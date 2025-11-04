@@ -1,0 +1,23 @@
+name: 'Setup Python and uv'
+description: 'Set up Python, install uv package manager, and sync project dependencies with workspace support'
+
+inputs:
+  python-version:
+    required: false
+    default: '3.12'
+  group-deps:
+    required: false
+    default: 'dev'
+
+runs:
+  using: 'composite'
+  steps:
+    - uses: actions/setup-python@v5
+      with:
+        python-version: ${{ inputs.python-version }}
+    - uses: astral-sh/setup-uv@v3
+      with:
+        enable-cache: true
+        cache-dependency-glob: '**/pyproject.toml'
+    - shell: bash
+      run: uv sync --all-packages --group ${{ inputs.group-deps }}

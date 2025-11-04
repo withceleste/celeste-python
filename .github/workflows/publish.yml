@@ -1,0 +1,142 @@
+name: Publish
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  validate-release:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.extract-version.outputs.tag_version }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: extract-version
+        run: |
+          TAG_VERSION="${GITHUB_REF#refs/tags/v}"
+          echo "tag_version=$TAG_VERSION" >> $GITHUB_OUTPUT
+      - id: read-version
+        run: |
+          python3 << EOF
+          import tomllib
+          with open('pyproject.toml', 'rb') as f:
+              data = tomllib.load(f)
+          version = data['project']['version']
+          print(f"pyproject_version={version}", file=open('$GITHUB_OUTPUT', 'a'))
+          EOF
+      - run: |
+          TAG_VERSION="${{ steps.extract-version.outputs.tag_version }}"
+          PYPROJECT_VERSION="${{ steps.read-version.outputs.pyproject_version }}"
+          if [ "$TAG_VERSION" != "$PYPROJECT_VERSION" ]; then
+            echo "Version mismatch: tag=$TAG_VERSION, pyproject=$PYPROJECT_VERSION"
+            exit 1
+          fi
+
+  run-ci:
+    needs: validate-release
+    uses: ./.github/workflows/ci.yml
+    secrets: inherit
+
+  build:
+    needs: [validate-release, run-ci]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - uses: ./.github/actions/setup-python-uv
+      - run: uv build
+      - run: |
+          uv pip install twine
+          uv run twine check dist/*
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  publish-testpypi:
+    needs: [build]
+    runs-on: ubuntu-latest
+    environment:
+      name: testpypi
+      url: https://test.pypi.org/project/celeste-ai/
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+          skip-existing: true
+          print-hash: true
+
+  publish-pypi:
+    needs: [publish-testpypi]
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/project/celeste-ai/
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          skip-existing: true
+          print-hash: true
+
+  github-release:
+    needs: [publish-pypi]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - id: extract-version
+        run: |
+          TAG_VERSION="${GITHUB_REF#refs/tags/v}"
+          echo "version=$TAG_VERSION" >> $GITHUB_OUTPUT
+      - id: changelog
+        run: |
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          if [ -z "$PREVIOUS_TAG" ]; then
+            CHANGELOG=$(git log --pretty=format:'- %s' --reverse || echo "Initial release")
+          else
+            CHANGELOG=$(git log ${PREVIOUS_TAG}..HEAD --pretty=format:'- %s' || echo "No changes")
+          fi
+          {
+            echo 'changelog<<EOF'
+            echo "$CHANGELOG"
+            echo 'EOF'
+          } >> $GITHUB_OUTPUT
+      - uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.ref }}
+          name: Release v${{ steps.extract-version.outputs.version }}
+          body: |
+            ## Release v${{ steps.extract-version.outputs.version }}
+
+            ### Changes
+            ${{ steps.changelog.outputs.changelog }}
+
+            ### Installation
+            ```bash
+            uv add "celeste-ai==${{ steps.extract-version.outputs.version }}"
+            ```
+          files: dist/*
+          draft: false
+          prerelease: false
