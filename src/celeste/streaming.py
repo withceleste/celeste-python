@@ -111,4 +111,3 @@ class Stream[Out: Output](ABC):
 
 
 __all__ = ["Stream"]
-

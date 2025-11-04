@@ -148,4 +148,3 @@ def get_client_class(capability: Capability, provider: Provider) -> type[Client]
 
 
 __all__ = ["Client", "get_client_class", "register_client"]
-

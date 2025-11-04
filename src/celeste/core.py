@@ -50,4 +50,3 @@ class Parameter(StrEnum):
 
 
 __all__ = ["Capability", "Parameter", "Provider"]
-

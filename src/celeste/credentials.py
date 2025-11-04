@@ -106,4 +106,3 @@ class Credentials(BaseSettings):
 credentials = Credentials()  # type: ignore[call-arg]
 
 __all__ = ["Credentials", "credentials"]
-
