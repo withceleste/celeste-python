@@ -66,7 +66,8 @@ class Credentials(BaseSettings):
             return override_key
 
         if not self.has_credential(provider):
-            raise ValueError(f"Provider {provider} has no credentials configured.")
+            msg = f"Provider {provider} has no credentials configured."
+            raise ValueError(msg)
 
         credential: SecretStr = getattr(self, PROVIDER_CREDENTIAL_MAP[provider])
         return credential
@@ -97,7 +98,8 @@ class Credentials(BaseSettings):
         """
         credential_field = PROVIDER_CREDENTIAL_MAP.get(provider)
         if not credential_field:
-            raise ValueError(f"Provider {provider} has no credential mapping")
+            msg = f"Provider {provider} has no credential mapping"
+            raise ValueError(msg)
         return getattr(self, credential_field, None) is not None
 
 

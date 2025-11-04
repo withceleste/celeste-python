@@ -42,7 +42,7 @@ class Capability(StrEnum):
 
 
 class Parameter(StrEnum):
-    """Universal parameters across all capabilities."""
+    """Universal parameters across most capabilities."""
 
     TEMPERATURE = "temperature"
     SEED = "seed"
