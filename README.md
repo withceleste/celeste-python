@@ -2,7 +2,7 @@
 
 # Celeste AI
 
-<img src="logo.svg" width="64" height="64" alt="Celeste Logo">
+<img src="https://raw.githubusercontent.com/withceleste/celeste-python/main/logo.svg" width="64" height="64" alt="Celeste Logo">
 
 **The primitive layer for multi-modal AI**
 
