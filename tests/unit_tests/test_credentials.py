@@ -319,6 +319,18 @@ class TestProviderMapping:
                 f"Missing field {field_name} for {provider}"
             )
 
+    def test_all_providers_have_credential_mapping(self) -> None:
+        """Every Provider enum value has a corresponding entry in PROVIDER_CREDENTIAL_MAP."""
+        # Get all providers that should have credentials
+        # Note: All providers in Provider enum require credentials
+        all_providers = list(Provider)
+
+        # Verify each provider has a mapping
+        for provider in all_providers:
+            assert provider in PROVIDER_CREDENTIAL_MAP, (
+                f"Provider {provider.value} missing from PROVIDER_CREDENTIAL_MAP"
+            )
+
 
 class TestEdgeCases:
     """Test edge cases and error conditions."""

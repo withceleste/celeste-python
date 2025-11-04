@@ -142,6 +142,19 @@ class TestRange:
         assert constraint(1.0) == 1.0
         assert constraint(2.0) == 2.0
 
+    def test_validates_value_near_step_within_epsilon(self) -> None:
+        """Range validates values within epsilon tolerance of valid step."""
+        constraint = Range(min=0.0, max=10.0, step=0.1)
+
+        # Test values that might have floating-point precision issues
+        # 0.1 + 0.1 + 0.1 might be 0.30000000000000004 due to float representation
+        result = constraint(0.1 + 0.1 + 0.1)  # Should be ~0.3
+        assert result == pytest.approx(0.3)
+
+        # Test another precision edge case
+        result2 = constraint(0.7)  # Should pass within epsilon
+        assert result2 == pytest.approx(0.7)
+
 
 class TestPattern:
     """Test Pattern constraint validation."""

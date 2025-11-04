@@ -317,6 +317,26 @@ class TestHTTPClientRequestMethods:
         call_kwargs = mock_httpx_client.get.call_args[1]
         assert call_kwargs["timeout"] == 60.0
 
+    async def test_custom_timeout_passed_to_httpx(
+        self, mock_httpx_client: AsyncMock
+    ) -> None:
+        """HTTPClient passes custom timeout value to httpx.AsyncClient methods."""
+        http_client = HTTPClient()
+        custom_timeout = 120.0
+
+        with patch("celeste.http.httpx.AsyncClient", return_value=mock_httpx_client):
+            await http_client.post(
+                url="https://api.example.com/test",
+                headers={"Authorization": "Bearer test"},
+                json_body={"key": "value"},
+                timeout=custom_timeout,
+            )
+
+        # Verify custom timeout was passed to httpx
+        mock_httpx_client.post.assert_called_once()
+        call_kwargs = mock_httpx_client.post.call_args[1]
+        assert call_kwargs["timeout"] == custom_timeout
+
 
 class TestHTTPClientRegistry:
     """Test get_http_client registry and singleton behavior."""

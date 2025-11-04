@@ -488,6 +488,24 @@ class TestStreamEmptyStreamError:
             async for _ in stream:
                 pass
 
+    async def test_stream_with_only_lifecycle_events_raises_error(self) -> None:
+        """Stream raises RuntimeError when SSE yields events but all chunks are filtered to None."""
+        # Arrange - Events that all return None from _parse_chunk
+        events = [
+            {"type": "ping"},  # Lifecycle event (no delta/content)
+            {"type": "start"},  # Lifecycle event
+            {"type": "end"},  # Lifecycle event
+            {"finish_reason": "stop"},  # Lifecycle event
+        ]
+        stream = ConcreteStream(_async_iter(events))
+
+        # Act & Assert - Should raise RuntimeError when exhausted
+        with pytest.raises(
+            RuntimeError, match=r"Stream completed but no chunks were produced"
+        ):
+            async for _ in stream:
+                pass
+
 
 class TestStreamExceptionHandling:
     """Test Stream exception handling in __anext__."""
