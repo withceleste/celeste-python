@@ -1,5 +1,6 @@
 """Constraint models for parameter validation."""
 
+import math
 import re
 from abc import ABC, abstractmethod
 from typing import Any, get_args, get_origin
@@ -53,7 +54,9 @@ class Range(Constraint):
             remainder = (value - self.min) % self.step
             # Use epsilon for floating-point comparison tolerance
             epsilon = 1e-9
-            if remainder > epsilon and abs(remainder - self.step) > epsilon:
+            if not math.isclose(remainder, 0, abs_tol=epsilon) and not math.isclose(
+                remainder, self.step, abs_tol=epsilon
+            ):
                 # Calculate nearest valid values for actionable error message
                 closest_below = self.min + (
                     int((value - self.min) / self.step) * self.step

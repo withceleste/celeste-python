@@ -2,6 +2,7 @@
 
 from abc import ABC, abstractmethod
 from collections.abc import AsyncIterator
+from types import TracebackType
 from typing import Any, Self
 
 from celeste.io import Chunk, Output
@@ -84,7 +85,7 @@ class Stream[Out: Output](ABC):
         self,
         exc_type: type[BaseException] | None,
         exc_val: BaseException | None,
-        exc_tb: Any,  # noqa: ANN401
+        exc_tb: TracebackType | None,
     ) -> bool:
         """Exit context - ensure cleanup even on exception."""
         await self.aclose()

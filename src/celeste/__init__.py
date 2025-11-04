@@ -6,7 +6,7 @@ from pydantic import SecretStr
 from celeste.client import Client, get_client_class, register_client
 from celeste.core import Capability, Parameter, Provider
 from celeste.credentials import credentials
-from celeste.http import HTTPClient
+from celeste.http import HTTPClient, close_all_http_clients
 from celeste.io import Input, Output, Usage
 from celeste.models import Model, get_model, list_models, register_models
 from celeste.parameters import Parameters
@@ -106,6 +106,7 @@ __all__ = [
     "Parameters",
     "Provider",
     "Usage",
+    "close_all_http_clients",
     "create_client",
     "get_client_class",
     "get_model",

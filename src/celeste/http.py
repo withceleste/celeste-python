@@ -1,6 +1,7 @@
 """HTTP client with persistent connection pooling for AI provider APIs."""
 
 import json
+import logging
 from collections.abc import AsyncIterator
 from typing import Any
 
@@ -8,6 +9,8 @@ import httpx
 from httpx_sse import aconnect_sse
 
 from celeste.core import Capability, Provider
+
+logger = logging.getLogger(__name__)
 
 MAX_CONNECTIONS = 20
 MAX_KEEPALIVE_CONNECTIONS = 10
@@ -173,10 +176,6 @@ def get_http_client(provider: Provider, capability: Capability) -> HTTPClient:
 
 async def close_all_http_clients() -> None:
     """Close all HTTP clients gracefully and clear registry."""
-    import logging
-
-    logger = logging.getLogger(__name__)
-
     for key, client in list(_http_clients.items()):
         try:
             await client.aclose()
