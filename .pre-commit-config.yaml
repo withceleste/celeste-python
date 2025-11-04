@@ -1,0 +1,61 @@
+# See https://pre-commit.com for more information
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: no-commit-to-branch
+        name: "🚫 Prevent commits to protected branches"
+        args: [--branch, main, --branch, master, --branch, develop]
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+      - id: check-toml
+      - id: check-merge-conflict
+      - id: check-json
+      - id: debug-statements  # Check for print/pdb statements
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.14.3
+    hooks:
+      - id: ruff-check
+        args: [--fix]
+        files: ^(src/celeste|tests)/
+        name: "🐍 Lint with Ruff"
+      - id: ruff-format
+        files: ^(src/celeste|tests)/
+        name: "🐍 Format with Ruff"
+
+  - repo: local
+    hooks:
+      - id: mypy
+        name: "🐍 Type check with mypy"
+        entry: uv run mypy -p celeste
+        language: system
+        types: [python]
+        pass_filenames: false
+      - id: mypy-tests
+        name: "🐍 Type check tests with mypy"
+        entry: uv run mypy tests/
+        language: system
+        types: [python]
+        pass_filenames: false
+
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.8.6
+    hooks:
+      - id: bandit
+        name: "🔒 Security check with Bandit"
+        args: ["-c", "pyproject.toml", "-r", "src/"]
+        additional_dependencies: ["bandit[toml]"]
+
+  - repo: local
+    hooks:
+      - id: pytest
+        name: "🧪 Run tests with coverage"
+        entry: uv run pytest tests/ --cov=celeste --cov-report=term-missing
+        language: system
+        types: [python]
+        pass_filenames: false
+        always_run: true
+        stages: [pre-push]  # Run on push, not commit (keeps commits fast)
