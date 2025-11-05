@@ -53,14 +53,13 @@ class TestRegisterModels:
         clear()
 
         register_models(SAMPLE_MODELS, Capability.TEXT_GENERATION)
-        assert len(list_models()) == 2
-        register_models(SAMPLE_MODELS[1], Capability.IMAGE_GENERATION)
         assert len(list_models()) == 3
         for model in SAMPLE_MODELS:
             retrieved = get_model(model.id, model.provider)
             assert retrieved is not None
             assert model.id == retrieved.id
             assert model.provider == retrieved.provider
+            assert Capability.TEXT_GENERATION in retrieved.capabilities
 
     def test_reregistering_same_key_raises_error(self) -> None:
         """Re-registering with same (id, provider) but different display_name raises ValueError."""
