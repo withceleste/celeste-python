@@ -11,8 +11,8 @@ class Model(BaseModel):
 
     id: str
     provider: Provider
-    capabilities: set[Capability] = Field(default_factory=set)
     display_name: str
+    capabilities: set[Capability] = Field(default_factory=set)
     parameter_constraints: dict[str, Constraint] = Field(default_factory=dict)
 
     @property
@@ -25,25 +25,45 @@ class Model(BaseModel):
 _models: dict[tuple[str, Provider], Model] = {}
 
 
-def register_models(models: Model | list[Model]) -> None:
+def register_models(models: Model | list[Model], capability: Capability) -> None:
     """Register one or more models in the global registry.
 
     Args:
         models: Single Model instance or list of Models to register.
                Each model is indexed by (model_id, provider) tuple.
+        capability: The capability these models are being registered for.
 
     Raises:
-        ValueError: If a model with the same (id, provider) is already registered.
+        ValueError: If display_name differs for duplicate (id, provider) pairs.
     """
     if isinstance(models, Model):
         models = [models]
 
     for model in models:
         key = (model.id, model.provider)
-        if key in _models:
-            msg = f"Model '{model.id}' for provider {model.provider.value} is already registered"
-            raise ValueError(msg)
-        _models[key] = model
+
+        # Get existing or create new model with empty capabilities/constraints
+        registered = _models.setdefault(
+            key,
+            Model(
+                id=model.id,
+                provider=model.provider,
+                display_name=model.display_name,
+                capabilities=set(),
+                parameter_constraints={},
+            ),
+        )
+
+        # Validate display name consistency
+        if registered.display_name != model.display_name:
+            raise ValueError(
+                f"Inconsistent display_name for {model.id}: "
+                f"'{registered.display_name}' vs '{model.display_name}'"
+            )
+
+        # Update capabilities and constraints (single code path)
+        registered.capabilities.add(capability)
+        registered.parameter_constraints.update(model.parameter_constraints)
 
 
 def get_model(model_id: str, provider: Provider) -> Model | None:
@@ -72,15 +92,15 @@ def list_models(
     Returns:
         List of Model instances matching the filters.
     """
-    filtered = list(_models.values())
+    models = list(_models.values())
 
     if provider is not None:
-        filtered = [m for m in filtered if m.provider == provider]
+        models = [m for m in models if m.provider == provider]
 
     if capability is not None:
-        filtered = [m for m in filtered if capability in m.capabilities]
+        models = [m for m in models if capability in m.capabilities]
 
-    return filtered
+    return models
 
 
 def clear() -> None:

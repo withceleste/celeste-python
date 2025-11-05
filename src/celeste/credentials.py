@@ -20,6 +20,7 @@ PROVIDER_CREDENTIAL_MAP = {
     Provider.LUMA: "luma_api_key",
     Provider.TOPAZLABS: "topazlabs_api_key",
     Provider.PERPLEXITY: "perplexity_api_key",
+    Provider.BYTEDANCE: "bytedance_api_key",
 }
 
 
@@ -38,6 +39,7 @@ class Credentials(BaseSettings):
     luma_api_key: SecretStr | None = Field(None, alias="LUMA_API_KEY")
     topazlabs_api_key: SecretStr | None = Field(None, alias="TOPAZLABS_API_KEY")
     perplexity_api_key: SecretStr | None = Field(None, alias="PERPLEXITY_API_KEY")
+    bytedance_api_key: SecretStr | None = Field(None, alias="BYTEDANCE_API_KEY")
 
     model_config = {
         "env_file": find_dotenv(),

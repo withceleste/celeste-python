@@ -18,6 +18,7 @@ class Provider(StrEnum):
     LUMA = "luma"
     TOPAZLABS = "topazlabs"
     PERPLEXITY = "perplexity"
+    BYTEDANCE = "bytedance"
 
 
 class Capability(StrEnum):
@@ -29,6 +30,7 @@ class Capability(StrEnum):
 
     # Image
     IMAGE_GENERATION = "image_generation"
+    IMAGE_INTELLIGENCE = "image_intelligence"
 
     # Video
     VIDEO_INTELLIGENCE = "video_intelligence"
