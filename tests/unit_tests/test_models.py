@@ -45,7 +45,12 @@ class TestRegisterModels:
         """Registering models works with both single model and list."""
         single_model = SAMPLE_MODELS[0]
         register_models(single_model, Capability.TEXT_GENERATION)
-        assert get_model(single_model.id, single_model.provider) == single_model
+        retrieved = get_model(single_model.id, single_model.provider)
+        assert retrieved is not None
+        assert retrieved.id == single_model.id
+        assert retrieved.provider == single_model.provider
+        assert retrieved.display_name == single_model.display_name
+        assert Capability.TEXT_GENERATION in retrieved.capabilities
 
         clear()
 
@@ -212,8 +217,16 @@ class TestGetModel:
 
         register_models([model1, model2], Capability.TEXT_GENERATION)
 
-        assert get_model("shared-id", Provider.OPENAI) == model1
-        assert get_model("shared-id", Provider.ANTHROPIC) == model2
+        retrieved1 = get_model("shared-id", Provider.OPENAI)
+        retrieved2 = get_model("shared-id", Provider.ANTHROPIC)
+        assert retrieved1 is not None
+        assert retrieved1.id == model1.id
+        assert retrieved1.provider == model1.provider
+        assert retrieved1.display_name == model1.display_name
+        assert retrieved2 is not None
+        assert retrieved2.id == model2.id
+        assert retrieved2.provider == model2.provider
+        assert retrieved2.display_name == model2.display_name
 
 
 class TestEntryPoints:
