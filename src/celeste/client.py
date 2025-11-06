@@ -1,6 +1,7 @@
 """Base client and client registry for AI capabilities."""
 
 from abc import ABC, abstractmethod
+from collections.abc import AsyncIterator
 from json import JSONDecodeError
 from typing import Any, Unpack
 
@@ -37,6 +38,53 @@ class Client[In: Input, Out: Output](ABC, BaseModel):
         """Shared HTTP client with connection pooling for this provider."""
         return get_http_client(self.provider, self.capability)
 
+    async def generate(self, *args: Any, **parameters: Unpack[Parameters]) -> Out:  # noqa: ANN401
+        """Generate content - signature varies by capability.
+
+        Args:
+            *args: Capability-specific positional arguments (prompt, image, video, etc.).
+            **parameters: Capability-specific keyword arguments (temperature, max_tokens, etc.).
+
+        Returns:
+            Output of the parameterized type (e.g., TextGenerationOutput).
+        """
+        inputs = self._create_inputs(*args, **parameters)
+        request_body = self._build_request(inputs, **parameters)
+        response = await self._make_request(request_body, **parameters)
+        self._handle_error_response(response)
+        response_data = response.json()
+        return self._output_class()(
+            content=self._parse_content(response_data, **parameters),
+            usage=self._parse_usage(response_data),
+            metadata=self._build_metadata(response_data),
+        )
+
+    def stream(self, *args: Any, **parameters: Unpack[Parameters]) -> Stream[Out]:  # noqa: ANN401
+        """Stream content - signature varies by capability.
+
+        Args:
+            *args: Capability-specific positional arguments (same as generate).
+            **parameters: Capability-specific keyword arguments (same as generate).
+
+        Returns:
+            Stream yielding chunks and providing final Output.
+
+        Raises:
+            NotImplementedError: If model doesn't support streaming.
+        """
+        if not self.model.streaming:
+            msg = f"Streaming not supported for model '{self.model.id}'"
+            raise NotImplementedError(msg)
+
+        inputs = self._create_inputs(*args, **parameters)
+        request_body = self._build_request(inputs, **parameters)
+        sse_iterator = self._make_stream_request(request_body, **parameters)
+        return self._stream_class()(  # type: ignore[call-arg]
+            sse_iterator,
+            transform_output=self._transform_output,
+            **parameters,
+        )
+
     @classmethod
     @abstractmethod
     def parameter_mappers(cls) -> list[ParameterMapper]:
@@ -46,31 +94,66 @@ class Client[In: Input, Out: Output](ABC, BaseModel):
     @abstractmethod
     def _init_request(self, inputs: In) -> dict[str, Any]:
         """Initialize provider-specific base request structure."""
-        pass
+        ...
 
     @abstractmethod
     def _parse_usage(self, response_data: dict[str, Any]) -> Usage:
         """Parse usage information from provider response."""
-        pass
+        ...
 
     @abstractmethod
     def _parse_content(
         self, response_data: dict[str, Any], **parameters: Unpack[Parameters]
     ) -> object:
         """Parse content from provider response."""
-        pass
+        ...
+
+    @abstractmethod
+    def _create_inputs(self, *args: Any, **parameters: Unpack[Parameters]) -> In:  # noqa: ANN401
+        """Map positional arguments to Input type."""
+        ...
+
+    @classmethod
+    @abstractmethod
+    def _output_class(cls) -> type[Out]:
+        """Return the Output class for this client."""
+        ...
+
+    @abstractmethod
+    async def _make_request(
+        self, request_body: dict[str, Any], **parameters: Unpack[Parameters]
+    ) -> httpx.Response:
+        """Make HTTP request(s) and return response object."""
+        ...
+
+    @abstractmethod
+    def _stream_class(self) -> type[Stream[Out]]:
+        """Return the Stream class for this client."""
+        ...
+
+    @abstractmethod
+    def _make_stream_request(
+        self, request_body: dict[str, Any], **parameters: Unpack[Parameters]
+    ) -> AsyncIterator[dict[str, Any]]:
+        """Make HTTP streaming request and return async iterator of events."""
+        ...
+
+    def _build_metadata(self, response_data: dict[str, Any]) -> dict[str, Any]:
+        """Build metadata dictionary from response data."""
+        return {
+            "model": self.model.id,
+            "provider": self.provider.value,
+        }
 
     def _handle_error_response(self, response: httpx.Response) -> None:
-        """Handle error responses from provider APIs"""
+        """Handle error responses from provider APIs."""
         if not response.is_success:
-            # Try to extract error message from JSON response
             try:
                 error_data = response.json()
                 error_msg = error_data.get("error", {}).get("message", response.text)
             except JSONDecodeError:
                 error_msg = response.text or f"HTTP {response.status_code}"
 
-            # Raise HTTPStatusError with provider context
             raise httpx.HTTPStatusError(
                 f"{self.provider.value} API error: {error_msg}",
                 request=response.request,
@@ -93,41 +176,11 @@ class Client[In: Input, Out: Output](ABC, BaseModel):
         """Build complete request by combining base request with parameters."""
         request = self._init_request(inputs)
 
-        # Apply parameter mappers from registry
         for mapper in self.parameter_mappers():
             value = parameters.get(mapper.name)
             request = mapper.map(request, value, self.model)
 
         return request
-
-    def stream(self, *args: Any, **parameters: Unpack[Parameters]) -> Stream[Out]:  # noqa: ANN401
-        """Stream content - signature varies by capability.
-
-        Args:
-            *args: Capability-specific positional arguments (same as generate).
-            **parameters: Capability-specific keyword arguments (same as generate).
-
-        Returns:
-            Stream yielding chunks and providing final Output.
-
-        Raises:
-            NotImplementedError: If capability doesn't support streaming.
-        """
-        msg = f"Streaming not supported for {self.capability.value} with provider {self.provider.value}"
-        raise NotImplementedError(msg)
-
-    @abstractmethod
-    async def generate(self, *args: Any, **parameters: Unpack[Parameters]) -> Out:  # noqa: ANN401
-        """Generate content - signature varies by capability.
-
-        Args:
-            *args: Capability-specific positional arguments (prompt, text, image_url, etc.).
-            **parameters: Capability-specific keyword arguments (temperature, max_tokens, etc.).
-
-        Returns:
-            Output of the parameterized type (e.g., TextGenerationOutput).
-        """
-        pass
 
 
 _clients: dict[tuple[Capability, Provider], type[Client]] = {}
