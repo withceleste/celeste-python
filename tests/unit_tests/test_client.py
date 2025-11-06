@@ -1,9 +1,10 @@
 """High-value tests for Client - focusing on critical validation and framework behavior."""
 
-from collections.abc import Generator
+from collections.abc import AsyncIterator, Generator
 from enum import StrEnum
 from typing import Any, Unpack
 
+import httpx
 import pytest
 from pydantic import SecretStr, ValidationError
 
@@ -12,6 +13,7 @@ from celeste.core import Capability, Provider
 from celeste.io import Input, Output, Usage
 from celeste.models import Model
 from celeste.parameters import ParameterMapper, Parameters
+from celeste.streaming import Stream
 
 
 class ParamEnum(StrEnum):
@@ -167,8 +169,43 @@ class ConcreteClient(Client):
     ) -> Any:  # noqa: ANN401
         return response_data.get("content", "test content")
 
-    async def generate(self, **parameters: Unpack[Parameters]) -> Output:
-        return Output(content="test output")
+    def _create_inputs(
+        self,
+        *args: Any,  # noqa: ANN401
+        **parameters: Unpack[Parameters],
+    ) -> Input:
+        """Map positional arguments to Input type."""
+        if args:
+            prompt = str(args[0])
+            return _TestInput(prompt=prompt)
+        prompt_value = parameters.get("prompt", "test prompt")
+        prompt = str(prompt_value) if prompt_value is not None else "test prompt"
+        return _TestInput(prompt=prompt)
+
+    @classmethod
+    def _output_class(cls) -> type[Output]:
+        """Return the Output class for this client."""
+        return Output
+
+    async def _make_request(
+        self, request_body: dict[str, Any], **parameters: Unpack[Parameters]
+    ) -> httpx.Response:
+        """Make HTTP request(s) and return response object."""
+        return httpx.Response(
+            200,
+            json={"content": "test content"},
+            request=httpx.Request("POST", "https://test.com"),
+        )
+
+    def _stream_class(self) -> type[Stream[Output]]:
+        """Return the Stream class for this client."""
+        raise NotImplementedError("Streaming not implemented in test client")
+
+    def _make_stream_request(
+        self, request_body: dict[str, Any], **parameters: Unpack[Parameters]
+    ) -> AsyncIterator[dict[str, Any]]:
+        """Make HTTP streaming request and return async iterator of events."""
+        raise NotImplementedError("Streaming not implemented in test client")
 
 
 class TestClientValidation:
@@ -502,10 +539,9 @@ class TestClientStreaming:
 
         # Act & Assert
         with pytest.raises(NotImplementedError) as exc_info:
-            client.stream()
+            client.stream("test prompt")
 
         # Verify error message contains all debugging info
         error_msg = str(exc_info.value)
         assert "Streaming not supported" in error_msg
-        assert "text_generation" in error_msg
-        assert "openai" in error_msg
+        assert "gpt-4" in error_msg

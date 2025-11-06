@@ -14,6 +14,7 @@ class Model(BaseModel):
     display_name: str
     capabilities: set[Capability] = Field(default_factory=set)
     parameter_constraints: dict[str, Constraint] = Field(default_factory=dict)
+    streaming: bool = Field(default=False)
 
     @property
     def supported_parameters(self) -> set[str]:
@@ -51,6 +52,7 @@ def register_models(models: Model | list[Model], capability: Capability) -> None
                 display_name=model.display_name,
                 capabilities=set(),
                 parameter_constraints={},
+                streaming=model.streaming,
             ),
         )
 

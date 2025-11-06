@@ -8,7 +8,15 @@ from celeste.mime_types import AudioMimeType, ImageMimeType, MimeType, VideoMime
 
 
 class Artifact(BaseModel):
-    """Base class for all media artifacts."""
+    """Base class for all media artifacts.
+
+    Artifacts can be represented in three ways:
+    - url: Remote HTTP/HTTPS URL (may expire, e.g., DALL-E URLs last 1 hour)
+    - data: In-memory bytes (for immediate use without download)
+    - path: Local filesystem path (for local providers or saved files)
+
+    Providers typically populate only one of these fields.
+    """
 
     url: str | None = None
     data: bytes | None = None
