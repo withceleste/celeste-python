@@ -44,6 +44,8 @@ jobs:
   integration-test:
     needs: [validate-release, run-ci]
     runs-on: ubuntu-latest
+    environment:
+      name: integration-tests
     steps:
       - uses: actions/checkout@v4
         with:
