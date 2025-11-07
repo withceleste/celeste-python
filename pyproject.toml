@@ -38,6 +38,7 @@ dev = [
     "pytest-cov>=7.0",
     "pytest-randomly>=4.0",
     "pytest-asyncio>=1.2.0",
+    "pytest-xdist>=3.0.0",
     "ruff>=0.8.0",
     "mypy>=1.13.0",
     "types-requests>=2.31.0",
@@ -63,6 +64,7 @@ asyncio_mode = "auto"
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
     "smoke: quick checks for critical paths",
+    "integration: marks tests as integration tests (require API keys)",
 ]
 
 [tool.coverage.run]

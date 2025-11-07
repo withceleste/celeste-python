@@ -1,4 +1,4 @@
-.PHONY: help sync lint lint-fix format typecheck test security ci clean
+.PHONY: help sync lint lint-fix format typecheck test integration-test security ci clean
 
 # Default target
 help:
@@ -8,6 +8,7 @@ help:
 	@echo "  make format     - Apply Ruff formatting"
 	@echo "  make typecheck  - Run mypy type checking"
 	@echo "  make test       - Run pytest with coverage"
+	@echo "  make integration-test - Run integration tests (requires API keys)"
 	@echo "  make security   - Run Bandit security scan"
 	@echo "  make ci       - Run full CI/CD pipeline"
 	@echo "  make clean      - Clean cache directories"
@@ -37,6 +38,10 @@ typecheck:
 # Testing
 test:
 	uv run pytest tests/ --cov=celeste --cov-report=term-missing --cov-fail-under=90
+
+# Integration testing (requires API keys)
+integration-test:
+	uv run pytest tests/integration_tests/ -m integration -v -n auto
 
 # Security scanning (config reads from pyproject.toml)
 security:

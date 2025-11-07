@@ -41,8 +41,25 @@ jobs:
     uses: ./.github/workflows/ci.yml
     secrets: inherit
 
-  build:
+  integration-test:
     needs: [validate-release, run-ci]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - uses: ./.github/actions/setup-python-uv
+      - name: Run integration tests
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
+          COHERE_API_KEY: ${{ secrets.COHERE_API_KEY }}
+        run: make integration-test
+
+  build:
+    needs: [validate-release, run-ci, integration-test]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
