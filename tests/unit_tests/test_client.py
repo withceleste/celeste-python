@@ -52,9 +52,9 @@ def _create_test_client_class(
         def _parse_usage(self, response_data: dict[str, Any]) -> Usage:
             return Usage()
 
-        def _parse_content(
+        def _parse_content(  # type: ignore[override]
             self, response_data: dict[str, Any], **parameters: Unpack[Parameters]
-        ) -> Any:  # noqa: ANN401
+        ) -> object:
             return response_data.get("content", "test content")
 
         async def generate(self, **parameters: Unpack[Parameters]) -> Output:
@@ -164,9 +164,9 @@ class ConcreteClient(Client):
     def _parse_usage(self, response_data: dict[str, Any]) -> Usage:
         return Usage()
 
-    def _parse_content(
+    def _parse_content(  # type: ignore[override]
         self, response_data: dict[str, Any], **parameters: Unpack[Parameters]
-    ) -> Any:  # noqa: ANN401
+    ) -> object:
         return response_data.get("content", "test content")
 
     def _create_inputs(
@@ -187,7 +187,7 @@ class ConcreteClient(Client):
         """Return the Output class for this client."""
         return Output
 
-    async def _make_request(
+    async def _make_request(  # type: ignore[override]
         self, request_body: dict[str, Any], **parameters: Unpack[Parameters]
     ) -> httpx.Response:
         """Make HTTP request(s) and return response object."""
@@ -197,11 +197,11 @@ class ConcreteClient(Client):
             request=httpx.Request("POST", "https://test.com"),
         )
 
-    def _stream_class(self) -> type[Stream[Output]]:
+    def _stream_class(self) -> type[Stream[Output, Parameters]]:
         """Return the Stream class for this client."""
         raise NotImplementedError("Streaming not implemented in test client")
 
-    def _make_stream_request(
+    def _make_stream_request(  # type: ignore[override]
         self, request_body: dict[str, Any], **parameters: Unpack[Parameters]
     ) -> AsyncIterator[dict[str, Any]]:
         """Make HTTP streaming request and return async iterator of events."""
@@ -438,7 +438,7 @@ class TestClientRequestBuilding:
         inputs = _TestInput(prompt="test prompt")
 
         # Act
-        request = client._build_request(inputs, test_param="mapped_value")  # type: ignore[call-arg]
+        request = client._build_request(inputs, test_param="mapped_value")
 
         # Assert
         assert request["prompt"] == "test prompt"
@@ -473,7 +473,7 @@ class TestClientRequestBuilding:
         # Act
         request = client._build_request(
             inputs, first_param="first", second_param="second"
-        )  # type: ignore[call-arg]
+        )
 
         # Assert
         assert request["first_param"] == "first"

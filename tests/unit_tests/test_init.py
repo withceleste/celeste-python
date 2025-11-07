@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+from pydantic import SecretStr
 
 from celeste import Capability, Model, Provider, create_client
 
@@ -65,9 +66,15 @@ class TestCreateClient:
         self, sample_models: list[Model]
     ) -> None:
         """Test that create_client uses get_model for explicit selection."""
-        with patch("celeste.get_model", autospec=True) as mock_get_model:
+        with (
+            patch("celeste.get_model", autospec=True) as mock_get_model,
+            patch("celeste.get_client_class", autospec=True) as mock_get_client_class,
+        ):
             # Arrange
             mock_get_model.return_value = sample_models[1]  # claude-3
+            mock_get_client_class.side_effect = NotImplementedError(
+                "Client not registered"
+            )
 
             # Act & Assert
             with pytest.raises(
@@ -77,6 +84,7 @@ class TestCreateClient:
                     capability=Capability.TEXT_GENERATION,
                     provider=Provider.ANTHROPIC,
                     model="claude-3",
+                    api_key=SecretStr("dummy"),
                 )
 
             mock_get_model.assert_called_once_with("claude-3", Provider.ANTHROPIC)
@@ -96,9 +104,15 @@ class TestCreateClient:
         self, sample_models: list[Model]
     ) -> None:
         """Test that provider filtering is applied when provider is specified."""
-        with patch("celeste.list_models", autospec=True) as mock_list_models:
+        with (
+            patch("celeste.list_models", autospec=True) as mock_list_models,
+            patch("celeste.get_client_class", autospec=True) as mock_get_client_class,
+        ):
             # Arrange
             mock_list_models.return_value = [sample_models[1]]  # claude-3
+            mock_get_client_class.side_effect = NotImplementedError(
+                "Client not registered"
+            )
 
             # Act - Should fail at _get_client_class but provider filtering should work
             with pytest.raises(
@@ -107,6 +121,7 @@ class TestCreateClient:
                 create_client(
                     capability=Capability.TEXT_GENERATION,
                     provider=Provider.ANTHROPIC,
+                    api_key=SecretStr("dummy"),
                 )
 
             # Assert - verify provider was passed to list_models
@@ -123,6 +138,7 @@ class TestCreateClientIntegration:
         with (
             patch("celeste.list_models", autospec=True) as mock_list_models,
             patch("celeste.get_model", autospec=True) as mock_get_model,
+            patch("celeste.get_client_class", autospec=True) as mock_get_client_class,
         ):
             # Arrange
             explicit_model = sample_models[1]  # claude-3
@@ -130,6 +146,9 @@ class TestCreateClientIntegration:
 
             mock_get_model.return_value = explicit_model
             mock_list_models.return_value = [auto_model]
+            mock_get_client_class.side_effect = NotImplementedError(
+                "Client not registered"
+            )
 
             # Act - Should fail at _get_client_class but precedence should work
             with pytest.raises(NotImplementedError):
@@ -137,6 +156,7 @@ class TestCreateClientIntegration:
                     capability=Capability.TEXT_GENERATION,
                     provider=Provider.ANTHROPIC,
                     model="claude-3",
+                    api_key=SecretStr("dummy"),
                 )
 
             # Assert - Should use explicit path, not auto-selection

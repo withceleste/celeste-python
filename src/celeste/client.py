@@ -16,7 +16,7 @@ from celeste.parameters import ParameterMapper, Parameters
 from celeste.streaming import Stream
 
 
-class Client[In: Input, Out: Output](ABC, BaseModel):
+class Client[In: Input, Out: Output, Params: Parameters](ABC, BaseModel):
     """Base class for all capability-specific clients."""
 
     model_config = ConfigDict(from_attributes=True)
@@ -38,7 +38,11 @@ class Client[In: Input, Out: Output](ABC, BaseModel):
         """Shared HTTP client with connection pooling for this provider."""
         return get_http_client(self.provider, self.capability)
 
-    async def generate(self, *args: Any, **parameters: Unpack[Parameters]) -> Out:  # noqa: ANN401
+    async def generate(
+        self,
+        *args: Any,  # noqa: ANN401
+        **parameters: Unpack[Params],  # type: ignore[misc]
+    ) -> Out:
         """Generate content - signature varies by capability.
 
         Args:
@@ -59,7 +63,11 @@ class Client[In: Input, Out: Output](ABC, BaseModel):
             metadata=self._build_metadata(response_data),
         )
 
-    def stream(self, *args: Any, **parameters: Unpack[Parameters]) -> Stream[Out]:  # noqa: ANN401
+    def stream(
+        self,
+        *args: Any,  # noqa: ANN401
+        **parameters: Unpack[Params],  # type: ignore[misc]
+    ) -> Stream[Out, Params]:
         """Stream content - signature varies by capability.
 
         Args:
@@ -79,7 +87,7 @@ class Client[In: Input, Out: Output](ABC, BaseModel):
         inputs = self._create_inputs(*args, **parameters)
         request_body = self._build_request(inputs, **parameters)
         sse_iterator = self._make_stream_request(request_body, **parameters)
-        return self._stream_class()(  # type: ignore[call-arg]
+        return self._stream_class()(
             sse_iterator,
             transform_output=self._transform_output,
             **parameters,
@@ -103,13 +111,19 @@ class Client[In: Input, Out: Output](ABC, BaseModel):
 
     @abstractmethod
     def _parse_content(
-        self, response_data: dict[str, Any], **parameters: Unpack[Parameters]
+        self,
+        response_data: dict[str, Any],
+        **parameters: Unpack[Params],  # type: ignore[misc]
     ) -> object:
         """Parse content from provider response."""
         ...
 
     @abstractmethod
-    def _create_inputs(self, *args: Any, **parameters: Unpack[Parameters]) -> In:  # noqa: ANN401
+    def _create_inputs(
+        self,
+        *args: Any,  # noqa: ANN401
+        **parameters: Unpack[Params],  # type: ignore[misc]
+    ) -> In:
         """Map positional arguments to Input type."""
         ...
 
@@ -121,19 +135,23 @@ class Client[In: Input, Out: Output](ABC, BaseModel):
 
     @abstractmethod
     async def _make_request(
-        self, request_body: dict[str, Any], **parameters: Unpack[Parameters]
+        self,
+        request_body: dict[str, Any],
+        **parameters: Unpack[Params],  # type: ignore[misc]
     ) -> httpx.Response:
         """Make HTTP request(s) and return response object."""
         ...
 
     @abstractmethod
-    def _stream_class(self) -> type[Stream[Out]]:
+    def _stream_class(self) -> type[Stream[Out, Params]]:
         """Return the Stream class for this client."""
         ...
 
     @abstractmethod
     def _make_stream_request(
-        self, request_body: dict[str, Any], **parameters: Unpack[Parameters]
+        self,
+        request_body: dict[str, Any],
+        **parameters: Unpack[Params],  # type: ignore[misc]
     ) -> AsyncIterator[dict[str, Any]]:
         """Make HTTP streaming request and return async iterator of events."""
         ...
@@ -161,7 +179,9 @@ class Client[In: Input, Out: Output](ABC, BaseModel):
             )
 
     def _transform_output(
-        self, content: object, **parameters: Unpack[Parameters]
+        self,
+        content: object,
+        **parameters: Unpack[Params],  # type: ignore[misc]
     ) -> object:
         """Transform content using parameter mapper output transformations."""
         for mapper in self.parameter_mappers():
@@ -171,7 +191,9 @@ class Client[In: Input, Out: Output](ABC, BaseModel):
         return content
 
     def _build_request(
-        self, inputs: In, **parameters: Unpack[Parameters]
+        self,
+        inputs: In,
+        **parameters: Unpack[Params],  # type: ignore[misc]
     ) -> dict[str, Any]:
         """Build complete request by combining base request with parameters."""
         request = self._init_request(inputs)
@@ -183,11 +205,13 @@ class Client[In: Input, Out: Output](ABC, BaseModel):
         return request
 
 
-_clients: dict[tuple[Capability, Provider], type[Client]] = {}
+_clients: dict[tuple[Capability, Provider], type[Client[Any, Any, Any]]] = {}
 
 
 def register_client(
-    capability: Capability, provider: Provider, client_class: type[Client]
+    capability: Capability,
+    provider: Provider,
+    client_class: type[Client[Any, Any, Any]],
 ) -> None:
     """Register a provider-specific client class for a capability.
 
@@ -199,7 +223,9 @@ def register_client(
     _clients[(capability, provider)] = client_class
 
 
-def get_client_class(capability: Capability, provider: Provider) -> type[Client]:
+def get_client_class(
+    capability: Capability, provider: Provider
+) -> type[Client[Any, Any, Any]]:
     """Get the registered client class for a capability and provider.
 
     Args:

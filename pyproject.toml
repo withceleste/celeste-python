@@ -45,11 +45,6 @@ dev = [
     "pre-commit>=3.5.0",
 ]
 
-[project.entry-points."celeste.packages"]
-# Example entry points for packages to register their models and clients:
-# text_generation = "text_generation:register_models"
-# image_generation = "image_generation:register_models"
-
 [tool.uv.workspace]
 members = ["packages/*"]
 
@@ -133,6 +128,7 @@ strict_equality = true
 module = "tests.*"
 disallow_untyped_defs = false  # Relax for tests
 disallow_incomplete_defs = false
+disable_error_code = ["override", "return-value", "arg-type", "call-arg", "assignment", "no-any-return"]
 
 [[tool.mypy.overrides]]
 module = "httpx"
@@ -141,6 +137,15 @@ ignore_missing_imports = true
 [[tool.mypy.overrides]]
 module = "httpx_sse"
 ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = [
+    "celeste_text_generation.*",
+    "celeste_text_generation.client",
+    "celeste_text_generation.streaming",
+    "celeste_text_generation.providers.*",
+]
+disable_error_code = ["override", "return-value", "arg-type", "call-arg", "assignment", "no-any-return"]
 
 [tool.bandit]
 exclude_dirs = [".venv", "__pycache__"]

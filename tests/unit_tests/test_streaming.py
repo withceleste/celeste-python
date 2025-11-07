@@ -1,13 +1,14 @@
 """High-value tests for Stream - focusing on lifecycle, resource cleanup, and state management."""
 
 from collections.abc import AsyncIterator
-from typing import Any
+from typing import Any, Unpack
 from unittest.mock import AsyncMock
 
 import pytest
 from pydantic import Field
 
 from celeste.io import Chunk, FinishReason, Output, Usage
+from celeste.parameters import Parameters
 from celeste.streaming import Stream
 
 
@@ -17,7 +18,7 @@ class ConcreteOutput(Output[str]):
     pass
 
 
-class ConcreteStream(Stream[ConcreteOutput]):
+class ConcreteStream(Stream[ConcreteOutput, Parameters]):
     """Concrete Stream implementation for testing abstract behavior."""
 
     def __init__(
@@ -25,6 +26,7 @@ class ConcreteStream(Stream[ConcreteOutput]):
         sse_iterator: AsyncIterator[dict[str, Any]],
         chunk_events: list[dict[str, Any]] | None = None,
         filter_none: bool = False,
+        **parameters: Unpack[Parameters],
     ) -> None:
         """Initialize stream with configurable parsing behavior.
 
@@ -33,7 +35,7 @@ class ConcreteStream(Stream[ConcreteOutput]):
             chunk_events: Events that should be converted to chunks.
             filter_none: If True, return None for events not in chunk_events.
         """
-        super().__init__(sse_iterator)
+        super().__init__(sse_iterator, **parameters)
         self._chunk_events = chunk_events or []
         self._filter_none = filter_none
 
@@ -53,7 +55,9 @@ class ConcreteStream(Stream[ConcreteOutput]):
             metadata=event.get("metadata", {}),
         )
 
-    def _parse_output(self, chunks: list[Chunk]) -> ConcreteOutput:
+    def _parse_output(  # type: ignore[override]
+        self, chunks: list[Chunk], **parameters: Unpack[Parameters]
+    ) -> ConcreteOutput:
         """Combine chunks into final output."""
         content = "".join(chunk.content for chunk in chunks)
         # Usage is empty base class - store data in metadata for tests
@@ -364,10 +368,12 @@ class TestStreamAbstractBehavior:
         """Subclass without _parse_chunk implementation must fail instantiation."""
 
         # Arrange
-        class IncompleteStream(Stream[ConcreteOutput]):
+        class IncompleteStream(Stream[ConcreteOutput, Parameters]):
             """Missing _parse_chunk implementation."""
 
-            def _parse_output(self, chunks: list[Chunk]) -> ConcreteOutput:
+            def _parse_output(  # type: ignore[override]
+                self, chunks: list[Chunk], **parameters: Unpack[Parameters]
+            ) -> ConcreteOutput:
                 """Implement _parse_output but not _parse_chunk."""
                 return ConcreteOutput(content="test")
 
@@ -381,7 +387,7 @@ class TestStreamAbstractBehavior:
         """Subclass without _parse_output implementation must fail instantiation."""
 
         # Arrange
-        class IncompleteStream(Stream[ConcreteOutput]):
+        class IncompleteStream(Stream[ConcreteOutput, Parameters]):
             """Missing _parse_output implementation."""
 
             def _parse_chunk(self, event: dict[str, Any]) -> Chunk | None:
@@ -538,7 +544,9 @@ class TestStreamExceptionHandling:
         class ExceptionStream(ConcreteStream):
             """Stream that raises exception in _parse_output."""
 
-            def _parse_output(self, chunks: list[Chunk]) -> ConcreteOutput:
+            def _parse_output(  # type: ignore[override]
+                self, chunks: list[Chunk], **parameters: Unpack[Parameters]
+            ) -> ConcreteOutput:
                 """Raise exception during output parsing."""
                 raise RuntimeError("Output parse error")
 
@@ -611,7 +619,7 @@ class TestStreamWithTypedUsageAndFinishReason:
                 default_factory=lambda: TypedUsage(input_tokens=0, output_tokens=0)
             )
 
-        class TypedStream(Stream[TypedOutput]):
+        class TypedStream(Stream[TypedOutput, Parameters]):
             """Stream using typed classes."""
 
             def _parse_chunk(self, event: dict[str, Any]) -> TypedChunk | None:
@@ -639,7 +647,9 @@ class TestStreamWithTypedUsageAndFinishReason:
                     usage=usage,
                 )
 
-            def _parse_output(self, chunks: list[Chunk]) -> TypedOutput:
+            def _parse_output(  # type: ignore[override]
+                self, chunks: list[Chunk], **parameters: Unpack[Parameters]
+            ) -> TypedOutput:
                 """Combine chunks into typed output."""
                 content = "".join(chunk.content for chunk in chunks)
 

@@ -3,23 +3,26 @@
 from abc import ABC, abstractmethod
 from collections.abc import AsyncIterator
 from types import TracebackType
-from typing import Any, Self
+from typing import Any, Self, Unpack
 
 from celeste.io import Chunk, Output
+from celeste.parameters import Parameters
 
 
-class Stream[Out: Output](ABC):
+class Stream[Out: Output, Params: Parameters](ABC):
     """Async iterator wrapper providing final Output access after stream exhaustion."""
 
     def __init__(
         self,
         sse_iterator: AsyncIterator[dict[str, Any]],
+        **parameters: Unpack[Params],  # type: ignore[misc]
     ) -> None:
         """Initialize stream with SSE iterator."""
         self._sse_iterator = sse_iterator
         self._chunks: list[Chunk] = []
         self._closed = False
         self._output: Out | None = None
+        self._parameters = parameters
 
     @abstractmethod
     def _parse_chunk(self, event: dict[str, Any]) -> Chunk | None:
@@ -27,7 +30,7 @@ class Stream[Out: Output](ABC):
         ...
 
     @abstractmethod
-    def _parse_output(self, chunks: list[Chunk]) -> Out:
+    def _parse_output(self, chunks: list[Chunk], **parameters: Unpack[Params]) -> Out:  # type: ignore[misc]
         """Parse final Output from accumulated chunks."""
         ...
 
@@ -67,7 +70,7 @@ class Stream[Out: Output](ABC):
                 msg = "Stream completed but no chunks were produced"
                 raise RuntimeError(msg)
 
-            self._output = self._parse_output(self._chunks)
+            self._output = self._parse_output(self._chunks, **self._parameters)
         except Exception:
             await self.aclose()
             raise

@@ -34,11 +34,13 @@ class Range(Constraint):
     """Range constraint - value must be within min/max bounds.
 
     If step is provided, value must be at min + (n * step) for some integer n.
+    If special_values is provided, those values bypass min/max validation.
     """
 
     min: float | int
     max: float | int
     step: float | None = None
+    special_values: list[float | int] | None = None
 
     def __call__(self, value: float | int) -> float | int:
         """Validate value is within range and matches step increment."""
@@ -46,10 +48,19 @@ class Range(Constraint):
             msg = f"Must be numeric, got {type(value).__name__}"
             raise TypeError(msg)
 
+        # Check if value is a special value that bypasses range check
+        if self.special_values is not None and value in self.special_values:
+            return value
+
+        # Validate range
         if not self.min <= value <= self.max:
-            msg = f"Must be between {self.min} and {self.max}, got {value}"
+            special_msg = (
+                f" or one of {self.special_values}" if self.special_values else ""
+            )
+            msg = f"Must be between {self.min} and {self.max}{special_msg}, got {value}"
             raise ValueError(msg)
 
+        # Validate step if provided
         if self.step is not None:
             remainder = (value - self.min) % self.step
             # Use epsilon for floating-point comparison tolerance

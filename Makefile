@@ -20,19 +20,19 @@ sync:
 
 # Linting
 lint:
-	uv run ruff check src/celeste tests/
+	uv run ruff check src/celeste tests/ packages/
 
 # Linting with auto-fix
 lint-fix:
-	uv run ruff check --fix src/celeste tests/
+	uv run ruff check --fix src/celeste tests/ packages/
 
 # Formatting
 format:
-	uv run ruff format src/celeste tests/
+	uv run ruff format src/celeste tests/ packages/
 
 # Type checking (fail fast on any error)
 typecheck:
-	@uv run mypy -p celeste && uv run mypy tests/
+	@uv run mypy -p celeste && uv run mypy tests/ && uv run mypy packages/
 
 # Testing
 test:
@@ -40,7 +40,7 @@ test:
 
 # Security scanning (config reads from pyproject.toml)
 security:
-	uv run bandit -c pyproject.toml -r src/ -f screen
+	uv run bandit -c pyproject.toml -r src/ packages/ -f screen
 
 # Full CI/CD pipeline - what GitHub Actions will run
 ci:
