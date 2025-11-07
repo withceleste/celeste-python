@@ -1,8 +1,6 @@
 """Integration tests for text generation across all providers."""
 
 import pytest
-from celeste_text_generation import TextGenerationOutput, TextGenerationUsage
-from celeste_text_generation.parameters import TextGenerationParameters
 
 from celeste import Capability, Provider, create_client
 
@@ -19,14 +17,15 @@ from celeste import Capability, Provider, create_client
 )
 @pytest.mark.integration
 @pytest.mark.asyncio
-async def test_generate(
-    provider: Provider, model: str, parameters: TextGenerationParameters
-) -> None:
+async def test_generate(provider: Provider, model: str, parameters: dict) -> None:
     """Test text generation with max_tokens parameter across all providers.
 
     This test demonstrates that the unified API works identically across
     all providers using the same code - proving the abstraction value.
     """
+    # Import here to avoid circular import during pytest collection
+    from celeste_text_generation import TextGenerationOutput, TextGenerationUsage
+
     # Arrange
     client = create_client(
         capability=Capability.TEXT_GENERATION,
