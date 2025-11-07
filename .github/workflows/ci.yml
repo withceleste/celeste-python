@@ -30,7 +30,12 @@ jobs:
       - uses: ./.github/actions/setup-python-uv
         with:
           python-version: ${{ inputs.python-version || '3.12' }}
-      - run: uv run ruff format --check src/celeste tests/ packages/
+      - run: |
+          if [ -d "packages" ]; then
+            uv run ruff format --check src/celeste tests/ packages/
+          else
+            uv run ruff format --check src/celeste tests/
+          fi
 
   lint:
     runs-on: ubuntu-latest
@@ -41,7 +46,12 @@ jobs:
       - uses: ./.github/actions/setup-python-uv
         with:
           python-version: ${{ inputs.python-version || '3.12' }}
-      - run: uv run ruff check --output-format=github src/celeste tests/ packages/
+      - run: |
+          if [ -d "packages" ]; then
+            uv run ruff check --output-format=github src/celeste tests/ packages/
+          else
+            uv run ruff check --output-format=github src/celeste tests/
+          fi
 
   type-check:
     runs-on: ubuntu-latest
@@ -52,7 +62,12 @@ jobs:
       - uses: ./.github/actions/setup-python-uv
         with:
           python-version: ${{ inputs.python-version || '3.12' }}
-      - run: uv run mypy -p celeste && uv run mypy tests/ && uv run mypy packages/
+      - run: |
+          if [ -d "packages" ]; then
+            uv run mypy -p celeste && uv run mypy tests/ && uv run mypy packages/
+          else
+            uv run mypy -p celeste && uv run mypy tests/
+          fi
 
   security:
     runs-on: ubuntu-latest
@@ -63,7 +78,12 @@ jobs:
       - uses: ./.github/actions/setup-python-uv
         with:
           python-version: ${{ inputs.python-version || '3.12' }}
-      - run: uv run bandit -c pyproject.toml -r src/ packages/ -f screen
+      - run: |
+          if [ -d "packages" ]; then
+            uv run bandit -c pyproject.toml -r src/ packages/ -f screen
+          else
+            uv run bandit -c pyproject.toml -r src/ -f screen
+          fi
 
   test:
     if: ${{ !inputs.skip-tests }}
