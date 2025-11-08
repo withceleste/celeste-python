@@ -9,6 +9,11 @@ import httpx
 from pydantic import BaseModel, ConfigDict, Field, SecretStr
 
 from celeste.core import Capability, Provider
+from celeste.exceptions import (
+    ClientNotFoundError,
+    StreamingNotSupportedError,
+    UnsupportedCapabilityError,
+)
 from celeste.http import HTTPClient, get_http_client
 from celeste.io import Input, Output, Usage
 from celeste.models import Model
@@ -29,8 +34,9 @@ class Client[In: Input, Out: Output, Params: Parameters](ABC, BaseModel):
     def model_post_init(self, __context: object) -> None:
         """Validate capability compatibility."""
         if self.capability not in self.model.capabilities:
-            raise ValueError(
-                f"Model '{self.model.id}' does not support capability {self.capability.value}"
+            raise UnsupportedCapabilityError(
+                model_id=self.model.id,
+                capability=self.capability.value,
             )
 
     @property
@@ -81,8 +87,7 @@ class Client[In: Input, Out: Output, Params: Parameters](ABC, BaseModel):
             NotImplementedError: If model doesn't support streaming.
         """
         if not self.model.streaming:
-            msg = f"Streaming not supported for model '{self.model.id}'"
-            raise NotImplementedError(msg)
+            raise StreamingNotSupportedError(model_id=self.model.id)
 
         inputs = self._create_inputs(*args, **parameters)
         request_body = self._build_request(inputs, **parameters)
@@ -236,11 +241,12 @@ def get_client_class(
         The registered client class.
 
     Raises:
-        NotImplementedError: If no client is registered for this capability/provider.
+        ClientNotFoundError: If no client is registered for this capability/provider.
     """
     if (capability, provider) not in _clients:
-        raise NotImplementedError(
-            f"No client registered for {capability.value} with provider {provider.value}"
+        raise ClientNotFoundError(
+            capability=capability.value,
+            provider=provider.value,
         )
     return _clients[(capability, provider)]
 

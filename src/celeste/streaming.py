@@ -5,6 +5,7 @@ from collections.abc import AsyncIterator
 from types import TracebackType
 from typing import Any, Self, Unpack
 
+from celeste.exceptions import StreamEmptyError, StreamNotExhaustedError
 from celeste.io import Chunk, Output
 from celeste.parameters import Parameters
 
@@ -67,8 +68,7 @@ class Stream[Out: Output, Params: Parameters](ABC):
 
             # Stream exhausted - validate and parse final output
             if not self._chunks:
-                msg = "Stream completed but no chunks were produced"
-                raise RuntimeError(msg)
+                raise StreamEmptyError()
 
             self._output = self._parse_output(self._chunks, **self._parameters)
         except Exception:
@@ -96,10 +96,9 @@ class Stream[Out: Output, Params: Parameters](ABC):
 
     @property
     def output(self) -> Out:
-        """Access final Output after stream exhaustion (raises RuntimeError if not ready)."""
+        """Access final Output after stream exhaustion (raises StreamNotExhaustedError if not ready)."""
         if self._output is None:
-            msg = "Stream not exhausted. Consume all chunks before accessing .output"
-            raise RuntimeError(msg)
+            raise StreamNotExhaustedError()
         return self._output
 
     async def aclose(self) -> None:

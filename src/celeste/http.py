@@ -65,7 +65,11 @@ class HTTPClient:
 
         Raises:
             httpx.HTTPError: On network or timeout errors.
+            ValueError: If URL is empty or invalid.
         """
+        if not url or not url.strip():
+            raise ValueError("URL cannot be empty")
+        
         client = await self._get_client()
         return await client.post(
             url,
@@ -94,7 +98,11 @@ class HTTPClient:
 
         Raises:
             httpx.HTTPError: On network or timeout errors.
+            ValueError: If URL is empty or invalid.
         """
+        if not url or not url.strip():
+            raise ValueError("URL cannot be empty")
+        
         client = await self._get_client()
         return await client.get(
             url,

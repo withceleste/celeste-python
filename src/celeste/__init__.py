@@ -6,6 +6,18 @@ from pydantic import SecretStr
 from celeste.client import Client, get_client_class, register_client
 from celeste.core import Capability, Parameter, Provider
 from celeste.credentials import credentials
+from celeste.exceptions import (
+    CelesteError,
+    ClientNotFoundError,
+    ConstraintViolationError,
+    MissingCredentialsError,
+    ModelNotFoundError,
+    StreamEmptyError,
+    StreamingNotSupportedError,
+    StreamNotExhaustedError,
+    UnsupportedCapabilityError,
+    UnsupportedParameterError,
+)
 from celeste.http import HTTPClient, close_all_http_clients
 from celeste.io import Input, Output, Usage
 from celeste.models import Model, get_model, list_models, register_models
@@ -35,8 +47,7 @@ def _resolve_model(
             raise ValueError(msg)
         found = get_model(model, provider)
         if not found:
-            msg = f"Model '{model}' not found for provider {provider}"
-            raise ValueError(msg)
+            raise ModelNotFoundError(model_id=model, provider=provider.value)
         return found
 
     return model
@@ -97,14 +108,24 @@ _load_from_entry_points()
 # Exports
 __all__ = [
     "Capability",
+    "CelesteError",
     "Client",
+    "ClientNotFoundError",
+    "ConstraintViolationError",
     "HTTPClient",
     "Input",
+    "MissingCredentialsError",
     "Model",
+    "ModelNotFoundError",
     "Output",
     "Parameter",
     "Parameters",
     "Provider",
+    "StreamEmptyError",
+    "StreamingNotSupportedError",
+    "StreamNotExhaustedError",
+    "UnsupportedCapabilityError",
+    "UnsupportedParameterError",
     "Usage",
     "close_all_http_clients",
     "create_client",
