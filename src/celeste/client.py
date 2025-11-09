@@ -30,7 +30,7 @@ class Client[In: Input, Out: Output, Params: Parameters](ABC, BaseModel):
         """Validate capability compatibility."""
         if self.capability not in self.model.capabilities:
             raise ValueError(
-                f"Model '{self.model.id}' does not support capability {self.capability.value}"
+                f"Model '{self.model.id}' does not support capability {self.capability}"
             )
 
     @property
@@ -240,7 +240,7 @@ def get_client_class(
     """
     if (capability, provider) not in _clients:
         raise NotImplementedError(
-            f"No client registered for {capability.value} with provider {provider.value}"
+            f"No client registered for {capability} with provider {provider}"
         )
     return _clients[(capability, provider)]
 

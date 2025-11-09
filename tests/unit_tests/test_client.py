@@ -235,7 +235,7 @@ class TestClientValidation:
         # Arrange & Act & Assert
         with pytest.raises(
             ValidationError,
-            match=r"Model 'gpt-4' does not support capability image_generation",
+            match=rf"Model 'gpt-4' does not support capability {Capability.IMAGE_GENERATION}",
         ):
             ConcreteClient(
                 model=text_model,
@@ -287,7 +287,7 @@ class TestClientValidation:
         # Act & Assert
         with pytest.raises(
             ValidationError,
-            match=r"Model 'broken-model' does not support capability text_generation",
+            match=rf"Model 'broken-model' does not support capability {Capability.TEXT_GENERATION}",
         ):
             ConcreteClient(
                 model=empty_model,
@@ -335,7 +335,8 @@ class TestClientRegistry:
 
         # Act & Assert
         with pytest.raises(
-            NotImplementedError, match=r"No client registered for image_generation"
+            NotImplementedError,
+            match=rf"No client registered for {Capability.IMAGE_GENERATION}",
         ):
             get_client_class(unregistered_capability, provider)
 
@@ -380,13 +381,13 @@ class TestClientRegistry:
             (
                 Capability.IMAGE_GENERATION,
                 Provider.ANTHROPIC,
-                "image_generation",
+                "image-generation",
                 "anthropic",
             ),
             (
                 Capability.VIDEO_GENERATION,
                 Provider.OPENAI,
-                "video_generation",
+                "video-generation",
                 "openai",
             ),
         ],

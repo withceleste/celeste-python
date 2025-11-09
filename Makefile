@@ -41,7 +41,7 @@ test:
 
 # Integration testing (requires API keys)
 integration-test:
-	uv run pytest tests/integration_tests/ -m integration -v --dist=worksteal -n auto
+	uv run pytest packages/*/tests/integration_tests/ -m integration -v --dist=worksteal -n auto
 
 # Security scanning (config reads from pyproject.toml)
 security:

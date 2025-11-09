@@ -46,15 +46,6 @@ MODELS: list[Model] = [
         },
     ),
     Model(
-        id="claude-sonnet-3-7",
-        provider=Provider.ANTHROPIC,
-        display_name="Claude Sonnet 3.7",
-        streaming=True,
-        parameter_constraints={
-            TextGenerationParameter.OUTPUT_SCHEMA: Schema(),
-        },
-    ),
-    Model(
         id="claude-opus-4-20250514",
         provider=Provider.ANTHROPIC,
         display_name="Claude Opus 4",

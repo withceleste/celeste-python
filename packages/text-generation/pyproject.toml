@@ -1,6 +1,6 @@
 [project]
 name = "celeste-text-generation"
-version = "0.1.0"
+version = "0.1.1"
 description = "Type-safe text generation for Celeste AI. Unified interface for OpenAI, Anthropic, Google, Mistral, Cohere, and more"
 authors = [{name = "Kamilbenkirane", email = "kamil@withceleste.ai"}]
 readme = "README.md"
@@ -29,7 +29,7 @@ Issues = "https://github.com/withceleste/celeste-python/issues"
 celeste-ai = { workspace = true }
 
 [project.entry-points."celeste.packages"]
-text_generation = "celeste_text_generation:register_package"
+text-generation = "celeste_text_generation:register_package"
 
 [build-system]
 requires = ["hatchling"]

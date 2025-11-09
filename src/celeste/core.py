@@ -25,19 +25,19 @@ class Capability(StrEnum):
     """Supported AI capabilities."""
 
     # Text
-    TEXT_GENERATION = "text_generation"
+    TEXT_GENERATION = "text-generation"
     EMBEDDINGS = "embeddings"
 
     # Image
-    IMAGE_GENERATION = "image_generation"
-    IMAGE_INTELLIGENCE = "image_intelligence"
+    IMAGE_GENERATION = "image-generation"
+    IMAGE_INTELLIGENCE = "image-intelligence"
 
     # Video
-    VIDEO_INTELLIGENCE = "video_intelligence"
-    VIDEO_GENERATION = "video_generation"
+    VIDEO_INTELLIGENCE = "video-intelligence"
+    VIDEO_GENERATION = "video-generation"
 
     # Audio
-    AUDIO_INTELLIGENCE = "audio_intelligence"
+    AUDIO_INTELLIGENCE = "audio-intelligence"
 
     # Search
     SEARCH = "search"

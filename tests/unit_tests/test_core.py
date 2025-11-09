@@ -80,7 +80,7 @@ class TestCapability:
         assert issubclass(Capability, Enum)
         assert issubclass(Capability, str)
         # Can create capability from string
-        cap = Capability("text_generation")
+        cap = Capability("text-generation")
         assert cap == Capability.TEXT_GENERATION
 
     def test_capability_set_operations(self) -> None:
@@ -103,19 +103,19 @@ class TestCapability:
 
         # Act & Assert
         assert text.value != image.value
-        assert text.value == "text_generation"
-        assert image.value == "image_generation"
+        assert text.value == "text-generation"
+        assert image.value == "image-generation"
 
     def test_capability_string_conversion(self) -> None:
         """Capability converts from and to strings correctly."""
         # Arrange & Act
-        from_string = Capability("text_generation")
+        from_string = Capability("text-generation")
         from_enum = Capability.TEXT_GENERATION
 
         # Assert
         assert from_string == from_enum
-        assert from_enum.value == "text_generation"
-        assert from_enum == "text_generation"
+        assert from_enum.value == "text-generation"
+        assert from_enum == "text-generation"
 
 
 class TestEnumImmutability:
