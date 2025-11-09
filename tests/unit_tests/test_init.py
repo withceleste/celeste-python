@@ -44,7 +44,7 @@ class TestCreateClient:
 
             # Act & Assert
             with pytest.raises(
-                ValueError, match=r"No model found for.*text_generation"
+                ValueError, match=rf"No model found for.*{Capability.TEXT_GENERATION}"
             ):
                 create_client(capability=Capability.TEXT_GENERATION)
 
