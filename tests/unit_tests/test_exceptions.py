@@ -4,6 +4,7 @@ import pytest
 
 from celeste.exceptions import (
     ClientNotFoundError,
+    ConstraintViolationError,
     Error,
     MissingCredentialsError,
     ModelNotFoundError,
@@ -29,6 +30,7 @@ class TestExceptionHierarchy:
             StreamEmptyError(),
             MissingCredentialsError("openai"),
             UnsupportedParameterError("temperature", "model-1"),
+            ConstraintViolationError("Must be between 0 and 1, got 2"),
         ]
 
         for exc in exceptions:
@@ -166,6 +168,25 @@ class TestUnsupportedParameterError:
         assert (
             str(exc) == "Parameter 'max_tokens' is not supported by model 'whisper-1'"
         )
+
+
+class TestConstraintViolationError:
+    """Test ConstraintViolationError exception."""
+
+    def test_creates_with_message(self) -> None:
+        """Test exception can be created with a message."""
+        exc = ConstraintViolationError("Must be between 0 and 1, got 2")
+
+        assert "Must be between 0 and 1" in str(exc)
+        assert "got 2" in str(exc)
+
+    def test_inherits_from_validation_error(self) -> None:
+        """Test ConstraintViolationError inherits from ValidationError."""
+        from celeste.exceptions import ValidationError
+
+        exc = ConstraintViolationError("Test message")
+        assert isinstance(exc, ValidationError)
+        assert isinstance(exc, Error)
 
 
 class TestExceptionUsability:

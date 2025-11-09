@@ -135,20 +135,14 @@ class UnsupportedParameterError(ValidationError):
 
 
 __all__ = [
-    "CapabilityError",
-    "ClientError",
     "ClientNotFoundError",
     "ConstraintViolationError",
-    "CredentialsError",
     "Error",
     "MissingCredentialsError",
-    "ModelError",
     "ModelNotFoundError",
     "StreamEmptyError",
     "StreamNotExhaustedError",
-    "StreamingError",
     "StreamingNotSupportedError",
     "UnsupportedCapabilityError",
     "UnsupportedParameterError",
-    "ValidationError",
 ]
