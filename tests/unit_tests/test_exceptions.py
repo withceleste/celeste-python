@@ -3,8 +3,8 @@
 import pytest
 
 from celeste.exceptions import (
-    CelesteError,
     ClientNotFoundError,
+    Error,
     MissingCredentialsError,
     ModelNotFoundError,
     StreamEmptyError,
@@ -18,8 +18,8 @@ from celeste.exceptions import (
 class TestExceptionHierarchy:
     """Test exception hierarchy and inheritance."""
 
-    def test_all_exceptions_inherit_from_celeste_error(self) -> None:
-        """Test that all custom exceptions inherit from CelesteError."""
+    def test_all_exceptions_inherit_from_error(self) -> None:
+        """Test that all custom exceptions inherit from Error."""
         exceptions = [
             ModelNotFoundError("model-1", "openai"),
             UnsupportedCapabilityError("model-1", "text-generation"),
@@ -32,7 +32,7 @@ class TestExceptionHierarchy:
         ]
 
         for exc in exceptions:
-            assert isinstance(exc, CelesteError)
+            assert isinstance(exc, Error)
             assert isinstance(exc, Exception)
 
 
@@ -179,8 +179,8 @@ class TestExceptionUsability:
         assert exc_info.value.model_id == "test-model"
 
     def test_can_catch_base_exception(self) -> None:
-        """Test all custom exceptions can be caught as CelesteError."""
-        with pytest.raises(CelesteError):
+        """Test all custom exceptions can be caught as Error."""
+        with pytest.raises(Error):
             raise StreamEmptyError()
 
     def test_can_access_exception_attributes(self) -> None:

@@ -7,9 +7,9 @@ from celeste.client import Client, get_client_class, register_client
 from celeste.core import Capability, Parameter, Provider
 from celeste.credentials import credentials
 from celeste.exceptions import (
-    CelesteError,
     ClientNotFoundError,
     ConstraintViolationError,
+    Error,
     MissingCredentialsError,
     ModelNotFoundError,
     StreamEmptyError,
@@ -108,10 +108,10 @@ _load_from_entry_points()
 # Exports
 __all__ = [
     "Capability",
-    "CelesteError",
     "Client",
     "ClientNotFoundError",
     "ConstraintViolationError",
+    "Error",
     "HTTPClient",
     "Input",
     "MissingCredentialsError",
@@ -122,8 +122,8 @@ __all__ = [
     "Parameters",
     "Provider",
     "StreamEmptyError",
-    "StreamingNotSupportedError",
     "StreamNotExhaustedError",
+    "StreamingNotSupportedError",
     "UnsupportedCapabilityError",
     "UnsupportedParameterError",
     "Usage",

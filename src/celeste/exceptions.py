@@ -1,13 +1,13 @@
 """Custom exceptions for Celeste."""
 
 
-class CelesteError(Exception):
+class Error(Exception):
     """Base exception for all Celeste errors."""
 
     pass
 
 
-class ModelError(CelesteError):
+class ModelError(Error):
     """Errors related to model operations and registry."""
 
     pass
@@ -23,7 +23,7 @@ class ModelNotFoundError(ModelError):
         super().__init__(f"Model '{model_id}' not found for provider {provider}")
 
 
-class CapabilityError(CelesteError):
+class CapabilityError(Error):
     """Errors related to capability compatibility."""
 
     pass
@@ -41,7 +41,7 @@ class UnsupportedCapabilityError(CapabilityError):
         )
 
 
-class ClientError(CelesteError):
+class ClientError(Error):
     """Errors related to client operations."""
 
     pass
@@ -59,7 +59,7 @@ class ClientNotFoundError(ClientError):
         )
 
 
-class StreamingError(CelesteError):
+class StreamingError(Error):
     """Errors related to streaming operations."""
 
     pass
@@ -79,7 +79,9 @@ class StreamNotExhaustedError(StreamingError):
 
     def __init__(self) -> None:
         """Initialize with helpful message."""
-        super().__init__("Stream not exhausted. Consume all chunks before accessing .output")
+        super().__init__(
+            "Stream not exhausted. Consume all chunks before accessing .output"
+        )
 
 
 class StreamEmptyError(StreamingError):
@@ -90,7 +92,7 @@ class StreamEmptyError(StreamingError):
         super().__init__("Stream completed but no chunks were produced")
 
 
-class CredentialsError(CelesteError):
+class CredentialsError(Error):
     """Errors related to API credentials."""
 
     pass
@@ -108,7 +110,7 @@ class MissingCredentialsError(CredentialsError):
         )
 
 
-class ValidationError(CelesteError):
+class ValidationError(Error):
     """Errors related to parameter and constraint validation."""
 
     pass
@@ -133,20 +135,20 @@ class UnsupportedParameterError(ValidationError):
 
 
 __all__ = [
-    "CelesteError",
-    "ModelError",
-    "ModelNotFoundError",
     "CapabilityError",
-    "UnsupportedCapabilityError",
     "ClientError",
     "ClientNotFoundError",
+    "ConstraintViolationError",
+    "CredentialsError",
+    "Error",
+    "MissingCredentialsError",
+    "ModelError",
+    "ModelNotFoundError",
+    "StreamEmptyError",
+    "StreamNotExhaustedError",
     "StreamingError",
     "StreamingNotSupportedError",
-    "StreamNotExhaustedError",
-    "StreamEmptyError",
-    "CredentialsError",
-    "MissingCredentialsError",
-    "ValidationError",
-    "ConstraintViolationError",
+    "UnsupportedCapabilityError",
     "UnsupportedParameterError",
+    "ValidationError",
 ]
