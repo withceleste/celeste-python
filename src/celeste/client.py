@@ -36,7 +36,7 @@ class Client[In: Input, Out: Output, Params: Parameters](ABC, BaseModel):
         if self.capability not in self.model.capabilities:
             raise UnsupportedCapabilityError(
                 model_id=self.model.id,
-                capability=self.capability.value,
+                capability=self.capability,
             )
 
     @property
@@ -165,7 +165,7 @@ class Client[In: Input, Out: Output, Params: Parameters](ABC, BaseModel):
         """Build metadata dictionary from response data."""
         return {
             "model": self.model.id,
-            "provider": self.provider.value,
+            "provider": self.provider,
         }
 
     def _handle_error_response(self, response: httpx.Response) -> None:
@@ -178,7 +178,7 @@ class Client[In: Input, Out: Output, Params: Parameters](ABC, BaseModel):
                 error_msg = response.text or f"HTTP {response.status_code}"
 
             raise httpx.HTTPStatusError(
-                f"{self.provider.value} API error: {error_msg}",
+                f"{self.provider} API error: {error_msg}",
                 request=response.request,
                 response=response,
             )
@@ -245,8 +245,8 @@ def get_client_class(
     """
     if (capability, provider) not in _clients:
         raise ClientNotFoundError(
-            capability=capability.value,
-            provider=provider.value,
+            capability=capability,
+            provider=provider,
         )
     return _clients[(capability, provider)]
 

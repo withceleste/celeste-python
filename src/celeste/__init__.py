@@ -37,8 +37,8 @@ def _resolve_model(
         models = list_models(provider=provider, capability=capability)
         if not models:
             raise ModelNotFoundError(
-                capability=capability.value,
-                provider=provider.value if provider else None,
+                capability=capability,
+                provider=provider if provider else None,
             )
         return models[0]
 
@@ -49,7 +49,7 @@ def _resolve_model(
             raise ValueError(msg)
         found = get_model(model, provider)
         if not found:
-            raise ModelNotFoundError(model_id=model, provider=provider.value)
+            raise ModelNotFoundError(model_id=model, provider=provider)
         return found
 
     return model

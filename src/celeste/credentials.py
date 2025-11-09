@@ -68,7 +68,7 @@ class Credentials(BaseSettings):
             return override_key
 
         if not self.has_credential(provider):
-            raise MissingCredentialsError(provider=provider.value)
+            raise MissingCredentialsError(provider=provider)
 
         credential: SecretStr = getattr(self, PROVIDER_CREDENTIAL_MAP[provider])
         return credential

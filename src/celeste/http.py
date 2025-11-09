@@ -69,7 +69,7 @@ class HTTPClient:
         """
         if not url or not url.strip():
             raise ValueError("URL cannot be empty")
-        
+
         client = await self._get_client()
         return await client.post(
             url,
@@ -102,7 +102,7 @@ class HTTPClient:
         """
         if not url or not url.strip():
             raise ValueError("URL cannot be empty")
-        
+
         client = await self._get_client()
         return await client.get(
             url,

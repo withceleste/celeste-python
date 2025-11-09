@@ -38,7 +38,7 @@ class ParameterMapper(ABC):
 
     def _validate_value(self, value: Any, model: Model) -> Any:  # noqa: ANN401
         """Validate parameter value using model constraint.
-        
+
         Raises:
             UnsupportedParameterError: If parameter is not supported by the model.
         """
@@ -48,7 +48,7 @@ class ParameterMapper(ABC):
         constraint = model.parameter_constraints.get(self.name)
         if constraint is None:
             raise UnsupportedParameterError(
-                parameter=self.name.value,
+                parameter=self.name,
                 model_id=model.id,
             )
 
