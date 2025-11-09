@@ -10,6 +10,7 @@ from pydantic import SecretStr, ValidationError
 
 from celeste.client import Client, _clients, get_client_class, register_client
 from celeste.core import Capability, Provider
+from celeste.exceptions import ClientNotFoundError
 from celeste.io import Input, Output, Usage
 from celeste.models import Model
 from celeste.parameters import ParameterMapper, Parameters
@@ -330,8 +331,6 @@ class TestClientRegistry:
     def test_get_client_class_raises_for_unregistered_capability(self) -> None:
         """get_client_class raises ClientNotFoundError for unregistered capabilities."""
         # Arrange
-        from celeste.exceptions import ClientNotFoundError
-
         unregistered_capability = Capability.IMAGE_GENERATION
         provider = Provider.OPENAI
 
