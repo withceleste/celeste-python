@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock
 import pytest
 from pydantic import Field
 
+from celeste.exceptions import StreamEmptyError, StreamNotExhaustedError
 from celeste.io import Chunk, FinishReason, Output, Usage
 from celeste.parameters import Parameters
 from celeste.streaming import Stream
@@ -155,14 +156,14 @@ class TestStreamOutputProperty:
     """Test Stream.output property - access guard and final result."""
 
     async def test_output_access_before_exhaustion_raises_error(self) -> None:
-        """Accessing .output before stream exhaustion must raise RuntimeError."""
+        """Accessing .output before stream exhaustion must raise StreamNotExhaustedError."""
         # Arrange
         events = [{"delta": "test"}]
         stream = ConcreteStream(_async_iter(events))
 
-        # Act & Assert - Premature access raises RuntimeError
+        # Act & Assert - Premature access raises StreamNotExhaustedError
         with pytest.raises(
-            RuntimeError, match=r"Stream not exhausted\. Consume all chunks"
+            StreamNotExhaustedError, match=r"Stream not exhausted\. Consume all chunks"
         ):
             _ = stream.output
 
@@ -478,7 +479,7 @@ class TestStreamEmptyStreamError:
     """Test Stream empty stream error handling."""
 
     async def test_empty_stream_raises_runtime_error(self) -> None:
-        """Stream must raise RuntimeError when exhausted with no chunks."""
+        """Stream must raise StreamEmptyError when exhausted with no chunks."""
 
         # Arrange - Create stream where all events return None from _parse_chunk
         async def empty_iter() -> AsyncIterator[dict[str, Any]]:
@@ -487,15 +488,15 @@ class TestStreamEmptyStreamError:
 
         stream = ConcreteStream(empty_iter())
 
-        # Act & Assert - Exhaustion raises RuntimeError
+        # Act & Assert - Exhaustion raises StreamEmptyError
         with pytest.raises(
-            RuntimeError, match=r"Stream completed but no chunks were produced"
+            StreamEmptyError, match=r"Stream completed but no chunks were produced"
         ):
             async for _ in stream:
                 pass
 
     async def test_stream_with_only_lifecycle_events_raises_error(self) -> None:
-        """Stream raises RuntimeError when SSE yields events but all chunks are filtered to None."""
+        """Stream raises StreamEmptyError when SSE yields events but all chunks are filtered to None."""
         # Arrange - Events that all return None from _parse_chunk
         events = [
             {"type": "ping"},  # Lifecycle event (no delta/content)
@@ -505,9 +506,9 @@ class TestStreamEmptyStreamError:
         ]
         stream = ConcreteStream(_async_iter(events))
 
-        # Act & Assert - Should raise RuntimeError when exhausted
+        # Act & Assert - Should raise StreamEmptyError when exhausted
         with pytest.raises(
-            RuntimeError, match=r"Stream completed but no chunks were produced"
+            StreamEmptyError, match=r"Stream completed but no chunks were produced"
         ):
             async for _ in stream:
                 pass

@@ -36,8 +36,10 @@ def _resolve_model(
         # Auto-select first available model
         models = list_models(provider=provider, capability=capability)
         if not models:
-            msg = f"No model found for {capability}"
-            raise ValueError(msg)
+            raise ModelNotFoundError(
+                capability=capability.value,
+                provider=provider.value if provider else None,
+            )
         return models[0]
 
     if isinstance(model, str):
@@ -71,8 +73,10 @@ def create_client(
         Configured client instance ready for generation operations.
 
     Raises:
-        ValueError: If no model found or resolution fails.
-        NotImplementedError: If no client registered for capability/provider.
+        ModelNotFoundError: If no model found for the specified capability/provider.
+        ClientNotFoundError: If no client registered for capability/provider.
+        MissingCredentialsError: If required credentials are not configured.
+        UnsupportedCapabilityError: If the resolved model doesn't support the requested capability.
     """
     # Resolve model
     resolved_model = _resolve_model(capability, provider, model)

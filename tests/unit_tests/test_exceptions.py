@@ -43,18 +43,48 @@ class TestModelNotFoundError:
 
     def test_creates_with_model_and_provider(self) -> None:
         """Test exception stores model and provider attributes."""
+        exc = ModelNotFoundError(model_id="gpt-4", provider="openai")
+
+        assert exc.model_id == "gpt-4"
+        assert exc.provider == "openai"
+        assert exc.capability is None
+        assert "gpt-4" in str(exc)
+        assert "openai" in str(exc)
+
+    def test_message_is_descriptive_with_model_and_provider(self) -> None:
+        """Test exception message is clear and actionable for specific model."""
+        exc = ModelNotFoundError(model_id="claude-3", provider="anthropic")
+
+        assert str(exc) == "Model 'claude-3' not found for provider anthropic"
+
+    def test_creates_with_capability_only(self) -> None:
+        """Test exception with capability only (no models available for capability)."""
+        exc = ModelNotFoundError(capability="text-generation")
+
+        assert exc.model_id is None
+        assert exc.provider is None
+        assert exc.capability == "text-generation"
+        assert "No model found for capability 'text-generation'" in str(exc)
+
+    def test_creates_with_capability_and_provider(self) -> None:
+        """Test exception with capability and provider (no models for capability/provider combo)."""
+        exc = ModelNotFoundError(capability="text-generation", provider="openai")
+
+        assert exc.model_id is None
+        assert exc.provider == "openai"
+        assert exc.capability == "text-generation"
+        assert (
+            "No model found for capability 'text-generation' with provider openai"
+            in str(exc)
+        )
+
+    def test_backwards_compatibility_positional_args(self) -> None:
+        """Test that positional arguments still work for backwards compatibility."""
         exc = ModelNotFoundError("gpt-4", "openai")
 
         assert exc.model_id == "gpt-4"
         assert exc.provider == "openai"
         assert "gpt-4" in str(exc)
-        assert "openai" in str(exc)
-
-    def test_message_is_descriptive(self) -> None:
-        """Test exception message is clear and actionable."""
-        exc = ModelNotFoundError("claude-3", "anthropic")
-
-        assert str(exc) == "Model 'claude-3' not found for provider anthropic"
 
 
 class TestUnsupportedCapabilityError:

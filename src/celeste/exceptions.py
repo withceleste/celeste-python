@@ -16,11 +16,36 @@ class ModelError(Error):
 class ModelNotFoundError(ModelError):
     """Raised when a requested model cannot be found."""
 
-    def __init__(self, model_id: str, provider: str) -> None:
-        """Initialize with model details."""
+    def __init__(
+        self,
+        model_id: str | None = None,
+        provider: str | None = None,
+        capability: str | None = None,
+    ) -> None:
+        """Initialize with model details.
+
+        Args:
+            model_id: Optional specific model ID that was not found.
+            provider: Optional provider name.
+            capability: Optional capability name (used when no specific model_id).
+        """
         self.model_id = model_id
         self.provider = provider
-        super().__init__(f"Model '{model_id}' not found for provider {provider}")
+        self.capability = capability
+
+        # Generate appropriate error message based on available parameters
+        if model_id and provider:
+            msg = f"Model '{model_id}' not found for provider {provider}"
+        elif capability and provider:
+            msg = (
+                f"No model found for capability '{capability}' with provider {provider}"
+            )
+        elif capability:
+            msg = f"No model found for capability '{capability}'"
+        else:
+            msg = "Model not found"
+
+        super().__init__(msg)
 
 
 class CapabilityError(Error):

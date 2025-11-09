@@ -84,7 +84,7 @@ class Client[In: Input, Out: Output, Params: Parameters](ABC, BaseModel):
             Stream yielding chunks and providing final Output.
 
         Raises:
-            NotImplementedError: If model doesn't support streaming.
+            StreamingNotSupportedError: If model doesn't support streaming.
         """
         if not self.model.streaming:
             raise StreamingNotSupportedError(model_id=self.model.id)
