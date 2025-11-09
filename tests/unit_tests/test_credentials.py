@@ -137,7 +137,9 @@ class TestGetCredentials:
         creds = Credentials()  # type: ignore[call-arg]
 
         # Act & Assert
-        with pytest.raises(ValueError, match="no credentials configured"):
+        from celeste.exceptions import MissingCredentialsError
+
+        with pytest.raises(MissingCredentialsError, match="no credentials configured"):
             creds.get_credentials(Provider.OPENAI)
 
     @pytest.mark.parametrize(

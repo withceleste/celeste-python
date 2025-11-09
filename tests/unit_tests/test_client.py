@@ -328,14 +328,16 @@ class TestClientRegistry:
         assert retrieved_class is ConcreteClient
 
     def test_get_client_class_raises_for_unregistered_capability(self) -> None:
-        """get_client_class raises NotImplementedError for unregistered capabilities."""
+        """get_client_class raises ClientNotFoundError for unregistered capabilities."""
         # Arrange
+        from celeste.exceptions import ClientNotFoundError
+
         unregistered_capability = Capability.IMAGE_GENERATION
         provider = Provider.OPENAI
 
         # Act & Assert
         with pytest.raises(
-            NotImplementedError,
+            ClientNotFoundError,
             match=rf"No client registered for {Capability.IMAGE_GENERATION}",
         ):
             get_client_class(unregistered_capability, provider)

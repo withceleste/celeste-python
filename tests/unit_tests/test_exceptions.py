@@ -5,7 +5,6 @@ import pytest
 from celeste.exceptions import (
     CelesteError,
     ClientNotFoundError,
-    ConstraintViolationError,
     MissingCredentialsError,
     ModelNotFoundError,
     StreamEmptyError,
@@ -23,8 +22,8 @@ class TestExceptionHierarchy:
         """Test that all custom exceptions inherit from CelesteError."""
         exceptions = [
             ModelNotFoundError("model-1", "openai"),
-            UnsupportedCapabilityError("model-1", "text_generation"),
-            ClientNotFoundError("text_generation", "openai"),
+            UnsupportedCapabilityError("model-1", "text-generation"),
+            ClientNotFoundError("text-generation", "openai"),
             StreamingNotSupportedError("model-1"),
             StreamNotExhaustedError(),
             StreamEmptyError(),
@@ -61,20 +60,20 @@ class TestUnsupportedCapabilityError:
 
     def test_creates_with_model_and_capability(self) -> None:
         """Test exception stores model and capability attributes."""
-        exc = UnsupportedCapabilityError("gpt-4", "image_generation")
+        exc = UnsupportedCapabilityError("gpt-4", "image-generation")
 
         assert exc.model_id == "gpt-4"
-        assert exc.capability == "image_generation"
+        assert exc.capability == "image-generation"
         assert "gpt-4" in str(exc)
-        assert "image_generation" in str(exc)
+        assert "image-generation" in str(exc)
 
     def test_message_is_descriptive(self) -> None:
         """Test exception message is clear and actionable."""
-        exc = UnsupportedCapabilityError("gpt-3.5-turbo", "video_generation")
+        exc = UnsupportedCapabilityError("gpt-3.5-turbo", "video-generation")
 
         assert (
             str(exc)
-            == "Model 'gpt-3.5-turbo' does not support capability 'video_generation'"
+            == "Model 'gpt-3.5-turbo' does not support capability 'video-generation'"
         )
 
 
@@ -83,11 +82,11 @@ class TestClientNotFoundError:
 
     def test_creates_with_capability_and_provider(self) -> None:
         """Test exception stores capability and provider attributes."""
-        exc = ClientNotFoundError("text_generation", "unknown_provider")
+        exc = ClientNotFoundError("text-generation", "unknown_provider")
 
-        assert exc.capability == "text_generation"
+        assert exc.capability == "text-generation"
         assert exc.provider == "unknown_provider"
-        assert "text_generation" in str(exc)
+        assert "text-generation" in str(exc)
         assert "unknown_provider" in str(exc)
 
 

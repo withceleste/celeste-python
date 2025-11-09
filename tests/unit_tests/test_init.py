@@ -6,6 +6,7 @@ import pytest
 from pydantic import SecretStr
 
 from celeste import Capability, Model, Provider, create_client
+from celeste.exceptions import ModelNotFoundError
 
 
 @pytest.fixture
@@ -55,7 +56,7 @@ class TestCreateClient:
             mock_get_model.return_value = None
 
             # Act & Assert
-            with pytest.raises(ValueError, match=r"Model.*not found"):
+            with pytest.raises(ModelNotFoundError, match=r"Model.*not found"):
                 create_client(
                     capability=Capability.TEXT_GENERATION,
                     provider=Provider.OPENAI,
