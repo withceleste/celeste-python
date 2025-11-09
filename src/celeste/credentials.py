@@ -5,6 +5,7 @@ from pydantic import Field, SecretStr
 from pydantic_settings import BaseSettings
 
 from celeste.core import Provider
+from celeste.exceptions import MissingCredentialsError
 
 # Provider to credential field mapping
 PROVIDER_CREDENTIAL_MAP = {
@@ -61,15 +62,13 @@ class Credentials(BaseSettings):
             SecretStr containing the API key for the provider.
 
         Raises:
-            ValueError: If provider requires credentials but none are configured,
-                       or if provider is not supported (no credential mapping).
+            MissingCredentialsError: If provider requires credentials but none are configured.
         """
         if override_key:
             return override_key
 
         if not self.has_credential(provider):
-            msg = f"Provider {provider} has no credentials configured."
-            raise ValueError(msg)
+            raise MissingCredentialsError(provider=provider)
 
         credential: SecretStr = getattr(self, PROVIDER_CREDENTIAL_MAP[provider])
         return credential

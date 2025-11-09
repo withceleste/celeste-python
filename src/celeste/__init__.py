@@ -6,6 +6,18 @@ from pydantic import SecretStr
 from celeste.client import Client, get_client_class, register_client
 from celeste.core import Capability, Parameter, Provider
 from celeste.credentials import credentials
+from celeste.exceptions import (
+    ClientNotFoundError,
+    ConstraintViolationError,
+    Error,
+    MissingCredentialsError,
+    ModelNotFoundError,
+    StreamEmptyError,
+    StreamingNotSupportedError,
+    StreamNotExhaustedError,
+    UnsupportedCapabilityError,
+    UnsupportedParameterError,
+)
 from celeste.http import HTTPClient, close_all_http_clients
 from celeste.io import Input, Output, Usage
 from celeste.models import Model, get_model, list_models, register_models
@@ -24,8 +36,10 @@ def _resolve_model(
         # Auto-select first available model
         models = list_models(provider=provider, capability=capability)
         if not models:
-            msg = f"No model found for {capability}"
-            raise ValueError(msg)
+            raise ModelNotFoundError(
+                capability=capability,
+                provider=provider if provider else None,
+            )
         return models[0]
 
     if isinstance(model, str):
@@ -35,8 +49,7 @@ def _resolve_model(
             raise ValueError(msg)
         found = get_model(model, provider)
         if not found:
-            msg = f"Model '{model}' not found for provider {provider}"
-            raise ValueError(msg)
+            raise ModelNotFoundError(model_id=model, provider=provider)
         return found
 
     return model
@@ -60,8 +73,10 @@ def create_client(
         Configured client instance ready for generation operations.
 
     Raises:
-        ValueError: If no model found or resolution fails.
-        NotImplementedError: If no client registered for capability/provider.
+        ModelNotFoundError: If no model found for the specified capability/provider.
+        ClientNotFoundError: If no client registered for capability/provider.
+        MissingCredentialsError: If required credentials are not configured.
+        UnsupportedCapabilityError: If the resolved model doesn't support the requested capability.
     """
     # Resolve model
     resolved_model = _resolve_model(capability, provider, model)
@@ -98,13 +113,23 @@ _load_from_entry_points()
 __all__ = [
     "Capability",
     "Client",
+    "ClientNotFoundError",
+    "ConstraintViolationError",
+    "Error",
     "HTTPClient",
     "Input",
+    "MissingCredentialsError",
     "Model",
+    "ModelNotFoundError",
     "Output",
     "Parameter",
     "Parameters",
     "Provider",
+    "StreamEmptyError",
+    "StreamNotExhaustedError",
+    "StreamingNotSupportedError",
+    "UnsupportedCapabilityError",
+    "UnsupportedParameterError",
     "Usage",
     "close_all_http_clients",
     "create_client",

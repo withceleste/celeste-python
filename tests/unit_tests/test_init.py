@@ -6,6 +6,7 @@ import pytest
 from pydantic import SecretStr
 
 from celeste import Capability, Model, Provider, create_client
+from celeste.exceptions import ModelNotFoundError
 
 
 @pytest.fixture
@@ -37,14 +38,15 @@ class TestCreateClient:
     """Test the create_client factory function."""
 
     def test_create_client_no_models_available_raises_error(self) -> None:
-        """Test that create_client raises ValueError when no models are available."""
+        """Test that create_client raises ModelNotFoundError when no models are available."""
         with patch("celeste.list_models", autospec=True) as mock_list_models:
             # Arrange
             mock_list_models.return_value = []
 
             # Act & Assert
             with pytest.raises(
-                ValueError, match=rf"No model found for.*{Capability.TEXT_GENERATION}"
+                ModelNotFoundError,
+                match=rf"No model found for capability.*{Capability.TEXT_GENERATION}",
             ):
                 create_client(capability=Capability.TEXT_GENERATION)
 
@@ -55,7 +57,7 @@ class TestCreateClient:
             mock_get_model.return_value = None
 
             # Act & Assert
-            with pytest.raises(ValueError, match=r"Model.*not found"):
+            with pytest.raises(ModelNotFoundError, match=r"Model.*not found"):
                 create_client(
                     capability=Capability.TEXT_GENERATION,
                     provider=Provider.OPENAI,

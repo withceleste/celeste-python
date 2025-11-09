@@ -3,6 +3,7 @@
 import pytest
 
 from celeste.constraints import Bool, Choice, Float, Int, Pattern, Range, Str
+from celeste.exceptions import ConstraintViolationError
 
 
 class TestChoice:
@@ -18,11 +19,11 @@ class TestChoice:
         assert result == "b"
 
     def test_rejects_value_not_in_options(self) -> None:
-        """Test that invalid choice raises ValueError."""
+        """Test that invalid choice raises ConstraintViolationError."""
         constraint = Choice[str](options=["a", "b", "c"])
 
         with pytest.raises(
-            ValueError, match=r"Must be one of \['a', 'b', 'c'\], got 'd'"
+            ConstraintViolationError, match=r"Must be one of \['a', 'b', 'c'\], got 'd'"
         ):
             constraint("d")
 
@@ -60,24 +61,28 @@ class TestRange:
         assert constraint(10) == 10
 
     def test_rejects_value_below_min(self) -> None:
-        """Test that value below min raises ValueError."""
+        """Test that value below min raises ConstraintViolationError."""
         constraint = Range(min=0, max=10)
 
-        with pytest.raises(ValueError, match=r"Must be between 0 and 10, got -1"):
+        with pytest.raises(
+            ConstraintViolationError, match=r"Must be between 0 and 10, got -1"
+        ):
             constraint(-1)
 
     def test_rejects_value_above_max(self) -> None:
-        """Test that value above max raises ValueError."""
+        """Test that value above max raises ConstraintViolationError."""
         constraint = Range(min=0, max=10)
 
-        with pytest.raises(ValueError, match=r"Must be between 0 and 10, got 11"):
+        with pytest.raises(
+            ConstraintViolationError, match=r"Must be between 0 and 10, got 11"
+        ):
             constraint(11)
 
     def test_rejects_non_numeric_value(self) -> None:
-        """Test that non-numeric value raises TypeError."""
+        """Test that non-numeric value raises ConstraintViolationError."""
         constraint = Range(min=0, max=10)
 
-        with pytest.raises(TypeError, match=r"Must be numeric, got str"):
+        with pytest.raises(ConstraintViolationError, match=r"Must be numeric, got str"):
             constraint("5")  # type: ignore[arg-type]
 
     def test_accepts_both_int_and_float(self) -> None:
@@ -97,11 +102,11 @@ class TestRange:
         assert constraint(10) == 10  # max
 
     def test_rejects_value_not_on_step(self) -> None:
-        """Test that value not on step increment raises ValueError."""
+        """Test that value not on step increment raises ConstraintViolationError."""
         constraint = Range(min=0, max=10, step=2)
 
         with pytest.raises(
-            ValueError,
+            ConstraintViolationError,
             match=r"Value must match step 2(\.0)?. Nearest valid: 2(\.0)? or 4(\.0)?, got 3",
         ):
             constraint(3)
@@ -126,7 +131,7 @@ class TestRange:
         assert constraint(14) == 14  # min + 9
 
         with pytest.raises(
-            ValueError,
+            ConstraintViolationError,
             match=r"Value must match step 3(\.0)?. Nearest valid: 5(\.0)? or 8(\.0)?, got 7",
         ):
             constraint(7)
@@ -169,17 +174,17 @@ class TestPattern:
         assert result == "123-4567"
 
     def test_rejects_non_matching_pattern(self) -> None:
-        """Test that non-matching pattern raises ValueError."""
+        """Test that non-matching pattern raises ConstraintViolationError."""
         constraint = Pattern(pattern=r"^\d{3}-\d{4}$")
 
-        with pytest.raises(ValueError, match=r"Must match pattern"):
+        with pytest.raises(ConstraintViolationError, match=r"Must match pattern"):
             constraint("abc-defg")
 
     def test_rejects_non_string_value(self) -> None:
-        """Test that non-string value raises TypeError."""
+        """Test that non-string value raises ConstraintViolationError."""
         constraint = Pattern(pattern=r"^\d+$")
 
-        with pytest.raises(TypeError, match=r"Must be string, got int"):
+        with pytest.raises(ConstraintViolationError, match=r"Must be string, got int"):
             constraint(123)  # type: ignore[arg-type]
 
     def test_validates_complex_regex_patterns(self) -> None:
@@ -213,24 +218,28 @@ class TestStr:
         assert result == "valid"
 
     def test_rejects_string_below_min_length(self) -> None:
-        """Test string shorter than min_length raises ValueError."""
+        """Test string shorter than min_length raises ConstraintViolationError."""
         constraint = Str(min_length=5)
 
-        with pytest.raises(ValueError, match=r"String too short \(min 5\), got 3"):
+        with pytest.raises(
+            ConstraintViolationError, match=r"String too short \(min 5\), got 3"
+        ):
             constraint("abc")
 
     def test_rejects_string_above_max_length(self) -> None:
-        """Test string longer than max_length raises ValueError."""
+        """Test string longer than max_length raises ConstraintViolationError."""
         constraint = Str(max_length=5)
 
-        with pytest.raises(ValueError, match=r"String too long \(max 5\), got 10"):
+        with pytest.raises(
+            ConstraintViolationError, match=r"String too long \(max 5\), got 10"
+        ):
             constraint("too long!!")
 
     def test_rejects_non_string_value(self) -> None:
-        """Test non-string value raises TypeError."""
+        """Test non-string value raises ConstraintViolationError."""
         constraint = Str()
 
-        with pytest.raises(TypeError, match=r"Must be string, got int"):
+        with pytest.raises(ConstraintViolationError, match=r"Must be string, got int"):
             constraint(123)  # type: ignore[arg-type]
 
     def test_validates_boundary_lengths(self) -> None:
@@ -254,24 +263,24 @@ class TestInt:
         assert result == 42
 
     def test_rejects_float_value(self) -> None:
-        """Test that float raises TypeError."""
+        """Test that float raises ConstraintViolationError."""
         constraint = Int()
 
-        with pytest.raises(TypeError, match=r"Must be int, got float"):
+        with pytest.raises(ConstraintViolationError, match=r"Must be int, got float"):
             constraint(42.0)  # type: ignore[arg-type]
 
     def test_rejects_boolean_value(self) -> None:
-        """Test that bool raises TypeError despite isinstance(True, int)."""
+        """Test that bool raises ConstraintViolationError despite isinstance(True, int)."""
         constraint = Int()
 
-        with pytest.raises(TypeError, match=r"Must be int, got bool"):
+        with pytest.raises(ConstraintViolationError, match=r"Must be int, got bool"):
             constraint(True)
 
     def test_rejects_string_value(self) -> None:
-        """Test that string raises TypeError."""
+        """Test that string raises ConstraintViolationError."""
         constraint = Int()
 
-        with pytest.raises(TypeError, match=r"Must be int, got str"):
+        with pytest.raises(ConstraintViolationError, match=r"Must be int, got str"):
             constraint("42")  # type: ignore[arg-type]
 
 
@@ -297,17 +306,21 @@ class TestFloat:
         assert isinstance(result, float)
 
     def test_rejects_boolean_value(self) -> None:
-        """Test that bool raises TypeError despite isinstance(True, int)."""
+        """Test that bool raises ConstraintViolationError despite isinstance(True, int)."""
         constraint = Float()
 
-        with pytest.raises(TypeError, match=r"Must be float or int, got bool"):
+        with pytest.raises(
+            ConstraintViolationError, match=r"Must be float or int, got bool"
+        ):
             constraint(True)
 
     def test_rejects_string_value(self) -> None:
-        """Test that string raises TypeError."""
+        """Test that string raises ConstraintViolationError."""
         constraint = Float()
 
-        with pytest.raises(TypeError, match=r"Must be float or int, got str"):
+        with pytest.raises(
+            ConstraintViolationError, match=r"Must be float or int, got str"
+        ):
             constraint("3.14")  # type: ignore[arg-type]
 
 
@@ -323,15 +336,15 @@ class TestBool:
         assert constraint(False) is False
 
     def test_rejects_int_value(self) -> None:
-        """Test that int raises TypeError (no implicit 0/1 conversion)."""
+        """Test that int raises ConstraintViolationError (no implicit 0/1 conversion)."""
         constraint = Bool()
 
-        with pytest.raises(TypeError, match=r"Must be bool, got int"):
+        with pytest.raises(ConstraintViolationError, match=r"Must be bool, got int"):
             constraint(1)  # type: ignore[arg-type]
 
     def test_rejects_string_value(self) -> None:
-        """Test that string raises TypeError."""
+        """Test that string raises ConstraintViolationError."""
         constraint = Bool()
 
-        with pytest.raises(TypeError, match=r"Must be bool, got str"):
+        with pytest.raises(ConstraintViolationError, match=r"Must be bool, got str"):
             constraint("true")  # type: ignore[arg-type]

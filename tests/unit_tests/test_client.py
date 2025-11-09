@@ -6,10 +6,15 @@ from typing import Any, Unpack
 
 import httpx
 import pytest
-from pydantic import SecretStr, ValidationError
+from pydantic import SecretStr
 
 from celeste.client import Client, _clients, get_client_class, register_client
 from celeste.core import Capability, Provider
+from celeste.exceptions import (
+    ClientNotFoundError,
+    StreamingNotSupportedError,
+    UnsupportedCapabilityError,
+)
 from celeste.io import Input, Output, Usage
 from celeste.models import Model
 from celeste.parameters import ParameterMapper, Parameters
@@ -234,8 +239,8 @@ class TestClientValidation:
         """Client rejects model that lacks required capability."""
         # Arrange & Act & Assert
         with pytest.raises(
-            ValidationError,
-            match=rf"Model 'gpt-4' does not support capability {Capability.IMAGE_GENERATION}",
+            UnsupportedCapabilityError,
+            match=rf"Model 'gpt-4' does not support capability '{Capability.IMAGE_GENERATION}'",
         ):
             ConcreteClient(
                 model=text_model,
@@ -286,8 +291,8 @@ class TestClientValidation:
 
         # Act & Assert
         with pytest.raises(
-            ValidationError,
-            match=rf"Model 'broken-model' does not support capability {Capability.TEXT_GENERATION}",
+            UnsupportedCapabilityError,
+            match=rf"Model 'broken-model' does not support capability '{Capability.TEXT_GENERATION}'",
         ):
             ConcreteClient(
                 model=empty_model,
@@ -328,14 +333,14 @@ class TestClientRegistry:
         assert retrieved_class is ConcreteClient
 
     def test_get_client_class_raises_for_unregistered_capability(self) -> None:
-        """get_client_class raises NotImplementedError for unregistered capabilities."""
+        """get_client_class raises ClientNotFoundError for unregistered capabilities."""
         # Arrange
         unregistered_capability = Capability.IMAGE_GENERATION
         provider = Provider.OPENAI
 
         # Act & Assert
         with pytest.raises(
-            NotImplementedError,
+            ClientNotFoundError,
             match=rf"No client registered for {Capability.IMAGE_GENERATION}",
         ):
             get_client_class(unregistered_capability, provider)
@@ -400,9 +405,9 @@ class TestClientRegistry:
         expected_capability_str: str,
         expected_provider_str: str,
     ) -> None:
-        """NotImplementedError includes both capability and provider for debugging."""
+        """ClientNotFoundError includes both capability and provider for debugging."""
         # Arrange & Act & Assert
-        with pytest.raises(NotImplementedError) as exc_info:
+        with pytest.raises(ClientNotFoundError) as exc_info:
             get_client_class(missing_capability, provider)
 
         # Assert both parts in error message
@@ -529,7 +534,7 @@ class TestClientStreaming:
     def test_stream_raises_not_implemented_with_descriptive_error(
         self, text_model: Model, api_key: str
     ) -> None:
-        """stream() raises NotImplementedError with capability and provider info."""
+        """stream() raises StreamingNotSupportedError with capability and provider info."""
         # Arrange
         client = ConcreteClient(
             model=text_model,
@@ -539,7 +544,7 @@ class TestClientStreaming:
         )
 
         # Act & Assert
-        with pytest.raises(NotImplementedError) as exc_info:
+        with pytest.raises(StreamingNotSupportedError) as exc_info:
             client.stream("test prompt")
 
         # Verify error message contains all debugging info

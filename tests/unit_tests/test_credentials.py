@@ -9,6 +9,7 @@ from pydantic import SecretStr
 
 from celeste.core import Provider
 from celeste.credentials import PROVIDER_CREDENTIAL_MAP, Credentials
+from celeste.exceptions import MissingCredentialsError
 
 # Single source of truth for environment variable names
 ENV_VAR_NAMES = [
@@ -137,7 +138,7 @@ class TestGetCredentials:
         creds = Credentials()  # type: ignore[call-arg]
 
         # Act & Assert
-        with pytest.raises(ValueError, match="no credentials configured"):
+        with pytest.raises(MissingCredentialsError, match="no credentials configured"):
             creds.get_credentials(Provider.OPENAI)
 
     @pytest.mark.parametrize(

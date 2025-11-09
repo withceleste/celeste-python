@@ -7,6 +7,8 @@ from typing import Any, get_args, get_origin
 
 from pydantic import BaseModel, Field
 
+from celeste.exceptions import ConstraintViolationError
+
 
 class Constraint(BaseModel, ABC):
     """Base constraint for parameter validation."""
@@ -26,7 +28,7 @@ class Choice[T](Constraint):
         """Validate value is in options."""
         if value not in self.options:
             msg = f"Must be one of {self.options}, got {value!r}"
-            raise ValueError(msg)
+            raise ConstraintViolationError(msg)
         return value
 
 
@@ -46,7 +48,7 @@ class Range(Constraint):
         """Validate value is within range and matches step increment."""
         if not isinstance(value, (int, float)):
             msg = f"Must be numeric, got {type(value).__name__}"
-            raise TypeError(msg)
+            raise ConstraintViolationError(msg)
 
         # Check if value is a special value that bypasses range check
         if self.special_values is not None and value in self.special_values:
@@ -58,7 +60,7 @@ class Range(Constraint):
                 f" or one of {self.special_values}" if self.special_values else ""
             )
             msg = f"Must be between {self.min} and {self.max}{special_msg}, got {value}"
-            raise ValueError(msg)
+            raise ConstraintViolationError(msg)
 
         # Validate step if provided
         if self.step is not None:
@@ -74,7 +76,7 @@ class Range(Constraint):
                 )
                 closest_above = closest_below + self.step
                 msg = f"Value must match step {self.step}. Nearest valid: {closest_below} or {closest_above}, got {value}"
-                raise ValueError(msg)
+                raise ConstraintViolationError(msg)
 
         return value
 
@@ -88,11 +90,11 @@ class Pattern(Constraint):
         """Validate value matches pattern."""
         if not isinstance(value, str):
             msg = f"Must be string, got {type(value).__name__}"
-            raise TypeError(msg)
+            raise ConstraintViolationError(msg)
 
         if not re.fullmatch(self.pattern, value):
             msg = f"Must match pattern {self.pattern!r}, got {value!r}"
-            raise ValueError(msg)
+            raise ConstraintViolationError(msg)
 
         return value
 
@@ -107,15 +109,15 @@ class Str(Constraint):
         """Validate value is a string."""
         if not isinstance(value, str):
             msg = f"Must be string, got {type(value).__name__}"
-            raise TypeError(msg)
+            raise ConstraintViolationError(msg)
 
         if self.min_length is not None and len(value) < self.min_length:
             msg = f"String too short (min {self.min_length}), got {len(value)}"
-            raise ValueError(msg)
+            raise ConstraintViolationError(msg)
 
         if self.max_length is not None and len(value) > self.max_length:
             msg = f"String too long (max {self.max_length}), got {len(value)}"
-            raise ValueError(msg)
+            raise ConstraintViolationError(msg)
 
         return value
 
@@ -128,7 +130,7 @@ class Int(Constraint):
         # isinstance(True, int) is True, so exclude bools explicitly
         if not isinstance(value, int) or isinstance(value, bool):
             msg = f"Must be int, got {type(value).__name__}"
-            raise TypeError(msg)
+            raise ConstraintViolationError(msg)
 
         return value
 
@@ -140,7 +142,7 @@ class Float(Constraint):
         """Validate value is numeric."""
         if not isinstance(value, (int, float)) or isinstance(value, bool):
             msg = f"Must be float or int, got {type(value).__name__}"
-            raise TypeError(msg)
+            raise ConstraintViolationError(msg)
 
         return float(value)
 
@@ -152,7 +154,7 @@ class Bool(Constraint):
         """Validate value is a boolean."""
         if not isinstance(value, bool):
             msg = f"Must be bool, got {type(value).__name__}"
-            raise TypeError(msg)
+            raise ConstraintViolationError(msg)
 
         return value
 
@@ -167,13 +169,13 @@ class Schema(Constraint):
             inner = get_args(value)[0]
             if not (isinstance(inner, type) and issubclass(inner, BaseModel)):
                 msg = f"List type must be BaseModel, got {inner}"
-                raise TypeError(msg)
+                raise ConstraintViolationError(msg)
             return value
 
         # For plain type, validate directly
         if not (isinstance(value, type) and issubclass(value, BaseModel)):
             msg = f"Must be BaseModel, got {value}"
-            raise TypeError(msg)
+            raise ConstraintViolationError(msg)
 
         return value
 
