@@ -18,6 +18,8 @@ def register_package() -> None:
 
 # Import after register_package is defined to avoid circular imports
 from celeste_text_generation.io import (  # noqa: E402
+    TextGenerationChunk,
+    TextGenerationFinishReason,
     TextGenerationInput,
     TextGenerationOutput,
     TextGenerationUsage,
@@ -25,6 +27,8 @@ from celeste_text_generation.io import (  # noqa: E402
 from celeste_text_generation.streaming import TextGenerationStream  # noqa: E402
 
 __all__ = [
+    "TextGenerationChunk",
+    "TextGenerationFinishReason",
     "TextGenerationInput",
     "TextGenerationOutput",
     "TextGenerationStream",

@@ -38,6 +38,7 @@ class AnthropicTextGenerationStream(TextGenerationStream):
         self._tool_use_blocks: list[dict[str, Any]] = []
         self._current_tool_use: dict[str, Any] | None = None
         self._current_tool_use_partial_json: str = ""
+        self._last_finish_reason: TextGenerationFinishReason | None = None
 
     def _parse_chunk(self, event: dict[str, Any]) -> Chunk | None:
         """Parse SSE event into Chunk."""
@@ -208,6 +209,7 @@ class AnthropicTextGenerationStream(TextGenerationStream):
             finish_reason: TextGenerationFinishReason | None = None
             if stop_reason is not None:
                 finish_reason = TextGenerationFinishReason(reason=stop_reason)
+                self._last_finish_reason = finish_reason
 
             usage = self._parse_usage_from_event(event)
 
@@ -223,7 +225,7 @@ class AnthropicTextGenerationStream(TextGenerationStream):
 
             return TextGenerationChunk(
                 content="",
-                finish_reason=None,
+                finish_reason=self._last_finish_reason,
                 usage=usage,
             )
 
