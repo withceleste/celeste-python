@@ -17,6 +17,7 @@ from celeste.exceptions import (
     StreamNotExhaustedError,
     UnsupportedCapabilityError,
     UnsupportedParameterError,
+    ValidationError,
 )
 from celeste.http import HTTPClient, close_all_http_clients
 from celeste.io import Input, Output, Usage
@@ -131,6 +132,7 @@ __all__ = [
     "UnsupportedCapabilityError",
     "UnsupportedParameterError",
     "Usage",
+    "ValidationError",
     "close_all_http_clients",
     "create_client",
     "get_client_class",
