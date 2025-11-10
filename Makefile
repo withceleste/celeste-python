@@ -7,7 +7,7 @@ help:
 	@echo "  make lint       - Run Ruff linting"
 	@echo "  make format     - Apply Ruff formatting"
 	@echo "  make typecheck  - Run mypy type checking"
-	@echo "  make test       - Run pytest with coverage"
+	@echo "  make test       - Run all tests (core + packages) with coverage"
 	@echo "  make integration-test - Run integration tests (requires API keys)"
 	@echo "  make security   - Run Bandit security scan"
 	@echo "  make ci       - Run full CI/CD pipeline"
@@ -37,7 +37,7 @@ typecheck:
 
 # Testing
 test:
-	uv run pytest tests/unit_tests --cov=celeste --cov-report=term-missing --cov-fail-under=90
+	uv run pytest tests/unit_tests packages/*/tests/unit_tests --cov=celeste --cov-report=term-missing --cov-fail-under=90 -v
 
 # Integration testing (requires API keys)
 integration-test:

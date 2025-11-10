@@ -1,0 +1,39 @@
+[project]
+name = "celeste-image-generation"
+version = "0.2.1"
+description = "Type-safe image generation for Celeste AI. Unified interface for OpenAI, Google, ByteDance, and more"
+authors = [{name = "Kamilbenkirane", email = "kamil@withceleste.ai"}]
+readme = "README.md"
+license = {text = "Apache-2.0"}
+requires-python = ">=3.12"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Operating System :: OS Independent",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Typing :: Typed",
+]
+keywords = ["ai", "image-generation", "dall-e", "imagen", "openai", "google", "bytedance"]
+
+[project.urls]
+Homepage = "https://withceleste.ai"
+Documentation = "https://withceleste.ai/docs"
+Repository = "https://github.com/withceleste/celeste-python"
+Issues = "https://github.com/withceleste/celeste-python/issues"
+
+[tool.uv.sources]
+celeste-ai = { workspace = true }
+
+[project.entry-points."celeste.packages"]
+image-generation = "celeste_image_generation:register_package"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/celeste_image_generation"]
