@@ -1,24 +1,28 @@
 """Provider implementations for text generation."""
 
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from celeste.client import Client
-    from celeste.core import Provider
+from celeste import Client, Provider
 
 __all__ = ["PROVIDERS"]
 
 
-def _get_providers() -> list[tuple["Provider", type["Client"]]]:
+def _get_providers() -> list[tuple[Provider, type[Client]]]:
     """Lazy-load providers."""
-    from celeste.core import Provider
-    from celeste_text_generation.providers.anthropic import (
+    # Import clients directly from .client modules to avoid __init__.py imports
+    from celeste_text_generation.providers.anthropic.client import (
         AnthropicTextGenerationClient,
     )
-    from celeste_text_generation.providers.cohere import CohereTextGenerationClient
-    from celeste_text_generation.providers.google import GoogleTextGenerationClient
-    from celeste_text_generation.providers.mistral import MistralTextGenerationClient
-    from celeste_text_generation.providers.openai import OpenAITextGenerationClient
+    from celeste_text_generation.providers.cohere.client import (
+        CohereTextGenerationClient,
+    )
+    from celeste_text_generation.providers.google.client import (
+        GoogleTextGenerationClient,
+    )
+    from celeste_text_generation.providers.mistral.client import (
+        MistralTextGenerationClient,
+    )
+    from celeste_text_generation.providers.openai.client import (
+        OpenAITextGenerationClient,
+    )
 
     return [
         (Provider.ANTHROPIC, AnthropicTextGenerationClient),
@@ -29,4 +33,4 @@ def _get_providers() -> list[tuple["Provider", type["Client"]]]:
     ]
 
 
-PROVIDERS: list[tuple["Provider", type["Client"]]] = _get_providers()
+PROVIDERS: list[tuple[Provider, type[Client]]] = _get_providers()
