@@ -94,6 +94,10 @@ def list_models(
     Returns:
         List of Model instances matching the filters.
     """
+    # Load packages lazily to avoid circular imports
+    from celeste.registry import _load_from_entry_points
+
+    _load_from_entry_points()
     models = list(_models.values())
 
     if provider is not None:

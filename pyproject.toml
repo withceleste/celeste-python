@@ -1,6 +1,6 @@
 [project]
 name = "celeste-ai"
-version = "0.2.0"
+version = "0.2.1"
 description = "Open source, type-safe primitives for multi-modal AI. All capabilities, all providers, one interface"
 authors = [{name = "Kamilbenkirane", email = "kamil@withceleste.ai"}]
 readme = "README.md"
@@ -33,8 +33,9 @@ Repository = "https://github.com/withceleste/celeste-python"
 Issues = "https://github.com/withceleste/celeste-python/issues"
 
 [project.optional-dependencies]
-text-generation = ["celeste-text-generation>=0.1.0"]
-all = ["celeste-text-generation>=0.1.0"]
+text-generation = ["celeste-text-generation>=0.2.1"]
+image-generation = ["celeste-image-generation>=0.2.1"]
+all = ["celeste-text-generation>=0.2.1", "celeste-image-generation>=0.2.1"]
 
 [dependency-groups]
 dev = [
@@ -55,6 +56,7 @@ members = ["packages/*"]
 
 [tool.uv.sources]
 celeste-text-generation = { workspace = true }
+celeste-image-generation = { workspace = true }
 
 [build-system]
 requires = ["hatchling"]
@@ -68,6 +70,11 @@ minversion = "8.0"
 testpaths = ["tests"]
 addopts = "-ra --strict-markers --strict-config"
 asyncio_mode = "auto"
+pythonpath = [
+    "src",
+    "packages/text-generation/src",
+    "packages/image-generation/src",
+]
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
     "smoke: quick checks for critical paths",
@@ -153,6 +160,15 @@ module = [
     "celeste_text_generation.client",
     "celeste_text_generation.streaming",
     "celeste_text_generation.providers.*",
+]
+disable_error_code = ["override", "return-value", "arg-type", "call-arg", "assignment", "no-any-return"]
+
+[[tool.mypy.overrides]]
+module = [
+    "celeste_image_generation.*",
+    "celeste_image_generation.client",
+    "celeste_image_generation.streaming",
+    "celeste_image_generation.providers.*",
 ]
 disable_error_code = ["override", "return-value", "arg-type", "call-arg", "assignment", "no-any-return"]
 

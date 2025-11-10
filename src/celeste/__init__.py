@@ -1,4 +1,3 @@
-import importlib.metadata
 import logging
 
 from pydantic import SecretStr
@@ -23,6 +22,7 @@ from celeste.http import HTTPClient, close_all_http_clients
 from celeste.io import Input, Output, Usage
 from celeste.models import Model, get_model, list_models, register_models
 from celeste.parameters import Parameters
+from celeste.registry import _load_from_entry_points
 
 logger = logging.getLogger(__name__)
 
@@ -79,6 +79,8 @@ def create_client(
         MissingCredentialsError: If required credentials are not configured.
         UnsupportedCapabilityError: If the resolved model doesn't support the requested capability.
     """
+    # Load packages lazily when create_client is called
+    _load_from_entry_points()
     # Resolve model
     resolved_model = _resolve_model(capability, provider, model)
 
@@ -96,19 +98,6 @@ def create_client(
         api_key=resolved_key,
     )
 
-
-def _load_from_entry_points() -> None:
-    """Load models and clients from installed packages via entry points."""
-    entry_points = importlib.metadata.entry_points(group="celeste.packages")
-
-    for ep in entry_points:
-        register_func = ep.load()
-        # The function should register models and clients when called
-        register_func()
-
-
-# Load from entry points on import
-_load_from_entry_points()
 
 # Exports
 __all__ = [

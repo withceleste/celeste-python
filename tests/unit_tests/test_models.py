@@ -41,8 +41,11 @@ class TestRegisterModels:
     """Test model registration functionality."""
 
     @pytest.mark.smoke
-    def test_register_models_accepts_single_or_list(self) -> None:
+    @patch("celeste.registry._load_from_entry_points")
+    def test_register_models_accepts_single_or_list(self, mock_load: Mock) -> None:
         """Registering models works with both single model and list."""
+        # Prevent entry point loading from interfering with test isolation
+        mock_load.return_value = None
         single_model = SAMPLE_MODELS[0]
         register_models(single_model, Capability.TEXT_GENERATION)
         retrieved = get_model(single_model.id, single_model.provider)
@@ -63,8 +66,11 @@ class TestRegisterModels:
             assert model.provider == retrieved.provider
             assert Capability.TEXT_GENERATION in retrieved.capabilities
 
-    def test_reregistering_same_key_raises_error(self) -> None:
+    @patch("celeste.registry._load_from_entry_points")
+    def test_reregistering_same_key_raises_error(self, mock_load: Mock) -> None:
         """Re-registering with same (id, provider) but different display_name raises ValueError."""
+        # Prevent entry point loading from interfering with test isolation
+        mock_load.return_value = None
         original = SAMPLE_MODELS[0]
         register_models(original, Capability.TEXT_GENERATION)
 
@@ -82,8 +88,13 @@ class TestRegisterModels:
         assert result.display_name == original.display_name
         assert len(list_models()) == 1
 
-    def test_registering_same_model_for_multiple_capabilities_merges(self) -> None:
+    @patch("celeste.registry._load_from_entry_points")
+    def test_registering_same_model_for_multiple_capabilities_merges(
+        self, mock_load: Mock
+    ) -> None:
         """Registering the same model for multiple capabilities merges capabilities."""
+        # Prevent entry point loading from interfering with test isolation
+        mock_load.return_value = None
         model = Model(
             id="multi-cap-model",
             provider=Provider.OPENAI,
@@ -115,8 +126,10 @@ class TestListModels:
     """Test model listing and filtering functionality."""
 
     @pytest.fixture(autouse=True)
-    def setup_models(self) -> None:
+    def setup_models(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Set up test models for filtering tests."""
+        # Prevent entry point loading from interfering with test isolation
+        monkeypatch.setattr("celeste.registry._load_from_entry_points", lambda: None)
         register_models(SAMPLE_MODELS[0], Capability.TEXT_GENERATION)
         register_models(SAMPLE_MODELS[1], Capability.IMAGE_GENERATION)
         register_models(SAMPLE_MODELS[2], Capability.TEXT_GENERATION)
@@ -232,7 +245,7 @@ class TestGetModel:
 class TestEntryPoints:
     """Test entry point loading functionality."""
 
-    @patch("celeste.importlib.metadata.entry_points")
+    @patch("celeste.registry.importlib.metadata.entry_points")
     def test_entry_point_loading_success(
         self, mock_entry_points: Mock, capsys: pytest.CaptureFixture[str]
     ) -> None:
@@ -251,7 +264,7 @@ class TestEntryPoints:
         mock_entry_points.return_value = [mock_ep]
 
         clear()
-        from celeste import _load_from_entry_points
+        from celeste.registry import _load_from_entry_points
 
         _load_from_entry_points()
 
@@ -261,7 +274,7 @@ class TestEntryPoints:
         captured = capsys.readouterr()
         assert captured.err == ""
 
-    @patch("celeste.importlib.metadata.entry_points")
+    @patch("celeste.registry.importlib.metadata.entry_points")
     def test_entry_point_returns_none_handled(
         self, mock_entry_points: Mock, capsys: pytest.CaptureFixture[str]
     ) -> None:
@@ -273,7 +286,7 @@ class TestEntryPoints:
         mock_entry_points.return_value = [mock_ep]
 
         clear()
-        from celeste import _load_from_entry_points
+        from celeste.registry import _load_from_entry_points
 
         _load_from_entry_points()
 
@@ -335,8 +348,11 @@ class TestParameterSupport:
 class TestClear:
     """Test registry clearing functionality."""
 
-    def test_clear_removes_all_models(self) -> None:
+    @patch("celeste.registry._load_from_entry_points")
+    def test_clear_removes_all_models(self, mock_load: Mock) -> None:
         """clear removes all registered models."""
+        # Prevent entry point loading from interfering with test isolation
+        mock_load.return_value = None
         register_models(SAMPLE_MODELS[0], Capability.TEXT_GENERATION)
         register_models(SAMPLE_MODELS[1], Capability.IMAGE_GENERATION)
         register_models(SAMPLE_MODELS[2], Capability.TEXT_GENERATION)
