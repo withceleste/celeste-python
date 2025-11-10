@@ -32,7 +32,7 @@ class TestExceptionHierarchy:
             ModelNotFoundError("model-1", "openai"),
             UnsupportedCapabilityError("model-1", "text-generation"),
             ClientNotFoundError("text-generation", "openai"),
-            StreamingNotSupportedError(test_model),
+            StreamingNotSupportedError(test_model.id),
             StreamNotExhaustedError(),
             StreamEmptyError(),
             MissingCredentialsError("openai"),
@@ -132,17 +132,12 @@ class TestClientNotFoundError:
 class TestStreamingNotSupportedError:
     """Test StreamingNotSupportedError exception."""
 
-    def test_creates_with_model(self) -> None:
-        """Test exception stores model attribute."""
-        test_model = Model(
-            id="dall-e-3",
-            provider=Provider.OPENAI,
-            display_name="DALL-E 3",
-        )
-        exc = StreamingNotSupportedError(test_model)
+    def test_creates_with_model_id(self) -> None:
+        """Test exception stores model_id attribute."""
+        model_id = "dall-e-3"
+        exc = StreamingNotSupportedError(model_id)
 
-        assert exc.model == test_model
-        assert exc.model.id == "dall-e-3"
+        assert exc.model_id == model_id
         assert "dall-e-3" in str(exc)
         assert "Streaming not supported" in str(exc)
 

@@ -1,7 +1,5 @@
 """Custom exceptions for Celeste."""
 
-from celeste.models import Model
-
 
 class Error(Exception):
     """Base exception for all Celeste errors."""
@@ -92,13 +90,25 @@ class StreamingError(Error):
     pass
 
 
+class ValidationError(Error):
+    """Errors related to parameter and constraint validation."""
+
+    pass
+
+
+class ConstraintViolationError(ValidationError):
+    """Raised when a value violates a constraint."""
+
+    pass
+
+
 class StreamingNotSupportedError(StreamingError):
     """Raised when streaming is requested for a model that doesn't support it."""
 
-    def __init__(self, model: Model) -> None:
-        """Initialize with model details."""
-        self.model = model
-        super().__init__(f"Streaming not supported for model '{model.id}'")
+    def __init__(self, model_id: str) -> None:
+        """Initialize with model ID."""
+        self.model_id = model_id
+        super().__init__(f"Streaming not supported for model '{model_id}'")
 
 
 class StreamNotExhaustedError(StreamingError):
@@ -135,18 +145,6 @@ class MissingCredentialsError(CredentialsError):
             f"Provider {provider} has no credentials configured. "
             f"Set the appropriate environment variable or pass api_key parameter."
         )
-
-
-class ValidationError(Error):
-    """Errors related to parameter and constraint validation."""
-
-    pass
-
-
-class ConstraintViolationError(ValidationError):
-    """Raised when a value violates a constraint."""
-
-    pass
 
 
 class UnsupportedParameterError(ValidationError):
