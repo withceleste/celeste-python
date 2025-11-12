@@ -25,12 +25,10 @@ class TextGenerationClient(
     @abstractmethod
     def _init_request(self, inputs: TextGenerationInput) -> dict[str, Any]:
         """Initialize provider-specific request structure."""
-        ...
 
     @abstractmethod
     def _parse_usage(self, response_data: dict[str, Any]) -> TextGenerationUsage:
         """Parse usage information from provider response."""
-        ...
 
     @abstractmethod
     def _parse_content(
@@ -39,14 +37,12 @@ class TextGenerationClient(
         **parameters: Unpack[TextGenerationParameters],
     ) -> str | BaseModel:
         """Parse content from provider response."""
-        ...
 
     @abstractmethod
     def _parse_finish_reason(
         self, response_data: dict[str, Any]
     ) -> TextGenerationFinishReason | None:
         """Parse finish reason from provider response."""
-        ...
 
     def _create_inputs(
         self, *args: str, **parameters: Unpack[TextGenerationParameters]
@@ -80,4 +76,3 @@ class TextGenerationClient(
         **parameters: Unpack[TextGenerationParameters],
     ) -> httpx.Response:
         """Make HTTP request(s) and return response object."""
-        ...

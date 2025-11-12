@@ -9,7 +9,7 @@ from pydantic import ConfigDict
 from celeste.artifacts import ImageArtifact
 from celeste.core import Provider
 from celeste.exceptions import ModelNotFoundError
-from celeste.mime_types import ImageMimeType
+from celeste.mime_types import ApplicationMimeType, ImageMimeType
 from celeste.parameters import ParameterMapper
 from celeste_image_generation.client import ImageGenerationClient
 from celeste_image_generation.io import (
@@ -24,11 +24,7 @@ from .parameters import GOOGLE_PARAMETER_MAPPERS
 
 
 class GoogleImageGenerationClient(ImageGenerationClient):
-    """Google client for image generation.
-
-    Supports both Imagen API and Gemini multimodal API via adapter pattern.
-    Adapter selection happens automatically based on model type.
-    """
+    """Google client for image generation."""
 
     model_config = ConfigDict(extra="allow")
 
@@ -42,15 +38,14 @@ class GoogleImageGenerationClient(ImageGenerationClient):
 
     @classmethod
     def parameter_mappers(cls) -> list[ParameterMapper]:
-        """Return parameter mappers for Google provider."""
         return GOOGLE_PARAMETER_MAPPERS
 
     def _init_request(self, inputs: ImageGenerationInput) -> dict[str, Any]:
-        """Initialize request using API adapter."""
+        """Initialize request from Google API format."""
         return self.api.build_request(inputs.prompt, {})
 
     def _parse_usage(self, response_data: dict[str, Any]) -> ImageGenerationUsage:
-        """Parse usage from response using API adapter."""
+        """Parse usage from response."""
         return self.api.parse_usage(response_data)
 
     def _parse_content(
@@ -58,7 +53,7 @@ class GoogleImageGenerationClient(ImageGenerationClient):
         response_data: dict[str, Any],
         **parameters: Unpack[ImageGenerationParameters],
     ) -> ImageArtifact:
-        """Parse content from response using API adapter."""
+        """Parse content from response."""
         prediction = self.api.parse_response(response_data)
 
         if prediction is None:
@@ -73,7 +68,7 @@ class GoogleImageGenerationClient(ImageGenerationClient):
     def _parse_finish_reason(
         self, response_data: dict[str, Any]
     ) -> ImageGenerationFinishReason | None:
-        """Parse finish reason from provider response.
+        """Parse finish reason from response.
 
         For Gemini models, extracts finishReason from candidates[0].
         For Imagen models, returns None (not provided).
@@ -111,7 +106,7 @@ class GoogleImageGenerationClient(ImageGenerationClient):
         """Make HTTP request(s) and return response object."""
         headers = {
             config.AUTH_HEADER_NAME: self.api_key.get_secret_value(),
-            "Content-Type": "application/json",
+            "Content-Type": ApplicationMimeType.JSON,
         }
 
         return await self.http_client.post(

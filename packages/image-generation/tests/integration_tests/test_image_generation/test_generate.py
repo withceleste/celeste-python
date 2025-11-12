@@ -4,8 +4,6 @@ import pytest
 
 from celeste import Capability, Provider, create_client
 
-# Integration tests require API credentials configured in CI environment
-
 
 @pytest.mark.parametrize(
     ("provider", "model", "parameters"),

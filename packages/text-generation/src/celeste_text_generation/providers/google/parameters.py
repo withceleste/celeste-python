@@ -6,6 +6,7 @@ from typing import Any, get_args, get_origin
 from pydantic import BaseModel, TypeAdapter
 
 from celeste.core import Parameter
+from celeste.mime_types import ApplicationMimeType
 from celeste.models import Model
 from celeste.parameters import ParameterMapper
 from celeste_text_generation.parameters import TextGenerationParameter
@@ -93,7 +94,7 @@ class OutputSchemaMapper(ParameterMapper):
 
         config = request.setdefault("generationConfig", {})
         config["responseSchema"] = schema
-        config["responseMimeType"] = "application/json"
+        config["responseMimeType"] = ApplicationMimeType.JSON
 
         return request
 

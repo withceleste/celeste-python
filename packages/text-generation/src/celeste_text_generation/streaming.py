@@ -19,7 +19,6 @@ class TextGenerationStream(Stream[TextGenerationOutput, TextGenerationParameters
     @abstractmethod
     def _parse_chunk(self, event: dict[str, Any]) -> Chunk | None:
         """Parse SSE event into Chunk (provider-specific)."""
-        ...
 
     def _parse_output(
         self,

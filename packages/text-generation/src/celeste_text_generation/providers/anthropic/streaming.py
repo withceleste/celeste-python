@@ -22,7 +22,7 @@ class AnthropicTextGenerationStream(TextGenerationStream):
     def __init__(
         self,
         sse_iterator: Any,  # noqa: ANN401
-        transform_output: Callable[[object, Any], object],
+        transform_output: Callable[..., object],
         **parameters: Unpack[TextGenerationParameters],
     ) -> None:
         """Initialize stream with output transformation support.
@@ -306,23 +306,21 @@ class AnthropicTextGenerationStream(TextGenerationStream):
                         # Empty dict for BaseModel - try text chunks, but if none, raise error
                         text_content = "".join(chunk.content for chunk in chunks)
                         if text_content:
-                            content = self._transform_output(
-                                text_content, **self._parameters
-                            )
+                            content = self._transform_output(text_content, **parameters)
                         else:
                             msg = "Empty tool_use input dict and no text chunks available for BaseModel"
                             raise ValidationError(msg)
                     else:
                         # Empty dict for list[BaseModel] - OK, parse_output will convert to []
-                        content = self._transform_output(tool_input, **self._parameters)
+                        content = self._transform_output(tool_input, **parameters)
                 else:
                     # Valid tool_input - transform to BaseModel
-                    content = self._transform_output(tool_input, **self._parameters)
+                    content = self._transform_output(tool_input, **parameters)
             else:
                 # Fallback: concatenate text chunks
                 text_content = "".join(chunk.content for chunk in chunks)
                 if text_content:
-                    content = self._transform_output(text_content, **self._parameters)
+                    content = self._transform_output(text_content, **parameters)
                 else:
                     msg = "No tool_use input and no text chunks available"
                     raise ValidationError(msg)
@@ -330,7 +328,7 @@ class AnthropicTextGenerationStream(TextGenerationStream):
             # No tool_use blocks or no output_schema: concatenate text chunks
             content = "".join(chunk.content for chunk in chunks)
             # Apply parameter transformations (e.g., JSON → BaseModel if output_schema provided)
-            content = self._transform_output(content, **self._parameters)
+            content = self._transform_output(content, **parameters)
 
         usage = self._parse_usage(chunks)
         finish_reason = chunks[-1].finish_reason if chunks else None

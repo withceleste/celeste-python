@@ -7,7 +7,7 @@ from typing import Any, Unpack
 import httpx
 
 from celeste.artifacts import ImageArtifact
-from celeste.exceptions import ValidationError
+from celeste.mime_types import ApplicationMimeType
 from celeste.parameters import ParameterMapper
 from celeste_image_generation.client import ImageGenerationClient
 from celeste_image_generation.io import (
@@ -23,14 +23,14 @@ from .streaming import OpenAIImageGenerationStream
 
 
 class OpenAIImageGenerationClient(ImageGenerationClient):
-    """OpenAI client."""
+    """OpenAI client for image generation."""
 
     @classmethod
     def parameter_mappers(cls) -> list[ParameterMapper]:
         return OPENAI_PARAMETER_MAPPERS
 
     def _init_request(self, inputs: ImageGenerationInput) -> dict[str, Any]:
-        """Initialize request from inputs."""
+        """Initialize request from OpenAI API format."""
         request = {
             "model": self.model.id,
             "prompt": inputs.prompt,
@@ -55,7 +55,7 @@ class OpenAIImageGenerationClient(ImageGenerationClient):
         data = response_data.get("data", [])
         if not data:
             msg = "No image data in response"
-            raise ValidationError(msg)
+            raise ValueError(msg)
 
         image_data = data[0]
 
@@ -69,7 +69,7 @@ class OpenAIImageGenerationClient(ImageGenerationClient):
             return ImageArtifact(url=url)
 
         msg = "No image URL or base64 data in response"
-        raise ValidationError(msg)
+        raise ValueError(msg)
 
     def _parse_finish_reason(
         self, response_data: dict[str, Any]
@@ -95,7 +95,7 @@ class OpenAIImageGenerationClient(ImageGenerationClient):
         """Make HTTP request(s) and return response object."""
         headers = {
             config.AUTH_HEADER_NAME: f"{config.AUTH_HEADER_PREFIX}{self.api_key.get_secret_value()}",
-            "Content-Type": "application/json",
+            "Content-Type": ApplicationMimeType.JSON,
         }
 
         return await self.http_client.post(
@@ -125,7 +125,7 @@ class OpenAIImageGenerationClient(ImageGenerationClient):
 
         headers = {
             config.AUTH_HEADER_NAME: f"{config.AUTH_HEADER_PREFIX}{self.api_key.get_secret_value()}",
-            "Content-Type": "application/json",
+            "Content-Type": ApplicationMimeType.JSON,
         }
 
         return self.http_client.stream_post(

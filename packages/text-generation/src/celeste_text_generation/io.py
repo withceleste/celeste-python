@@ -4,7 +4,7 @@ from celeste.io import Chunk, FinishReason, Input, Output, Usage
 
 
 class TextGenerationInput(Input):
-    """Input for text generation requests."""
+    """Input for text generation operations."""
 
     prompt: str
 
