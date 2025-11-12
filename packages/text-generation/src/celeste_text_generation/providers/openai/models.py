@@ -71,7 +71,7 @@ MODELS: list[Model] = [
             TextGenerationParameter.OUTPUT_SCHEMA: Schema(),
         },
     ),
-        Model(
+    Model(
         id="gpt-5-mini",
         provider=Provider.OPENAI,
         display_name="GPT-5 Mini",
