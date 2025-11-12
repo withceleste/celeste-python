@@ -8,7 +8,7 @@ import httpx
 
 from celeste.artifacts import ImageArtifact
 from celeste.exceptions import ConstraintViolationError, ValidationError
-from celeste.mime_types import ImageMimeType
+from celeste.mime_types import ApplicationMimeType, ImageMimeType
 from celeste.parameters import ParameterMapper
 from celeste_image_generation.client import ImageGenerationClient
 from celeste_image_generation.io import (
@@ -39,7 +39,7 @@ class ByteDanceImageGenerationClient(ImageGenerationClient):
         }
 
     def _parse_usage(self, response_data: dict[str, Any]) -> ImageGenerationUsage:
-        """Parse usage from ByteDance response."""
+        """Parse usage from response."""
         usage_data = response_data.get("usage", {})
 
         return ImageGenerationUsage(
@@ -53,7 +53,7 @@ class ByteDanceImageGenerationClient(ImageGenerationClient):
         response_data: dict[str, Any],
         **parameters: Unpack[ImageGenerationParameters],
     ) -> ImageArtifact:
-        """Parse image content from ByteDance response."""
+        """Parse content from response."""
         images = response_data.get("images", [])
         if images and images[0].get("url"):
             return ImageArtifact(
@@ -81,7 +81,7 @@ class ByteDanceImageGenerationClient(ImageGenerationClient):
     def _parse_finish_reason(
         self, response_data: dict[str, Any]
     ) -> ImageGenerationFinishReason | None:
-        """Parse finish reason from provider response.
+        """Parse finish reason from response.
 
         ByteDance doesn't provide finish reasons for image generation.
         """
@@ -120,7 +120,7 @@ class ByteDanceImageGenerationClient(ImageGenerationClient):
 
         headers = {
             config.AUTH_HEADER_NAME: f"{config.AUTH_HEADER_PREFIX}{self.api_key.get_secret_value()}",
-            "Content-Type": "application/json",
+            "Content-Type": ApplicationMimeType.JSON,
         }
 
         return await self.http_client.post(
@@ -143,7 +143,7 @@ class ByteDanceImageGenerationClient(ImageGenerationClient):
 
         headers = {
             config.AUTH_HEADER_NAME: f"{config.AUTH_HEADER_PREFIX}{self.api_key.get_secret_value()}",
-            "Content-Type": "application/json",
+            "Content-Type": ApplicationMimeType.JSON,
         }
 
         return self.http_client.stream_post(

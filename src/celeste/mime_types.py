@@ -6,7 +6,11 @@ from enum import StrEnum
 class MimeType(StrEnum):
     """Base class for all MIME types."""
 
-    pass
+
+class ApplicationMimeType(MimeType):
+    """Standard MIME types for application data."""
+
+    JSON = "application/json"
 
 
 class ImageMimeType(MimeType):
@@ -15,6 +19,9 @@ class ImageMimeType(MimeType):
     PNG = "image/png"
     JPEG = "image/jpeg"
     WEBP = "image/webp"
+    BMP = "image/bmp"
+    TIFF = "image/tiff"
+    GIF = "image/gif"
 
 
 class VideoMimeType(MimeType):
@@ -37,9 +44,11 @@ class AudioMimeType(MimeType):
     AIFF = "audio/aiff"
     M4A = "audio/mp4"
     WMA = "audio/x-ms-wma"
+    PCM = "audio/pcm"
 
 
 __all__ = [
+    "ApplicationMimeType",
     "AudioMimeType",
     "ImageMimeType",
     "MimeType",

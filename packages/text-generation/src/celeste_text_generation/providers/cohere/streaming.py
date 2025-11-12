@@ -23,7 +23,7 @@ class CohereTextGenerationStream(TextGenerationStream):
     def __init__(
         self,
         sse_iterator: Any,  # noqa: ANN401
-        transform_output: Callable[[object, Any], object],
+        transform_output: Callable[..., object],
         **parameters: Unpack[TextGenerationParameters],
     ) -> None:
         """Initialize stream with output transformation support.
@@ -139,7 +139,7 @@ class CohereTextGenerationStream(TextGenerationStream):
         """Assemble chunks into final output, applying parameter transformations."""
         content_chunks = [chunk for chunk in chunks if chunk.content]
         content = "".join(chunk.content for chunk in content_chunks)
-        content = self._transform_output(content, **self._parameters)
+        content = self._transform_output(content, **parameters)
 
         usage = self._parse_usage(chunks)
         finish_reason = chunks[-1].finish_reason if chunks else None

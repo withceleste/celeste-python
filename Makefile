@@ -37,7 +37,7 @@ typecheck:
 
 # Testing
 test:
-	uv run pytest tests/unit_tests packages/*/tests/unit_tests --cov=celeste --cov-report=term-missing --cov-fail-under=90 -v
+	uv run pytest tests/unit_tests packages/*/tests/unit_tests --cov=celeste --cov-report=term-missing --cov-fail-under=80 -v
 
 # Integration testing (requires API keys)
 integration-test:

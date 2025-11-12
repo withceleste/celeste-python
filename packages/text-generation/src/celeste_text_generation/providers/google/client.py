@@ -6,6 +6,7 @@ from typing import Any, Unpack
 import httpx
 from pydantic import BaseModel
 
+from celeste.mime_types import ApplicationMimeType
 from celeste.parameters import ParameterMapper
 from celeste_text_generation.client import TextGenerationClient
 from celeste_text_generation.io import (
@@ -21,7 +22,7 @@ from .streaming import GoogleTextGenerationStream
 
 
 class GoogleTextGenerationClient(TextGenerationClient):
-    """Google client."""
+    """Google client for text generation."""
 
     @classmethod
     def parameter_mappers(cls) -> list[ParameterMapper]:
@@ -101,7 +102,7 @@ class GoogleTextGenerationClient(TextGenerationClient):
 
         headers = {
             config.AUTH_HEADER_NAME: f"{config.AUTH_HEADER_PREFIX}{self.api_key.get_secret_value()}",
-            "Content-Type": "application/json",
+            "Content-Type": ApplicationMimeType.JSON,
         }
 
         return await self.http_client.post(
@@ -124,7 +125,7 @@ class GoogleTextGenerationClient(TextGenerationClient):
 
         headers = {
             config.AUTH_HEADER_NAME: f"{config.AUTH_HEADER_PREFIX}{self.api_key.get_secret_value()}",
-            "Content-Type": "application/json",
+            "Content-Type": ApplicationMimeType.JSON,
         }
 
         return self.http_client.stream_post(
