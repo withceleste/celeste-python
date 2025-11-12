@@ -72,6 +72,32 @@ MODELS: list[Model] = [
         },
     ),
     Model(
+        id="gpt-5-mini",
+        provider=Provider.OPENAI,
+        display_name="GPT-5 Mini",
+        streaming=True,
+        parameter_constraints={
+            Parameter.MAX_TOKENS: Range(min=1, max=128000),
+            TextGenerationParameter.THINKING_BUDGET: Choice(
+                options=["minimal", "low", "medium", "high"]
+            ),
+            TextGenerationParameter.OUTPUT_SCHEMA: Schema(),
+        },
+    ),
+    Model(
+        id="gpt-5-nano",
+        provider=Provider.OPENAI,
+        display_name="GPT-5 Nano",
+        streaming=True,
+        parameter_constraints={
+            Parameter.MAX_TOKENS: Range(min=1, max=128000),
+            TextGenerationParameter.THINKING_BUDGET: Choice(
+                options=["minimal", "low", "medium", "high"]
+            ),
+            TextGenerationParameter.OUTPUT_SCHEMA: Schema(),
+        },
+    ),
+    Model(
         id="gpt-4.1",
         provider=Provider.OPENAI,
         display_name="GPT-4.1",
