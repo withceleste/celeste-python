@@ -5,7 +5,7 @@ from pydantic import Field, SecretStr
 from pydantic_settings import BaseSettings
 
 from celeste.core import Provider
-from celeste.exceptions import MissingCredentialsError
+from celeste.exceptions import MissingCredentialsError, UnsupportedProviderError
 
 # Provider to credential field mapping
 PROVIDER_CREDENTIAL_MAP = {
@@ -22,6 +22,7 @@ PROVIDER_CREDENTIAL_MAP = {
     Provider.TOPAZLABS: "topazlabs_api_key",
     Provider.PERPLEXITY: "perplexity_api_key",
     Provider.BYTEDANCE: "bytedance_api_key",
+    Provider.ELEVENLABS: "elevenlabs_api_key",
 }
 
 
@@ -41,6 +42,7 @@ class Credentials(BaseSettings):
     topazlabs_api_key: SecretStr | None = Field(None, alias="TOPAZLABS_API_KEY")
     perplexity_api_key: SecretStr | None = Field(None, alias="PERPLEXITY_API_KEY")
     bytedance_api_key: SecretStr | None = Field(None, alias="BYTEDANCE_API_KEY")
+    elevenlabs_api_key: SecretStr | None = Field(None, alias="ELEVENLABS_API_KEY")
 
     model_config = {
         "env_file": find_dotenv(),
@@ -95,12 +97,11 @@ class Credentials(BaseSettings):
             True if provider has credentials configured, False if credentials not set.
 
         Raises:
-            ValueError: If provider has no credential mapping.
+            UnsupportedProviderError: If provider has no credential mapping.
         """
         credential_field = PROVIDER_CREDENTIAL_MAP.get(provider)
         if not credential_field:
-            msg = f"Provider {provider} has no credential mapping"
-            raise ValueError(msg)
+            raise UnsupportedProviderError(provider=provider)
         return getattr(self, credential_field, None) is not None
 
 

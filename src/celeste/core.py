@@ -19,6 +19,7 @@ class Provider(StrEnum):
     TOPAZLABS = "topazlabs"
     PERPLEXITY = "perplexity"
     BYTEDANCE = "bytedance"
+    ELEVENLABS = "elevenlabs"
 
 
 class Capability(StrEnum):
@@ -38,6 +39,9 @@ class Capability(StrEnum):
 
     # Audio
     AUDIO_INTELLIGENCE = "audio-intelligence"
+
+    # Speech
+    SPEECH_GENERATION = "speech-generation"
 
     # Search
     SEARCH = "search"

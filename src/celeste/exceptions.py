@@ -147,6 +147,18 @@ class MissingCredentialsError(CredentialsError):
         )
 
 
+class UnsupportedProviderError(CredentialsError):
+    """Raised when a provider is not configured in the credential system."""
+
+    def __init__(self, provider: str) -> None:
+        """Initialize with provider details."""
+        self.provider = provider
+        super().__init__(
+            f"Provider {provider} has no credential mapping. "
+            f"This provider is not configured in the credential system."
+        )
+
+
 class UnsupportedParameterError(ValidationError):
     """Raised when a parameter is not supported by a model."""
 
@@ -170,4 +182,5 @@ __all__ = [
     "StreamingNotSupportedError",
     "UnsupportedCapabilityError",
     "UnsupportedParameterError",
+    "UnsupportedProviderError",
 ]

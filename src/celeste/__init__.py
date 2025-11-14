@@ -16,6 +16,7 @@ from celeste.exceptions import (
     StreamNotExhaustedError,
     UnsupportedCapabilityError,
     UnsupportedParameterError,
+    UnsupportedProviderError,
     ValidationError,
 )
 from celeste.http import HTTPClient, close_all_http_clients
@@ -120,6 +121,7 @@ __all__ = [
     "StreamingNotSupportedError",
     "UnsupportedCapabilityError",
     "UnsupportedParameterError",
+    "UnsupportedProviderError",
     "Usage",
     "ValidationError",
     "close_all_http_clients",
