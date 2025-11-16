@@ -14,7 +14,10 @@ from celeste_text_generation.io import (
     TextGenerationInput,
     TextGenerationUsage,
 )
-from celeste_text_generation.parameters import TextGenerationParameters
+from celeste_text_generation.parameters import (
+    TextGenerationParameter,
+    TextGenerationParameters,
+)
 
 from . import config
 from .parameters import ANTHROPIC_PARAMETER_MAPPERS
@@ -62,14 +65,6 @@ class AnthropicTextGenerationClient(TextGenerationClient):
             msg = "No content blocks in response"
             raise ValueError(msg)
 
-        output_schema = parameters.get("output_schema")
-        if output_schema is not None:
-            for content_block in content:
-                if content_block.get("type") == "tool_use":
-                    tool_input = content_block.get("input")
-                    if tool_input is not None:
-                        return self._transform_output(tool_input, **parameters)
-
         text_content = ""
         for content_block in content:
             if content_block.get("type") == "text":
@@ -112,6 +107,9 @@ class AnthropicTextGenerationClient(TextGenerationClient):
             "Content-Type": ApplicationMimeType.JSON,
         }
 
+        if parameters.get(TextGenerationParameter.OUTPUT_SCHEMA) is not None:
+            headers[config.ANTHROPIC_BETA_HEADER] = config.STRUCTURED_OUTPUTS_BETA
+
         return await self.http_client.post(
             f"{config.BASE_URL}{config.ENDPOINT}",
             headers=headers,
@@ -137,6 +135,9 @@ class AnthropicTextGenerationClient(TextGenerationClient):
             config.ANTHROPIC_VERSION_HEADER: config.ANTHROPIC_VERSION,
             "Content-Type": ApplicationMimeType.JSON,
         }
+
+        if parameters.get(TextGenerationParameter.OUTPUT_SCHEMA) is not None:
+            headers[config.ANTHROPIC_BETA_HEADER] = config.STRUCTURED_OUTPUTS_BETA
 
         return self.http_client.stream_post(
             f"{config.BASE_URL}{config.STREAM_ENDPOINT}",

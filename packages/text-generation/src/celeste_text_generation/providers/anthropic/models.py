@@ -22,7 +22,6 @@ MODELS: list[Model] = [
         streaming=True,
         parameter_constraints={
             TextGenerationParameter.THINKING_BUDGET: Range(min=-1, max=32000),
-            TextGenerationParameter.OUTPUT_SCHEMA: Schema(),
         },
     ),
     Model(
@@ -42,7 +41,6 @@ MODELS: list[Model] = [
         streaming=True,
         parameter_constraints={
             TextGenerationParameter.THINKING_BUDGET: Range(min=-1, max=64000),
-            TextGenerationParameter.OUTPUT_SCHEMA: Schema(),
         },
     ),
     Model(
@@ -52,7 +50,6 @@ MODELS: list[Model] = [
         streaming=True,
         parameter_constraints={
             TextGenerationParameter.THINKING_BUDGET: Range(min=-1, max=32000),
-            TextGenerationParameter.OUTPUT_SCHEMA: Schema(),
         },
     ),
 ]
