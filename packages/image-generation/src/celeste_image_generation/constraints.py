@@ -61,7 +61,7 @@ class Dimensions(Constraint):
         if not (self.min_aspect_ratio <= aspect_ratio <= self.max_aspect_ratio):
             msg = (
                 f"Aspect ratio {aspect_ratio:.3f} outside valid range "
-                f"[{self.min_aspect_ratio:.3f}, {self.max_aspect_ratio:.1f}]"
+                f"[{self.min_aspect_ratio:.3f}, {self.max_aspect_ratio:.3f}]"
             )
             raise ConstraintViolationError(msg)
 

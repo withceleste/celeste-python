@@ -9,14 +9,12 @@ def register_package() -> None:
     from celeste_text_generation.models import MODELS
     from celeste_text_generation.providers import PROVIDERS
 
-    # Register provider-specific clients
     for provider, client_class in PROVIDERS:
         register_client(Capability.TEXT_GENERATION, provider, client_class)
 
     register_models(MODELS, capability=Capability.TEXT_GENERATION)
 
 
-# Import after register_package is defined to avoid circular imports
 from celeste_text_generation.io import (  # noqa: E402
     TextGenerationChunk,
     TextGenerationFinishReason,

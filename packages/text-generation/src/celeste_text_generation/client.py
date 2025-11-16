@@ -50,7 +50,7 @@ class TextGenerationClient(
         """Map positional arguments to Input type."""
         if args:
             return TextGenerationInput(prompt=args[0])
-        prompt = parameters.get("prompt")
+        prompt: str | None = parameters.get("prompt")
         if prompt is None:
             msg = (
                 "prompt is required (either as positional argument or keyword argument)"
@@ -66,7 +66,9 @@ class TextGenerationClient(
     def _build_metadata(self, response_data: dict[str, Any]) -> dict[str, Any]:
         """Build metadata dictionary from response data."""
         metadata = super()._build_metadata(response_data)
-        metadata["finish_reason"] = self._parse_finish_reason(response_data)
+        metadata["raw_response"] = (
+            response_data
+        )
         return metadata
 
     @abstractmethod

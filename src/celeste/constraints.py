@@ -61,7 +61,9 @@ class Range(Constraint):
             special_msg = (
                 f" or one of {self.special_values}" if self.special_values else ""
             )
-            msg = f"Must be between {self.min} and {self.max}{special_msg}, got {value}"
+            msg = (
+                f"Must be between {self.min} and {self.max}{special_msg}, got {value!r}"
+            )
             raise ConstraintViolationError(msg)
 
         # Validate step if provided
@@ -77,7 +79,7 @@ class Range(Constraint):
                     int((value - self.min) / self.step) * self.step
                 )
                 closest_above = closest_below + self.step
-                msg = f"Value must match step {self.step}. Nearest valid: {closest_below} or {closest_above}, got {value}"
+                msg = f"Value must match step {self.step}. Nearest valid: {closest_below} or {closest_above}, got {value!r}"
                 raise ConstraintViolationError(msg)
 
         return value
@@ -114,11 +116,11 @@ class Str(Constraint):
             raise ConstraintViolationError(msg)
 
         if self.min_length is not None and len(value) < self.min_length:
-            msg = f"String too short (min {self.min_length}), got {len(value)}"
+            msg = f"String too short (min {self.min_length}), got length {len(value)}: {value!r}"
             raise ConstraintViolationError(msg)
 
         if self.max_length is not None and len(value) > self.max_length:
-            msg = f"String too long (max {self.max_length}), got {len(value)}"
+            msg = f"String too long (max {self.max_length}), got length {len(value)}: {value!r}"
             raise ConstraintViolationError(msg)
 
         return value
@@ -203,10 +205,8 @@ class ImageConstraint(Constraint):
             and value.mime_type not in self.supported_mime_types
         ):
             supported_values = [mt.value for mt in self.supported_mime_types]
-            msg = (
-                f"mime_type must be one of {supported_values}, "
-                f"got {value.mime_type.value if value.mime_type else None}"
-            )
+            got_value = value.mime_type.value if value.mime_type else None
+            msg = f"mime_type must be one of {supported_values}, got {got_value!r}"
             raise ConstraintViolationError(msg)
 
         return value
@@ -239,9 +239,10 @@ class ImagesConstraint(Constraint):
                     raise ConstraintViolationError(msg)
                 if img.mime_type not in self.supported_mime_types:
                     supported_values = [mt.value for mt in self.supported_mime_types]
+                    got_value = img.mime_type.value if img.mime_type else None
                     msg = (
                         f"Image {i + 1}: mime_type must be one of {supported_values}, "
-                        f"got {img.mime_type.value if img.mime_type else None}"
+                        f"got {got_value!r}"
                     )
                     raise ConstraintViolationError(msg)
 

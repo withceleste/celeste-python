@@ -222,7 +222,7 @@ class TestStr:
         constraint = Str(min_length=5)
 
         with pytest.raises(
-            ConstraintViolationError, match=r"String too short \(min 5\), got 3"
+            ConstraintViolationError, match=r"String too short \(min 5\), got length 3"
         ):
             constraint("abc")
 
@@ -231,7 +231,7 @@ class TestStr:
         constraint = Str(max_length=5)
 
         with pytest.raises(
-            ConstraintViolationError, match=r"String too long \(max 5\), got 10"
+            ConstraintViolationError, match=r"String too long \(max 5\), got length 10"
         ):
             constraint("too long!!")
 

@@ -16,18 +16,14 @@ class ImageGenerationFinishReason(FinishReason):
     Stores raw provider reason. Providers map their values in implementation.
     """
 
-    reason: str | None = (
-        None  # Raw provider string (e.g., "STOP", "NO_IMAGE", "PROHIBITED_CONTENT")
-    )
-    message: str | None = None  # Optional human-readable explanation from provider
+    reason: str
+    message: str | None = None
 
 
 class ImageGenerationUsage(Usage):
     """Image generation usage metrics.
 
-    Most providers don't report usage metrics for image generation.
-    OpenAI gpt-image-1 reports usage only in streaming mode.
-    ByteDance reports tokens_used for billing tracking.
+    All fields optional since providers vary.
     """
 
     total_tokens: int | None = None
