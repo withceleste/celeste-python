@@ -67,7 +67,7 @@ class ImageGenerationClient(
         """Build metadata dictionary from response data."""
         metadata = super()._build_metadata(response_data)
         metadata["raw_response"] = (
-            response_data  # Complete raw response (providers filter content fields)
+            response_data  # Filtered response data (content fields removed by providers before calling super)
         )
         return metadata
 

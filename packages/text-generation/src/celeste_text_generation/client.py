@@ -67,7 +67,7 @@ class TextGenerationClient(
         """Build metadata dictionary from response data."""
         metadata = super()._build_metadata(response_data)
         metadata["raw_response"] = (
-            response_data  # Complete raw response (providers filter content fields)
+            response_data
         )
         return metadata
 
