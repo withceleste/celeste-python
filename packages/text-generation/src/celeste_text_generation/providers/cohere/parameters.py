@@ -1,7 +1,6 @@
 """Cohere parameter mappers."""
 
 import json
-from enum import StrEnum
 from typing import Any, get_args, get_origin
 
 from pydantic import BaseModel, TypeAdapter
@@ -15,7 +14,7 @@ from celeste_text_generation.parameters import TextGenerationParameter
 class TemperatureMapper(ParameterMapper):
     """Map temperature parameter to Cohere temperature field."""
 
-    name: StrEnum = Parameter.TEMPERATURE
+    name = Parameter.TEMPERATURE
 
     def map(
         self,
@@ -35,7 +34,7 @@ class TemperatureMapper(ParameterMapper):
 class MaxTokensMapper(ParameterMapper):
     """Map max_tokens parameter to Cohere max_tokens field."""
 
-    name: StrEnum = Parameter.MAX_TOKENS
+    name = Parameter.MAX_TOKENS
 
     def map(
         self,
@@ -55,7 +54,7 @@ class MaxTokensMapper(ParameterMapper):
 class ThinkingBudgetMapper(ParameterMapper):
     """Map thinking_budget parameter to Cohere thinking parameter."""
 
-    name: StrEnum = TextGenerationParameter.THINKING_BUDGET
+    name = TextGenerationParameter.THINKING_BUDGET
 
     def map(
         self,
@@ -91,7 +90,7 @@ class ThinkingBudgetMapper(ParameterMapper):
 class OutputSchemaMapper(ParameterMapper):
     """Map output_schema parameter to Cohere response_format."""
 
-    name: StrEnum = TextGenerationParameter.OUTPUT_SCHEMA
+    name = TextGenerationParameter.OUTPUT_SCHEMA
 
     def map(
         self,

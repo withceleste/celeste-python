@@ -1,6 +1,5 @@
 """Mistral parameter mappers."""
 
-from enum import StrEnum
 from typing import Any, get_args, get_origin
 
 from pydantic import BaseModel, TypeAdapter
@@ -92,7 +91,7 @@ class ThinkingBudgetMapper(ParameterMapper):
 class OutputSchemaMapper(ParameterMapper):
     """Map output_schema parameter to Mistral response_format."""
 
-    name: StrEnum = TextGenerationParameter.OUTPUT_SCHEMA
+    name = TextGenerationParameter.OUTPUT_SCHEMA
 
     def map(
         self,
