@@ -9,7 +9,6 @@ def register_package() -> None:
     from celeste_image_generation.models import MODELS
     from celeste_image_generation.providers import PROVIDERS
 
-    # Register provider-specific clients
     for provider, client_class in PROVIDERS:
         register_client(Capability.IMAGE_GENERATION, provider, client_class)
 

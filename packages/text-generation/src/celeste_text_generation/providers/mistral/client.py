@@ -82,6 +82,15 @@ class MistralTextGenerationClient(TextGenerationClient):
             else None
         )
 
+    def _build_metadata(self, response_data: dict[str, Any]) -> dict[str, Any]:
+        """Build metadata dictionary from response data."""
+        # Filter content field before calling super
+        content_fields = {"choices"}
+        filtered_data = {
+            k: v for k, v in response_data.items() if k not in content_fields
+        }
+        return super()._build_metadata(filtered_data)
+
     async def _make_request(
         self,
         request_body: dict[str, Any],

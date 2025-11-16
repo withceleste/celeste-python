@@ -89,14 +89,12 @@ class GoogleImageGenerationClient(ImageGenerationClient):
 
     def _build_metadata(self, response_data: dict[str, Any]) -> dict[str, Any]:
         """Build metadata dictionary from response data."""
-        # Parse finish_reason from full response_data before calling super (needs "candidates")
-        finish_reason = self._parse_finish_reason(response_data)
-
-        metadata = super()._build_metadata(response_data)
-        # Override with pre-parsed finish_reason
-        if finish_reason is not None:
-            metadata["finish_reason"] = finish_reason
-        return metadata
+        # Filter content field before calling super
+        content_fields = {"candidates"}
+        filtered_data = {
+            k: v for k, v in response_data.items() if k not in content_fields
+        }
+        return super()._build_metadata(filtered_data)
 
     async def _make_request(
         self,

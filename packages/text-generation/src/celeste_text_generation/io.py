@@ -15,7 +15,7 @@ class TextGenerationFinishReason(FinishReason):
     Stores raw provider reason. Providers map their values in implementation.
     """
 
-    reason: str  # Raw provider string (e.g., "stop", "end_turn", "STOP", "COMPLETE")
+    reason: str
 
 
 class TextGenerationUsage(Usage):

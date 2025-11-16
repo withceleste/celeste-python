@@ -66,11 +66,9 @@ class ImageGenerationClient(
     def _build_metadata(self, response_data: dict[str, Any]) -> dict[str, Any]:
         """Build metadata dictionary from response data."""
         metadata = super()._build_metadata(response_data)
-        # Only parse finish_reason if not already set by provider override
-        if "finish_reason" not in metadata:
-            finish_reason = self._parse_finish_reason(response_data)
-            if finish_reason is not None:
-                metadata["finish_reason"] = finish_reason
+        metadata["raw_response"] = (
+            response_data  # Complete raw response (providers filter content fields)
+        )
         return metadata
 
     @abstractmethod
