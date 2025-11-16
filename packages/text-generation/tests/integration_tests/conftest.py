@@ -1,13 +1,14 @@
 """Pytest configuration and fixtures for integration tests."""
 
-import pytest
+from collections.abc import AsyncGenerator
+
 import pytest_asyncio
 
 from celeste.http import close_all_http_clients
 
 
 @pytest_asyncio.fixture(autouse=True)
-async def cleanup_http_clients() -> None:
+async def cleanup_http_clients() -> AsyncGenerator[None, None]:
     """Ensure HTTP clients are closed after each test.
 
     This fixture runs automatically after each test to ensure HTTP clients
