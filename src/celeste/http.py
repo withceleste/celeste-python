@@ -78,6 +78,42 @@ class HTTPClient:
             timeout=timeout,
         )
 
+    async def post_multipart(
+        self,
+        url: str,
+        headers: dict[str, str],
+        files: dict[str, tuple[str, bytes, str]],
+        data: dict[str, str],
+        timeout: float = DEFAULT_TIMEOUT,
+    ) -> httpx.Response:
+        """Make POST request with multipart/form-data.
+
+        Args:
+            url: Full URL to POST to.
+            headers: HTTP headers including authentication.
+            files: File fields as dict mapping field_name -> (filename, content_bytes, mime_type).
+            data: Form data fields as dict mapping field_name -> string value.
+            timeout: Request timeout in seconds.
+
+        Returns:
+            HTTP response from the server.
+
+        Raises:
+            httpx.HTTPError: On network or timeout errors.
+            ValueError: If URL is empty or invalid.
+        """
+        if not url or not url.strip():
+            raise ValueError("URL cannot be empty")
+
+        client = await self._get_client()
+        return await client.post(
+            url,
+            headers=headers,
+            files=files,
+            data=data,
+            timeout=timeout,
+        )
+
     async def get(
         self,
         url: str,

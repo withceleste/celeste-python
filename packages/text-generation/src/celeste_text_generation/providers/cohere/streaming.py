@@ -147,7 +147,8 @@ class CohereTextGenerationStream(TextGenerationStream):
         return TextGenerationOutput(
             content=content,
             usage=usage,
-            metadata={"finish_reason": finish_reason},
+            finish_reason=finish_reason,
+            metadata={},
         )
 
 

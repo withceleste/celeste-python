@@ -12,6 +12,7 @@ class TextGenerationParameter(StrEnum):
 
     THINKING_BUDGET = "thinking_budget"
     OUTPUT_SCHEMA = "output_schema"
+    VERBOSITY = "verbosity"
 
 
 class TextGenerationParameters(Parameters):
@@ -20,4 +21,5 @@ class TextGenerationParameters(Parameters):
     temperature: float | None
     max_tokens: int | None
     thinking_budget: int | None
+    verbosity: str | None
     output_schema: type[BaseModel] | None

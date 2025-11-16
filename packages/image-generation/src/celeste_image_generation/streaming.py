@@ -37,7 +37,8 @@ class ImageGenerationStream(Stream[ImageGenerationOutput, ImageGenerationParamet
         return ImageGenerationOutput(
             content=content,
             usage=usage,
-            metadata={"finish_reason": finish_reason},
+            finish_reason=finish_reason,
+            metadata={},
         )
 
     @abstractmethod

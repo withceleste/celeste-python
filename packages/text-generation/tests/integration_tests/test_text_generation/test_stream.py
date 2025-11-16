@@ -98,6 +98,9 @@ async def test_stream(provider: Provider, model: str, parameters: dict) -> None:
 
     # Assert 6: Finish Reason
     assert chunks[-1].finish_reason is not None, "Final chunk should have finish_reason"
-    assert "finish_reason" in output.metadata, (
-        "Output metadata should contain finish_reason"
+    assert output.finish_reason is not None, (
+        "Output should have finish_reason as direct field"
+    )
+    assert isinstance(output.finish_reason, TextGenerationFinishReason), (
+        f"Expected TextGenerationFinishReason, got {type(output.finish_reason)}"
     )
