@@ -66,9 +66,7 @@ class TextGenerationClient(
     def _build_metadata(self, response_data: dict[str, Any]) -> dict[str, Any]:
         """Build metadata dictionary from response data."""
         metadata = super()._build_metadata(response_data)
-        metadata["raw_response"] = (
-            response_data
-        )
+        metadata["raw_response"] = response_data
         return metadata
 
     @abstractmethod
