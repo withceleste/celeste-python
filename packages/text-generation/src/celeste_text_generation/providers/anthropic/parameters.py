@@ -1,7 +1,6 @@
 """Anthropic parameter mappers."""
 
 import json
-from enum import StrEnum
 from typing import Any, get_args, get_origin
 
 from pydantic import BaseModel, TypeAdapter
@@ -15,7 +14,7 @@ from celeste_text_generation.parameters import TextGenerationParameter
 class ThinkingBudgetMapper(ParameterMapper):
     """Map thinking_budget parameter to Anthropic thinking.budget_tokens."""
 
-    name: StrEnum = TextGenerationParameter.THINKING_BUDGET
+    name = TextGenerationParameter.THINKING_BUDGET
 
     def map(
         self,
@@ -64,7 +63,7 @@ class ThinkingBudgetMapper(ParameterMapper):
 class OutputSchemaMapper(ParameterMapper):
     """Map output_schema parameter to Anthropic native structured outputs (output_format)."""
 
-    name: StrEnum = TextGenerationParameter.OUTPUT_SCHEMA
+    name = TextGenerationParameter.OUTPUT_SCHEMA
 
     def map(
         self,
