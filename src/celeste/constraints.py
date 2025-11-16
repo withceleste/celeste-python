@@ -7,7 +7,9 @@ from typing import Any, get_args, get_origin
 
 from pydantic import BaseModel, Field
 
+from celeste.artifacts import ImageArtifact
 from celeste.exceptions import ConstraintViolationError
+from celeste.mime_types import ImageMimeType
 
 
 class Constraint(BaseModel, ABC):
@@ -180,11 +182,79 @@ class Schema(Constraint):
         return value
 
 
+class ImageConstraint(Constraint):
+    """Constraint for validating a single image artifact - validates mime_type."""
+
+    supported_mime_types: list[ImageMimeType] | None = None
+    """Supported MIME types for the image."""
+
+    def __call__(self, value: ImageArtifact) -> ImageArtifact:
+        """Validate single image artifact against constraint."""
+        if isinstance(value, list):
+            msg = "ImageConstraint requires a single ImageArtifact, not a list"
+            raise ConstraintViolationError(msg)
+
+        if not isinstance(value, ImageArtifact):
+            msg = f"Must be ImageArtifact, got {type(value).__name__}"
+            raise ConstraintViolationError(msg)
+
+        if (
+            self.supported_mime_types is not None
+            and value.mime_type not in self.supported_mime_types
+        ):
+            supported_values = [mt.value for mt in self.supported_mime_types]
+            msg = (
+                f"mime_type must be one of {supported_values}, "
+                f"got {value.mime_type.value if value.mime_type else None}"
+            )
+            raise ConstraintViolationError(msg)
+
+        return value
+
+
+class ImagesConstraint(Constraint):
+    """Constraint for validating image artifacts list - validates mime_type and count limits."""
+
+    supported_mime_types: list[ImageMimeType] | None = None
+    """Supported MIME types."""
+
+    max_count: int | None = None
+    """Maximum number of images."""
+
+    def __call__(
+        self, value: ImageArtifact | list[ImageArtifact]
+    ) -> list[ImageArtifact]:
+        """Validate image artifact(s) against constraint and normalize to list."""
+        # Normalize: if single ImageArtifact is passed, wrap it in a list
+        images = value if isinstance(value, list) else [value]
+
+        if self.max_count is not None and len(images) > self.max_count:
+            msg = f"Must have at most {self.max_count} image(s), got {len(images)}"
+            raise ConstraintViolationError(msg)
+
+        if self.supported_mime_types is not None:
+            for i, img in enumerate(images):
+                if not isinstance(img, ImageArtifact):
+                    msg = f"Image {i + 1}: Must be ImageArtifact, got {type(img).__name__}"
+                    raise ConstraintViolationError(msg)
+                if img.mime_type not in self.supported_mime_types:
+                    supported_values = [mt.value for mt in self.supported_mime_types]
+                    msg = (
+                        f"Image {i + 1}: mime_type must be one of {supported_values}, "
+                        f"got {img.mime_type.value if img.mime_type else None}"
+                    )
+                    raise ConstraintViolationError(msg)
+
+        return images
+
+
 __all__ = [
     "Bool",
     "Choice",
     "Constraint",
     "Float",
+    "ImageConstraint",
+    "ImagesConstraint",
     "Int",
     "Pattern",
     "Range",

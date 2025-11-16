@@ -12,7 +12,7 @@ class Input(BaseModel):
 
 
 class FinishReason(BaseModel):
-    """Base class for capability-specific finish reasons (used in streaming chunks)."""
+    """Base class for capability-specific finish reasons (used in streaming chunks and outputs)."""
 
     pass
 
@@ -28,6 +28,7 @@ class Output[Content](BaseModel):
 
     content: Content
     usage: Usage = Field(default_factory=Usage)
+    finish_reason: FinishReason | None = None
     metadata: dict[str, Any] = Field(default_factory=dict)
 
 

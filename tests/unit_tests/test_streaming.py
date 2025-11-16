@@ -614,11 +614,12 @@ class TestStreamWithTypedUsageAndFinishReason:
             usage: TypedUsage | None = None
 
         class TypedOutput(Output[str]):
-            """Typed output with specific usage."""
+            """Typed output with specific usage and finish_reason."""
 
             usage: TypedUsage = Field(
                 default_factory=lambda: TypedUsage(input_tokens=0, output_tokens=0)
             )
+            finish_reason: TypedFinishReason | None = None
 
         class TypedStream(Stream[TypedOutput, Parameters]):
             """Stream using typed classes."""
@@ -662,7 +663,18 @@ class TestStreamWithTypedUsageAndFinishReason:
                     else TypedUsage(input_tokens=0, output_tokens=0)
                 )
 
-                return TypedOutput(content=content, usage=usage)
+                # Extract finish_reason from final chunk (typed)
+                finish_reason = (
+                    final_chunk.finish_reason
+                    if final_chunk
+                    and isinstance(final_chunk, TypedChunk)
+                    and final_chunk.finish_reason
+                    else None
+                )
+
+                return TypedOutput(
+                    content=content, usage=usage, finish_reason=finish_reason
+                )
 
         # Act - Stream with typed chunks
         events: list[dict[str, Any]] = [
@@ -691,9 +703,12 @@ class TestStreamWithTypedUsageAndFinishReason:
         assert chunks[2].usage.input_tokens == 5
         assert chunks[2].usage.output_tokens == 10
 
-        # Assert - Output has typed usage
+        # Assert - Output has typed usage and finish_reason
         output = stream.output
         assert output.content == "Hello world!"
         assert isinstance(output.usage, TypedUsage)
         assert output.usage.input_tokens == 5
         assert output.usage.output_tokens == 10
+        assert output.finish_reason is not None
+        assert isinstance(output.finish_reason, TypedFinishReason)
+        assert output.finish_reason.reason == "stop"

@@ -15,7 +15,7 @@ from celeste.exceptions import (
     UnsupportedCapabilityError,
 )
 from celeste.http import HTTPClient, get_http_client
-from celeste.io import Input, Output, Usage
+from celeste.io import FinishReason, Input, Output, Usage
 from celeste.models import Model
 from celeste.parameters import ParameterMapper, Parameters
 from celeste.streaming import Stream
@@ -59,6 +59,7 @@ class Client[In: Input, Out: Output, Params: Parameters](ABC, BaseModel):
             Output of the parameterized type (e.g., TextGenerationOutput).
         """
         inputs = self._create_inputs(*args, **parameters)
+        inputs, parameters = self._validate_artifacts(inputs, **parameters)
         request_body = self._build_request(inputs, **parameters)
         response = await self._make_request(request_body, **parameters)
         self._handle_error_response(response)
@@ -66,6 +67,7 @@ class Client[In: Input, Out: Output, Params: Parameters](ABC, BaseModel):
         return self._output_class()(
             content=self._parse_content(response_data, **parameters),
             usage=self._parse_usage(response_data),
+            finish_reason=self._parse_finish_reason(response_data),
             metadata=self._build_metadata(response_data),
         )
 
@@ -90,6 +92,7 @@ class Client[In: Input, Out: Output, Params: Parameters](ABC, BaseModel):
             raise StreamingNotSupportedError(model_id=self.model.id)
 
         inputs = self._create_inputs(*args, **parameters)
+        inputs, parameters = self._validate_artifacts(inputs, **parameters)
         request_body = self._build_request(inputs, **parameters)
         sse_iterator = self._make_stream_request(request_body, **parameters)
         return self._stream_class()(
@@ -122,6 +125,16 @@ class Client[In: Input, Out: Output, Params: Parameters](ABC, BaseModel):
     ) -> object:
         """Parse content from provider response."""
         ...
+
+    def _parse_finish_reason(
+        self, response_data: dict[str, Any]
+    ) -> FinishReason | None:
+        """Parse finish reason from provider response.
+
+        Default implementation returns None. Override in capability-specific
+        clients that support finish reasons (e.g., text-generation, image-generation).
+        """
+        return None
 
     @abstractmethod
     def _create_inputs(
@@ -158,6 +171,14 @@ class Client[In: Input, Out: Output, Params: Parameters](ABC, BaseModel):
     ) -> AsyncIterator[dict[str, Any]]:
         """Make HTTP streaming request and return async iterator of events."""
         raise StreamingNotSupportedError(model_id=self.model.id)
+
+    def _validate_artifacts(
+        self,
+        inputs: In,
+        **parameters: Unpack[Params],  # type: ignore[misc]
+    ) -> tuple[In, dict[str, Any]]:
+        """Validate and prepare artifacts in inputs and parameters."""
+        return inputs, parameters
 
     def _build_metadata(self, response_data: dict[str, Any]) -> dict[str, Any]:
         """Build metadata dictionary from response data."""

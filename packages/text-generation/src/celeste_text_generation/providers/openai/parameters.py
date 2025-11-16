@@ -155,10 +155,6 @@ class TemperatureMapper(ParameterMapper):
         model: Model,
     ) -> dict[str, Any]:
         """Transform temperature into provider request."""
-        # Skip temperature for gpt-5 (uses reasoning.effort instead)
-        if model.id == "gpt-5":
-            return request
-
         validated_value = self._validate_value(value, model)
         if validated_value is None:
             return request
@@ -199,16 +195,31 @@ class ThinkingBudgetMapper(ParameterMapper):
         model: Model,
     ) -> dict[str, Any]:
         """Transform thinking_budget into provider request."""
-        # Only supported for GPT-5 models
-        if model.id != "gpt-5":
-            return request
-
         validated_value = self._validate_value(value, model)
         if validated_value is None:
             return request
 
-        # Map to reasoning.effort nested structure
         request.setdefault("reasoning", {})["effort"] = validated_value
+        return request
+
+
+class VerbosityMapper(ParameterMapper):
+    """Map verbosity parameter to OpenAI text.verbosity field."""
+
+    name: StrEnum = TextGenerationParameter.VERBOSITY
+
+    def map(
+        self,
+        request: dict[str, Any],
+        value: object,
+        model: Model,
+    ) -> dict[str, Any]:
+        """Transform verbosity into provider request."""
+        validated_value = self._validate_value(value, model)
+        if validated_value is None:
+            return request
+
+        request.setdefault("text", {})["verbosity"] = validated_value
         return request
 
 
@@ -216,6 +227,7 @@ OPENAI_PARAMETER_MAPPERS: list[ParameterMapper] = [
     TemperatureMapper(),
     MaxTokensMapper(),
     ThinkingBudgetMapper(),
+    VerbosityMapper(),
     OutputSchemaMapper(),
 ]
 
