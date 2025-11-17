@@ -1,7 +1,7 @@
 [project]
 name = "celeste-text-generation"
-version = "0.2.2"
-description = "Type-safe text generation for Celeste AI. Unified interface for OpenAI, Anthropic, Google, Mistral, Cohere, and more"
+version = "0.2.7"
+description = "Text generation package for Celeste AI. Unified interface for all providers"
 authors = [{name = "Kamilbenkirane", email = "kamil@withceleste.ai"}]
 readme = "README.md"
 license = {text = "Apache-2.0"}

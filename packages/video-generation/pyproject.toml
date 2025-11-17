@@ -1,6 +1,6 @@
 [project]
 name = "celeste-video-generation"
-version = "0.2.1"
+version = "0.2.7"
 description = "Video generation package for Celeste AI. Unified interface for all providers"
 authors = [{name = "Kamilbenkirane", email = "kamil@withceleste.ai"}]
 readme = "README.md"
