@@ -180,7 +180,12 @@ class GoogleVideoGenerationClient(VideoGenerationClient):
         )
 
     async def download_content(self, artifact: VideoArtifact) -> VideoArtifact:
-        """Download video content from URI."""
+        """Download video content from URI.
+
+        Google-specific method. Google Veo returns gs:// URIs that require
+        downloading with API key authentication. Other providers return video
+        content directly in the response.
+        """
         if not artifact.url:
             msg = "VideoArtifact has no URL to download from"
             raise ValueError(msg)

@@ -1,11 +1,4 @@
-"""ByteDance parameter mappers.
-
-BytePlus ModelArk API uses a unique parameter format where parameters are embedded
-in the text prompt using --parameter syntax, not as separate JSON fields.
-
-Example:
-    "text": "a dog jumping --duration 5 --resolution 720p"
-"""
+"""ByteDance parameter mappers."""
 
 from typing import Any
 
@@ -140,7 +133,7 @@ class FirstFrameMapper(ParameterMapper):
             return request
 
         if not validated_value.url:
-            msg = "ByteDance requires image URL for first_frame, not base64 data or file path"
+            msg = "ByteDance requires image URL (including data URIs) for first_frame. ImageArtifact must have url, data, or path"
             raise ValidationError(msg)
 
         content = request.setdefault("content", [])
@@ -171,7 +164,7 @@ class LastFrameMapper(ParameterMapper):
             return request
 
         if not validated_value.url:
-            msg = "ByteDance requires image URL for last_frame, not base64 data or file path"
+            msg = "ByteDance requires image URL (including data URIs) for last_frame. ImageArtifact must have url, data, or path"
             raise ValidationError(msg)
 
         content = request.setdefault("content", [])
