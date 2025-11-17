@@ -165,7 +165,6 @@ ignore_missing_imports = true
 module = [
     "celeste_text_generation.*",
     "celeste_text_generation.client",
-    "celeste_text_generation.streaming",
     "celeste_text_generation.providers.*",
 ]
 disable_error_code = ["override", "return-value", "arg-type", "call-arg", "assignment", "no-any-return"]
@@ -174,7 +173,6 @@ disable_error_code = ["override", "return-value", "arg-type", "call-arg", "assig
 module = [
     "celeste_image_generation.*",
     "celeste_image_generation.client",
-    "celeste_image_generation.streaming",
     "celeste_image_generation.providers.*",
 ]
 disable_error_code = ["override", "return-value", "arg-type", "call-arg", "assignment", "no-any-return"]

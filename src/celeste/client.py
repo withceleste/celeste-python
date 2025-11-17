@@ -15,7 +15,7 @@ from celeste.exceptions import (
     UnsupportedCapabilityError,
 )
 from celeste.http import HTTPClient, get_http_client
-from celeste.io import FinishReason, Input, Output, Usage
+from celeste.io import Chunk, FinishReason, Input, Output, Usage
 from celeste.models import Model
 from celeste.parameters import ParameterMapper, Parameters
 from celeste.streaming import Stream
@@ -75,7 +75,7 @@ class Client[In: Input, Out: Output, Params: Parameters](ABC, BaseModel):
         self,
         *args: Any,  # noqa: ANN401
         **parameters: Unpack[Params],  # type: ignore[misc]
-    ) -> Stream[Out, Params]:
+    ) -> Stream[Out, Params, Chunk]:
         """Stream content - signature varies by capability.
 
         Args:
@@ -160,7 +160,7 @@ class Client[In: Input, Out: Output, Params: Parameters](ABC, BaseModel):
         """Make HTTP request(s) and return response object."""
         ...
 
-    def _stream_class(self) -> type[Stream[Out, Params]]:
+    def _stream_class(self) -> type[Stream[Out, Params, Chunk]]:
         """Return the Stream class for this client."""
         raise StreamingNotSupportedError(model_id=self.model.id)
 

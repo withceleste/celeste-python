@@ -13,6 +13,7 @@ from celeste.http import (
     close_all_http_clients,
     get_http_client,
 )
+from celeste.mime_types import ApplicationMimeType
 
 
 @pytest.fixture
@@ -183,7 +184,7 @@ class TestHTTPClientRequestMethods:
         url = "https://api.example.com/generate"
         headers = {
             "Authorization": "Bearer sk-test",
-            "Content-Type": "application/json",
+            "Content-Type": ApplicationMimeType.JSON,
         }
         json_body = {"prompt": "Hello", "max_tokens": 100}
         timeout = 30.0

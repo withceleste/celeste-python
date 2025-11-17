@@ -5,7 +5,6 @@ from collections.abc import AsyncIterator
 from typing import Any
 
 from celeste.artifacts import ImageArtifact
-from celeste.io import Chunk
 from celeste.mime_types import ImageMimeType
 from celeste_image_generation.io import ImageGenerationChunk, ImageGenerationUsage
 from celeste_image_generation.streaming import ImageGenerationStream
@@ -21,7 +20,7 @@ class ByteDanceImageGenerationStream(ImageGenerationStream):
         super().__init__(sse_iterator)
         self._completed_usage: ImageGenerationUsage | None = None
 
-    def _parse_chunk(self, chunk_data: dict[str, Any]) -> Chunk | None:
+    def _parse_chunk(self, chunk_data: dict[str, Any]) -> ImageGenerationChunk | None:
         """Parse chunk from SSE event."""
         event_type = chunk_data.get("type")
 

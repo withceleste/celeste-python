@@ -3,7 +3,6 @@
 from abc import abstractmethod
 from typing import Any, Unpack
 
-from celeste.io import Chunk
 from celeste.streaming import Stream
 from celeste_text_generation.io import (
     TextGenerationChunk,
@@ -13,11 +12,13 @@ from celeste_text_generation.io import (
 from celeste_text_generation.parameters import TextGenerationParameters
 
 
-class TextGenerationStream(Stream[TextGenerationOutput, TextGenerationParameters]):
+class TextGenerationStream(
+    Stream[TextGenerationOutput, TextGenerationParameters, TextGenerationChunk]
+):
     """Streaming for text generation."""
 
     @abstractmethod
-    def _parse_chunk(self, event: dict[str, Any]) -> Chunk | None:
+    def _parse_chunk(self, event: dict[str, Any]) -> TextGenerationChunk | None:
         """Parse SSE event into Chunk (provider-specific)."""
 
     def _parse_output(

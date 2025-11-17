@@ -6,11 +6,12 @@ from types import TracebackType
 from typing import Any, Self, Unpack
 
 from celeste.exceptions import StreamEmptyError, StreamNotExhaustedError
-from celeste.io import Chunk, Output
+from celeste.io import Chunk as ChunkBase
+from celeste.io import Output
 from celeste.parameters import Parameters
 
 
-class Stream[Out: Output, Params: Parameters](ABC):
+class Stream[Out: Output, Params: Parameters, Chunk: ChunkBase](ABC):
     """Async iterator wrapper providing final Output access after stream exhaustion."""
 
     def __init__(

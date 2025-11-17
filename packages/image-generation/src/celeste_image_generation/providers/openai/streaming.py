@@ -5,7 +5,6 @@ import logging
 from typing import Any
 
 from celeste.artifacts import ImageArtifact
-from celeste.io import Chunk
 from celeste_image_generation.io import ImageGenerationChunk, ImageGenerationUsage
 from celeste_image_generation.streaming import ImageGenerationStream
 
@@ -15,7 +14,7 @@ logger = logging.getLogger(__name__)
 class OpenAIImageGenerationStream(ImageGenerationStream):
     """OpenAI streaming for image generation."""
 
-    def _parse_chunk(self, chunk_data: dict[str, Any]) -> Chunk | None:
+    def _parse_chunk(self, chunk_data: dict[str, Any]) -> ImageGenerationChunk | None:
         """Parse chunk from SSE event.
 
         OpenAI returns two event types:
