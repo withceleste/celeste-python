@@ -1,4 +1,4 @@
-"""Google provider configuration."""
+"""Google provider configuration for video generation."""
 
 BASE_URL = "https://generativelanguage.googleapis.com/v1beta"
 GENERATE_ENDPOINT = "/models/{model_id}:predictLongRunning"

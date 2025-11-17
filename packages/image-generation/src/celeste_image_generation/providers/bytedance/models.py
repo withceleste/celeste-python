@@ -1,4 +1,4 @@
-"""ByteDance models."""
+"""ByteDance models for image generation."""
 
 from celeste import Model, Provider
 from celeste.constraints import Bool, Choice

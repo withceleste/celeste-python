@@ -1,4 +1,4 @@
-"""Mistral provider configuration."""
+"""Mistral provider configuration for text generation."""
 
 # HTTP Configuration
 BASE_URL = "https://api.mistral.ai"

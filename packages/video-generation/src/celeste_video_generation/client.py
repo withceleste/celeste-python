@@ -7,6 +7,7 @@ import httpx
 
 from celeste.artifacts import VideoArtifact
 from celeste.client import Client
+from celeste.exceptions import ValidationError
 from celeste_video_generation.io import (
     VideoGenerationInput,
     VideoGenerationOutput,
@@ -37,11 +38,17 @@ class VideoGenerationClient(
         """Parse content from provider response."""
 
     def _create_inputs(
-        self,
-        prompt: str,
-        **parameters: Unpack[VideoGenerationParameters],
+        self, *args: str, **parameters: Unpack[VideoGenerationParameters]
     ) -> VideoGenerationInput:
         """Map positional arguments to Input type."""
+        if args:
+            return VideoGenerationInput(prompt=args[0])
+        prompt: str | None = parameters.get("prompt")
+        if prompt is None:
+            msg = (
+                "prompt is required (either as positional argument or keyword argument)"
+            )
+            raise ValidationError(msg)
         return VideoGenerationInput(prompt=prompt)
 
     @classmethod

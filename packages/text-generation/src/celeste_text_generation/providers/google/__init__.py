@@ -1,4 +1,4 @@
-"""Google provider."""
+"""Google provider for text generation."""
 
 from .client import GoogleTextGenerationClient
 from .models import MODELS

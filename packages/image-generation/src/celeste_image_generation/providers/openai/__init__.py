@@ -1,4 +1,4 @@
-"""OpenAI provider."""
+"""OpenAI provider for image generation."""
 
 from .client import OpenAIImageGenerationClient
 from .models import MODELS

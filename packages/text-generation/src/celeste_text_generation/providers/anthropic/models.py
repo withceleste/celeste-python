@@ -1,4 +1,4 @@
-"""Anthropic models."""
+"""Anthropic models for text generation."""
 
 from celeste import Model, Provider
 from celeste.constraints import Range, Schema

@@ -1,4 +1,4 @@
-"""Google provider configuration."""
+"""Google provider configuration for image generation."""
 
 # HTTP Configuration
 BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models"

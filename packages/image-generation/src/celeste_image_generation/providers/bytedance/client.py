@@ -1,4 +1,4 @@
-"""ByteDance client implementation."""
+"""ByteDance client implementation for image generation."""
 
 import base64
 from collections.abc import AsyncIterator
