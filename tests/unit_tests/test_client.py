@@ -15,7 +15,7 @@ from celeste.exceptions import (
     StreamingNotSupportedError,
     UnsupportedCapabilityError,
 )
-from celeste.io import Input, Output, Usage
+from celeste.io import Chunk, Input, Output, Usage
 from celeste.models import Model
 from celeste.parameters import ParameterMapper, Parameters
 from celeste.streaming import Stream
@@ -202,7 +202,7 @@ class ConcreteClient(Client):
             request=httpx.Request("POST", "https://test.com"),
         )
 
-    def _stream_class(self) -> type[Stream[Output, Parameters]]:
+    def _stream_class(self) -> type[Stream[Output, Parameters, Chunk]]:
         """Return the Stream class for this client."""
         raise NotImplementedError("Streaming not implemented in test client")
 

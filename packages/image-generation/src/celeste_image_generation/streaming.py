@@ -12,7 +12,9 @@ from celeste_image_generation.io import (
 from celeste_image_generation.parameters import ImageGenerationParameters
 
 
-class ImageGenerationStream(Stream[ImageGenerationOutput, ImageGenerationParameters]):
+class ImageGenerationStream(
+    Stream[ImageGenerationOutput, ImageGenerationParameters, ImageGenerationChunk]
+):
     """Streaming for image generation."""
 
     def _parse_output(

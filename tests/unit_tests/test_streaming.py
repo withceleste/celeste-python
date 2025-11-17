@@ -19,7 +19,7 @@ class ConcreteOutput(Output[str]):
     pass
 
 
-class ConcreteStream(Stream[ConcreteOutput, Parameters]):
+class ConcreteStream(Stream[ConcreteOutput, Parameters, Chunk]):
     """Concrete Stream implementation for testing abstract behavior."""
 
     def __init__(
@@ -369,7 +369,7 @@ class TestStreamAbstractBehavior:
         """Subclass without _parse_chunk implementation must fail instantiation."""
 
         # Arrange
-        class IncompleteStream(Stream[ConcreteOutput, Parameters]):
+        class IncompleteStream(Stream[ConcreteOutput, Parameters, Chunk]):
             """Missing _parse_chunk implementation."""
 
             def _parse_output(  # type: ignore[override]
@@ -388,7 +388,7 @@ class TestStreamAbstractBehavior:
         """Subclass without _parse_output implementation must fail instantiation."""
 
         # Arrange
-        class IncompleteStream(Stream[ConcreteOutput, Parameters]):
+        class IncompleteStream(Stream[ConcreteOutput, Parameters, Chunk]):
             """Missing _parse_output implementation."""
 
             def _parse_chunk(self, event: dict[str, Any]) -> Chunk | None:
@@ -621,7 +621,7 @@ class TestStreamWithTypedUsageAndFinishReason:
             )
             finish_reason: TypedFinishReason | None = None
 
-        class TypedStream(Stream[TypedOutput, Parameters]):
+        class TypedStream(Stream[TypedOutput, Parameters, TypedChunk]):
             """Stream using typed classes."""
 
             def _parse_chunk(self, event: dict[str, Any]) -> TypedChunk | None:

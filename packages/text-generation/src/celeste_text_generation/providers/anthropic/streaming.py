@@ -3,7 +3,6 @@
 from collections.abc import Callable
 from typing import Any, Unpack
 
-from celeste.io import Chunk
 from celeste_text_generation.io import (
     TextGenerationChunk,
     TextGenerationFinishReason,
@@ -34,7 +33,7 @@ class AnthropicTextGenerationStream(TextGenerationStream):
         self._transform_output = transform_output
         self._last_finish_reason: TextGenerationFinishReason | None = None
 
-    def _parse_chunk(self, event: dict[str, Any]) -> Chunk | None:
+    def _parse_chunk(self, event: dict[str, Any]) -> TextGenerationChunk | None:
         """Parse SSE event into Chunk."""
         event_type = event.get("type")
         if not event_type:
