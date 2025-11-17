@@ -1,4 +1,4 @@
-"""Mistral provider."""
+"""Mistral provider for text generation."""
 
 from .client import MistralTextGenerationClient
 from .models import MODELS

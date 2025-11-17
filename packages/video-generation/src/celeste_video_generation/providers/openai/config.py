@@ -1,4 +1,4 @@
-"""OpenAI provider configuration."""
+"""OpenAI provider configuration for video generation."""
 
 # HTTP Configuration
 BASE_URL = "https://api.openai.com"

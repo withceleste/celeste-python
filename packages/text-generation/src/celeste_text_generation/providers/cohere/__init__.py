@@ -1,4 +1,4 @@
-"""Cohere provider."""
+"""Cohere provider for text generation."""
 
 from .client import CohereTextGenerationClient
 from .models import MODELS

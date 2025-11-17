@@ -1,4 +1,4 @@
-"""Google models."""
+"""Google models for text generation."""
 
 from celeste import Model, Provider
 from celeste.constraints import Range, Schema

@@ -1,4 +1,4 @@
-"""Google client implementation."""
+"""Google client implementation for text generation."""
 
 from collections.abc import AsyncIterator
 from typing import Any, Unpack

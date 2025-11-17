@@ -1,4 +1,4 @@
-"""Google client implementation."""
+"""Google client implementation for image generation."""
 
 import base64
 from typing import Any, Unpack

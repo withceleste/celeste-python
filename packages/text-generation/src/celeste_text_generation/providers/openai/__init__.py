@@ -1,4 +1,4 @@
-"""OpenAI provider."""
+"""OpenAI provider for text generation."""
 
 from .client import OpenAITextGenerationClient
 from .models import MODELS

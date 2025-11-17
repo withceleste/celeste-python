@@ -1,4 +1,4 @@
-"""Google provider configuration."""
+"""Google provider configuration for text generation."""
 
 # HTTP Configuration
 BASE_URL = "https://generativelanguage.googleapis.com"

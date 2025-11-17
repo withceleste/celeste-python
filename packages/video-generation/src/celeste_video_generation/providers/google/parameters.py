@@ -1,4 +1,4 @@
-"""Google parameter mappers."""
+"""Google parameter mappers for video generation."""
 
 from typing import Any
 

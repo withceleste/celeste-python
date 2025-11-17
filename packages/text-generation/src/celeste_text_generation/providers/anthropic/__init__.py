@@ -1,4 +1,4 @@
-"""Anthropic provider."""
+"""Anthropic provider for text generation."""
 
 from .client import AnthropicTextGenerationClient
 from .models import MODELS

@@ -1,4 +1,4 @@
-"""Anthropic provider configuration."""
+"""Anthropic provider configuration for text generation."""
 
 # HTTP Configuration
 BASE_URL = "https://api.anthropic.com"

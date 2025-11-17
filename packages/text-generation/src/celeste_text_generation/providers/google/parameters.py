@@ -1,4 +1,4 @@
-"""Google parameter mappers."""
+"""Google parameter mappers for text generation."""
 
 from typing import Any, get_args, get_origin
 

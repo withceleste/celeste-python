@@ -1,4 +1,4 @@
-"""Google provider."""
+"""Google provider for image generation."""
 
 from .client import GoogleImageGenerationClient
 from .models import MODELS

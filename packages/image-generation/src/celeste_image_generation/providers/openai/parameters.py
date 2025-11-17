@@ -1,4 +1,4 @@
-"""OpenAI parameter mappers."""
+"""OpenAI parameter mappers for image generation."""
 
 from typing import Any
 

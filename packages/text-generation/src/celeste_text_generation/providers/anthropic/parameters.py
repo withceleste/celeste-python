@@ -1,4 +1,4 @@
-"""Anthropic parameter mappers."""
+"""Anthropic parameter mappers for text generation."""
 
 import json
 from typing import Any, get_args, get_origin

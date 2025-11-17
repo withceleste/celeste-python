@@ -1,4 +1,4 @@
-"""Google models."""
+"""Google models for video generation."""
 
 from celeste import Model, Provider
 from celeste.constraints import Choice, ImageConstraint, ImagesConstraint

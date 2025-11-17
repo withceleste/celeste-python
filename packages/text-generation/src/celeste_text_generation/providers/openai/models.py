@@ -1,4 +1,4 @@
-"""OpenAI models."""
+"""OpenAI models for text generation."""
 
 from celeste import Model, Provider
 from celeste.constraints import Choice, Range, Schema

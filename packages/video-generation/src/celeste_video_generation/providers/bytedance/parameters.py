@@ -1,4 +1,4 @@
-"""ByteDance parameter mappers."""
+"""ByteDance parameter mappers for video generation."""
 
 from typing import Any
 

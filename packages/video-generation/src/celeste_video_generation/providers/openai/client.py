@@ -1,4 +1,4 @@
-"""OpenAI client implementation."""
+"""OpenAI client implementation for video generation."""
 
 import asyncio
 import base64

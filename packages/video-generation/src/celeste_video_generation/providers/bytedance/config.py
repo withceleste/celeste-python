@@ -1,4 +1,4 @@
-"""ByteDance provider configuration."""
+"""ByteDance provider configuration for video generation."""
 
 # HTTP Configuration
 BASE_URL = "https://ark.ap-southeast.bytepluses.com/api/v3"
