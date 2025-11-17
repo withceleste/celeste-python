@@ -21,7 +21,7 @@ class TextGenerationStream(
     def _parse_chunk(self, event: dict[str, Any]) -> TextGenerationChunk | None:
         """Parse SSE event into Chunk (provider-specific)."""
 
-    def _parse_output(
+    def _parse_output(  # type: ignore[override]
         self,
         chunks: list[TextGenerationChunk],
         **parameters: Unpack[TextGenerationParameters],

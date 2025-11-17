@@ -33,7 +33,7 @@ format:
 
 # Type checking (fail fast on any error)
 typecheck:
-	@uv run mypy -p celeste && uv run mypy tests/ && uv run mypy packages/image-generation packages/text-generation
+	@uv run mypy -p celeste && uv run mypy tests/ && uv run mypy packages/image-generation packages/text-generation packages/video-generation
 
 # Testing
 test:

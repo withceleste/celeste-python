@@ -17,7 +17,7 @@ class ImageGenerationStream(
 ):
     """Streaming for image generation."""
 
-    def _parse_output(
+    def _parse_output(  # type: ignore[override]
         self,
         chunks: list[ImageGenerationChunk],
         **parameters: Unpack[ImageGenerationParameters],

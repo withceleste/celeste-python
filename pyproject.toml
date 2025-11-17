@@ -35,11 +35,13 @@ Issues = "https://github.com/withceleste/celeste-python/issues"
 [project.optional-dependencies]
 text-generation = ["celeste-text-generation>=0.2.2"]
 image-generation = ["celeste-image-generation>=0.2.2"]
+video-generation = ["celeste-video-generation>=0.2.1"]
 image-intelligence = ["celeste-image-intelligence>=0.2.1"]
 speech-generation = ["celeste-speech-generation>=0.2.3"]
 all = [
     "celeste-text-generation>=0.2.2",
     "celeste-image-generation>=0.2.2",
+    "celeste-video-generation>=0.2.1",
     "celeste-image-intelligence>=0.2.1",
     "celeste-speech-generation>=0.2.3",
 ]
@@ -64,6 +66,7 @@ members = ["packages/*"]
 [tool.uv.sources]
 celeste-text-generation = { workspace = true }
 celeste-image-generation = { workspace = true }
+celeste-video-generation = { workspace = true }
 
 [build-system]
 requires = ["hatchling"]
@@ -81,6 +84,7 @@ pythonpath = [
     "src",
     "packages/text-generation/src",
     "packages/image-generation/src",
+    "packages/video-generation/src",
 ]
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
@@ -163,17 +167,12 @@ ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 module = [
-    "celeste_text_generation.*",
     "celeste_text_generation.client",
     "celeste_text_generation.providers.*",
-]
-disable_error_code = ["override", "return-value", "arg-type", "call-arg", "assignment", "no-any-return"]
-
-[[tool.mypy.overrides]]
-module = [
-    "celeste_image_generation.*",
     "celeste_image_generation.client",
     "celeste_image_generation.providers.*",
+    "celeste_video_generation.client",
+    "celeste_video_generation.providers.*",
 ]
 disable_error_code = ["override", "return-value", "arg-type", "call-arg", "assignment", "no-any-return"]
 
