@@ -73,6 +73,28 @@ class ThinkingBudgetMapper(ParameterMapper):
         return request
 
 
+class ThinkingLevelMapper(ParameterMapper):
+    """Map thinking_level parameter to Google generationConfig.thinkingConfig.thinkingLevel."""
+
+    name = TextGenerationParameter.THINKING_LEVEL
+
+    def map(
+        self,
+        request: dict[str, Any],
+        value: object,
+        model: Model,
+    ) -> dict[str, Any]:
+        """Transform thinking_level into provider request."""
+        validated_value = self._validate_value(value, model)
+        if validated_value is None:
+            return request
+
+        request.setdefault("generationConfig", {}).setdefault("thinkingConfig", {})[
+            "thinkingLevel"
+        ] = validated_value
+        return request
+
+
 class OutputSchemaMapper(ParameterMapper):
     """Map output_schema parameter to Google generationConfig.responseSchema."""
 
@@ -220,6 +242,7 @@ GOOGLE_PARAMETER_MAPPERS: list[ParameterMapper] = [
     TemperatureMapper(),
     MaxTokensMapper(),
     ThinkingBudgetMapper(),
+    ThinkingLevelMapper(),
     OutputSchemaMapper(),
 ]
 
