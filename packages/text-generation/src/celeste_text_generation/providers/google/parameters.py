@@ -96,7 +96,7 @@ class ThinkingLevelMapper(ParameterMapper):
 
 
 class OutputSchemaMapper(ParameterMapper):
-    """Map output_schema parameter to Google generationConfig.responseSchema."""
+    """Map output_schema parameter to Google generationConfig.responseJsonSchema."""
 
     name = TextGenerationParameter.OUTPUT_SCHEMA
 
@@ -114,7 +114,7 @@ class OutputSchemaMapper(ParameterMapper):
         schema = self._convert_to_google_schema(validated_value)
 
         config = request.setdefault("generationConfig", {})
-        config["responseSchema"] = schema
+        config["responseJsonSchema"] = schema
         config["responseMimeType"] = ApplicationMimeType.JSON
 
         return request
@@ -135,16 +135,20 @@ class OutputSchemaMapper(ParameterMapper):
         return TypeAdapter(value).validate_json(content)
 
     def _convert_to_google_schema(self, output_schema: Any) -> dict[str, Any]:  # noqa: ANN401
-        """Convert Pydantic BaseModel or list[BaseModel] to Google OpenAPI 3.0 format."""
+        """Convert Pydantic BaseModel or list[BaseModel] to Google JSON Schema format."""
         origin = get_origin(output_schema)
         if origin is list:
             inner_type = get_args(output_schema)[0]
             items_schema = inner_type.model_json_schema()
-            json_schema = {"type": "array", "items": items_schema}
+            # Extract $defs from items_schema and move to root (JSON Schema requires $defs at root)
+            defs = items_schema.get("$defs", {})
+            items_schema_clean = {k: v for k, v in items_schema.items() if k != "$defs"}
+            json_schema = {"type": "array", "items": items_schema_clean}
+            if defs:
+                json_schema["$defs"] = defs
         else:
             json_schema = output_schema.model_json_schema()
 
-        json_schema = self._resolve_refs(json_schema)
         json_schema = self._remove_unsupported_fields(json_schema)
         return self._uppercase_types(json_schema)
 
@@ -167,56 +171,8 @@ class OutputSchemaMapper(ParameterMapper):
 
         return result
 
-    def _resolve_refs(self, schema: dict[str, Any]) -> dict[str, Any]:
-        """Resolve all $ref references and inline definitions (Google API doesn't support $ref)."""
-        defs: dict[str, Any] = {}
-
-        def collect_defs(value: object) -> None:
-            """Recursively collect all $defs dictionaries."""
-            if isinstance(value, dict):
-                if "$defs" in value:
-                    defs.update(value["$defs"])
-                for v in value.values():
-                    collect_defs(v)
-            elif isinstance(value, list):
-                for item in value:
-                    collect_defs(item)
-
-        collect_defs(schema)
-
-        def remove_defs(value: object) -> object:
-            """Recursively remove all $defs keys."""
-            if isinstance(value, dict):
-                result = {k: remove_defs(v) for k, v in value.items() if k != "$defs"}
-                return result
-            elif isinstance(value, list):
-                return [remove_defs(item) for item in value]
-            return value
-
-        schema = remove_defs(schema)
-
-        def resolve(value: object) -> object:
-            """Recursively resolve $ref references in schema."""
-            if isinstance(value, dict):
-                if "$ref" in value:
-                    ref_path = value["$ref"]
-                    if ref_path.startswith("#/$defs/"):
-                        ref_name = ref_path.split("/")[-1]
-                        if ref_name in defs:
-                            resolved = defs[ref_name].copy()
-                            resolved.update(
-                                {k: v for k, v in value.items() if k != "$ref"}
-                            )
-                            return resolve(resolved)
-                return {k: resolve(v) for k, v in value.items()}
-            elif isinstance(value, list):
-                return [resolve(item) for item in value]
-            return value
-
-        return resolve(schema)
-
     def _remove_unsupported_fields(self, schema: dict[str, Any]) -> dict[str, Any]:
-        """Remove unsupported fields from schema (e.g., 'title' that Google API doesn't accept)."""
+        """Remove unsupported metadata fields from schema."""
         result: dict[str, Any] = {}
 
         for key, value in schema.items():
