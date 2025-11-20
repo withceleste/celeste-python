@@ -29,6 +29,7 @@ class ImageGenerationUsage(Usage):
     total_tokens: int | None = None
     input_tokens: int | None = None
     output_tokens: int | None = None
+    reasoning_tokens: int | None = None
     generated_images: int | None = None
 
 

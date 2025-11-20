@@ -70,6 +70,7 @@ class GeminiImageAPIAdapter:
             input_tokens=usage_metadata.get("promptTokenCount"),
             output_tokens=usage_metadata.get("candidatesTokenCount"),
             total_tokens=usage_metadata.get("totalTokenCount"),
+            reasoning_tokens=usage_metadata.get("thoughtsTokenCount"),
             generated_images=len(candidates),
         )
 
