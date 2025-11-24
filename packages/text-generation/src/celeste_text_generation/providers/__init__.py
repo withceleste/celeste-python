@@ -23,6 +23,9 @@ def _get_providers() -> list[tuple[Provider, type[Client]]]:
     from celeste_text_generation.providers.openai.client import (
         OpenAITextGenerationClient,
     )
+    from celeste_text_generation.providers.xai.client import (
+        XAITextGenerationClient,
+    )
 
     return [
         (Provider.ANTHROPIC, AnthropicTextGenerationClient),
@@ -30,6 +33,7 @@ def _get_providers() -> list[tuple[Provider, type[Client]]]:
         (Provider.GOOGLE, GoogleTextGenerationClient),
         (Provider.MISTRAL, MistralTextGenerationClient),
         (Provider.OPENAI, OpenAITextGenerationClient),
+        (Provider.XAI, XAITextGenerationClient),
     ]
 
 

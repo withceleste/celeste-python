@@ -13,6 +13,7 @@ from celeste import Capability, Provider, create_client
         (Provider.GOOGLE, "gemini-2.5-flash-lite", {"thinking_budget": 0}),
         (Provider.MISTRAL, "mistral-tiny", {}),
         (Provider.COHERE, "command-a-03-2025", {}),
+        (Provider.XAI, "grok-3-mini", {}),
     ],
 )
 @pytest.mark.integration

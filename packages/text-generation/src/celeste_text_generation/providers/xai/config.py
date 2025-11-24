@@ -1,8 +1,8 @@
-"""Mistral provider configuration for text generation."""
+"""XAI provider configuration for text generation."""
 
 # HTTP Configuration
-BASE_URL = "https://api.mistral.ai"
-ENDPOINT = "/v1/chat/completions"
+BASE_URL = "https://api.x.ai/v1"
+ENDPOINT = "/chat/completions"
 STREAM_ENDPOINT = ENDPOINT
 
 # Authentication

@@ -41,7 +41,7 @@ uv add "celeste-ai[image-generation]"
 
 <img src="https://www.google.com/s2/favicons?domain=openai.com&sz=64" width="64" height="64" alt="OpenAI" title="OpenAI">
 <img src="https://www.google.com/s2/favicons?domain=google.com&sz=64" width="64" height="64" alt="Google" title="Google">
-<img src="https://www.google.com/s2/favicons?domain=seed.bytedance.com&sz=64" width="64" height="64" alt="ByteDance" title="ByteDance">
+<img src="https://www.google.com/s2/favicons?domain=byteplus.com&sz=64" width="64" height="64" alt="ByteDance" title="ByteDance">
 
 
 **Missing a provider?** [Request it](https://github.com/withceleste/celeste-python/issues/new) – ⚡ **we ship fast**.
