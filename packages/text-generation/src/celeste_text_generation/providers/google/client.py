@@ -48,8 +48,6 @@ class GoogleTextGenerationClient(TextGenerationClient):
             output_tokens=usage_metadata.get("candidatesTokenCount"),
             total_tokens=usage_metadata.get("totalTokenCount"),
             reasoning_tokens=usage_metadata.get("thoughtsTokenCount"),
-            billed_tokens=None,
-            cached_tokens=None,
         )
 
     def _parse_content(

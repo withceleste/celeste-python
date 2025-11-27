@@ -59,7 +59,6 @@ class OpenAITextGenerationStream(TextGenerationStream):
                     total_tokens=usage_data.get("total_tokens"),
                     cached_tokens=input_tokens_details.get("cached_tokens"),
                     reasoning_tokens=output_tokens_details.get("reasoning_tokens"),
-                    billed_tokens=None,
                 )
 
             finish_reason: TextGenerationFinishReason | None = None

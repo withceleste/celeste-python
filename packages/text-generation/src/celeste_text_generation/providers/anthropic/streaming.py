@@ -105,9 +105,7 @@ class AnthropicTextGenerationStream(TextGenerationStream):
             input_tokens=input_tokens,
             output_tokens=output_tokens,
             total_tokens=total_tokens,
-            billed_tokens=None,
-            cached_tokens=None,
-            reasoning_tokens=None,
+            cached_tokens=usage_data.get("cache_read_input_tokens"),
         )
 
     def _parse_usage(self, chunks: list[TextGenerationChunk]) -> TextGenerationUsage:

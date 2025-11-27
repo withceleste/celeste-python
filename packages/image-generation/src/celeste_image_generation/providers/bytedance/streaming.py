@@ -38,8 +38,6 @@ class ByteDanceImageGenerationStream(ImageGenerationStream):
             if usage_data:
                 self._completed_usage = ImageGenerationUsage(
                     total_tokens=usage_data.get("total_tokens"),
-                    input_tokens=None,
-                    output_tokens=None,
                 )
             return None
 

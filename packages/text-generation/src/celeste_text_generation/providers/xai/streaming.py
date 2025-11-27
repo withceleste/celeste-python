@@ -68,7 +68,6 @@ class XAITextGenerationStream(TextGenerationStream):
                 total_tokens=usage_dict.get("total_tokens"),
                 cached_tokens=prompt_tokens_details.get("cached_tokens"),
                 reasoning_tokens=completion_tokens_details.get("reasoning_tokens"),
-                billed_tokens=None,
             )
 
         # Create finish reason if present

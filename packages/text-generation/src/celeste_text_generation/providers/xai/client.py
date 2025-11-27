@@ -51,7 +51,6 @@ class XAITextGenerationClient(TextGenerationClient):
             total_tokens=usage_data.get("total_tokens"),
             cached_tokens=prompt_tokens_details.get("cached_tokens"),
             reasoning_tokens=completion_tokens_details.get("reasoning_tokens"),
-            billed_tokens=None,
         )
 
     def _parse_content(
