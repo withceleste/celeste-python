@@ -56,6 +56,16 @@ class MistralTextGenerationStream(TextGenerationStream):
 
         # Extract content delta
         content_delta = delta.get("content")
+
+        # Handle Magistral array format (reasoning models)
+        if isinstance(content_delta, list):
+            for block in content_delta:
+                if block.get("type") == "text":
+                    content_delta = block.get("text", "")
+                    break
+            else:
+                content_delta = ""
+
         finish_reason_str = first_choice.get("finish_reason")
 
         # Extract usage from event if present (in final event)

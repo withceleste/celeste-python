@@ -62,9 +62,18 @@ class MistralTextGenerationClient(TextGenerationClient):
 
         first_choice = choices[0]
         message = first_choice.get("message", {})
-        content = message.get("content") or ""
+        content = message.get("content")
 
-        return self._transform_output(content, **parameters)
+        # Handle Magistral array format (reasoning models)
+        if isinstance(content, list):
+            for block in content:
+                if block.get("type") == "text":
+                    content = block.get("text", "")
+                    break
+            else:
+                content = ""
+
+        return self._transform_output(content or "", **parameters)
 
     def _parse_finish_reason(
         self, response_data: dict[str, Any]
