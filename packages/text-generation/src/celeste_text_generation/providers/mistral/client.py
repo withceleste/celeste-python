@@ -64,14 +64,13 @@ class MistralTextGenerationClient(TextGenerationClient):
         message = first_choice.get("message", {})
         content = message.get("content")
 
-        # Handle Magistral array format (reasoning models)
+        # Handle magistral thinking models that return list content
         if isinstance(content, list):
+            text_parts = []
             for block in content:
-                if block.get("type") == "text":
-                    content = block.get("text", "")
-                    break
-            else:
-                content = ""
+                if isinstance(block, dict) and block.get("type") == "text":
+                    text_parts.append(block.get("text", ""))
+            content = "".join(text_parts)
 
         return self._transform_output(content or "", **parameters)
 
