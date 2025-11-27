@@ -41,10 +41,10 @@ class CohereTextGenerationClient(TextGenerationClient):
 
     def _parse_usage(self, response_data: dict[str, Any]) -> TextGenerationUsage:
         """Parse usage from response."""
-        meta = response_data.get("meta", {})
+        usage_data = response_data.get("usage", {})
 
-        billed_units = meta.get("billed_units", {})
-        tokens = meta.get("tokens", {})
+        billed_units = usage_data.get("billed_units", {})
+        tokens = usage_data.get("tokens", {})
 
         input_tokens = billed_units.get("input_tokens")
         output_tokens = billed_units.get("output_tokens")
@@ -54,7 +54,7 @@ class CohereTextGenerationClient(TextGenerationClient):
                 input_tokens=input_tokens,
                 output_tokens=output_tokens,
                 total_tokens=tokens.get("total_tokens") if tokens else None,
-                cached_tokens=meta.get("cached_tokens"),
+                cached_tokens=usage_data.get("cached_tokens"),
             )
 
         return TextGenerationUsage()

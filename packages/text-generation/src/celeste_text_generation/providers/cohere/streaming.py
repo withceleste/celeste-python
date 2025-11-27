@@ -94,11 +94,11 @@ class CohereTextGenerationStream(TextGenerationStream):
                 else None
             )
 
-            meta = event.get("meta", {})
+            usage_data = event.get("usage", {})
             usage = None
-            if isinstance(meta, dict):
-                billed_units = meta.get("billed_units", {})
-                tokens = meta.get("tokens", {})
+            if isinstance(usage_data, dict):
+                billed_units = usage_data.get("billed_units", {})
+                tokens = usage_data.get("tokens", {})
 
                 input_tokens = billed_units.get("input_tokens")
                 output_tokens = billed_units.get("output_tokens")
@@ -108,7 +108,7 @@ class CohereTextGenerationStream(TextGenerationStream):
                         input_tokens=input_tokens,
                         output_tokens=output_tokens,
                         total_tokens=tokens.get("total_tokens") if tokens else None,
-                        cached_tokens=meta.get("cached_tokens"),
+                        cached_tokens=usage_data.get("cached_tokens"),
                     )
 
             return TextGenerationChunk(
