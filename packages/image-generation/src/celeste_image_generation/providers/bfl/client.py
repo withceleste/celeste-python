@@ -1,6 +1,7 @@
 """BFL (Black Forest Labs) client implementation for FLUX.2 image generation."""
 
 import asyncio
+import json
 import time
 from typing import Any, Unpack
 
@@ -130,13 +131,15 @@ class BFLImageGenerationClient(ImageGenerationClient):
                 }
                 return httpx.Response(
                     status_code=200,
-                    json=final_data,
+                    content=json.dumps(final_data).encode("utf-8"),
+                    headers={"content-type": "application/json"},
                     request=httpx.Request("GET", polling_url),
                 )
             elif status in ("Error", "Failed"):
                 return httpx.Response(
                     status_code=400,
-                    json=poll_data,
+                    content=json.dumps(poll_data).encode("utf-8"),
+                    headers={"content-type": "application/json"},
                     request=httpx.Request("GET", polling_url),
                 )
 
