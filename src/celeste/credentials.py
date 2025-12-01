@@ -11,6 +11,7 @@ from celeste.exceptions import MissingCredentialsError, UnsupportedProviderError
 PROVIDER_CREDENTIAL_MAP = {
     Provider.OPENAI: "openai_api_key",
     Provider.ANTHROPIC: "anthropic_api_key",
+    Provider.BFL: "bfl_api_key",
     Provider.GOOGLE: "google_api_key",
     Provider.MISTRAL: "mistral_api_key",
     Provider.HUGGINGFACE: "huggingface_token",
@@ -31,6 +32,7 @@ class Credentials(BaseSettings):
 
     openai_api_key: SecretStr | None = Field(None, alias="OPENAI_API_KEY")
     anthropic_api_key: SecretStr | None = Field(None, alias="ANTHROPIC_API_KEY")
+    bfl_api_key: SecretStr | None = Field(None, alias="BFL_API_KEY")
     google_api_key: SecretStr | None = Field(None, alias="GOOGLE_API_KEY")
     mistral_api_key: SecretStr | None = Field(None, alias="MISTRAL_API_KEY")
     huggingface_token: SecretStr | None = Field(None, alias="HUGGINGFACE_TOKEN")

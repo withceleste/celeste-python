@@ -8,6 +8,7 @@ from celeste import Capability, Provider, create_client
 @pytest.mark.parametrize(
     ("provider", "model", "parameters"),
     [
+        (Provider.BFL, "flux-2-pro", {"aspect_ratio": "1024x1024"}),
         (Provider.OPENAI, "dall-e-2", {}),
         (Provider.GOOGLE, "imagen-4.0-fast-generate-001", {}),
         (Provider.BYTEDANCE, "seedream-4-0-250828", {}),
