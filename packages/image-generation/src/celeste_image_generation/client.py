@@ -45,12 +45,14 @@ class ImageGenerationClient(
         """Parse finish reason from provider response."""
 
     def _create_inputs(
-        self, *args: str, **parameters: Unpack[ImageGenerationParameters]
+        self,
+        *args: str,
+        prompt: str | None = None,
+        **parameters: Unpack[ImageGenerationParameters],
     ) -> ImageGenerationInput:
         """Map positional arguments to Input type."""
         if args:
             return ImageGenerationInput(prompt=args[0])
-        prompt: str | None = parameters.get("prompt")
         if prompt is None:
             msg = (
                 "prompt is required (either as positional argument or keyword argument)"

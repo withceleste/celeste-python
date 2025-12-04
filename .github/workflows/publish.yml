@@ -61,6 +61,7 @@ jobs:
           COHERE_API_KEY: ${{ secrets.COHERE_API_KEY }}
           BYTEDANCE_API_KEY: ${{ secrets.BYTEDANCE_API_KEY }}
           XAI_API_KEY: ${{ secrets.XAI_API_KEY }}
+          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
         run: make integration-test
 
   build:

@@ -64,7 +64,7 @@ jobs:
           python-version: ${{ inputs.python-version || '3.12' }}
       - run: |
           if [ -d "packages" ]; then
-            uv run mypy -p celeste && uv run mypy tests/ && uv run mypy packages/image-generation packages/text-generation packages/video-generation
+            uv run mypy -p celeste && uv run mypy tests/ && uv run mypy packages/image-generation packages/text-generation packages/video-generation packages/speech-generation --exclude '.*conftest\.py'
           else
             uv run mypy -p celeste && uv run mypy tests/
           fi

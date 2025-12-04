@@ -1,0 +1,42 @@
+"""Constraint models for speech generation."""
+
+from pydantic import Field
+
+from celeste.constraints import Constraint
+from celeste.exceptions import ConstraintViolationError
+from celeste_speech_generation.voices import Voice
+
+
+class VoiceConstraint(Constraint):
+    """Voice constraint - value must be a valid voice ID or name from the provided voices.
+
+    Accepts both voice IDs and names. If a name is provided, returns the corresponding ID.
+    """
+
+    voices: list[Voice] = Field(min_length=1)
+
+    def __call__(self, value: str) -> str:
+        """Validate value is a valid voice ID or name and return the ID."""
+        if not isinstance(value, str):
+            msg = f"Must be string, got {type(value).__name__}"
+            raise ConstraintViolationError(msg)
+
+        # Check if value is a voice ID
+        voice_ids = [v.id for v in self.voices]
+        if value in voice_ids:
+            return value
+
+        # Check if value is a voice name and return corresponding ID
+        voice_name_to_id = {v.name: v.id for v in self.voices}
+        if value in voice_name_to_id:
+            return voice_name_to_id[value]
+
+        # Neither ID nor name matches
+        voice_names = [v.name for v in self.voices]
+        msg = (
+            f"Must be one of {voice_names} (names) or {voice_ids} (IDs), got {value!r}"
+        )
+        raise ConstraintViolationError(msg)
+
+
+__all__ = ["VoiceConstraint"]
