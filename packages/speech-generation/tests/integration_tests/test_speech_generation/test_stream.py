@@ -13,7 +13,7 @@ from celeste import Capability, Provider, create_client
         (
             Provider.ELEVENLABS,
             "eleven_flash_v2_5",
-            {"voice": "Rachel", "response_format": "mp3_44100_128"},
+            {"voice": "Laura", "response_format": "mp3_44100_128"},
         ),
     ],
 )
