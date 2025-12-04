@@ -33,7 +33,7 @@ format:
 
 # Type checking (fail fast on any error)
 typecheck:
-	@uv run mypy -p celeste && uv run mypy tests/ && uv run mypy packages/image-generation packages/text-generation packages/video-generation packages/speech-generation --exclude '.*conftest\.py'
+	@uv run mypy -p celeste && uv run mypy tests/ && uv run mypy packages/image-generation packages/text-generation packages/video-generation packages/speech-generation
 
 # Testing
 test:

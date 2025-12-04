@@ -41,17 +41,74 @@ jobs:
     uses: ./.github/workflows/ci.yml
     secrets: inherit
 
-  integration-test:
-    needs: [validate-release, run-ci]
+  detect-changes:
+    needs: run-ci
     runs-on: ubuntu-latest
-    environment:
-      name: integration-tests
+    outputs:
+      packages: ${{ steps.build-matrix.outputs.packages }}
+      has-changes: ${{ steps.build-matrix.outputs.has-changes }}
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 1
+          fetch-depth: 0
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          base: ${{ github.event.before }}
+          filters: |
+            text-generation:
+              - 'packages/text-generation/**'
+            image-generation:
+              - 'packages/image-generation/**'
+            video-generation:
+              - 'packages/video-generation/**'
+            speech-generation:
+              - 'packages/speech-generation/**'
+            core:
+              - 'src/celeste/**'
+      - id: build-matrix
+        run: |
+          PACKAGES=()
+          CORE="${{ steps.filter.outputs.core }}"
+
+          if [[ "$CORE" == "true" || "${{ steps.filter.outputs.text-generation }}" == "true" ]]; then
+            PACKAGES+=("text-generation")
+          fi
+          if [[ "$CORE" == "true" || "${{ steps.filter.outputs.image-generation }}" == "true" ]]; then
+            PACKAGES+=("image-generation")
+          fi
+          if [[ "$CORE" == "true" || "${{ steps.filter.outputs.video-generation }}" == "true" ]]; then
+            PACKAGES+=("video-generation")
+          fi
+          if [[ "$CORE" == "true" || "${{ steps.filter.outputs.speech-generation }}" == "true" ]]; then
+            PACKAGES+=("speech-generation")
+          fi
+
+          # Convert to JSON array
+          JSON=$(printf '%s\n' "${PACKAGES[@]}" | jq -R . | jq -s -c .)
+          echo "packages=$JSON" >> $GITHUB_OUTPUT
+
+          if [[ ${#PACKAGES[@]} -gt 0 ]]; then
+            echo "has-changes=true" >> $GITHUB_OUTPUT
+          else
+            echo "has-changes=false" >> $GITHUB_OUTPUT
+          fi
+
+  integration-tests:
+    needs: [validate-release, run-ci, detect-changes]
+    if: needs.detect-changes.outputs.has-changes == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment:
+      name: integration-tests
+    strategy:
+      fail-fast: false
+      matrix:
+        package: ${{ fromJSON(needs.detect-changes.outputs.packages) }}
+    steps:
+      - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-python-uv
-      - name: Run integration tests
+      - name: Run ${{ matrix.package }} integration tests
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
@@ -62,10 +119,15 @@ jobs:
           BYTEDANCE_API_KEY: ${{ secrets.BYTEDANCE_API_KEY }}
           XAI_API_KEY: ${{ secrets.XAI_API_KEY }}
           ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
-        run: make integration-test
+        run: uv run pytest packages/${{ matrix.package }}/tests/integration_tests/ -m integration -v
 
   build:
-    needs: [validate-release, run-ci, integration-test]
+    needs: [validate-release, run-ci, detect-changes, integration-tests]
+    if: |
+      always() &&
+      needs.validate-release.result == 'success' &&
+      needs.run-ci.result == 'success' &&
+      (needs.integration-tests.result == 'success' || needs.integration-tests.result == 'skipped')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
