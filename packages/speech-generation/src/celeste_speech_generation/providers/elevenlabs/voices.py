@@ -23,6 +23,12 @@ ELEVENLABS_VOICES = [
         name="Laura",
         languages=set(),
     ),  # NEW - replaces Domi (ID confirmed from API)
+    Voice(
+        id="NOpBlnGInO9m6vDvFkFC",
+        provider=Provider.ELEVENLABS,
+        name="Spuds",
+        languages=set(),
+    ),  # Spuds (Grandpa Spuds Oxley)
     # TODO: Add Janet when available in API (replaces Rachel, Serena, Glinda)
     # TODO: Add Peter when available in API (replaces Elli, Fin)
     # TODO: Add Craig when available in API (replaces Josh, Jeremy)
