@@ -51,10 +51,22 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - id: get-base
+        run: |
+          # Get previous tag to compare against (tag pushes don't have github.event.before)
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          if [ -z "$PREVIOUS_TAG" ]; then
+            echo "base=" >> $GITHUB_OUTPUT
+            echo "run-all=true" >> $GITHUB_OUTPUT
+          else
+            echo "base=$PREVIOUS_TAG" >> $GITHUB_OUTPUT
+            echo "run-all=false" >> $GITHUB_OUTPUT
+          fi
       - uses: dorny/paths-filter@v3
         id: filter
+        if: steps.get-base.outputs.run-all != 'true'
         with:
-          base: ${{ github.event.before }}
+          base: ${{ steps.get-base.outputs.base }}
           filters: |
             text-generation:
               - 'packages/text-generation/**'
@@ -69,19 +81,24 @@ jobs:
       - id: build-matrix
         run: |
           PACKAGES=()
-          CORE="${{ steps.filter.outputs.core }}"
 
-          if [[ "$CORE" == "true" || "${{ steps.filter.outputs.text-generation }}" == "true" ]]; then
-            PACKAGES+=("text-generation")
-          fi
-          if [[ "$CORE" == "true" || "${{ steps.filter.outputs.image-generation }}" == "true" ]]; then
-            PACKAGES+=("image-generation")
-          fi
-          if [[ "$CORE" == "true" || "${{ steps.filter.outputs.video-generation }}" == "true" ]]; then
-            PACKAGES+=("video-generation")
-          fi
-          if [[ "$CORE" == "true" || "${{ steps.filter.outputs.speech-generation }}" == "true" ]]; then
-            PACKAGES+=("speech-generation")
+          # If first release or paths-filter was skipped, run all
+          if [[ "${{ steps.get-base.outputs.run-all }}" == "true" ]]; then
+            PACKAGES=("text-generation" "image-generation" "video-generation" "speech-generation")
+          else
+            CORE="${{ steps.filter.outputs.core }}"
+            if [[ "$CORE" == "true" || "${{ steps.filter.outputs.text-generation }}" == "true" ]]; then
+              PACKAGES+=("text-generation")
+            fi
+            if [[ "$CORE" == "true" || "${{ steps.filter.outputs.image-generation }}" == "true" ]]; then
+              PACKAGES+=("image-generation")
+            fi
+            if [[ "$CORE" == "true" || "${{ steps.filter.outputs.video-generation }}" == "true" ]]; then
+              PACKAGES+=("video-generation")
+            fi
+            if [[ "$CORE" == "true" || "${{ steps.filter.outputs.speech-generation }}" == "true" ]]; then
+              PACKAGES+=("speech-generation")
+            fi
           fi
 
           # Convert to JSON array
