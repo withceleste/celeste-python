@@ -21,6 +21,7 @@ class Provider(StrEnum):
     PERPLEXITY = "perplexity"
     BYTEDANCE = "bytedance"
     ELEVENLABS = "elevenlabs"
+    GRADIUM = "gradium"
 
 
 class Capability(StrEnum):
@@ -40,6 +41,7 @@ class Capability(StrEnum):
 
     # Audio
     AUDIO_INTELLIGENCE = "audio-intelligence"
+    AUDIO_RECOGNITION = "audio-recognition"
 
     # Speech
     SPEECH_GENERATION = "speech-generation"
