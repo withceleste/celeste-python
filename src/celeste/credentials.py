@@ -45,6 +45,7 @@ PROVIDER_CREDENTIAL_MAP = {
     Provider.BYTEPLUS: "byteplus_api_key",
     Provider.ELEVENLABS: "elevenlabs_api_key",
     Provider.BFL: "bfl_api_key",
+    Provider.GRADIUM: "gradium_api_key",
 }
 
 
@@ -66,6 +67,7 @@ class Credentials(BaseSettings):
     byteplus_api_key: SecretStr | None = Field(None, alias="BYTEPLUS_API_KEY")
     elevenlabs_api_key: SecretStr | None = Field(None, alias="ELEVENLABS_API_KEY")
     bfl_api_key: SecretStr | None = Field(None, alias="BFL_API_KEY")
+    gradium_api_key: SecretStr | None = Field(None, alias="GRADIUM_API_KEY")
 
     model_config = {
         "env_file": find_dotenv(),
