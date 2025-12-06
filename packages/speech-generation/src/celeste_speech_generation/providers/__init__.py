@@ -14,6 +14,9 @@ def _get_providers() -> list[tuple[Provider, type[Client]]]:
     from celeste_speech_generation.providers.google.client import (
         GoogleSpeechGenerationClient,
     )
+    from celeste_speech_generation.providers.mureka.client import (
+        MurekaSpeechGenerationClient,
+    )
     from celeste_speech_generation.providers.openai.client import (
         OpenAISpeechGenerationClient,
     )
@@ -22,6 +25,7 @@ def _get_providers() -> list[tuple[Provider, type[Client]]]:
         (Provider.GOOGLE, GoogleSpeechGenerationClient),
         (Provider.OPENAI, OpenAISpeechGenerationClient),
         (Provider.ELEVENLABS, ElevenLabsSpeechGenerationClient),
+        (Provider.MUREKA, MurekaSpeechGenerationClient),
     ]
 
 

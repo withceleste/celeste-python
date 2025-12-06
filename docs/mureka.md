@@ -1,10 +1,12 @@
-# Mureka Music Generation - Celeste AI Integration
+# Mureka - Celeste AI Integration
 
-This document describes how to use the Mureka provider in Celeste AI for music generation and related features.
+This document describes how to use the Mureka provider in Celeste AI for music generation, speech generation, and related features.
 
 ## Overview
 
-Mureka is a comprehensive music generation platform that allows you to:
+Mureka is a comprehensive AI audio platform that provides:
+
+### Music Generation
 - Generate songs with vocals and lyrics
 - Generate instrumental music
 - Create, extend, and manipulate lyrics
@@ -12,12 +14,28 @@ Mureka is a comprehensive music generation platform that allows you to:
 - Analyze song characteristics
 - Separate audio tracks (stemming)
 
+### Speech Generation
+- Text-to-speech (TTS) with multiple voices
+- Multi-voice podcast generation
+- Natural-sounding AI voices
+
 ## Getting Started
 
 ### Installation
 
+For music generation:
 ```bash
 pip install "celeste-ai[music-generation]"
+```
+
+For speech generation:
+```bash
+pip install "celeste-ai[speech-generation]"
+```
+
+For both:
+```bash
+pip install "celeste-ai[music-generation,speech-generation]"
 ```
 
 ### Setup
@@ -33,6 +51,10 @@ Or use a `.env` file:
 ```bash
 MUREKA_API_KEY=your-api-key-here
 ```
+
+---
+
+# Music Generation
 
 ## Basic Usage
 
@@ -438,8 +460,266 @@ For issues or questions:
 - [Celeste AI GitHub](https://github.com/anthropics/celeste-python)
 - [Mureka Platform](https://platform.mureka.ai)
 
+---
+
+# Speech Generation
+
+Mureka provides text-to-speech (TTS) and multi-voice podcast generation capabilities.
+
+## Available Voices
+
+Mureka offers 5 high-quality voices:
+
+| Voice ID | Name | Description |
+|----------|------|-------------|
+| `Ethan` | Ethan | Male voice |
+| `Victoria` | Victoria | Female voice |
+| `Jake` | Jake | Male voice |
+| `Luna` | Luna | Female voice |
+| `Emma` | Emma | Female voice (default) |
+
+## Basic TTS Usage
+
+### Generate Speech
+
+Convert text to speech using Mureka's TTS:
+
+```python
+import asyncio
+from celeste import Capability, Provider, create_client
+
+async def main():
+    # Create speech generation client
+    client = create_client(
+        capability=Capability.SPEECH_GENERATION,
+        provider=Provider.MUREKA,
+        model="mureka-tts-1",
+    )
+
+    # Generate speech with default voice (Emma)
+    response = await client.generate(
+        "Hello! Welcome to Mureka text-to-speech."
+    )
+
+    print(f"Audio URL: {response.content.url}")
+    print(f"Expires at: {response.metadata['expires_at']}")
+
+asyncio.run(main())
+```
+
+### Select a Voice
+
+Specify which voice to use:
+
+```python
+# Use Luna's voice
+response = await client.generate(
+    "Hi there! This is Luna speaking.",
+    voice="Luna",
+)
+
+# Use Jake's voice
+response = await client.generate(
+    "What's up? This is Jake!",
+    voice="Jake",
+)
+```
+
+### Use Custom Voice
+
+You can also use custom voice IDs if you've created them:
+
+```python
+response = await client.generate(
+    "Text with custom voice",
+    voice_id="your-custom-voice-id",
+)
+```
+
+**Note:** `voice` and `voice_id` are mutually exclusive.
+
+## Podcast Generation
+
+Generate multi-voice conversations with up to 10 turns:
+
+```python
+podcast = await client.generate_podcast([
+    {"text": "Welcome to our podcast! I'm Luna.", "voice": "Luna"},
+    {"text": "And I'm Jake. Today we're discussing AI.", "voice": "Jake"},
+    {"text": "That's right! Let's dive in.", "voice": "Luna"},
+])
+
+print(f"Podcast URL: {podcast.url}")
+print(f"Expires at: {podcast.expires_at}")
+```
+
+### Longer Conversations
+
+Create more complex multi-speaker content:
+
+```python
+# Create a 5-person conversation
+podcast = await client.generate_podcast([
+    {"text": "Good morning everyone! I'm your host, Emma.", "voice": "Emma"},
+    {"text": "Hi Emma! Victoria here.", "voice": "Victoria"},
+    {"text": "Ethan checking in.", "voice": "Ethan"},
+    {"text": "Jake present!", "voice": "Jake"},
+    {"text": "And Luna! Great to be here.", "voice": "Luna"},
+    {"text": "Today we're exploring AI in education.", "voice": "Emma"},
+    {"text": "It's a fascinating topic with so many applications.", "voice": "Victoria"},
+    {"text": "Absolutely. Let's start with personalized learning.", "voice": "Ethan"},
+    {"text": "AI tutors are becoming incredibly sophisticated.", "voice": "Jake"},
+    {"text": "The future of education is here!", "voice": "Luna"},
+])
+```
+
+**Limitations:**
+- Maximum 10 conversation turns per podcast
+- Each turn requires both `text` and `voice` fields
+- Voice must be one of the 5 available voices
+
+## Speech Generation Response
+
+### SpeechGenerationOutput
+
+```python
+response = await client.generate(...)
+
+# Audio content
+response.content.url  # str: URL to download audio
+
+# Metadata
+response.metadata["expires_at"]  # int: Unix timestamp when URL expires
+
+# Usage (empty for Mureka TTS)
+response.usage  # SpeechGenerationUsage
+```
+
+### PodcastOutput
+
+```python
+podcast = await client.generate_podcast(...)
+
+podcast.url  # str: URL to download podcast audio
+podcast.expires_at  # int: Unix timestamp when URL expires
+```
+
+## Model Information
+
+| Model ID | Description | Streaming | Voices |
+|----------|-------------|-----------|--------|
+| `mureka-tts-1` | Mureka text-to-speech | ❌ | Ethan, Victoria, Jake, Luna, Emma |
+
+**Note:** Mureka TTS returns audio URLs rather than streaming audio directly.
+
+## Complete Example
+
+```python
+import asyncio
+from celeste import Capability, Provider, create_client
+
+
+async def demo_tts():
+    """Demonstrate all TTS features."""
+    client = create_client(
+        capability=Capability.SPEECH_GENERATION,
+        provider=Provider.MUREKA,
+        model="mureka-tts-1",
+    )
+
+    # Single voice TTS
+    print("Generating single-voice speech...")
+    tts = await client.generate(
+        "The quick brown fox jumps over the lazy dog.",
+        voice="Emma",
+    )
+    print(f"✓ TTS: {tts.content.url}")
+
+    # Multi-voice podcast
+    print("\nGenerating podcast...")
+    podcast = await client.generate_podcast([
+        {"text": "Welcome to the AI News Podcast!", "voice": "Luna"},
+        {"text": "I'm your co-host Jake. Let's get started!", "voice": "Jake"},
+        {"text": "Today we're covering the latest in machine learning.", "voice": "Luna"},
+    ])
+    print(f"✓ Podcast: {podcast.url}")
+    print(f"  Expires: {podcast.expires_at}")
+
+
+asyncio.run(demo_tts())
+```
+
+## Best Practices
+
+### 1. Voice Selection
+
+Choose voices appropriate for your content:
+
+```python
+# Professional narration
+voice="Victoria"  # Clear, professional female voice
+
+# Casual conversation
+voice="Jake"  # Friendly male voice
+
+# Storytelling
+voice="Luna"  # Warm, engaging female voice
+```
+
+### 2. Text Formatting
+
+Structure your text for natural speech:
+
+```python
+# Good: Natural phrasing with punctuation
+text = "Hello! How are you today? I hope you're doing well."
+
+# Less natural: Run-on sentences
+text = "Hello how are you today I hope you're doing well"
+```
+
+### 3. Podcast Design
+
+Create engaging multi-voice content:
+
+```python
+# Use different voices for different speakers
+conversations = [
+    {"text": "Question: What is AI?", "voice": "Emma"},
+    {"text": "Answer: AI stands for Artificial Intelligence.", "voice": "Ethan"},
+    {"text": "That's a great explanation!", "voice": "Emma"},
+]
+
+podcast = await client.generate_podcast(conversations)
+```
+
+### 4. URL Expiration
+
+Audio URLs are temporary - download if needed:
+
+```python
+import httpx
+
+response = await client.generate("Important announcement")
+
+# Download before expiration
+async with httpx.AsyncClient() as http:
+    audio = await http.get(response.content.url)
+    with open("speech.mp3", "wb") as f:
+        f.write(audio.content)
+```
+
+## Speech Generation Limitations
+
+- **URL expiration**: Generated audio URLs expire after ~24 hours
+- **Podcast turns**: Maximum 10 conversation turns
+- **Voice selection**: Limited to 5 predefined voices (+ custom voices via voice_id)
+- **Streaming**: Not supported (URLs only)
+- **Usage metrics**: Not provided in response
+
 ## Examples
 
 Find complete examples in the `examples/` directory:
 - `music_generation_example.py` - Basic song generation
+- `speech_generation_example.py` - TTS and podcast generation
 - `mureka_advanced_example.py` - All Mureka features (coming soon)
