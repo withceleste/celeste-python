@@ -11,7 +11,7 @@ All capabilities. All providers. One interface.
 Primitives, not frameworks.
 
 [![Python](https://img.shields.io/badge/Python-3.12+-blue?style=for-the-badge)](https://www.python.org/)
-[![License](https://img.shields.io/badge/License-Apache_2.0-red?style=for-the-badge)](LICENSE)
+[![License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](LICENSE)
 [![PyPI](https://img.shields.io/badge/PyPI-celeste--ai-green?style=for-the-badge)](https://pypi.org/project/celeste-ai/)
 
 <a href="https://github.com/withceleste/celeste-python" target="_parent">
@@ -74,7 +74,7 @@ campaign = campaign_output.content
 
 # 3. Generate Ad Visual (Flux)
 # -----------------------------------------------------
-image_client = create_client(Capability.IMAGE_GENERATION, model="flux-2-dev")
+image_client = create_client(Capability.IMAGE_GENERATION, model="flux-2-flex")
 image_output = await image_client.generate(
     campaign.visual_prompt,
     aspect_ratio="1:1"
@@ -238,7 +238,7 @@ We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## 📄 License
 
-Apache 2.0 license – see [LICENSE](LICENSE) for details.
+MIT license – see [LICENSE](LICENSE) for details.
 
 ---
 

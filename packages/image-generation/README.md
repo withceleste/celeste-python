@@ -5,7 +5,7 @@
 **Image Generation capability for Celeste AI**
 
 [![Python](https://img.shields.io/badge/Python-3.12+-blue?style=for-the-badge)](https://www.python.org/)
-[![License](https://img.shields.io/badge/License-Apache_2.0-red?style=for-the-badge)](../../LICENSE)
+[![License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](../../LICENSE)
 
 [Quick Start](#-quick-start) • [Documentation](https://withceleste.ai/docs) • [Request Provider](https://github.com/withceleste/celeste-python/issues/new)
 
@@ -66,7 +66,7 @@ See [CONTRIBUTING.md](../../CONTRIBUTING.md) for guidelines.
 
 ## 📄 License
 
-Apache 2.0 License – see [LICENSE](../../LICENSE) for details.
+MIT License – see [LICENSE](../../LICENSE) for details.
 
 ---
 
