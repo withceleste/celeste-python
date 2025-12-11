@@ -33,4 +33,14 @@ MODELS: list[Model] = [
             ),
         },
     ),
+    Model(
+        id="sora-2-2025-12-08",
+        provider=Provider.OPENAI,
+        display_name="Sora 2 (December 2025)",
+        parameter_constraints={
+            VideoGenerationParameter.DURATION: Choice(options=["4", "8", "12"]),
+            VideoGenerationParameter.ASPECT_RATIO: Choice(options=["16:9", "9:16"]),
+            VideoGenerationParameter.RESOLUTION: Choice(options=["720p"]),
+        },
+    ),
 ]
