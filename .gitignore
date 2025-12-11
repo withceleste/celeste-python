@@ -157,3 +157,4 @@ uv.lock
 
 # Security reports
 bandit-report.json
+mureka.md

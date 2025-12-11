@@ -24,6 +24,7 @@ PROVIDER_CREDENTIAL_MAP = {
     Provider.PERPLEXITY: "perplexity_api_key",
     Provider.BYTEDANCE: "bytedance_api_key",
     Provider.ELEVENLABS: "elevenlabs_api_key",
+    Provider.GRADIUM: "gradium_api_key",
 }
 
 
@@ -45,6 +46,7 @@ class Credentials(BaseSettings):
     perplexity_api_key: SecretStr | None = Field(None, alias="PERPLEXITY_API_KEY")
     bytedance_api_key: SecretStr | None = Field(None, alias="BYTEDANCE_API_KEY")
     elevenlabs_api_key: SecretStr | None = Field(None, alias="ELEVENLABS_API_KEY")
+    gradium_api_key: SecretStr | None = Field(None, alias="GRADIUM_API_KEY")
 
     model_config = {
         "env_file": find_dotenv(),
