@@ -106,6 +106,28 @@ MODELS: list[Model] = [
         },
     ),
     Model(
+        id="devstral-2512",
+        provider=Provider.MISTRAL,
+        display_name="Devstral 2",
+        streaming=True,
+        parameter_constraints={
+            Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
+            Parameter.MAX_TOKENS: Range(min=1, max=32768, step=1),
+            TextGenerationParameter.OUTPUT_SCHEMA: Schema(),
+        },
+    ),
+    Model(
+        id="labs-devstral-small-2512",
+        provider=Provider.MISTRAL,
+        display_name="Devstral 2 Small",
+        streaming=True,
+        parameter_constraints={
+            Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
+            Parameter.MAX_TOKENS: Range(min=1, max=32768, step=1),
+            TextGenerationParameter.OUTPUT_SCHEMA: Schema(),
+        },
+    ),
+    Model(
         id="pixtral-12b-2409",
         provider=Provider.MISTRAL,
         display_name="Pixtral 12B",
@@ -117,9 +139,31 @@ MODELS: list[Model] = [
         },
     ),
     Model(
+        id="ministral-3b-latest",
+        provider=Provider.MISTRAL,
+        display_name="Ministral 3B",
+        streaming=True,
+        parameter_constraints={
+            Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
+            Parameter.MAX_TOKENS: Range(min=1, max=32768, step=1),
+            TextGenerationParameter.OUTPUT_SCHEMA: Schema(),
+        },
+    ),
+    Model(
         id="ministral-8b-latest",
         provider=Provider.MISTRAL,
         display_name="Ministral 8B",
+        streaming=True,
+        parameter_constraints={
+            Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
+            Parameter.MAX_TOKENS: Range(min=1, max=32768, step=1),
+            TextGenerationParameter.OUTPUT_SCHEMA: Schema(),
+        },
+    ),
+    Model(
+        id="ministral-14b-latest",
+        provider=Provider.MISTRAL,
+        display_name="Ministral 14B",
         streaming=True,
         parameter_constraints={
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
