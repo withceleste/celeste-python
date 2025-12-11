@@ -114,10 +114,6 @@ class OpenAIImageGenerationClient(ImageGenerationClient):
         **parameters: Unpack[ImageGenerationParameters],
     ) -> AsyncIterator[dict[str, Any]]:
         """Make HTTP streaming request and return async iterator of events."""
-        if self.model.id != "gpt-image-1":
-            msg = f"Streaming not supported for model '{self.model.id}'. Only 'gpt-image-1' supports streaming."
-            raise ValueError(msg)
-
         request_body["stream"] = True
 
         if "partial_images" not in request_body:
