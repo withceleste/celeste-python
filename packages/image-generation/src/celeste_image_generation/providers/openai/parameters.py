@@ -42,7 +42,7 @@ class AspectRatioMapper(ParameterMapper):
 
 
 class PartialImagesMapper(ParameterMapper):
-    """Map partial_images parameter for streaming (gpt-image-1 only)."""
+    """Map partial_images parameter for streaming."""
 
     name = ImageGenerationParameter.PARTIAL_IMAGES
 
@@ -55,7 +55,6 @@ class PartialImagesMapper(ParameterMapper):
         """Transform partial_images into provider request.
 
         Controls number of partial images during streaming (0-3).
-        Only supported by gpt-image-1 model.
 
         Args:
             request: Provider request dictionary to modify.
@@ -75,7 +74,7 @@ class PartialImagesMapper(ParameterMapper):
 
 
 class QualityMapper(ParameterMapper):
-    """Map quality parameter for DALL-E 3 and gpt-image-1."""
+    """Map quality parameter"""
 
     name = ImageGenerationParameter.QUALITY
 
@@ -90,6 +89,7 @@ class QualityMapper(ParameterMapper):
         Controls image quality/detail level.
         - DALL-E 3: "standard" or "hd"
         - gpt-image-1: "low", "medium", "high", or "auto"
+        - gpt-image-1-mini: "low", "medium", "high", or "auto"
         - DALL-E 2: Not supported (no constraint in model)
 
         Args:

@@ -41,4 +41,19 @@ MODELS: list[Model] = [
             ),
         },
     ),
+    Model(
+        id="gpt-image-1-mini",
+        provider=Provider.OPENAI,
+        display_name="GPT Image 1 Mini",
+        streaming=True,
+        parameter_constraints={
+            ImageGenerationParameter.PARTIAL_IMAGES: Range(min=0, max=3),
+            ImageGenerationParameter.ASPECT_RATIO: Choice(
+                options=["1024x1024", "1024x1536", "1536x1024", "auto"]
+            ),
+            ImageGenerationParameter.QUALITY: Choice(
+                options=["low", "medium", "high", "auto"]
+            ),
+        },
+    ),
 ]
