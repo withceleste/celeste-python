@@ -31,4 +31,29 @@ MODELS: list[Model] = [
             ImageGenerationParameter.WATERMARK: Bool(),
         },
     ),
+    Model(
+        id="seedream-4-5-251128",
+        provider=Provider.BYTEDANCE,
+        display_name="Seedream 4.5",
+        parameter_constraints={
+            ImageGenerationParameter.ASPECT_RATIO: Dimensions(
+                min_pixels=2560 * 1440,  # 3,686,400
+                max_pixels=4096 * 4096,  # 16,777,216
+                min_aspect_ratio=1 / 16,  # 0.0625
+                max_aspect_ratio=16,
+                presets={
+                    "Square 2K": "2048x2048",
+                    "Square 4K": "4096x4096",
+                    "HD 16:9": "1920x1080",
+                    "2K 16:9": "2560x1440",
+                    "4K 16:9": "3840x2160",
+                    "Portrait HD": "1080x1920",
+                    "Portrait 2K": "1440x2560",
+                    "Ultra-wide 21:9": "3024x1296",
+                },
+            ),
+            ImageGenerationParameter.QUALITY: Choice(options=["2K", "4K"]),
+            ImageGenerationParameter.WATERMARK: Bool(),
+        },
+    ),
 ]
