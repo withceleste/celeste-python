@@ -72,6 +72,45 @@ MODELS: list[Model] = [
         },
     ),
     Model(
+        id="gpt-5.2",
+        provider=Provider.OPENAI,
+        display_name="GPT-5.2",
+        streaming=True,
+        parameter_constraints={
+            Parameter.MAX_TOKENS: Range(min=1, max=128000),
+            TextGenerationParameter.THINKING_BUDGET: Choice(
+                options=["minimal", "low", "medium", "high", "xhigh"]
+            ),
+            TextGenerationParameter.OUTPUT_SCHEMA: Schema(),
+        },
+    ),
+    Model(
+        id="gpt-5.2-pro",
+        provider=Provider.OPENAI,
+        display_name="GPT-5.2 Pro",
+        streaming=True,
+        parameter_constraints={
+            Parameter.MAX_TOKENS: Range(min=1, max=128000),
+            TextGenerationParameter.THINKING_BUDGET: Choice(
+                options=["minimal", "low", "medium", "high", "xhigh"]
+            ),
+            TextGenerationParameter.VERBOSITY: Choice(
+                options=["low", "medium", "high"]
+            ),
+            TextGenerationParameter.OUTPUT_SCHEMA: Schema(),
+        },
+    ),
+    Model(
+        id="gpt-5.2-chat-latest",
+        provider=Provider.OPENAI,
+        display_name="GPT-5.2 Instant",
+        streaming=True,
+        parameter_constraints={
+            Parameter.TEMPERATURE: Range(min=0.0, max=2.0),
+            Parameter.MAX_TOKENS: Range(min=1, max=128000),
+        },
+    ),
+    Model(
         id="gpt-5.1",
         provider=Provider.OPENAI,
         display_name="GPT-5.1",
