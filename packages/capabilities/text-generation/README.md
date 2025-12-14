@@ -1,11 +1,11 @@
 <div align="center">
 
-# <img src="../../logo.svg" width="48" height="48" alt="Celeste Logo" style="vertical-align: middle;"> Celeste Video Generation
+# <img src="../../logo.svg" width="48" height="48" alt="Celeste Logo" style="vertical-align: middle;"> Celeste Text Generation
 
-**Video Generation capability for Celeste AI**
+**Text Generation capability for Celeste AI**
 
 [![Python](https://img.shields.io/badge/Python-3.12+-blue?style=for-the-badge)](https://www.python.org/)
-[![License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](../../LICENSE)
+[![License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](../../../LICENSE)
 
 [Quick Start](#-quick-start) • [Documentation](https://withceleste.ai/docs) • [Request Provider](https://github.com/withceleste/celeste-python/issues/new)
 
@@ -19,17 +19,17 @@
 from celeste import create_client, Capability, Provider
 
 client = create_client(
-    capability=Capability.VIDEO_GENERATION,
+    capability=Capability.TEXT_GENERATION,
     provider=Provider.OPENAI,
 )
 
-response = await client.generate(prompt="A cinematic video of a sunset over mountains")
+response = await client.generate(prompt="Hello, world!")
 print(response.content)
 ```
 
 **Install:**
 ```bash
-uv add "celeste-ai[video-generation]"
+uv add "celeste-ai[text-generation]"
 ```
 
 ---
@@ -39,9 +39,11 @@ uv add "celeste-ai[video-generation]"
 
 <div align="center">
 
-<img src="https://www.google.com/s2/favicons?domain=byteplus.com&sz=64" width="64" height="64" alt="ByteDance" title="ByteDance">
-<img src="https://www.google.com/s2/favicons?domain=openai.com&sz=64" width="64" height="64" alt="OpenAI" title="OpenAI">
 <img src="https://www.google.com/s2/favicons?domain=google.com&sz=64" width="64" height="64" alt="Google" title="Google">
+<img src="https://www.google.com/s2/favicons?domain=anthropic.com&sz=64" width="64" height="64" alt="Anthropic" title="Anthropic">
+<img src="https://www.google.com/s2/favicons?domain=openai.com&sz=64" width="64" height="64" alt="OpenAI" title="OpenAI">
+<img src="https://mistral.ai/favicon.ico" width="64" height="64" alt="Mistral" title="Mistral">
+<img src="https://www.google.com/s2/favicons?domain=cohere.com&sz=64" width="64" height="64" alt="Cohere" title="Cohere">
 
 
 **Missing a provider?** [Request it](https://github.com/withceleste/celeste-python/issues/new) – ⚡ **we ship fast**.
@@ -50,7 +52,7 @@ uv add "celeste-ai[video-generation]"
 
 ---
 
-**Streaming**: ❌ Not Supported
+**Streaming**: ✅ Supported
 
 **Parameters**: See [API Documentation](https://withceleste.ai/docs/api) for full parameter reference.
 
@@ -66,7 +68,7 @@ See [CONTRIBUTING.md](../../CONTRIBUTING.md) for guidelines.
 
 ## 📄 License
 
-MIT License – see [LICENSE](../../LICENSE) for details.
+MIT License – see [LICENSE](../../../LICENSE) for details.
 
 ---
 

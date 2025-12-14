@@ -59,7 +59,7 @@ dev = [
 ]
 
 [tool.uv.workspace]
-members = ["packages/*"]
+members = ["packages/capabilities/*"]
 
 [tool.uv.sources]
 celeste-text-generation = { workspace = true }
@@ -81,10 +81,10 @@ addopts = "-ra --strict-markers --strict-config"
 asyncio_mode = "auto"
 pythonpath = [
     "src",
-    "packages/text-generation/src",
-    "packages/image-generation/src",
-    "packages/video-generation/src",
-    "packages/speech-generation/src",
+    "packages/capabilities/text-generation/src",
+    "packages/capabilities/image-generation/src",
+    "packages/capabilities/video-generation/src",
+    "packages/capabilities/speech-generation/src",
 ]
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",

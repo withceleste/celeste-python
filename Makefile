@@ -33,15 +33,15 @@ format:
 
 # Type checking (fail fast on any error)
 typecheck:
-	@uv run mypy -p celeste && uv run mypy tests/ && uv run mypy packages/image-generation packages/text-generation packages/video-generation packages/speech-generation
+	@uv run mypy -p celeste && uv run mypy tests/ && uv run mypy packages/capabilities/image-generation packages/capabilities/text-generation packages/capabilities/video-generation packages/capabilities/speech-generation
 
 # Testing
 test:
-	uv run pytest tests/unit_tests packages/*/tests/unit_tests --cov=celeste --cov-report=term-missing --cov-fail-under=80 -v
+	uv run pytest tests/unit_tests packages/capabilities/*/tests/unit_tests --cov=celeste --cov-report=term-missing --cov-fail-under=80 -v
 
 # Integration testing (requires API keys)
 integration-test:
-	uv run pytest packages/*/tests/integration_tests/ -m integration -v --dist=worksteal -n auto
+	uv run pytest packages/capabilities/*/tests/integration_tests/ -m integration -v --dist=worksteal -n auto
 
 # Security scanning (config reads from pyproject.toml)
 security:

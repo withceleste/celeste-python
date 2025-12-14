@@ -1,11 +1,11 @@
 <div align="center">
 
-# <img src="../../logo.svg" width="48" height="48" alt="Celeste Logo" style="vertical-align: middle;"> Celeste Image Generation
+# <img src="../../logo.svg" width="48" height="48" alt="Celeste Logo" style="vertical-align: middle;"> Celeste Speech Generation
 
-**Image Generation capability for Celeste AI**
+**Speech Generation capability for Celeste AI**
 
 [![Python](https://img.shields.io/badge/Python-3.12+-blue?style=for-the-badge)](https://www.python.org/)
-[![License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](../../LICENSE)
+[![License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](../../../LICENSE)
 
 [Quick Start](#-quick-start) • [Documentation](https://withceleste.ai/docs) • [Request Provider](https://github.com/withceleste/celeste-python/issues/new)
 
@@ -19,17 +19,17 @@
 from celeste import create_client, Capability, Provider
 
 client = create_client(
-    capability=Capability.IMAGE_GENERATION,
-    provider=Provider.OPENAI,
+    capability=Capability.SPEECH_GENERATION,
+    provider=Provider.ELEVENLABS,
 )
 
-response = await client.generate(prompt="A red apple on a white background")
-print(response.content)
+response = await client.generate(text="Welcome to Celeste AI. Transform your text into natural, expressive speech with just a few lines of code.")
+# response.content is an AudioArtifact with binary audio data
 ```
 
 **Install:**
 ```bash
-uv add "celeste-ai[image-generation]"
+uv add "celeste-ai[speech-generation]"
 ```
 
 ---
@@ -41,7 +41,7 @@ uv add "celeste-ai[image-generation]"
 
 <img src="https://www.google.com/s2/favicons?domain=openai.com&sz=64" width="64" height="64" alt="OpenAI" title="OpenAI">
 <img src="https://www.google.com/s2/favicons?domain=google.com&sz=64" width="64" height="64" alt="Google" title="Google">
-<img src="https://www.google.com/s2/favicons?domain=byteplus.com&sz=64" width="64" height="64" alt="ByteDance" title="ByteDance">
+<img src="https://www.google.com/s2/favicons?domain=elevenlabs.io&sz=64" width="64" height="64" alt="ElevenLabs" title="ElevenLabs">
 
 
 **Missing a provider?** [Request it](https://github.com/withceleste/celeste-python/issues/new) – ⚡ **we ship fast**.
@@ -66,7 +66,7 @@ See [CONTRIBUTING.md](../../CONTRIBUTING.md) for guidelines.
 
 ## 📄 License
 
-MIT License – see [LICENSE](../../LICENSE) for details.
+MIT License – see [LICENSE](../../../LICENSE) for details.
 
 ---
 
