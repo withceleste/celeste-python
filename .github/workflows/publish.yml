@@ -69,13 +69,13 @@ jobs:
           base: ${{ steps.get-base.outputs.base }}
           filters: |
             text-generation:
-              - 'packages/text-generation/**'
+              - 'packages/capabilities/text-generation/**'
             image-generation:
-              - 'packages/image-generation/**'
+              - 'packages/capabilities/image-generation/**'
             video-generation:
-              - 'packages/video-generation/**'
+              - 'packages/capabilities/video-generation/**'
             speech-generation:
-              - 'packages/speech-generation/**'
+              - 'packages/capabilities/speech-generation/**'
             core:
               - 'src/celeste/**'
       - id: build-matrix
@@ -136,7 +136,7 @@ jobs:
           BYTEDANCE_API_KEY: ${{ secrets.BYTEDANCE_API_KEY }}
           XAI_API_KEY: ${{ secrets.XAI_API_KEY }}
           ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
-        run: uv run pytest packages/${{ matrix.package }}/tests/integration_tests/ -m integration -v
+        run: uv run pytest packages/capabilities/${{ matrix.package }}/tests/integration_tests/ -m integration -v
 
   build:
     needs: [validate-release, run-ci, detect-changes, integration-tests]
