@@ -27,6 +27,7 @@ Issues = "https://github.com/withceleste/celeste-python/issues"
 
 [tool.uv.sources]
 celeste-ai = { workspace = true }
+celeste-bfl = { workspace = true }
 celeste-google = { workspace = true }
 
 [project.entry-points."celeste.packages"]

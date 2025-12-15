@@ -1,14 +1,47 @@
-"""BFL parameter mappers for image generation."""
+"""BFL Images parameter mappers for image generation.
+
+AspectRatioMapper is defined locally (handles "WxH" → width/height transformation).
+Other mappers subclass from provider and add capability-specific `name` attribute.
+"""
 
 from typing import Any
 
-from celeste import Model
+from celeste_bfl.images.parameters import (
+    GuidanceMapper as _GuidanceMapper,
+)
+from celeste_bfl.images.parameters import (
+    HeightMapper as _HeightMapper,
+)
+from celeste_bfl.images.parameters import (
+    OutputFormatMapper as _OutputFormatMapper,
+)
+from celeste_bfl.images.parameters import (
+    PromptUpsamplingMapper as _PromptUpsamplingMapper,
+)
+from celeste_bfl.images.parameters import (
+    SafetyToleranceMapper as _SafetyToleranceMapper,
+)
+from celeste_bfl.images.parameters import (
+    SeedMapper as _SeedMapper,
+)
+from celeste_bfl.images.parameters import (
+    StepsMapper as _StepsMapper,
+)
+from celeste_bfl.images.parameters import (
+    WidthMapper as _WidthMapper,
+)
+
+from celeste.models import Model
 from celeste.parameters import ParameterMapper
 from celeste_image_generation.parameters import ImageGenerationParameter
 
 
 class AspectRatioMapper(ParameterMapper):
-    """Map aspect_ratio to BFL width/height parameters."""
+    """Map aspect_ratio to BFL width/height parameters.
+
+    Converts 'WxH' string to width/height, rounded to nearest multiple of 16.
+    Delegates to provider's WidthMapper and HeightMapper for the actual mapping.
+    """
 
     name = ImageGenerationParameter.ASPECT_RATIO
 
@@ -31,129 +64,34 @@ class AspectRatioMapper(ParameterMapper):
         width = ((width + 8) // 16) * 16
         height = ((height + 8) // 16) * 16
 
-        request["width"] = width
-        request["height"] = height
+        # Delegate to provider mappers
+        request = _WidthMapper().map(request, width, model)
+        request = _HeightMapper().map(request, height, model)
         return request
 
 
-class PromptUpsamplingMapper(ParameterMapper):
-    """Map prompt_upsampling parameter to BFL request format."""
-
+class PromptUpsamplingMapper(_PromptUpsamplingMapper):
     name = ImageGenerationParameter.PROMPT_UPSAMPLING
 
-    def map(
-        self,
-        request: dict[str, Any],
-        value: object,
-        model: Model,
-    ) -> dict[str, Any]:
-        """Transform prompt_upsampling into provider request."""
-        validated_value = self._validate_value(value, model)
-        if validated_value is None:
-            return request
 
-        request["prompt_upsampling"] = validated_value
-        return request
-
-
-class SeedMapper(ParameterMapper):
-    """Map seed parameter to BFL request format."""
-
+class SeedMapper(_SeedMapper):
     name = ImageGenerationParameter.SEED
 
-    def map(
-        self,
-        request: dict[str, Any],
-        value: object,
-        model: Model,
-    ) -> dict[str, Any]:
-        """Transform seed into provider request."""
-        validated_value = self._validate_value(value, model)
-        if validated_value is None:
-            return request
 
-        request["seed"] = validated_value
-        return request
-
-
-class SafetyToleranceMapper(ParameterMapper):
-    """Map safety_tolerance parameter to BFL request format."""
-
+class SafetyToleranceMapper(_SafetyToleranceMapper):
     name = ImageGenerationParameter.SAFETY_TOLERANCE
 
-    def map(
-        self,
-        request: dict[str, Any],
-        value: object,
-        model: Model,
-    ) -> dict[str, Any]:
-        """Transform safety_tolerance into provider request."""
-        validated_value = self._validate_value(value, model)
-        if validated_value is None:
-            return request
 
-        request["safety_tolerance"] = validated_value
-        return request
-
-
-class OutputFormatMapper(ParameterMapper):
-    """Map output_format parameter to BFL request format."""
-
+class OutputFormatMapper(_OutputFormatMapper):
     name = ImageGenerationParameter.OUTPUT_FORMAT
 
-    def map(
-        self,
-        request: dict[str, Any],
-        value: object,
-        model: Model,
-    ) -> dict[str, Any]:
-        """Transform output_format into provider request."""
-        validated_value = self._validate_value(value, model)
-        if validated_value is None:
-            return request
 
-        request["output_format"] = validated_value
-        return request
-
-
-class StepsMapper(ParameterMapper):
-    """Map steps parameter to BFL request format (flex only)."""
-
+class StepsMapper(_StepsMapper):
     name = ImageGenerationParameter.STEPS
 
-    def map(
-        self,
-        request: dict[str, Any],
-        value: object,
-        model: Model,
-    ) -> dict[str, Any]:
-        """Transform steps into provider request."""
-        validated_value = self._validate_value(value, model)
-        if validated_value is None:
-            return request
 
-        request["steps"] = validated_value
-        return request
-
-
-class GuidanceMapper(ParameterMapper):
-    """Map guidance parameter to BFL request format (flex only)."""
-
+class GuidanceMapper(_GuidanceMapper):
     name = ImageGenerationParameter.GUIDANCE
-
-    def map(
-        self,
-        request: dict[str, Any],
-        value: object,
-        model: Model,
-    ) -> dict[str, Any]:
-        """Transform guidance into provider request."""
-        validated_value = self._validate_value(value, model)
-        if validated_value is None:
-            return request
-
-        request["guidance"] = validated_value
-        return request
 
 
 BFL_PARAMETER_MAPPERS: list[ParameterMapper] = [

@@ -6,6 +6,7 @@ from typing import Any
 
 import httpx
 
+from celeste.core import UsageField
 from celeste.io import FinishReason
 from celeste.mime_types import ApplicationMimeType
 
@@ -116,6 +117,26 @@ class BFLImagesClient:
     def _parse_finish_reason(self, response_data: dict[str, Any]) -> FinishReason:
         """BFL provides status but not structured finish reasons."""
         return FinishReason(reason=None)
+
+    @staticmethod
+    def map_usage_fields(usage_data: dict[str, Any]) -> dict[str, float | None]:
+        """Map BFL usage fields to unified names.
+
+        Shared by client and streaming across all capabilities.
+        """
+        cost = usage_data.get("cost")
+        input_mp = usage_data.get("input_mp")
+        output_mp = usage_data.get("output_mp")
+        return {
+            UsageField.BILLED_UNITS: float(cost) if cost is not None else None,
+            UsageField.INPUT_MP: float(input_mp) if input_mp is not None else None,
+            UsageField.OUTPUT_MP: float(output_mp) if output_mp is not None else None,
+        }
+
+    def _parse_usage(self, response_data: dict[str, Any]) -> dict[str, float | None]:
+        """Extract usage data from BFL response."""
+        submit_metadata = response_data.get("_submit_metadata", {})
+        return self.map_usage_fields(submit_metadata)
 
     def _parse_content(self, response_data: dict[str, Any]) -> Any:
         """Parse result from response."""

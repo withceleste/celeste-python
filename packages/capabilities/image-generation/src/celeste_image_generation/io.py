@@ -32,6 +32,8 @@ class ImageGenerationUsage(Usage):
     reasoning_tokens: int | None = None
     num_images: int | None = None
     billed_units: float | None = None
+    input_mp: float | None = None
+    output_mp: float | None = None
 
 
 class ImageGenerationOutput(Output[ImageArtifact | list[ImageArtifact]]):
