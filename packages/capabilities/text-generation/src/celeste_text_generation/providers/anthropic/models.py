@@ -35,6 +35,16 @@ MODELS: list[Model] = [
         },
     ),
     Model(
+        id="claude-opus-4-5",
+        provider=Provider.ANTHROPIC,
+        display_name="Claude Opus 4.5",
+        streaming=True,
+        parameter_constraints={
+            TextGenerationParameter.THINKING_BUDGET: Range(min=-1, max=32000),
+            TextGenerationParameter.OUTPUT_SCHEMA: Schema(),
+        },
+    ),
+    Model(
         id="claude-sonnet-4-20250514",
         provider=Provider.ANTHROPIC,
         display_name="Claude Sonnet 4",

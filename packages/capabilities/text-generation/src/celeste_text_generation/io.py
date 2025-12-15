@@ -15,7 +15,7 @@ class TextGenerationFinishReason(FinishReason):
     Stores raw provider reason. Providers map their values in implementation.
     """
 
-    reason: str
+    reason: str | None = None
 
 
 class TextGenerationUsage(Usage):

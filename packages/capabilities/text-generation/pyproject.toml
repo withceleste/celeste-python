@@ -27,6 +27,7 @@ Issues = "https://github.com/withceleste/celeste-python/issues"
 
 [tool.uv.sources]
 celeste-ai = { workspace = true }
+celeste-anthropic = { workspace = true }
 
 [project.entry-points."celeste.packages"]
 text-generation = "celeste_text_generation:register_package"
