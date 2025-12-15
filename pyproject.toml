@@ -59,7 +59,10 @@ dev = [
 ]
 
 [tool.uv.workspace]
-members = ["packages/capabilities/*"]
+members = [
+    "packages/providers/*",
+    "packages/capabilities/*",
+]
 
 [tool.uv.sources]
 celeste-text-generation = { workspace = true }
@@ -135,6 +138,7 @@ known-first-party = ["celeste"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["D"]  # No docstrings required in tests
+"**/client.py" = ["ANN401"]  # Allow Any return types in mixin client classes
 
 [tool.mypy]
 python_version = "3.12"

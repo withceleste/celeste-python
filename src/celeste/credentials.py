@@ -4,14 +4,34 @@ from dotenv import find_dotenv
 from pydantic import Field, SecretStr
 from pydantic_settings import BaseSettings
 
+from celeste.auth import APIKey, Authentication
 from celeste.core import Provider
 from celeste.exceptions import MissingCredentialsError, UnsupportedProviderError
+
+# Provider to auth configuration mapping
+# Maps provider to (package_name, header, prefix) for API key auth
+PROVIDER_AUTH_CONFIG: dict[Provider, tuple[str, str, str]] = {
+    Provider.OPENAI: ("celeste_openai", "Authorization", "Bearer "),
+    Provider.ANTHROPIC: ("celeste_anthropic", "x-api-key", ""),
+    Provider.GOOGLE: ("celeste_google", "x-goog-api-key", ""),
+    Provider.MISTRAL: ("celeste_mistral", "Authorization", "Bearer "),
+    Provider.HUGGINGFACE: ("celeste_huggingface", "Authorization", "Bearer "),
+    Provider.STABILITYAI: ("celeste_stabilityai", "Authorization", "Bearer "),
+    Provider.REPLICATE: ("celeste_replicate", "Authorization", "Bearer "),
+    Provider.COHERE: ("celeste_cohere", "Authorization", "bearer "),
+    Provider.XAI: ("celeste_xai", "Authorization", "Bearer "),
+    Provider.LUMA: ("celeste_luma", "Authorization", "Bearer "),
+    Provider.TOPAZLABS: ("celeste_topazlabs", "X-API-Key", ""),
+    Provider.PERPLEXITY: ("celeste_perplexity", "Authorization", "Bearer "),
+    Provider.BYTEDANCE: ("celeste_bytedance", "Authorization", "Bearer "),
+    Provider.ELEVENLABS: ("celeste_elevenlabs", "xi-api-key", ""),
+    Provider.BFL: ("celeste_bfl", "x-key", ""),
+}
 
 # Provider to credential field mapping
 PROVIDER_CREDENTIAL_MAP = {
     Provider.OPENAI: "openai_api_key",
     Provider.ANTHROPIC: "anthropic_api_key",
-    Provider.BFL: "bfl_api_key",
     Provider.GOOGLE: "google_api_key",
     Provider.MISTRAL: "mistral_api_key",
     Provider.HUGGINGFACE: "huggingface_token",
@@ -24,6 +44,7 @@ PROVIDER_CREDENTIAL_MAP = {
     Provider.PERPLEXITY: "perplexity_api_key",
     Provider.BYTEDANCE: "bytedance_api_key",
     Provider.ELEVENLABS: "elevenlabs_api_key",
+    Provider.BFL: "bfl_api_key",
 }
 
 
@@ -32,7 +53,6 @@ class Credentials(BaseSettings):
 
     openai_api_key: SecretStr | None = Field(None, alias="OPENAI_API_KEY")
     anthropic_api_key: SecretStr | None = Field(None, alias="ANTHROPIC_API_KEY")
-    bfl_api_key: SecretStr | None = Field(None, alias="BFL_API_KEY")
     google_api_key: SecretStr | None = Field(None, alias="GOOGLE_API_KEY")
     mistral_api_key: SecretStr | None = Field(None, alias="MISTRAL_API_KEY")
     huggingface_token: SecretStr | None = Field(None, alias="HUGGINGFACE_TOKEN")
@@ -45,6 +65,7 @@ class Credentials(BaseSettings):
     perplexity_api_key: SecretStr | None = Field(None, alias="PERPLEXITY_API_KEY")
     bytedance_api_key: SecretStr | None = Field(None, alias="BYTEDANCE_API_KEY")
     elevenlabs_api_key: SecretStr | None = Field(None, alias="ELEVENLABS_API_KEY")
+    bfl_api_key: SecretStr | None = Field(None, alias="BFL_API_KEY")
 
     model_config = {
         "env_file": find_dotenv(),
@@ -54,13 +75,13 @@ class Credentials(BaseSettings):
     }
 
     def get_credentials(
-        self, provider: Provider, override_key: SecretStr | None = None
+        self, provider: Provider, override_key: str | SecretStr | None = None
     ) -> SecretStr:
         """Get credentials for a specific provider with optional override.
 
         Args:
             provider: The AI provider to get credentials for.
-            override_key: Optional SecretStr to use instead of environment variable.
+            override_key: Optional key to use instead of environment variable.
 
         Returns:
             SecretStr containing the API key for the provider.
@@ -69,6 +90,8 @@ class Credentials(BaseSettings):
             MissingCredentialsError: If provider requires credentials but none are configured.
         """
         if override_key:
+            if isinstance(override_key, str):
+                return SecretStr(override_key)
             return override_key
 
         if not self.has_credential(provider):
@@ -106,7 +129,48 @@ class Credentials(BaseSettings):
             raise UnsupportedProviderError(provider=provider)
         return getattr(self, credential_field, None) is not None
 
+    def get_auth(
+        self,
+        provider: Provider,
+        override_auth: Authentication | None = None,
+        override_key: str | SecretStr | None = None,
+    ) -> Authentication:
+        """Get authentication for a specific provider.
+
+        Args:
+            provider: The AI provider to authenticate with.
+            override_auth: Optional Authentication object to use directly.
+            override_key: Optional API key to use instead of environment variable.
+
+        Returns:
+            Authentication object configured for the provider.
+
+        Raises:
+            MissingCredentialsError: If provider requires credentials but none configured.
+            UnsupportedProviderError: If provider has no auth configuration.
+        """
+        # Direct auth object takes precedence
+        if override_auth is not None:
+            return override_auth
+
+        # Get auth config for provider
+        auth_config = PROVIDER_AUTH_CONFIG.get(provider)
+        if not auth_config:
+            raise UnsupportedProviderError(provider=provider)
+
+        # API key authentication
+        _package_name, header, prefix = auth_config
+
+        # Get API key (override or from environment)
+        api_key = self.get_credentials(provider, override_key)
+
+        return APIKey(
+            key=api_key,
+            header=header,
+            prefix=prefix,
+        )
+
 
 credentials = Credentials.model_validate({})
 
-__all__ = ["Credentials", "credentials"]
+__all__ = ["PROVIDER_AUTH_CONFIG", "Credentials", "credentials"]

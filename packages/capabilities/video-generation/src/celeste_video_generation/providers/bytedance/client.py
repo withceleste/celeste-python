@@ -180,7 +180,7 @@ class ByteDanceVideoGenerationClient(VideoGenerationClient):
     ) -> httpx.Response:
         """Make HTTP request with async polling."""
         headers = {
-            config.AUTH_HEADER_NAME: f"{config.AUTH_HEADER_PREFIX}{self.api_key.get_secret_value()}",
+            **self.auth.get_headers(),
             "Content-Type": ApplicationMimeType.JSON,
         }
 

@@ -8,6 +8,7 @@ import httpx
 import pytest
 from pydantic import SecretStr
 
+from celeste.auth import APIKey
 from celeste.client import Client, _clients, get_client_class, register_client
 from celeste.core import Capability, Provider
 from celeste.exceptions import (
@@ -226,7 +227,7 @@ class TestClientValidation:
             model=text_model,
             provider=text_model.provider,
             capability=Capability.TEXT_GENERATION,
-            api_key=SecretStr(api_key),
+            auth=APIKey(key=SecretStr(api_key)),
         )
 
         # Assert
@@ -246,7 +247,7 @@ class TestClientValidation:
                 model=text_model,
                 provider=text_model.provider,
                 capability=Capability.IMAGE_GENERATION,  # Model doesn't support this
-                api_key=SecretStr(api_key),
+                auth=APIKey(key=SecretStr(api_key)),
             )
 
     @pytest.mark.parametrize(
@@ -270,7 +271,7 @@ class TestClientValidation:
             model=multimodal_model,
             provider=multimodal_model.provider,
             capability=capability,
-            api_key=SecretStr(api_key),
+            auth=APIKey(key=SecretStr(api_key)),
         )
 
         # Assert
@@ -298,7 +299,7 @@ class TestClientValidation:
                 model=empty_model,
                 provider=empty_model.provider,
                 capability=Capability.TEXT_GENERATION,
-                api_key=SecretStr(api_key),
+                auth=APIKey(key=SecretStr(api_key)),
             )
 
 
@@ -438,7 +439,7 @@ class TestClientRequestBuilding:
             model=text_model,
             provider=text_model.provider,
             capability=Capability.TEXT_GENERATION,
-            api_key=SecretStr(api_key),
+            auth=APIKey(key=SecretStr(api_key)),
         )
 
         inputs = _TestInput(prompt="test prompt")
@@ -471,7 +472,7 @@ class TestClientRequestBuilding:
             model=text_model,
             provider=text_model.provider,
             capability=Capability.TEXT_GENERATION,
-            api_key=SecretStr(api_key),
+            auth=APIKey(key=SecretStr(api_key)),
         )
 
         inputs = _TestInput(prompt="test prompt")
@@ -515,7 +516,7 @@ class TestClientRequestBuilding:
             model=text_model,
             provider=text_model.provider,
             capability=Capability.TEXT_GENERATION,
-            api_key=SecretStr(api_key),
+            auth=APIKey(key=SecretStr(api_key)),
         )
 
         original_content = "original content"
@@ -540,7 +541,7 @@ class TestClientStreaming:
             model=text_model,
             provider=text_model.provider,
             capability=Capability.TEXT_GENERATION,
-            api_key=SecretStr(api_key),
+            auth=APIKey(key=SecretStr(api_key)),
         )
 
         # Act & Assert

@@ -28,7 +28,7 @@ class GoogleImageGenerationClient(ImageGenerationClient):
 
     model_config = ConfigDict(extra="allow")
 
-    def model_post_init(self, __context: Any) -> None:  # noqa: ANN401
+    def model_post_init(self, __context: Any) -> None:
         """Initialize API adapter based on model type."""
         super().model_post_init(__context)
 
@@ -103,7 +103,7 @@ class GoogleImageGenerationClient(ImageGenerationClient):
     ) -> httpx.Response:
         """Make HTTP request(s) and return response object."""
         headers = {
-            config.AUTH_HEADER_NAME: self.api_key.get_secret_value(),
+            **self.auth.get_headers(),
             "Content-Type": ApplicationMimeType.JSON,
         }
 
