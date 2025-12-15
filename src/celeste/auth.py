@@ -66,9 +66,9 @@ def get_auth_class(auth_type: str) -> type[Authentication]:
     Raises:
         ValueError: If auth type is not registered.
     """
-    from celeste.registry import _load_from_entry_points
+    from celeste.registry import _load_providers_from_entry_points
 
-    _load_from_entry_points()
+    _load_providers_from_entry_points()
 
     if auth_type not in _auth_classes:
         msg = f"Unknown auth type: {auth_type}. Available: {list(_auth_classes.keys())}"

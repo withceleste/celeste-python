@@ -296,7 +296,7 @@ class TestHTTPClientRequestMethods:
         # Assert - Verify default timeout was used
         mock_httpx_client.post.assert_called_once()
         call_kwargs = mock_httpx_client.post.call_args[1]
-        assert call_kwargs["timeout"] == 60.0
+        assert call_kwargs["timeout"] == 180.0
 
     async def test_get_uses_default_timeout_when_not_specified(
         self, mock_httpx_client: AsyncMock
@@ -316,7 +316,7 @@ class TestHTTPClientRequestMethods:
         # Assert - Verify default timeout was used
         mock_httpx_client.get.assert_called_once()
         call_kwargs = mock_httpx_client.get.call_args[1]
-        assert call_kwargs["timeout"] == 60.0
+        assert call_kwargs["timeout"] == 180.0
 
     async def test_custom_timeout_passed_to_httpx(
         self, mock_httpx_client: AsyncMock
