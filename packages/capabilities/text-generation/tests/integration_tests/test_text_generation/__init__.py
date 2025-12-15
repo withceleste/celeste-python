@@ -1,1 +1,1 @@
-"""Integration tests for text generation capability."""
+"""Text generation integration test module."""

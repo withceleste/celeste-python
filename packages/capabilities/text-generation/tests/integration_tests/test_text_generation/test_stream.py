@@ -37,6 +37,7 @@ async def test_stream(provider: Provider, model: str, parameters: dict) -> None:
     client = create_client(
         capability=Capability.TEXT_GENERATION,
         provider=provider,
+        model=model,
     )
     prompt = "Hi"
     max_tokens = 30
@@ -44,7 +45,6 @@ async def test_stream(provider: Provider, model: str, parameters: dict) -> None:
     # Act - Create stream
     stream = client.stream(
         prompt=prompt,
-        model=model,
         max_tokens=max_tokens,
         **parameters,
     )

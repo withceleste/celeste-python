@@ -31,6 +31,7 @@ async def test_generate(provider: Provider, model: str, parameters: dict) -> Non
     client = create_client(
         capability=Capability.TEXT_GENERATION,
         provider=provider,
+        model=model,
     )
     prompt = "Hi"
     max_tokens = 30
@@ -38,7 +39,6 @@ async def test_generate(provider: Provider, model: str, parameters: dict) -> Non
     # Act
     response = await client.generate(
         prompt=prompt,
-        model=model,
         max_tokens=max_tokens,
         **parameters,
     )

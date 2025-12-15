@@ -4,10 +4,10 @@ from abc import abstractmethod
 from typing import Any, Unpack
 
 import httpx
-from pydantic import BaseModel
 
 from celeste.client import Client
 from celeste.exceptions import ValidationError
+from celeste.types import StructuredOutput
 from celeste_text_generation.io import (
     TextGenerationFinishReason,
     TextGenerationInput,
@@ -35,24 +35,22 @@ class TextGenerationClient(
         self,
         response_data: dict[str, Any],
         **parameters: Unpack[TextGenerationParameters],
-    ) -> str | BaseModel:
+    ) -> StructuredOutput:
         """Parse content from provider response."""
 
     @abstractmethod
     def _parse_finish_reason(
         self, response_data: dict[str, Any]
-    ) -> TextGenerationFinishReason | None:
+    ) -> TextGenerationFinishReason:
         """Parse finish reason from provider response."""
 
     def _create_inputs(
-        self,
-        *args: str,
-        prompt: str | None = None,
-        **parameters: Unpack[TextGenerationParameters],
+        self, *args: str, **parameters: Unpack[TextGenerationParameters]
     ) -> TextGenerationInput:
         """Map positional arguments to Input type."""
         if args:
             return TextGenerationInput(prompt=args[0])
+        prompt: str | None = parameters.get("prompt")
         if prompt is None:
             msg = (
                 "prompt is required (either as positional argument or keyword argument)"
