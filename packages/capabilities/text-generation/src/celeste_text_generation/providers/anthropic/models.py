@@ -2,6 +2,7 @@
 
 from celeste import Model, Provider
 from celeste.constraints import Range, Schema
+from celeste.core import Parameter
 from celeste_text_generation.parameters import TextGenerationParameter
 
 MODELS: list[Model] = [
@@ -11,6 +12,7 @@ MODELS: list[Model] = [
         display_name="Claude Sonnet 4.5",
         streaming=True,
         parameter_constraints={
+            Parameter.MAX_TOKENS: Range(min=1, max=64000),
             TextGenerationParameter.THINKING_BUDGET: Range(min=-1, max=64000),
             TextGenerationParameter.OUTPUT_SCHEMA: Schema(),
         },
@@ -21,6 +23,7 @@ MODELS: list[Model] = [
         display_name="Claude Haiku 4.5",
         streaming=True,
         parameter_constraints={
+            Parameter.MAX_TOKENS: Range(min=1, max=64000),
             TextGenerationParameter.THINKING_BUDGET: Range(min=-1, max=32000),
         },
     ),
@@ -30,6 +33,7 @@ MODELS: list[Model] = [
         display_name="Claude Opus 4.1",
         streaming=True,
         parameter_constraints={
+            Parameter.MAX_TOKENS: Range(min=1, max=32000),
             TextGenerationParameter.THINKING_BUDGET: Range(min=-1, max=32000),
             TextGenerationParameter.OUTPUT_SCHEMA: Schema(),
         },
@@ -40,6 +44,7 @@ MODELS: list[Model] = [
         display_name="Claude Opus 4.5",
         streaming=True,
         parameter_constraints={
+            Parameter.MAX_TOKENS: Range(min=1, max=64000),
             TextGenerationParameter.THINKING_BUDGET: Range(min=-1, max=32000),
             TextGenerationParameter.OUTPUT_SCHEMA: Schema(),
         },
@@ -50,6 +55,7 @@ MODELS: list[Model] = [
         display_name="Claude Sonnet 4",
         streaming=True,
         parameter_constraints={
+            Parameter.MAX_TOKENS: Range(min=1, max=64000),
             TextGenerationParameter.THINKING_BUDGET: Range(min=-1, max=64000),
         },
     ),
@@ -59,6 +65,7 @@ MODELS: list[Model] = [
         display_name="Claude Opus 4",
         streaming=True,
         parameter_constraints={
+            Parameter.MAX_TOKENS: Range(min=1, max=32000),
             TextGenerationParameter.THINKING_BUDGET: Range(min=-1, max=32000),
         },
     ),
