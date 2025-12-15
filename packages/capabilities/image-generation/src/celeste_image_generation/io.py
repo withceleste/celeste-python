@@ -16,7 +16,7 @@ class ImageGenerationFinishReason(FinishReason):
     Stores raw provider reason. Providers map their values in implementation.
     """
 
-    reason: str
+    reason: str | None = None
     message: str | None = None
 
 
@@ -30,12 +30,12 @@ class ImageGenerationUsage(Usage):
     input_tokens: int | None = None
     output_tokens: int | None = None
     reasoning_tokens: int | None = None
-    generated_images: int | None = None
+    num_images: int | None = None
     billed_units: float | None = None
 
 
-class ImageGenerationOutput(Output[ImageArtifact]):
-    """Output with ImageArtifact content."""
+class ImageGenerationOutput(Output[ImageArtifact | list[ImageArtifact]]):
+    """Output with ImageArtifact content (single or multiple)."""
 
     pass
 

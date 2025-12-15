@@ -3,7 +3,7 @@
 from typing import Any
 
 import pytest
-from celeste_image_generation.providers.google.client import GoogleImageGenerationClient
+from celeste_image_generation.providers.google.gemini import GeminiImageGenerationClient
 from pydantic import SecretStr
 
 from celeste.auth import APIKey
@@ -12,12 +12,12 @@ from celeste.models import Model
 
 
 class TestParseFinishReason:
-    """Test _parse_finish_reason method for Google image generation client."""
+    """Test _parse_finish_reason method for Gemini image generation client."""
 
     @pytest.fixture
-    def client(self) -> GoogleImageGenerationClient:
-        """Create a Google image generation client for testing."""
-        return GoogleImageGenerationClient(
+    def client(self) -> GeminiImageGenerationClient:
+        """Create a Gemini image generation client for testing."""
+        return GeminiImageGenerationClient(
             model=Model(
                 id="gemini-2.5-flash-image",
                 provider=Provider.GOOGLE,
@@ -58,7 +58,7 @@ class TestParseFinishReason:
     )
     def test_parse_finish_reason_with_valid_reason(
         self,
-        client: GoogleImageGenerationClient,
+        client: GeminiImageGenerationClient,
         finish_reason: str,
         finish_message: str | None,
         expected_reason: str,
@@ -114,7 +114,7 @@ class TestParseFinishReason:
     )
     def test_parse_finish_reason_returns_none_for_invalid_input(
         self,
-        client: GoogleImageGenerationClient,
+        client: GeminiImageGenerationClient,
         response_data: dict[str, Any],
     ) -> None:
         """Test parsing finish reason returns None for invalid/missing input."""
@@ -125,7 +125,7 @@ class TestParseFinishReason:
         assert result is None
 
     def test_parse_finish_reason_empty_string_finish_reason(
-        self, client: GoogleImageGenerationClient
+        self, client: GeminiImageGenerationClient
     ) -> None:
         """Test parsing finish reason when finishReason is empty string."""
         # Arrange
@@ -142,7 +142,7 @@ class TestParseFinishReason:
         assert result is None
 
     def test_parse_finish_reason_empty_string_message(
-        self, client: GoogleImageGenerationClient
+        self, client: GeminiImageGenerationClient
     ) -> None:
         """Test parsing finish reason when finishMessage is empty string."""
         # Arrange

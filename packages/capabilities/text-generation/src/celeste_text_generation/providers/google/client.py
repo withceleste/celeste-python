@@ -1,13 +1,11 @@
 """Google client implementation for text generation."""
 
-from collections.abc import AsyncIterator
 from typing import Any, Unpack
 
-import httpx
-from pydantic import BaseModel
+from celeste_google.generate_content.client import GoogleGenerateContentClient
 
-from celeste.mime_types import ApplicationMimeType
 from celeste.parameters import ParameterMapper
+from celeste.types import StructuredOutput
 from celeste_text_generation.client import TextGenerationClient
 from celeste_text_generation.io import (
     TextGenerationFinishReason,
@@ -16,12 +14,11 @@ from celeste_text_generation.io import (
 )
 from celeste_text_generation.parameters import TextGenerationParameters
 
-from . import config
 from .parameters import GOOGLE_PARAMETER_MAPPERS
 from .streaming import GoogleTextGenerationStream
 
 
-class GoogleTextGenerationClient(TextGenerationClient):
+class GoogleTextGenerationClient(GoogleGenerateContentClient, TextGenerationClient):
     """Google client for text generation."""
 
     @classmethod
@@ -30,116 +27,41 @@ class GoogleTextGenerationClient(TextGenerationClient):
 
     def _init_request(self, inputs: TextGenerationInput) -> dict[str, Any]:
         """Initialize request from Google contents array format."""
-        contents = [
-            {
-                "role": "user",
-                "parts": [{"text": inputs.prompt}],
-            }
-        ]
-
-        return {"contents": contents}
+        return {
+            "contents": [
+                {
+                    "role": "user",
+                    "parts": [{"text": inputs.prompt}],
+                }
+            ]
+        }
 
     def _parse_usage(self, response_data: dict[str, Any]) -> TextGenerationUsage:
         """Parse usage from response."""
-        usage_metadata = response_data.get("usageMetadata", {})
-
-        return TextGenerationUsage(
-            input_tokens=usage_metadata.get("promptTokenCount"),
-            output_tokens=usage_metadata.get("candidatesTokenCount"),
-            total_tokens=usage_metadata.get("totalTokenCount"),
-            reasoning_tokens=usage_metadata.get("thoughtsTokenCount"),
-        )
+        usage = super()._parse_usage(response_data)
+        return TextGenerationUsage(**usage)
 
     def _parse_content(
         self,
         response_data: dict[str, Any],
         **parameters: Unpack[TextGenerationParameters],
-    ) -> str | BaseModel:
+    ) -> StructuredOutput:
         """Parse content from response."""
-        candidates = response_data.get("candidates", [])
-        if not candidates:
-            msg = "No candidates in response"
-            raise ValueError(msg)
-
-        candidate = candidates[0]
-        content = candidate.get("content", {})
-        parts = content.get("parts", [])
-
-        if not parts:
-            msg = "No parts in candidate content"
-            raise ValueError(msg)
-
-        text_part = parts[0]
-        text = text_part.get("text") or ""
-
-        return self._transform_output(text, **parameters)
+        candidates = super()._parse_content(response_data)
+        parts = candidates[0].get("content", {}).get("parts", [])
+        text = parts[0].get("text") if parts else ""
+        return self._transform_output(text or "", **parameters)
 
     def _parse_finish_reason(
         self, response_data: dict[str, Any]
-    ) -> TextGenerationFinishReason | None:
+    ) -> TextGenerationFinishReason:
         """Parse finish reason from response."""
-        candidates = response_data.get("candidates", [])
-        if not candidates:
-            return None
-
-        candidate = candidates[0]
-        finish_reason_str = candidate.get("finishReason")
-
-        if not finish_reason_str:
-            return None
-
-        return TextGenerationFinishReason(reason=finish_reason_str)
-
-    def _build_metadata(self, response_data: dict[str, Any]) -> dict[str, Any]:
-        """Build metadata dictionary from response data."""
-        # Filter content field before calling super
-        content_fields = {"candidates"}
-        filtered_data = {
-            k: v for k, v in response_data.items() if k not in content_fields
-        }
-        return super()._build_metadata(filtered_data)
-
-    async def _make_request(
-        self,
-        request_body: dict[str, Any],
-        **parameters: Unpack[TextGenerationParameters],
-    ) -> httpx.Response:
-        """Make HTTP request(s) and return response object."""
-        endpoint = config.ENDPOINT.format(model_id=self.model.id)
-
-        headers = {
-            **self.auth.get_headers(),
-            "Content-Type": ApplicationMimeType.JSON,
-        }
-
-        return await self.http_client.post(
-            f"{config.BASE_URL}{endpoint}",
-            headers=headers,
-            json_body=request_body,
-        )
+        finish_reason = super()._parse_finish_reason(response_data)
+        return TextGenerationFinishReason(reason=finish_reason.reason)
 
     def _stream_class(self) -> type[GoogleTextGenerationStream]:
         """Return the Stream class for this client."""
         return GoogleTextGenerationStream
-
-    def _make_stream_request(
-        self,
-        request_body: dict[str, Any],
-        **parameters: Unpack[TextGenerationParameters],
-    ) -> AsyncIterator[dict[str, Any]]:
-        """Make HTTP streaming request and return async iterator of events."""
-        stream_endpoint = config.STREAM_ENDPOINT.format(model_id=self.model.id)
-
-        headers = {
-            **self.auth.get_headers(),
-            "Content-Type": ApplicationMimeType.JSON,
-        }
-
-        return self.http_client.stream_post(
-            f"{config.BASE_URL}{stream_endpoint}",
-            headers=headers,
-            json_body=request_body,
-        )
 
 
 __all__ = ["GoogleTextGenerationClient"]

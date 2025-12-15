@@ -35,24 +35,22 @@ class ImageGenerationClient(
         self,
         response_data: dict[str, Any],
         **parameters: Unpack[ImageGenerationParameters],
-    ) -> ImageArtifact:
+    ) -> ImageArtifact | list[ImageArtifact]:
         """Parse content from provider response."""
 
     @abstractmethod
     def _parse_finish_reason(
         self, response_data: dict[str, Any]
-    ) -> ImageGenerationFinishReason | None:
+    ) -> ImageGenerationFinishReason:
         """Parse finish reason from provider response."""
 
     def _create_inputs(
-        self,
-        *args: str,
-        prompt: str | None = None,
-        **parameters: Unpack[ImageGenerationParameters],
+        self, *args: str, **parameters: Unpack[ImageGenerationParameters]
     ) -> ImageGenerationInput:
         """Map positional arguments to Input type."""
         if args:
             return ImageGenerationInput(prompt=args[0])
+        prompt: str | None = parameters.get("prompt")
         if prompt is None:
             msg = (
                 "prompt is required (either as positional argument or keyword argument)"

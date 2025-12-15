@@ -1,0 +1,82 @@
+"""Google Imagen API client with shared implementation."""
+
+from typing import Any
+
+import httpx
+
+from celeste.io import FinishReason
+from celeste.mime_types import ApplicationMimeType
+
+from . import config
+
+
+class GoogleImagenClient:
+    """Mixin for Imagen API capabilities.
+
+    Provides shared implementation for capabilities using the Imagen API:
+    - _make_request() - HTTP POST to :predict endpoint
+    - _parse_usage() - Returns empty dict (Imagen doesn't provide usage)
+    - _parse_content() - Extract predictions[] array
+    - _parse_finish_reason() - Returns None (Imagen doesn't provide finish reasons)
+    - _build_metadata() - Filter out predictions content
+
+    Capability clients extend parsing methods via super() to wrap/transform results.
+
+    Usage:
+        class GoogleImageGenerationClient(GoogleImagenClient, ImageGenerationClient):
+            def _parse_content(self, response_data, **parameters):
+                predictions = super()._parse_content(response_data)
+                # Extract image from predictions[0]...
+    """
+
+    async def _make_request(
+        self,
+        request_body: dict[str, Any],
+        **parameters: Any,
+    ) -> httpx.Response:
+        """Make HTTP request to Imagen :predict endpoint."""
+        endpoint = config.GoogleImagenEndpoint.CREATE_IMAGE.format(
+            model_id=self.model.id  # type: ignore[attr-defined]
+        )
+        headers = {
+            **self.auth.get_headers(),  # type: ignore[attr-defined]
+            "Content-Type": ApplicationMimeType.JSON,
+        }
+        return await self.http_client.post(  # type: ignore[attr-defined,no-any-return]
+            f"{config.BASE_URL}{endpoint}",
+            headers=headers,
+            json_body=request_body,
+        )
+
+    def _parse_usage(self, response_data: dict[str, Any]) -> dict[str, int | None]:
+        """Imagen API doesn't provide usage metadata."""
+        return {}
+
+    def _parse_content(self, response_data: dict[str, Any]) -> Any:
+        """Parse predictions from response.
+
+        Returns predictions array that capability clients extract from.
+        """
+        predictions = response_data.get("predictions", [])
+        if not predictions:
+            msg = "No predictions in response"
+            raise ValueError(msg)
+        return predictions
+
+    def _parse_finish_reason(self, response_data: dict[str, Any]) -> FinishReason:
+        """Imagen API doesn't provide finish reasons."""
+        return FinishReason(reason=None)
+
+    def _build_metadata(self, response_data: dict[str, Any]) -> dict[str, Any]:
+        """Build metadata, filtering out predictions content.
+
+        Keeps metadata like raiFilteredReason, safety attributes.
+        """
+        content_fields = {"predictions"}
+        filtered_data = {
+            k: v for k, v in response_data.items() if k not in content_fields
+        }
+        return super()._build_metadata(filtered_data)  # type: ignore[misc,no-any-return]
+
+
+__all__ = ["GoogleImagenClient"]
