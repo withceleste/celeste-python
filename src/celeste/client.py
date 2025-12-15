@@ -20,6 +20,7 @@ from celeste.io import Chunk, FinishReason, Input, Output, Usage
 from celeste.models import Model
 from celeste.parameters import ParameterMapper, Parameters
 from celeste.streaming import Stream
+from celeste.types import StructuredOutput
 
 
 class Client[In: Input, Out: Output, Params: Parameters](ABC, BaseModel):
@@ -123,7 +124,7 @@ class Client[In: Input, Out: Output, Params: Parameters](ABC, BaseModel):
         self,
         response_data: dict[str, Any],
         **parameters: Unpack[Params],  # type: ignore[misc]
-    ) -> object:
+    ) -> StructuredOutput:
         """Parse content from provider response."""
         ...
 
@@ -205,9 +206,9 @@ class Client[In: Input, Out: Output, Params: Parameters](ABC, BaseModel):
 
     def _transform_output(
         self,
-        content: object,
+        content: StructuredOutput,
         **parameters: Unpack[Params],  # type: ignore[misc]
-    ) -> object:
+    ) -> StructuredOutput:
         """Transform content using parameter mapper output transformations."""
         for mapper in self.parameter_mappers():
             value = parameters.get(mapper.name)

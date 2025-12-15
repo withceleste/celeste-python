@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 MAX_CONNECTIONS = 20
 MAX_KEEPALIVE_CONNECTIONS = 10
-DEFAULT_TIMEOUT = 60.0
+DEFAULT_TIMEOUT = 180.0
 
 
 class HTTPClient:

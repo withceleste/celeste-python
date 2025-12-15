@@ -20,6 +20,7 @@ from celeste.io import Chunk, Input, Output, Usage
 from celeste.models import Model
 from celeste.parameters import ParameterMapper, Parameters
 from celeste.streaming import Stream
+from celeste.types import StructuredOutput
 
 
 class ParamEnum(StrEnum):
@@ -92,7 +93,9 @@ def _create_test_mapper(
                 request[actual_map_key] = value
             return request
 
-        def parse_output(self, content: object, value: object | None) -> object:
+        def parse_output(
+            self, content: StructuredOutput, value: object | None
+        ) -> StructuredOutput:
             return content
 
     return TestMapperClass()
@@ -120,7 +123,9 @@ def _create_transform_mapper(
                 request[actual_map_key] = value
             return request
 
-        def parse_output(self, content: object, value: object | None) -> object:
+        def parse_output(
+            self, content: StructuredOutput, value: object | None
+        ) -> StructuredOutput:
             if value is not None:
                 return f"{content}_transformed_with_{value}"
             return content
