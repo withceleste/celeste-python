@@ -29,6 +29,7 @@ Issues = "https://github.com/withceleste/celeste-python/issues"
 celeste-ai = { workspace = true }
 celeste-bfl = { workspace = true }
 celeste-google = { workspace = true }
+celeste-openai = { workspace = true }
 
 [project.entry-points."celeste.packages"]
 image-generation = "celeste_image_generation:register_package"

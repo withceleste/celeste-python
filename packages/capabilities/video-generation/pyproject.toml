@@ -31,6 +31,7 @@ Issues = "https://github.com/withceleste/celeste-python/issues"
 [tool.uv.sources]
 celeste-ai = { workspace = true }
 celeste-google = { workspace = true }
+celeste-openai = { workspace = true }
 
 [project.entry-points."celeste.packages"]
 video-generation = "celeste_video_generation:register_package"

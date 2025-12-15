@@ -27,6 +27,7 @@ Issues = "https://github.com/withceleste/celeste-python/issues"
 
 [tool.uv.sources]
 celeste-ai = { workspace = true }
+celeste-openai = { workspace = true }
 
 [project.entry-points."celeste.packages"]
 speech-generation = "celeste_speech_generation:register_package"
