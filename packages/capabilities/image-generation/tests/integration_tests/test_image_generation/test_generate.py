@@ -35,6 +35,7 @@ async def test_generate(provider: Provider, model: str, parameters: dict) -> Non
     client = create_client(
         capability=Capability.IMAGE_GENERATION,
         provider=provider,
+        model=model,
     )
     prompt = "A red apple on a white background"
 

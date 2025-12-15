@@ -129,10 +129,21 @@ class Str(Constraint):
 class Int(Constraint):
     """Integer type constraint."""
 
-    def __call__(self, value: int) -> int:
-        """Validate value is an integer."""
-        # isinstance(True, int) is True, so exclude bools explicitly
-        if not isinstance(value, int) or isinstance(value, bool):
+    def __call__(self, value: int | str | float) -> int:
+        """Validate value is an integer or convert string/float to int."""
+        if isinstance(value, str):
+            if not value.lstrip("-").isdigit():
+                msg = f"Must be int, got {value!r}"
+                raise ConstraintViolationError(msg)
+            return int(value)
+
+        if isinstance(value, float):
+            if not value.is_integer():
+                msg = f"Must be int, got {value!r}"
+                raise ConstraintViolationError(msg)
+            return int(value)
+
+        if not isinstance(value, int):
             msg = f"Must be int, got {type(value).__name__}"
             raise ConstraintViolationError(msg)
 
