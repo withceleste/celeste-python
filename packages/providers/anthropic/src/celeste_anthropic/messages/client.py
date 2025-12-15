@@ -1,0 +1,158 @@
+"""Anthropic Messages API client with shared implementation."""
+
+from collections.abc import AsyncIterator
+from typing import Any
+
+import httpx
+
+from celeste.core import UsageField
+from celeste.io import FinishReason
+from celeste.mime_types import ApplicationMimeType
+
+from . import config
+
+
+class AnthropicMessagesClient:
+    """Mixin for Anthropic Messages API capabilities.
+
+    Provides shared implementation for all capabilities using the Messages API:
+    - _make_request() - HTTP POST to /v1/messages
+    - _make_stream_request() - HTTP streaming to /v1/messages
+    - _parse_usage() - Extract usage dict from response
+    - _parse_content() - Extract content array from response
+    - _parse_finish_reason() - Extract finish reason from response
+    - _build_metadata() - Filter content fields
+
+    Usage:
+        class AnthropicTextGenerationClient(AnthropicMessagesClient, TextGenerationClient):
+            def _parse_content(self, response_data, **parameters):
+                content = super()._parse_content(response_data)  # Raw content array
+                for block in content:
+                    if block.get("type") == "text":
+                        return self._transform_output(block.get("text") or "", **parameters)
+                return ""
+    """
+
+    def _build_request(
+        self,
+        inputs: Any,
+        **parameters: Any,
+    ) -> Any:
+        """Build request with Anthropic-specific defaults."""
+        request = super()._build_request(inputs, **parameters)  # type: ignore[misc]
+        request["model"] = self.model.id  # type: ignore[attr-defined]
+
+        # Apply max_tokens default if not set (Anthropic requires it)
+        if "max_tokens" not in request:
+            request["max_tokens"] = config.DEFAULT_MAX_TOKENS
+
+        return request
+
+    def _build_headers(self, request_body: dict[str, Any]) -> dict[str, str]:
+        """Build headers with beta features extracted from request."""
+        beta_features: list[str] = request_body.pop("_beta_features", [])
+
+        headers: dict[str, str] = {
+            **self.auth.get_headers(),  # type: ignore[attr-defined]
+            config.HEADER_ANTHROPIC_VERSION: config.ANTHROPIC_VERSION,
+            "Content-Type": ApplicationMimeType.JSON,
+        }
+
+        if beta_features:
+            beta_values = [
+                getattr(config, f"BETA_{f.upper().replace('-', '_')}")
+                for f in beta_features
+            ]
+            headers[config.HEADER_ANTHROPIC_BETA] = ",".join(beta_values)
+
+        return headers
+
+    async def _make_request(
+        self,
+        request_body: dict[str, Any],
+        **parameters: Any,
+    ) -> httpx.Response:
+        """Make HTTP request to Anthropic Messages API endpoint."""
+        headers = self._build_headers(request_body)
+
+        return await self.http_client.post(  # type: ignore[attr-defined,no-any-return]
+            f"{config.BASE_URL}{config.AnthropicMessagesEndpoint.CREATE_MESSAGE}",
+            headers=headers,
+            json_body=request_body,
+        )
+
+    def _make_stream_request(
+        self,
+        request_body: dict[str, Any],
+        **parameters: Any,
+    ) -> AsyncIterator[dict[str, Any]]:
+        """Make streaming request to Anthropic Messages API endpoint."""
+        request_body["stream"] = True
+        headers = self._build_headers(request_body)
+
+        return self.http_client.stream_post(  # type: ignore[attr-defined,no-any-return]
+            f"{config.BASE_URL}{config.AnthropicMessagesEndpoint.CREATE_MESSAGE}",
+            headers=headers,
+            json_body=request_body,
+        )
+
+    @staticmethod
+    def map_usage_fields(usage_data: dict[str, Any]) -> dict[str, int | None]:
+        """Map Anthropic usage fields to unified names.
+
+        Shared by client and streaming across all capabilities.
+        """
+        input_tokens = usage_data.get("input_tokens")
+        output_tokens = usage_data.get("output_tokens")
+        cached_tokens = usage_data.get("cache_read_input_tokens")
+        total_tokens = (
+            (input_tokens + output_tokens)
+            if (input_tokens is not None and output_tokens is not None)
+            else None
+        )
+        return {
+            UsageField.INPUT_TOKENS: input_tokens,
+            UsageField.OUTPUT_TOKENS: output_tokens,
+            UsageField.TOTAL_TOKENS: total_tokens,
+            UsageField.CACHED_TOKENS: cached_tokens,
+        }
+
+    def _parse_usage(self, response_data: dict[str, Any]) -> dict[str, int | None]:
+        """Extract usage data from Messages API response."""
+        usage_data = response_data.get("usage", {})
+        return self.map_usage_fields(usage_data)
+
+    def _parse_content(self, response_data: dict[str, Any]) -> Any:
+        """Parse content array from Messages API.
+
+        Returns raw content array that capability clients extract from.
+        """
+        content = response_data.get("content", [])
+        if not content:
+            msg = "No content in response"
+            raise ValueError(msg)
+        return content
+
+    def _parse_finish_reason(
+        self, response_data: dict[str, Any]
+    ) -> FinishReason | None:
+        """Extract finish reason from Messages API response.
+
+        Returns FinishReason that capability clients wrap in their specific type.
+        """
+        stop_reason = response_data.get("stop_reason")
+        if stop_reason is None:
+            return None
+
+        return FinishReason(reason=stop_reason)
+
+    def _build_metadata(self, response_data: dict[str, Any]) -> dict[str, Any]:
+        """Build metadata dictionary, filtering out content field."""
+        content_fields = {"content"}
+        filtered_data = {
+            k: v for k, v in response_data.items() if k not in content_fields
+        }
+        return super()._build_metadata(filtered_data)  # type: ignore[misc,no-any-return]
+
+
+__all__ = ["AnthropicMessagesClient"]

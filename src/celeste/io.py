@@ -14,7 +14,7 @@ class Input(BaseModel):
 class FinishReason(BaseModel):
     """Base class for capability-specific finish reasons (used in streaming chunks and outputs)."""
 
-    pass
+    reason: str | None = None
 
 
 class Usage(BaseModel):

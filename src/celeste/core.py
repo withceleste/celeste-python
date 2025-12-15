@@ -56,4 +56,24 @@ class Parameter(StrEnum):
     MAX_TOKENS = "max_tokens"
 
 
-__all__ = ["Capability", "Parameter", "Provider"]
+class UsageField(StrEnum):
+    """Standard usage field names across Celeste capabilities.
+
+    Use these when mapping provider usage fields to unified names.
+    """
+
+    INPUT_TOKENS = "input_tokens"
+    OUTPUT_TOKENS = "output_tokens"
+    TOTAL_TOKENS = "total_tokens"
+    CACHED_TOKENS = "cached_tokens"
+    REASONING_TOKENS = "reasoning_tokens"
+    BILLED_TOKENS = "billed_tokens"
+    NUM_IMAGES = "num_images"
+    BILLED_UNITS = "billed_units"
+    INPUT_MP = "input_mp"
+    OUTPUT_MP = "output_mp"
+    CACHE_CREATION_INPUT_TOKENS = "cache_creation_input_tokens"
+    CACHE_READ_INPUT_TOKENS = "cache_read_input_tokens"
+
+
+__all__ = ["Capability", "Parameter", "Provider", "UsageField"]
