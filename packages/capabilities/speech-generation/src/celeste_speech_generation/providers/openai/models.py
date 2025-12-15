@@ -25,7 +25,7 @@ MODELS: list[Model] = [
         parameter_constraints={
             SpeechGenerationParameter.VOICE: VoiceConstraint(voices=TTS1_VOICES),
             SpeechGenerationParameter.SPEED: Range(min=0.25, max=4.0),
-            SpeechGenerationParameter.RESPONSE_FORMAT: Choice(
+            SpeechGenerationParameter.OUTPUT_FORMAT: Choice(
                 options=_RESPONSE_FORMAT_OPTIONS
             ),
         },
@@ -38,7 +38,7 @@ MODELS: list[Model] = [
         parameter_constraints={
             SpeechGenerationParameter.VOICE: VoiceConstraint(voices=TTS1_HD_VOICES),
             SpeechGenerationParameter.SPEED: Range(min=0.25, max=4.0),
-            SpeechGenerationParameter.RESPONSE_FORMAT: Choice(
+            SpeechGenerationParameter.OUTPUT_FORMAT: Choice(
                 options=_RESPONSE_FORMAT_OPTIONS
             ),
         },
@@ -53,7 +53,7 @@ MODELS: list[Model] = [
                 voices=GPT4O_MINI_TTS_VOICES
             ),
             SpeechGenerationParameter.SPEED: Range(min=0.25, max=4.0),
-            SpeechGenerationParameter.RESPONSE_FORMAT: Choice(
+            SpeechGenerationParameter.OUTPUT_FORMAT: Choice(
                 options=_RESPONSE_FORMAT_OPTIONS
             ),
         },

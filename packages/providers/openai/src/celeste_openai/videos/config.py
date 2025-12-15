@@ -1,13 +1,16 @@
-"""OpenAI provider configuration for video generation."""
+"""Configuration for OpenAI Videos API."""
 
-# HTTP Configuration
+from enum import StrEnum
+
+
+class OpenAIVideosEndpoint(StrEnum):
+    """Endpoints for Videos API."""
+
+    CREATE_VIDEO = "/v1/videos"
+
+
 BASE_URL = "https://api.openai.com"
-ENDPOINT = "/v1/videos"
 CONTENT_ENDPOINT_SUFFIX = "/content"
-
-# Authentication
-AUTH_HEADER_NAME = "Authorization"
-AUTH_HEADER_PREFIX = "Bearer "
 
 # Polling Configuration
 MAX_POLLS = 60

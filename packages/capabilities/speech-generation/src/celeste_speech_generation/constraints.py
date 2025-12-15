@@ -8,10 +8,7 @@ from celeste_speech_generation.voices import Voice
 
 
 class VoiceConstraint(Constraint):
-    """Voice constraint - value must be a valid voice ID or name from the provided voices.
-
-    Accepts both voice IDs and names. If a name is provided, returns the corresponding ID.
-    """
+    """Voice constraint - value must be a valid voice ID from the provided voices."""
 
     voices: list[Voice] = Field(min_length=1)
 

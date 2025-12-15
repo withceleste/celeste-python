@@ -16,7 +16,7 @@ MODELS: list[Model] = [
         parameter_constraints={
             SpeechGenerationParameter.VOICE: VoiceConstraint(voices=ELEVENLABS_VOICES),
             SpeechGenerationParameter.SPEED: Range(min=0.7, max=1.2),
-            SpeechGenerationParameter.RESPONSE_FORMAT: Choice(
+            SpeechGenerationParameter.OUTPUT_FORMAT: Choice(
                 options=[
                     "mp3_44100_128",
                     "pcm_22050_16",
@@ -34,7 +34,7 @@ MODELS: list[Model] = [
         parameter_constraints={
             SpeechGenerationParameter.VOICE: VoiceConstraint(voices=ELEVENLABS_VOICES),
             SpeechGenerationParameter.SPEED: Range(min=0.7, max=1.2),
-            SpeechGenerationParameter.RESPONSE_FORMAT: Choice(
+            SpeechGenerationParameter.OUTPUT_FORMAT: Choice(
                 options=[
                     "mp3_44100_128",
                     "pcm_22050_16",
@@ -52,7 +52,7 @@ MODELS: list[Model] = [
         parameter_constraints={
             SpeechGenerationParameter.VOICE: VoiceConstraint(voices=ELEVENLABS_VOICES),
             SpeechGenerationParameter.SPEED: Range(min=0.7, max=1.2),
-            SpeechGenerationParameter.RESPONSE_FORMAT: Choice(
+            SpeechGenerationParameter.OUTPUT_FORMAT: Choice(
                 options=[
                     "mp3_44100_128",
                     "pcm_22050_16",
@@ -70,7 +70,7 @@ MODELS: list[Model] = [
         parameter_constraints={
             SpeechGenerationParameter.VOICE: VoiceConstraint(voices=ELEVENLABS_VOICES),
             SpeechGenerationParameter.SPEED: Range(min=0.7, max=1.2),
-            SpeechGenerationParameter.RESPONSE_FORMAT: Choice(
+            SpeechGenerationParameter.OUTPUT_FORMAT: Choice(
                 options=[
                     "mp3_44100_128",
                     "pcm_22050_16",
@@ -88,7 +88,7 @@ MODELS: list[Model] = [
         parameter_constraints={
             SpeechGenerationParameter.VOICE: VoiceConstraint(voices=ELEVENLABS_VOICES),
             SpeechGenerationParameter.SPEED: Range(min=0.7, max=1.2),
-            SpeechGenerationParameter.RESPONSE_FORMAT: Choice(
+            SpeechGenerationParameter.OUTPUT_FORMAT: Choice(
                 options=[
                     "mp3_44100_128",
                     "pcm_22050_16",
@@ -106,7 +106,7 @@ MODELS: list[Model] = [
         parameter_constraints={
             SpeechGenerationParameter.VOICE: VoiceConstraint(voices=ELEVENLABS_VOICES),
             SpeechGenerationParameter.SPEED: Range(min=0.7, max=1.2),
-            SpeechGenerationParameter.RESPONSE_FORMAT: Choice(
+            SpeechGenerationParameter.OUTPUT_FORMAT: Choice(
                 options=[
                     "mp3_44100_128",
                     "pcm_22050_16",
@@ -124,7 +124,7 @@ MODELS: list[Model] = [
         parameter_constraints={
             SpeechGenerationParameter.VOICE: VoiceConstraint(voices=ELEVENLABS_VOICES),
             SpeechGenerationParameter.SPEED: Range(min=0.7, max=1.2),
-            SpeechGenerationParameter.RESPONSE_FORMAT: Choice(
+            SpeechGenerationParameter.OUTPUT_FORMAT: Choice(
                 options=[
                     "mp3_44100_128",
                     "pcm_22050_16",
@@ -142,7 +142,7 @@ MODELS: list[Model] = [
         parameter_constraints={
             SpeechGenerationParameter.VOICE: VoiceConstraint(voices=ELEVENLABS_VOICES),
             SpeechGenerationParameter.SPEED: Range(min=0.7, max=1.2),
-            SpeechGenerationParameter.RESPONSE_FORMAT: Choice(
+            SpeechGenerationParameter.OUTPUT_FORMAT: Choice(
                 options=[
                     "mp3_44100_128",
                     "pcm_22050_16",

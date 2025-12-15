@@ -110,6 +110,14 @@ class GoogleVeoClient:
             raise ValueError(msg)
         return generated_samples[0].get("video", {})
 
+    def _parse_usage(self, response_data: dict[str, Any]) -> dict[str, Any]:
+        """Parse usage from Veo API response.
+
+        Google Veo API doesn't return usage data in the response.
+        Returns empty dict that capability clients can wrap in their Usage type.
+        """
+        return {}
+
     async def download_content(self, url: str) -> bytes:
         """Download video content from GCS URL.
 
