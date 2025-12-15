@@ -1,18 +1,16 @@
 """OpenAI client implementation for video generation."""
 
-import asyncio
 import base64
 import io
 import json
-import logging
 from typing import Any, Unpack
 
-import httpx
+from celeste_openai.videos.client import OpenAIVideosClient
 from PIL import Image
 
 from celeste.artifacts import ImageArtifact, VideoArtifact
 from celeste.exceptions import ValidationError
-from celeste.mime_types import ApplicationMimeType, VideoMimeType
+from celeste.mime_types import VideoMimeType
 from celeste.parameters import ParameterMapper
 from celeste_video_generation.client import VideoGenerationClient
 from celeste_video_generation.io import (
@@ -21,13 +19,10 @@ from celeste_video_generation.io import (
 )
 from celeste_video_generation.parameters import VideoGenerationParameters
 
-from . import config
 from .parameters import OPENAI_PARAMETER_MAPPERS
 
-logger = logging.getLogger(__name__)
 
-
-class OpenAIVideoGenerationClient(VideoGenerationClient):
+class OpenAIVideoGenerationClient(OpenAIVideosClient, VideoGenerationClient):
     """OpenAI client for video generation."""
 
     @classmethod
@@ -75,10 +70,8 @@ class OpenAIVideoGenerationClient(VideoGenerationClient):
 
     def _parse_usage(self, response_data: dict[str, Any]) -> VideoGenerationUsage:
         """Parse usage from response."""
-        seconds = response_data.get("seconds")
-        return VideoGenerationUsage(
-            billing_units=float(seconds) if seconds else None,
-        )
+        usage = super()._parse_usage(response_data)
+        return VideoGenerationUsage(**usage)
 
     def _parse_content(
         self,
@@ -142,103 +135,6 @@ class OpenAIVideoGenerationClient(VideoGenerationClient):
         }
 
         return files, data
-
-    async def _make_request(
-        self,
-        request_body: dict[str, Any],
-        **parameters: Unpack[VideoGenerationParameters],
-    ) -> httpx.Response:
-        """Make HTTP request with async polling for OpenAI video generation."""
-        headers = self.auth.get_headers()
-
-        files, data = await self._prepare_multipart_request(request_body.copy())
-
-        if files:
-            logger.info("Sending multipart request to OpenAI with input_reference")
-            response = await self.http_client.post_multipart(
-                f"{config.BASE_URL}{config.ENDPOINT}",
-                headers=headers,
-                files=files,
-                data=data,
-            )
-        else:
-            logger.info(f"Sending request to OpenAI: {request_body}")
-            response = await self.http_client.post(
-                f"{config.BASE_URL}{config.ENDPOINT}",
-                headers=headers,
-                json_body=request_body,
-            )
-        self._handle_error_response(response)
-        video_obj = response.json()
-
-        video_id = video_obj["id"]
-        logger.info(f"Created video job: {video_id}")
-
-        for _ in range(config.MAX_POLLS):
-            status_response = await self.http_client.get(
-                f"{config.BASE_URL}{config.ENDPOINT}/{video_id}",
-                headers=headers,
-            )
-            self._handle_error_response(status_response)
-            video_obj = status_response.json()
-
-            status = video_obj["status"]
-            progress = video_obj.get("progress", 0)
-
-            logger.info(f"Video {video_id}: {status} ({progress}%)")
-
-            if status == config.STATUS_COMPLETED:
-                break
-            elif status == config.STATUS_FAILED:
-                error = video_obj.get("error", {})
-                msg = (
-                    f"Video generation failed: {error.get('message', 'Unknown error')}"
-                )
-                raise RuntimeError(msg)
-
-            await asyncio.sleep(config.POLL_INTERVAL)
-        else:
-            msg = f"Video generation timeout after {config.MAX_POLLS * config.POLL_INTERVAL} seconds"
-            raise TimeoutError(msg)
-
-        content_response = await self.http_client.get(
-            f"{config.BASE_URL}{config.ENDPOINT}/{video_id}{config.CONTENT_ENDPOINT_SUFFIX}",
-            headers=headers,
-        )
-        self._handle_error_response(content_response)
-        video_data = content_response.content
-
-        response_data = {
-            "video_data": base64.b64encode(video_data).decode("utf-8"),
-            "model": video_obj.get("model", self.model.id),
-            "video_id": video_id,
-            "seconds": video_obj.get("seconds"),
-            "size": video_obj.get("size"),
-            "created_at": video_obj.get("created_at"),
-            "completed_at": video_obj.get("completed_at"),
-            "expires_at": video_obj.get("expires_at"),
-        }
-
-        return httpx.Response(
-            200,
-            content=json.dumps(response_data).encode(),
-            headers={"Content-Type": ApplicationMimeType.JSON},
-        )
-
-    def _build_metadata(self, response_data: dict[str, Any]) -> dict[str, Any]:
-        """Build metadata from response data."""
-        content_fields = {"video_data"}
-        filtered_data = {
-            k: v for k, v in response_data.items() if k not in content_fields
-        }
-        metadata = super()._build_metadata(filtered_data)
-        metadata["video_id"] = response_data.get("video_id")
-        metadata["seconds"] = response_data.get("seconds")
-        metadata["size"] = response_data.get("size")
-        metadata["created_at"] = response_data.get("created_at")
-        metadata["completed_at"] = response_data.get("completed_at")
-        metadata["expires_at"] = response_data.get("expires_at")
-        return metadata
 
 
 __all__ = ["OpenAIVideoGenerationClient"]

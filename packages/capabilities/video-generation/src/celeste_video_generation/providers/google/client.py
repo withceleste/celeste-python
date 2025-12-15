@@ -35,7 +35,8 @@ class GoogleVideoGenerationClient(GoogleVeoClient, VideoGenerationClient):
 
     def _parse_usage(self, response_data: dict[str, Any]) -> VideoGenerationUsage:
         """Parse usage from response."""
-        return VideoGenerationUsage()
+        usage = super()._parse_usage(response_data)
+        return VideoGenerationUsage(**usage)
 
     def _parse_content(
         self,
