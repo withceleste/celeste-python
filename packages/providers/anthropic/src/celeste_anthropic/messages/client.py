@@ -133,17 +133,12 @@ class AnthropicMessagesClient:
             raise ValueError(msg)
         return content
 
-    def _parse_finish_reason(
-        self, response_data: dict[str, Any]
-    ) -> FinishReason | None:
+    def _parse_finish_reason(self, response_data: dict[str, Any]) -> FinishReason:
         """Extract finish reason from Messages API response.
 
         Returns FinishReason that capability clients wrap in their specific type.
         """
         stop_reason = response_data.get("stop_reason")
-        if stop_reason is None:
-            return None
-
         return FinishReason(reason=stop_reason)
 
     def _build_metadata(self, response_data: dict[str, Any]) -> dict[str, Any]:
