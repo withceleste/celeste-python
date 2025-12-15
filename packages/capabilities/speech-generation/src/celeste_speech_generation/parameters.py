@@ -10,8 +10,9 @@ class SpeechGenerationParameter(StrEnum):
 
     VOICE = "voice"
     SPEED = "speed"
-    RESPONSE_FORMAT = "response_format"
+    OUTPUT_FORMAT = "output_format"
     PROMPT = "prompt"
+    LANGUAGE = "language"
 
 
 class SpeechGenerationParameters(Parameters):
@@ -19,5 +20,5 @@ class SpeechGenerationParameters(Parameters):
 
     voice: str | None
     speed: float | None
-    response_format: str | None
+    output_format: str | None
     prompt: str | None

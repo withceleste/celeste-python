@@ -48,7 +48,7 @@ class VoiceMapper(ParameterMapper):
 class OutputFormatMapper(ParameterMapper):
     """Map response_format parameter to ElevenLabs output_format field."""
 
-    name = SpeechGenerationParameter.RESPONSE_FORMAT
+    name = SpeechGenerationParameter.OUTPUT_FORMAT
 
     def map(
         self,
