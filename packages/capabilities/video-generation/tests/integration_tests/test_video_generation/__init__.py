@@ -1,1 +1,1 @@
-"""Integration tests for video generation."""
+"""Video generation integration test module."""

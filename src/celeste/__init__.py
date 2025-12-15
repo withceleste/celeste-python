@@ -25,6 +25,7 @@ from celeste.io import Input, Output, Usage
 from celeste.models import Model, get_model, list_models, register_models
 from celeste.parameters import Parameters
 from celeste.registry import _load_from_entry_points
+from celeste.utils import image_to_data_uri
 
 logger = logging.getLogger(__name__)
 
@@ -135,6 +136,7 @@ __all__ = [
     "create_client",
     "get_client_class",
     "get_model",
+    "image_to_data_uri",
     "list_models",
     "register_client",
     "register_models",
