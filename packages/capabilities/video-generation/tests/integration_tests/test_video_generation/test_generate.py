@@ -28,17 +28,9 @@ from celeste import Capability, Provider, create_client
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_generate(provider: Provider, model: str, parameters: dict) -> None:
-    """Test video generation with prompt parameter across all providers.
-
-    This test demonstrates that the unified API works identically across
-    all providers using the same code - proving the abstraction value.
-    Uses cheapest models with minimum duration and lowest resolution to minimize costs.
-    """
-    # Import here to avoid circular import during pytest collection
-    from celeste_video_generation import (
-        VideoGenerationOutput,
-        VideoGenerationUsage,
-    )
+    """Test video generation across all providers. Uses cheapest models."""
+    # Import inside function to avoid circular import
+    from celeste_video_generation import VideoGenerationOutput, VideoGenerationUsage
 
     from celeste.artifacts import VideoArtifact
 
@@ -46,13 +38,13 @@ async def test_generate(provider: Provider, model: str, parameters: dict) -> Non
     client = create_client(
         capability=Capability.VIDEO_GENERATION,
         provider=provider,
+        model=model,
     )
-    prompt = "A cinematic video of a sunset over mountains"
+    prompt = "A cat playing with a ball"
 
     # Act
     response = await client.generate(
         prompt=prompt,
-        model=model,
         **parameters,
     )
 
