@@ -4,14 +4,8 @@ from typing import Any
 
 from celeste_anthropic.messages.parameters import (
     MaxTokensMapper as _MaxTokensMapper,
-)
-from celeste_anthropic.messages.parameters import (
     OutputSchemaMapper as _OutputSchemaMapper,
-)
-from celeste_anthropic.messages.parameters import (
     TemperatureMapper as _TemperatureMapper,
-)
-from celeste_anthropic.messages.parameters import (
     ThinkingMapper as _ThinkingMapper,
 )
 
