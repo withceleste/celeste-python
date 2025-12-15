@@ -1,13 +1,11 @@
 """Mistral client implementation for text generation."""
 
-from collections.abc import AsyncIterator
 from typing import Any, Unpack
 
-import httpx
-from pydantic import BaseModel
+from celeste_mistral.chat.client import MistralChatClient
 
-from celeste.mime_types import ApplicationMimeType
 from celeste.parameters import ParameterMapper
+from celeste.types import StructuredOutput
 from celeste_text_generation.client import TextGenerationClient
 from celeste_text_generation.io import (
     TextGenerationFinishReason,
@@ -16,12 +14,11 @@ from celeste_text_generation.io import (
 )
 from celeste_text_generation.parameters import TextGenerationParameters
 
-from . import config
 from .parameters import MISTRAL_PARAMETER_MAPPERS
 from .streaming import MistralTextGenerationStream
 
 
-class MistralTextGenerationClient(TextGenerationClient):
+class MistralTextGenerationClient(MistralChatClient, TextGenerationClient):
     """Mistral client for text generation."""
 
     @classmethod
@@ -41,19 +38,14 @@ class MistralTextGenerationClient(TextGenerationClient):
 
     def _parse_usage(self, response_data: dict[str, Any]) -> TextGenerationUsage:
         """Parse usage from response."""
-        usage_dict = response_data.get("usage", {})
-
-        return TextGenerationUsage(
-            input_tokens=usage_dict.get("prompt_tokens"),
-            output_tokens=usage_dict.get("completion_tokens"),
-            total_tokens=usage_dict.get("total_tokens"),
-        )
+        usage = super()._parse_usage(response_data)
+        return TextGenerationUsage(**usage)
 
     def _parse_content(
         self,
         response_data: dict[str, Any],
         **parameters: Unpack[TextGenerationParameters],
-    ) -> str | BaseModel:
+    ) -> StructuredOutput:
         """Parse content from response."""
         choices = response_data.get("choices", [])
         if not choices:
@@ -62,7 +54,7 @@ class MistralTextGenerationClient(TextGenerationClient):
 
         first_choice = choices[0]
         message = first_choice.get("message", {})
-        content = message.get("content")
+        content = message.get("content") or ""
 
         # Handle magistral thinking models that return list content
         if isinstance(content, list):
@@ -72,23 +64,19 @@ class MistralTextGenerationClient(TextGenerationClient):
                     text_parts.append(block.get("text", ""))
             content = "".join(text_parts)
 
-        return self._transform_output(content or "", **parameters)
+        return self._transform_output(content, **parameters)
 
     def _parse_finish_reason(
         self, response_data: dict[str, Any]
-    ) -> TextGenerationFinishReason | None:
+    ) -> TextGenerationFinishReason:
         """Parse finish reason from response."""
         choices = response_data.get("choices", [])
         if not choices:
-            return None
-
-        first_choice = choices[0]
-        finish_reason_str = first_choice.get("finish_reason")
-        return (
-            TextGenerationFinishReason(reason=finish_reason_str)
-            if finish_reason_str
-            else None
-        )
+            finish_reason_str = None
+        else:
+            first_choice = choices[0]
+            finish_reason_str = first_choice.get("finish_reason")
+        return TextGenerationFinishReason(reason=finish_reason_str)
 
     def _build_metadata(self, response_data: dict[str, Any]) -> dict[str, Any]:
         """Build metadata dictionary from response data."""
@@ -99,48 +87,9 @@ class MistralTextGenerationClient(TextGenerationClient):
         }
         return super()._build_metadata(filtered_data)
 
-    async def _make_request(
-        self,
-        request_body: dict[str, Any],
-        **parameters: Unpack[TextGenerationParameters],
-    ) -> httpx.Response:
-        """Make HTTP request(s) and return response object."""
-        request_body["model"] = self.model.id
-
-        headers = {
-            **self.auth.get_headers(),
-            "Content-Type": ApplicationMimeType.JSON,
-        }
-
-        return await self.http_client.post(
-            f"{config.BASE_URL}{config.ENDPOINT}",
-            headers=headers,
-            json_body=request_body,
-        )
-
     def _stream_class(self) -> type[MistralTextGenerationStream]:
         """Return the Stream class for this client."""
         return MistralTextGenerationStream
-
-    def _make_stream_request(
-        self,
-        request_body: dict[str, Any],
-        **parameters: Unpack[TextGenerationParameters],
-    ) -> AsyncIterator[dict[str, Any]]:
-        """Make HTTP streaming request and return async iterator of events."""
-        request_body["model"] = self.model.id
-        request_body["stream"] = True
-
-        headers = {
-            **self.auth.get_headers(),
-            "Content-Type": ApplicationMimeType.JSON,
-        }
-
-        return self.http_client.stream_post(
-            f"{config.BASE_URL}{config.STREAM_ENDPOINT}",
-            headers=headers,
-            json_body=request_body,
-        )
 
 
 __all__ = ["MistralTextGenerationClient"]
