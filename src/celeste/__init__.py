@@ -4,7 +4,7 @@ from pydantic import SecretStr
 
 from celeste.auth import APIKey, Authentication
 from celeste.client import Client, get_client_class, register_client
-from celeste.core import Capability, Parameter, Provider
+from celeste.core import Capability, Parameter, Provider, UsageField
 from celeste.credentials import credentials
 from celeste.exceptions import (
     ClientNotFoundError,
@@ -25,6 +25,12 @@ from celeste.io import Input, Output, Usage
 from celeste.models import Model, get_model, list_models, register_models
 from celeste.parameters import Parameters
 from celeste.registry import _load_from_entry_points
+from celeste.structured_outputs import (
+    RefResolvingJsonSchemaGenerator,
+    StrictJsonSchemaGenerator,
+    StrictRefResolvingJsonSchemaGenerator,
+)
+from celeste.types import JsonValue
 from celeste.utils import image_to_data_uri
 
 logger = logging.getLogger(__name__)
@@ -117,6 +123,7 @@ __all__ = [
     "Error",
     "HTTPClient",
     "Input",
+    "JsonValue",
     "MissingCredentialsError",
     "Model",
     "ModelNotFoundError",
@@ -124,13 +131,17 @@ __all__ = [
     "Parameter",
     "Parameters",
     "Provider",
+    "RefResolvingJsonSchemaGenerator",
     "StreamEmptyError",
     "StreamNotExhaustedError",
     "StreamingNotSupportedError",
+    "StrictJsonSchemaGenerator",
+    "StrictRefResolvingJsonSchemaGenerator",
     "UnsupportedCapabilityError",
     "UnsupportedParameterError",
     "UnsupportedProviderError",
     "Usage",
+    "UsageField",
     "ValidationError",
     "close_all_http_clients",
     "create_client",

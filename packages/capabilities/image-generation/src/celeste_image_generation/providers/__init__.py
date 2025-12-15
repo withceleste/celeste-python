@@ -11,8 +11,8 @@ def _get_providers() -> list[tuple[Provider, type[Client]]]:
     from celeste_image_generation.providers.bfl.client import (
         BFLImageGenerationClient,
     )
-    from celeste_image_generation.providers.bytedance.client import (
-        ByteDanceImageGenerationClient,
+    from celeste_image_generation.providers.byteplus.client import (
+        BytePlusImageGenerationClient,
     )
     from celeste_image_generation.providers.google.client import (
         GoogleImageGenerationClient,
@@ -23,7 +23,7 @@ def _get_providers() -> list[tuple[Provider, type[Client]]]:
 
     return [
         (Provider.BFL, BFLImageGenerationClient),
-        (Provider.BYTEDANCE, ByteDanceImageGenerationClient),
+        (Provider.BYTEPLUS, BytePlusImageGenerationClient),
         (Provider.GOOGLE, GoogleImageGenerationClient),
         (Provider.OPENAI, OpenAIImageGenerationClient),
     ]

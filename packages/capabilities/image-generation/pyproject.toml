@@ -17,7 +17,7 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
     "Typing :: Typed",
 ]
-keywords = ["ai", "image-generation", "dall-e", "imagen", "openai", "google", "bytedance"]
+keywords = ["ai", "image-generation", "dall-e", "imagen", "openai", "google", "byteplus"]
 
 [project.urls]
 Homepage = "https://withceleste.ai"
@@ -28,6 +28,7 @@ Issues = "https://github.com/withceleste/celeste-python/issues"
 [tool.uv.sources]
 celeste-ai = { workspace = true }
 celeste-bfl = { workspace = true }
+celeste-byteplus = { workspace = true }
 celeste-google = { workspace = true }
 celeste-openai = { workspace = true }
 

@@ -19,7 +19,7 @@ from celeste import Capability, Provider, create_client
             {"duration": 4, "resolution": "720p"},
         ),
         (
-            Provider.BYTEDANCE,
+            Provider.BYTEPLUS,
             "seedance-1-0-lite-t2v-250428",
             {"duration": 2, "resolution": "480p"},
         ),

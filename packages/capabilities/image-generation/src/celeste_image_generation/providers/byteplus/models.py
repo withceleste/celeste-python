@@ -1,4 +1,4 @@
-"""ByteDance models for image generation."""
+"""BytePlus models for image generation."""
 
 from celeste import Model, Provider
 from celeste.constraints import Bool, Choice
@@ -8,7 +8,7 @@ from celeste_image_generation.parameters import ImageGenerationParameter
 MODELS: list[Model] = [
     Model(
         id="seedream-4-0-250828",
-        provider=Provider.BYTEDANCE,
+        provider=Provider.BYTEPLUS,
         display_name="Seedream 4.0",
         parameter_constraints={
             ImageGenerationParameter.ASPECT_RATIO: Dimensions(
@@ -33,7 +33,7 @@ MODELS: list[Model] = [
     ),
     Model(
         id="seedream-4-5-251128",
-        provider=Provider.BYTEDANCE,
+        provider=Provider.BYTEPLUS,
         display_name="Seedream 4.5",
         parameter_constraints={
             ImageGenerationParameter.ASPECT_RATIO: Dimensions(
