@@ -262,26 +262,37 @@ class TestInt:
 
         assert result == 42
 
-    def test_rejects_float_value(self) -> None:
-        """Test that float raises ConstraintViolationError."""
+    def test_accepts_boolean_as_int(self) -> None:
+        """Test that bool is accepted as int (True=1, False=0)."""
+        constraint = Int()
+        assert constraint(True) == 1
+        assert constraint(False) == 0
+
+    def test_accepts_valid_string(self) -> None:
+        """Test that valid integer string is converted."""
+        constraint = Int()
+        assert constraint("42") == 42
+        assert constraint("-10") == -10
+
+    def test_rejects_invalid_string(self) -> None:
+        """Test that non-integer string raises ConstraintViolationError."""
         constraint = Int()
 
-        with pytest.raises(ConstraintViolationError, match=r"Must be int, got float"):
-            constraint(42.0)  # type: ignore[arg-type]
+        with pytest.raises(ConstraintViolationError, match=r"Must be int, got 'abc'"):
+            constraint("abc")
 
-    def test_rejects_boolean_value(self) -> None:
-        """Test that bool raises ConstraintViolationError despite isinstance(True, int)."""
+    def test_accepts_whole_float(self) -> None:
+        """Test that whole number float is converted."""
+        constraint = Int()
+        assert constraint(1.0) == 1
+        assert constraint(-5.0) == -5
+
+    def test_rejects_fractional_float(self) -> None:
+        """Test that fractional float raises ConstraintViolationError."""
         constraint = Int()
 
-        with pytest.raises(ConstraintViolationError, match=r"Must be int, got bool"):
-            constraint(True)
-
-    def test_rejects_string_value(self) -> None:
-        """Test that string raises ConstraintViolationError."""
-        constraint = Int()
-
-        with pytest.raises(ConstraintViolationError, match=r"Must be int, got str"):
-            constraint("42")  # type: ignore[arg-type]
+        with pytest.raises(ConstraintViolationError, match=r"Must be int, got 1.1"):
+            constraint(1.1)
 
 
 class TestFloat:

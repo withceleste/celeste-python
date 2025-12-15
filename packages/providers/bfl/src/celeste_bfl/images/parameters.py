@@ -2,6 +2,7 @@
 
 from typing import Any
 
+from celeste.constraints import Int
 from celeste.models import Model
 from celeste.parameters import ParameterMapper
 
@@ -12,15 +13,14 @@ class WidthMapper(ParameterMapper):
     def map(
         self,
         request: dict[str, Any],
-        value: object,
+        value: int | str | float | None,
         model: Model,
     ) -> dict[str, Any]:
         """Transform width into provider request."""
-        validated_value = self._validate_value(value, model)
-        if validated_value is None:
+        if value is None:
             return request
 
-        request["width"] = validated_value
+        request["width"] = Int()(value)
         return request
 
 
@@ -30,15 +30,14 @@ class HeightMapper(ParameterMapper):
     def map(
         self,
         request: dict[str, Any],
-        value: object,
+        value: int | str | float | None,
         model: Model,
     ) -> dict[str, Any]:
         """Transform height into provider request."""
-        validated_value = self._validate_value(value, model)
-        if validated_value is None:
+        if value is None:
             return request
 
-        request["height"] = validated_value
+        request["height"] = Int()(value)
         return request
 
 
