@@ -8,16 +8,16 @@ from celeste import Capability, Provider, create_client
 @pytest.mark.parametrize(
     ("provider", "model", "parameters"),
     [
-        (Provider.OPENAI, "tts-1", {"voice": "alloy", "response_format": "mp3"}),
+        (Provider.OPENAI, "tts-1", {"voice": "alloy", "output_format": "mp3"}),
         (
             Provider.GOOGLE,
-            "gemini-2.5-flash-preview-tts",
+            "gemini-2.5-flash-tts",
             {"voice": "Zephyr", "speed": 1.0},
         ),
         (
             Provider.ELEVENLABS,
             "eleven_flash_v2_5",
-            {"voice": "Laura", "response_format": "mp3_44100_128"},
+            {"voice": "Rachel", "output_format": "mp3_44100_128"},
         ),
     ],
 )
@@ -42,13 +42,13 @@ async def test_generate(provider: Provider, model: str, parameters: dict) -> Non
     client = create_client(
         capability=Capability.SPEECH_GENERATION,
         provider=provider,
+        model=model,
     )
     text = "Hello, this is a test of the Celeste speech generation capability."
 
     # Act
     response = await client.generate(
         text=text,
-        model=model,
         **parameters,
     )
 
@@ -62,12 +62,10 @@ async def test_generate(provider: Provider, model: str, parameters: dict) -> Non
     assert response.content.has_content, (
         f"AudioArtifact has no content (data/path): {response.content}"
     )
-    assert response.content.data is not None, "AudioArtifact data is None"
+    assert response.content.data is not None, "Audio data is None"
     assert len(response.content.data) > 0, "Audio data is empty"
 
     # Validate usage metrics
     assert isinstance(response.usage, SpeechGenerationUsage), (
         f"Expected SpeechGenerationUsage, got {type(response.usage)}"
     )
-    # Note: Speech generation providers typically don't return usage metrics.
-    # Usage object exists for API consistency but fields are empty.

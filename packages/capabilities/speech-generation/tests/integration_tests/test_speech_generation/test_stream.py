@@ -13,7 +13,7 @@ from celeste import Capability, Provider, create_client
         (
             Provider.ELEVENLABS,
             "eleven_flash_v2_5",
-            {"voice": "Laura", "response_format": "mp3_44100_128"},
+            {"voice": "Rachel", "output_format": "mp3_44100_128"},
         ),
     ],
 )
@@ -34,6 +34,7 @@ async def test_stream(provider: Provider, model: str, parameters: dict) -> None:
     client = create_client(
         capability=Capability.SPEECH_GENERATION,
         provider=provider,
+        model=model,
     )
     text = "Hello, this is a streaming test."
 
@@ -41,7 +42,6 @@ async def test_stream(provider: Provider, model: str, parameters: dict) -> None:
     chunks = []
     async for chunk in client.stream(
         text=text,
-        model=model,
         **parameters,
     ):
         assert isinstance(chunk, SpeechGenerationChunk)

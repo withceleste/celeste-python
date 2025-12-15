@@ -1,7 +1,7 @@
 """Input and output types for speech generation."""
 
 from celeste.artifacts import AudioArtifact
-from celeste.io import Chunk, Input, Output, Usage
+from celeste.io import Chunk, FinishReason, Input, Output, Usage
 
 
 class SpeechGenerationInput(Input):
@@ -17,6 +17,10 @@ class SpeechGenerationUsage(Usage):
     """
 
 
+class SpeechGenerationFinishReason(FinishReason):
+    """Finish reason for speech generation."""
+
+
 class SpeechGenerationOutput(Output[AudioArtifact]):
     """Output with audio artifact content."""
 
@@ -24,9 +28,7 @@ class SpeechGenerationOutput(Output[AudioArtifact]):
 class SpeechGenerationChunk(Chunk[bytes]):
     """Typed chunk for speech generation streaming.
 
-    Note: Unlike TextGenerationChunk, this class intentionally omits a finish_reason
-    field. TTS providers stream raw audio bytes without completion signals - the
-    stream simply ends when audio generation is complete.
+    Speech streaming sends raw bytes without finish_reason.
     """
 
     usage: SpeechGenerationUsage | None = None
@@ -34,6 +36,7 @@ class SpeechGenerationChunk(Chunk[bytes]):
 
 __all__ = [
     "SpeechGenerationChunk",
+    "SpeechGenerationFinishReason",
     "SpeechGenerationInput",
     "SpeechGenerationOutput",
     "SpeechGenerationUsage",

@@ -38,14 +38,12 @@ class SpeechGenerationClient(
         """Parse content from provider response."""
 
     def _create_inputs(
-        self,
-        *args: str,
-        text: str | None = None,
-        **parameters: Unpack[SpeechGenerationParameters],
+        self, *args: str, **parameters: Unpack[SpeechGenerationParameters]
     ) -> SpeechGenerationInput:
         """Map positional arguments to Input type."""
         if args:
             return SpeechGenerationInput(text=args[0])
+        text: str | None = parameters.get("text")
         if text is None:
             msg = "text is required (either as positional argument or keyword argument)"
             raise ValidationError(msg)
