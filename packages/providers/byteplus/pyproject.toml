@@ -1,6 +1,6 @@
 [project]
 name = "celeste-byteplus"
-version = "0.1.0"
+version = "0.3.0"
 description = "BytePlus provider package for Celeste AI"
 authors = [{name = "Kamilbenkirane", email = "kamil@withceleste.ai"}]
 license = {text = "Apache-2.0"}

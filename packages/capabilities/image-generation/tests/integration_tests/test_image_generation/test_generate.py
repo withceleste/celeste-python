@@ -42,7 +42,6 @@ async def test_generate(provider: Provider, model: str, parameters: dict) -> Non
     # Act
     response = await client.generate(
         prompt=prompt,
-        model=model,
         **parameters,
     )
 

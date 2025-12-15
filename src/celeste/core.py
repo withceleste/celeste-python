@@ -8,7 +8,7 @@ class Provider(StrEnum):
 
     OPENAI = "openai"
     ANTHROPIC = "anthropic"
-    BFL = "bfl"
+    BFL = "Black Forest Labs"
     GOOGLE = "google"
     MISTRAL = "mistral"
     COHERE = "cohere"
