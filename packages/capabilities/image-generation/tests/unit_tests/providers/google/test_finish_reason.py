@@ -6,6 +6,7 @@ import pytest
 from celeste_image_generation.providers.google.client import GoogleImageGenerationClient
 from pydantic import SecretStr
 
+from celeste.auth import APIKey
 from celeste.core import Capability, Provider
 from celeste.models import Model
 
@@ -25,7 +26,7 @@ class TestParseFinishReason:
             ),
             provider=Provider.GOOGLE,
             capability=Capability.IMAGE_GENERATION,
-            api_key=SecretStr("test-key"),
+            auth=APIKey(key=SecretStr("test-key")),
         )
 
     @pytest.mark.parametrize(

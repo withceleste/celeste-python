@@ -94,7 +94,7 @@ class OpenAIImageGenerationClient(ImageGenerationClient):
     ) -> httpx.Response:
         """Make HTTP request(s) and return response object."""
         headers = {
-            config.AUTH_HEADER_NAME: f"{config.AUTH_HEADER_PREFIX}{self.api_key.get_secret_value()}",
+            **self.auth.get_headers(),
             "Content-Type": ApplicationMimeType.JSON,
         }
 
@@ -120,7 +120,7 @@ class OpenAIImageGenerationClient(ImageGenerationClient):
             request_body["partial_images"] = 1
 
         headers = {
-            config.AUTH_HEADER_NAME: f"{config.AUTH_HEADER_PREFIX}{self.api_key.get_secret_value()}",
+            **self.auth.get_headers(),
             "Content-Type": ApplicationMimeType.JSON,
         }
 

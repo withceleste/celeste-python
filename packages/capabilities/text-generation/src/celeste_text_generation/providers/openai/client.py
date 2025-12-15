@@ -115,7 +115,7 @@ class OpenAITextGenerationClient(TextGenerationClient):
         request_body["model"] = self.model.id
 
         headers = {
-            config.AUTH_HEADER_NAME: f"{config.AUTH_HEADER_PREFIX}{self.api_key.get_secret_value()}",
+            **self.auth.get_headers(),
             "Content-Type": ApplicationMimeType.JSON,
         }
 
@@ -139,7 +139,7 @@ class OpenAITextGenerationClient(TextGenerationClient):
         request_body["stream"] = True
 
         headers = {
-            config.AUTH_HEADER_NAME: f"{config.AUTH_HEADER_PREFIX}{self.api_key.get_secret_value()}",
+            **self.auth.get_headers(),
             "Content-Type": ApplicationMimeType.JSON,
         }
 

@@ -128,7 +128,7 @@ class GoogleVideoGenerationClient(VideoGenerationClient):
         url = f"{config.BASE_URL}{endpoint}"
 
         headers = {
-            "x-goog-api-key": self.api_key.get_secret_value(),
+            **self.auth.get_headers(),
             "Content-Type": ApplicationMimeType.JSON,
         }
 
@@ -147,7 +147,7 @@ class GoogleVideoGenerationClient(VideoGenerationClient):
         logger.info(f"Video generation started: {operation_name}")
 
         poll_url = f"{config.BASE_URL}{config.POLL_ENDPOINT.format(operation_name=operation_name)}"
-        poll_headers = {"x-goog-api-key": self.api_key.get_secret_value()}
+        poll_headers = self.auth.get_headers()
 
         while True:
             await asyncio.sleep(config.POLL_INTERVAL)
@@ -196,7 +196,7 @@ class GoogleVideoGenerationClient(VideoGenerationClient):
 
         logger.info(f"Downloading video from: {download_url}")
 
-        headers = {"x-goog-api-key": self.api_key.get_secret_value()}
+        headers = self.auth.get_headers()
 
         response = await self.http_client.get(
             download_url,

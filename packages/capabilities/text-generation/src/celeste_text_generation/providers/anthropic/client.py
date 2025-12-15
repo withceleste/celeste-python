@@ -100,7 +100,7 @@ class AnthropicTextGenerationClient(TextGenerationClient):
         request_body["max_tokens"] = parameters.get("max_tokens") or 1024
 
         headers = {
-            config.AUTH_HEADER_NAME: f"{config.AUTH_HEADER_PREFIX}{self.api_key.get_secret_value()}",
+            **self.auth.get_headers(),
             config.ANTHROPIC_VERSION_HEADER: config.ANTHROPIC_VERSION,
             "Content-Type": ApplicationMimeType.JSON,
         }
@@ -129,7 +129,7 @@ class AnthropicTextGenerationClient(TextGenerationClient):
         request_body["stream"] = True
 
         headers = {
-            config.AUTH_HEADER_NAME: f"{config.AUTH_HEADER_PREFIX}{self.api_key.get_secret_value()}",
+            **self.auth.get_headers(),
             config.ANTHROPIC_VERSION_HEADER: config.ANTHROPIC_VERSION,
             "Content-Type": ApplicationMimeType.JSON,
         }

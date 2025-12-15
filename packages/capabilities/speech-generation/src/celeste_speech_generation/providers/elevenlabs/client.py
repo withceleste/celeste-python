@@ -88,7 +88,7 @@ class ElevenLabsSpeechGenerationClient(SpeechGenerationClient):
         endpoint = config.ENDPOINT.format(voice_id=voice_id)
 
         headers = {
-            config.AUTH_HEADER_NAME: self.api_key.get_secret_value(),
+            **self.auth.get_headers(),
             "Content-Type": ApplicationMimeType.JSON,
         }
 
@@ -152,7 +152,7 @@ class ElevenLabsSpeechGenerationClient(SpeechGenerationClient):
         stream_endpoint = config.STREAM_ENDPOINT.format(voice_id=voice_id)
 
         headers = {
-            config.AUTH_HEADER_NAME: self.api_key.get_secret_value(),
+            **self.auth.get_headers(),
             "Content-Type": ApplicationMimeType.JSON,
         }
 

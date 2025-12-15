@@ -78,7 +78,7 @@ class BFLImageGenerationClient(ImageGenerationClient):
     ) -> httpx.Response:
         """Make HTTP request(s) and return response object."""
         headers = {
-            config.AUTH_HEADER_NAME: self.api_key.get_secret_value(),
+            **self.auth.get_headers(),
             "Content-Type": ApplicationMimeType.JSON,
             "Accept": ApplicationMimeType.JSON,
         }
@@ -103,7 +103,7 @@ class BFLImageGenerationClient(ImageGenerationClient):
 
         start_time = time.monotonic()
         poll_headers = {
-            config.AUTH_HEADER_NAME: self.api_key.get_secret_value(),
+            **self.auth.get_headers(),
             "Accept": ApplicationMimeType.JSON,
         }
 

@@ -149,9 +149,7 @@ class OpenAIVideoGenerationClient(VideoGenerationClient):
         **parameters: Unpack[VideoGenerationParameters],
     ) -> httpx.Response:
         """Make HTTP request with async polling for OpenAI video generation."""
-        headers = {
-            config.AUTH_HEADER_NAME: f"{config.AUTH_HEADER_PREFIX}{self.api_key.get_secret_value()}",
-        }
+        headers = self.auth.get_headers()
 
         files, data = await self._prepare_multipart_request(request_body.copy())
 
