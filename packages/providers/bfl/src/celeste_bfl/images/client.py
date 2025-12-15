@@ -1,0 +1,129 @@
+"""BFL Images API client with shared implementation."""
+
+import asyncio
+import time
+from typing import Any
+
+import httpx
+
+from celeste.io import FinishReason
+from celeste.mime_types import ApplicationMimeType
+
+from . import config
+
+
+class BFLImagesClient:
+    """Mixin for BFL Images API operations.
+
+    Provides shared implementation:
+    - _make_request() - HTTP POST with async polling pattern
+    - _parse_finish_reason() - Map BFL status to FinishReason
+
+    The BFL API uses async polling:
+    1. POST to /v1/{model_id} to submit job
+    2. Poll GET polling_url until Ready/Failed
+    3. Return final response with merged metadata
+
+    Usage:
+        class BFLImageGenerationClient(BFLImagesClient, ImageGenerationClient):
+            def _parse_content(self, response_data, **parameters):
+                result = response_data.get("result", {})
+                # Extract image from result["sample"]...
+    """
+
+    async def _make_request(
+        self,
+        request_body: dict[str, Any],
+        **parameters: Any,
+    ) -> httpx.Response:
+        """Make HTTP request with async polling for BFL image generation.
+
+        Handles the complete async polling workflow:
+        1. Submit job to /v1/{model_id}
+        2. Poll polling_url until Ready/Failed
+        3. Return response with _submit_metadata for usage parsing
+        """
+        auth_headers = self.auth.get_headers()  # type: ignore[attr-defined]
+        headers = {
+            **auth_headers,
+            "Content-Type": ApplicationMimeType.JSON,
+            "Accept": ApplicationMimeType.JSON,
+        }
+
+        endpoint = config.BFLImagesEndpoint.CREATE_IMAGE.format(model_id=self.model.id)  # type: ignore[attr-defined]
+
+        # Phase 1: Submit job
+        submit_response = await self.http_client.post(  # type: ignore[attr-defined]
+            f"{config.BASE_URL}{endpoint}",
+            headers=headers,
+            json_body=request_body,
+        )
+
+        if submit_response.status_code != 200:
+            return submit_response  # type: ignore[no-any-return]
+
+        submit_data = submit_response.json()
+        polling_url = submit_data.get("polling_url")
+
+        if not polling_url:
+            msg = f"No polling_url in {self.provider} response"  # type: ignore[attr-defined]
+            raise ValueError(msg)
+
+        # Phase 2: Poll for completion
+        start_time = time.monotonic()
+        poll_headers = {
+            **auth_headers,
+            "Accept": ApplicationMimeType.JSON,
+        }
+
+        while True:
+            elapsed = time.monotonic() - start_time
+            if elapsed >= config.POLLING_TIMEOUT:
+                msg = f"{self.provider} polling timed out after {config.POLLING_TIMEOUT} seconds"  # type: ignore[attr-defined]
+                raise TimeoutError(msg)
+
+            poll_response = await self.http_client.get(  # type: ignore[attr-defined]
+                polling_url,
+                headers=poll_headers,
+            )
+
+            if poll_response.status_code != 200:
+                return poll_response  # type: ignore[no-any-return]
+
+            poll_data = poll_response.json()
+            status = poll_data.get("status")
+
+            if status == "Ready":
+                # Merge submit metadata into final response for usage parsing
+                final_data = {
+                    **poll_data,
+                    "_submit_metadata": submit_data,
+                }
+                return httpx.Response(
+                    status_code=200,
+                    json=final_data,
+                    request=httpx.Request("GET", polling_url),
+                )
+            elif status in ("Error", "Failed"):
+                return httpx.Response(
+                    status_code=400,
+                    json=poll_data,
+                    request=httpx.Request("GET", polling_url),
+                )
+
+            await asyncio.sleep(config.POLLING_INTERVAL)
+
+    def _parse_finish_reason(self, response_data: dict[str, Any]) -> FinishReason:
+        """BFL provides status but not structured finish reasons."""
+        return FinishReason(reason=None)
+
+    def _parse_content(self, response_data: dict[str, Any]) -> Any:
+        """Parse result from response."""
+        result = response_data.get("result", {})
+        if not result:
+            msg = "No result in response"
+            raise ValueError(msg)
+        return result
+
+
+__all__ = ["BFLImagesClient"]
