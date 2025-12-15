@@ -1,6 +1,11 @@
 """Google provider for image generation."""
 
 from .client import GoogleImageGenerationClient
-from .models import MODELS
+from .models import GEMINI_MODELS, IMAGEN_MODELS, MODELS
 
-__all__ = ["MODELS", "GoogleImageGenerationClient"]
+__all__ = [
+    "GEMINI_MODELS",
+    "IMAGEN_MODELS",
+    "MODELS",
+    "GoogleImageGenerationClient",
+]

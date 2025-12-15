@@ -1,7 +1,7 @@
 """Streaming for image generation."""
 
 from abc import abstractmethod
-from typing import Unpack
+from typing import Any, Unpack
 
 from celeste.streaming import Stream
 from celeste_image_generation.io import (
@@ -16,6 +16,10 @@ class ImageGenerationStream(
     Stream[ImageGenerationOutput, ImageGenerationParameters, ImageGenerationChunk]
 ):
     """Streaming for image generation."""
+
+    @abstractmethod
+    def _parse_chunk(self, event: dict[str, Any]) -> ImageGenerationChunk | None:
+        """Parse SSE event into Chunk (provider-specific)."""
 
     def _parse_output(  # type: ignore[override]
         self,

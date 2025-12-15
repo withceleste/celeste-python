@@ -1,7 +1,7 @@
 """Google models for image generation."""
 
 from celeste import Model, Provider
-from celeste.constraints import Choice
+from celeste.constraints import Choice, ImagesConstraint, Range
 from celeste_image_generation.parameters import ImageGenerationParameter
 
 # Imagen API models (instances[].prompt → predictions[])
@@ -12,6 +12,7 @@ IMAGEN_MODELS: list[Model] = [
         provider=Provider.GOOGLE,
         display_name="Imagen 4",
         parameter_constraints={
+            ImageGenerationParameter.NUM_IMAGES: Range(min=1, max=4),
             ImageGenerationParameter.ASPECT_RATIO: Choice(
                 options=["1:1", "3:4", "4:3", "9:16", "16:9"]
             ),
@@ -23,6 +24,7 @@ IMAGEN_MODELS: list[Model] = [
         provider=Provider.GOOGLE,
         display_name="Imagen 4 Fast",
         parameter_constraints={
+            ImageGenerationParameter.NUM_IMAGES: Range(min=1, max=4),
             ImageGenerationParameter.ASPECT_RATIO: Choice(
                 options=["1:1", "3:4", "4:3", "9:16", "16:9"]
             ),
@@ -34,22 +36,11 @@ IMAGEN_MODELS: list[Model] = [
         provider=Provider.GOOGLE,
         display_name="Imagen 4 Ultra",
         parameter_constraints={
+            ImageGenerationParameter.NUM_IMAGES: Range(min=1, max=4),
             ImageGenerationParameter.ASPECT_RATIO: Choice(
                 options=["1:1", "3:4", "4:3", "9:16", "16:9"]
             ),
             ImageGenerationParameter.QUALITY: Choice(options=["1K", "2K"]),
-        },
-    ),
-    # Imagen 3 models (deprecated June 24, 2025) - Support for backwards compatibility
-    Model(
-        id="imagen-3.0-generate-002",
-        provider=Provider.GOOGLE,
-        display_name="Imagen 3",
-        parameter_constraints={
-            ImageGenerationParameter.ASPECT_RATIO: Choice(
-                options=["1:1", "3:4", "4:3", "9:16", "16:9"]
-            ),
-            ImageGenerationParameter.QUALITY: Choice(options=["1K"]),
         },
     ),
 ]
@@ -75,6 +66,7 @@ GEMINI_MODELS: list[Model] = [
                     "21:9",
                 ]
             ),
+            ImageGenerationParameter.REFERENCE_IMAGES: ImagesConstraint(max_count=3),
         },
     ),
     Model(
@@ -97,6 +89,7 @@ GEMINI_MODELS: list[Model] = [
                 ]
             ),
             ImageGenerationParameter.QUALITY: Choice(options=["1K", "2K", "4K"]),
+            ImageGenerationParameter.REFERENCE_IMAGES: ImagesConstraint(max_count=14),
         },
     ),
 ]
