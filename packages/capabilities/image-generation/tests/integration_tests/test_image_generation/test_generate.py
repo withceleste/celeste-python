@@ -11,7 +11,7 @@ from celeste import Capability, Provider, create_client
         (Provider.BFL, "flux-2-pro", {"aspect_ratio": "1024x1024"}),
         (Provider.OPENAI, "dall-e-2", {}),
         (Provider.GOOGLE, "imagen-4.0-fast-generate-001", {"num_images": 1}),
-        (Provider.BYTEDANCE, "seedream-4-0-250828", {}),
+        (Provider.BYTEPLUS, "seedream-4-0-250828", {}),
     ],
 )
 @pytest.mark.integration

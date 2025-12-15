@@ -8,8 +8,8 @@ __all__ = ["PROVIDERS"]
 def _get_providers() -> list[tuple[Provider, type[Client]]]:
     """Lazy-load providers."""
     # Import clients directly from .client modules to avoid __init__.py imports
-    from celeste_video_generation.providers.bytedance.client import (
-        ByteDanceVideoGenerationClient,
+    from celeste_video_generation.providers.byteplus.client import (
+        BytePlusVideoGenerationClient,
     )
     from celeste_video_generation.providers.google.client import (
         GoogleVideoGenerationClient,
@@ -19,7 +19,7 @@ def _get_providers() -> list[tuple[Provider, type[Client]]]:
     )
 
     return [
-        (Provider.BYTEDANCE, ByteDanceVideoGenerationClient),
+        (Provider.BYTEPLUS, BytePlusVideoGenerationClient),
         (Provider.GOOGLE, GoogleVideoGenerationClient),
         (Provider.OPENAI, OpenAIVideoGenerationClient),
     ]

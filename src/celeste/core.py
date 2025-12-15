@@ -19,7 +19,7 @@ class Provider(StrEnum):
     LUMA = "luma"
     TOPAZLABS = "topazlabs"
     PERPLEXITY = "perplexity"
-    BYTEDANCE = "bytedance"
+    BYTEPLUS = "byteplus"
     ELEVENLABS = "elevenlabs"
 
 

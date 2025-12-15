@@ -1,4 +1,4 @@
-"""ByteDance client implementation for image generation."""
+"""BytePlus client implementation for image generation."""
 
 import base64
 from collections.abc import AsyncIterator
@@ -19,19 +19,19 @@ from celeste_image_generation.io import (
 from celeste_image_generation.parameters import ImageGenerationParameters
 
 from . import config
-from .parameters import BYTEDANCE_PARAMETER_MAPPERS
-from .streaming import ByteDanceImageGenerationStream
+from .parameters import BYTEPLUS_PARAMETER_MAPPERS
+from .streaming import BytePlusImageGenerationStream
 
 
-class ByteDanceImageGenerationClient(ImageGenerationClient):
-    """ByteDance client for image generation."""
+class BytePlusImageGenerationClient(ImageGenerationClient):
+    """BytePlus client for image generation."""
 
     @classmethod
     def parameter_mappers(cls) -> list[ParameterMapper]:
-        return BYTEDANCE_PARAMETER_MAPPERS
+        return BYTEPLUS_PARAMETER_MAPPERS
 
     def _init_request(self, inputs: ImageGenerationInput) -> dict[str, Any]:
-        """Initialize request from ByteDance API structure."""
+        """Initialize request from BytePlus API structure."""
         return {
             "model": self.model.id,
             "prompt": inputs.prompt,
@@ -75,7 +75,7 @@ class ByteDanceImageGenerationClient(ImageGenerationClient):
                     mime_type=ImageMimeType.PNG,
                 )
 
-        msg = "No image content found in ByteDance response"
+        msg = "No image content found in BytePlus response"
         raise ValidationError(msg)
 
     def _parse_finish_reason(
@@ -83,7 +83,7 @@ class ByteDanceImageGenerationClient(ImageGenerationClient):
     ) -> ImageGenerationFinishReason | None:
         """Parse finish reason from response.
 
-        ByteDance doesn't provide finish reasons for image generation.
+        BytePlus doesn't provide finish reasons for image generation.
         """
         return None
 
@@ -109,7 +109,7 @@ class ByteDanceImageGenerationClient(ImageGenerationClient):
         if parameters.get("aspect_ratio") and parameters.get("quality"):
             msg = (
                 "Cannot use both 'aspect_ratio' and 'quality' parameters. "
-                "ByteDance's 'size' field supports two methods that cannot be combined:\n"
+                "BytePlus's 'size' field supports two methods that cannot be combined:\n"
                 "  • quality: Resolution class ('1K', '2K', '4K')\n"
                 "  • aspect_ratio: Exact dimensions (e.g., '2048x2048', '3840x2160')\n"
                 "Use one or the other, not both."
@@ -129,9 +129,9 @@ class ByteDanceImageGenerationClient(ImageGenerationClient):
             json_body=request_body,
         )
 
-    def _stream_class(self) -> type[ByteDanceImageGenerationStream]:
+    def _stream_class(self) -> type[BytePlusImageGenerationStream]:
         """Return the Stream class for this client."""
-        return ByteDanceImageGenerationStream
+        return BytePlusImageGenerationStream
 
     def _make_stream_request(
         self,
@@ -153,4 +153,4 @@ class ByteDanceImageGenerationClient(ImageGenerationClient):
         )
 
 
-__all__ = ["ByteDanceImageGenerationClient"]
+__all__ = ["BytePlusImageGenerationClient"]

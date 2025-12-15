@@ -1,4 +1,4 @@
-"""ByteDance parameter mappers for video generation."""
+"""BytePlus parameter mappers for video generation."""
 
 from typing import Any
 
@@ -133,7 +133,7 @@ class FirstFrameMapper(ParameterMapper):
             return request
 
         if not validated_value.url:
-            msg = "ByteDance requires image URL (including data URIs) for first_frame. ImageArtifact must have url, data, or path"
+            msg = "BytePlus requires image URL (including data URIs) for first_frame. ImageArtifact must have url, data, or path"
             raise ValidationError(msg)
 
         content = request.setdefault("content", [])
@@ -164,7 +164,7 @@ class LastFrameMapper(ParameterMapper):
             return request
 
         if not validated_value.url:
-            msg = "ByteDance requires image URL (including data URIs) for last_frame. ImageArtifact must have url, data, or path"
+            msg = "BytePlus requires image URL (including data URIs) for last_frame. ImageArtifact must have url, data, or path"
             raise ValidationError(msg)
 
         content = request.setdefault("content", [])
@@ -181,7 +181,7 @@ class LastFrameMapper(ParameterMapper):
         return request
 
 
-BYTEDANCE_PARAMETER_MAPPERS: list[ParameterMapper] = [
+BYTEPLUS_PARAMETER_MAPPERS: list[ParameterMapper] = [
     DurationMapper(),
     ResolutionMapper(),
     ReferenceImagesMapper(),
@@ -189,4 +189,4 @@ BYTEDANCE_PARAMETER_MAPPERS: list[ParameterMapper] = [
     LastFrameMapper(),
 ]
 
-__all__ = ["BYTEDANCE_PARAMETER_MAPPERS"]
+__all__ = ["BYTEPLUS_PARAMETER_MAPPERS"]

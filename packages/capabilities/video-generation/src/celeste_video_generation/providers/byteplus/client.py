@@ -1,4 +1,4 @@
-"""ByteDance client implementation for video generation."""
+"""BytePlus client implementation for video generation."""
 
 import asyncio
 import base64
@@ -20,24 +20,24 @@ from celeste_video_generation.io import (
 from celeste_video_generation.parameters import VideoGenerationParameters
 
 from . import config
-from .parameters import BYTEDANCE_PARAMETER_MAPPERS
+from .parameters import BYTEPLUS_PARAMETER_MAPPERS
 
 logger = logging.getLogger(__name__)
 
 
-class ByteDanceVideoGenerationClient(VideoGenerationClient):
-    """ByteDance client for video generation."""
+class BytePlusVideoGenerationClient(VideoGenerationClient):
+    """BytePlus client for video generation."""
 
     @classmethod
     def parameter_mappers(cls) -> list[ParameterMapper]:
-        return BYTEDANCE_PARAMETER_MAPPERS
+        return BYTEPLUS_PARAMETER_MAPPERS
 
     def _validate_artifacts(
         self,
         inputs: VideoGenerationInput,
         **parameters: Unpack[VideoGenerationParameters],
     ) -> tuple[VideoGenerationInput, dict[str, Any]]:
-        """Validate and prepare artifacts for ByteDance API."""
+        """Validate and prepare artifacts for BytePlus API."""
 
         # Helper function to convert ImageArtifact to base64 data URI
         def convert_to_data_url(img: ImageArtifact) -> ImageArtifact:
@@ -96,11 +96,11 @@ class ByteDanceVideoGenerationClient(VideoGenerationClient):
             )
         elif artifact.data:
             logger.warning(
-                f"ByteDance requires {artifact_type} URL, not base64 data. Upload {artifact_type} first."
+                f"BytePlus requires {artifact_type} URL, not base64 data. Upload {artifact_type} first."
             )
         elif artifact.path:
             logger.warning(
-                f"ByteDance requires {artifact_type} URL, not file path. Upload {artifact_type} first."
+                f"BytePlus requires {artifact_type} URL, not file path. Upload {artifact_type} first."
             )
 
     def _init_request(self, inputs: VideoGenerationInput) -> dict[str, Any]:
@@ -136,7 +136,7 @@ class ByteDanceVideoGenerationClient(VideoGenerationClient):
         """Parse content from response."""
         content = response_data.get("content")
         if not isinstance(content, dict):
-            msg = f"No content field in ByteDance response. Available keys: {list(response_data.keys())}"
+            msg = f"No content field in BytePlus response. Available keys: {list(response_data.keys())}"
             raise ValueError(msg)
 
         video_url = content.get("video_url")
@@ -184,7 +184,7 @@ class ByteDanceVideoGenerationClient(VideoGenerationClient):
             "Content-Type": ApplicationMimeType.JSON,
         }
 
-        logger.debug("Submitting video generation task to ByteDance")
+        logger.debug("Submitting video generation task to BytePlus")
         submit_response = await self.http_client.post(
             f"{config.BASE_URL}{config.ENDPOINT}",
             headers=headers,
@@ -194,7 +194,7 @@ class ByteDanceVideoGenerationClient(VideoGenerationClient):
         submit_data = submit_response.json()
 
         task_id = submit_data["id"]
-        logger.info(f"ByteDance task submitted: {task_id}")
+        logger.info(f"BytePlus task submitted: {task_id}")
 
         start_time = time.time()
         polling_interval = config.DEFAULT_POLLING_INTERVAL
@@ -205,11 +205,11 @@ class ByteDanceVideoGenerationClient(VideoGenerationClient):
         while True:
             elapsed = time.time() - start_time
             if elapsed > config.MAX_POLLING_TIMEOUT:
-                msg = f"ByteDance task {task_id} timed out after {elapsed:.0f}s"
+                msg = f"BytePlus task {task_id} timed out after {elapsed:.0f}s"
                 raise TimeoutError(msg)
 
             status_url = f"{config.BASE_URL}{config.STATUS_ENDPOINT_TEMPLATE.format(task_id=task_id)}"
-            logger.debug(f"Polling ByteDance task status: {task_id}")
+            logger.debug(f"Polling BytePlus task status: {task_id}")
 
             status_response = await self.http_client.get(
                 status_url,
@@ -219,10 +219,10 @@ class ByteDanceVideoGenerationClient(VideoGenerationClient):
             status_data = status_response.json()
 
             status = status_data.get("status")
-            logger.debug(f"ByteDance task {task_id} status: {status}")
+            logger.debug(f"BytePlus task {task_id} status: {status}")
 
             if status == config.STATUS_SUCCEEDED:
-                logger.info(f"ByteDance task {task_id} completed in {elapsed:.0f}s")
+                logger.info(f"BytePlus task {task_id} completed in {elapsed:.0f}s")
                 return httpx.Response(
                     200,
                     content=json.dumps(status_data).encode(),
@@ -236,10 +236,10 @@ class ByteDanceVideoGenerationClient(VideoGenerationClient):
                     if isinstance(error, dict)
                     else "Unknown error"
                 )
-                msg = f"ByteDance task {task_id} failed: {error_msg}"
+                msg = f"BytePlus task {task_id} failed: {error_msg}"
                 raise ValueError(msg)
 
             await asyncio.sleep(polling_interval)
 
 
-__all__ = ["ByteDanceVideoGenerationClient"]
+__all__ = ["BytePlusVideoGenerationClient"]

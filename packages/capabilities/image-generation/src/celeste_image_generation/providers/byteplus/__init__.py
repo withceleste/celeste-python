@@ -1,6 +1,6 @@
-"""ByteDance provider for image generation."""
+"""BytePlus provider for image generation."""
 
-from .client import ByteDanceImageGenerationClient
+from .client import BytePlusImageGenerationClient
 from .models import MODELS
 
-__all__ = ["MODELS", "ByteDanceImageGenerationClient"]
+__all__ = ["MODELS", "BytePlusImageGenerationClient"]

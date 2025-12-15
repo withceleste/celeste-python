@@ -1,4 +1,4 @@
-"""ByteDance streaming for image generation."""
+"""BytePlus streaming for image generation."""
 
 import logging
 from collections.abc import AsyncIterator
@@ -12,8 +12,8 @@ from celeste_image_generation.streaming import ImageGenerationStream
 logger = logging.getLogger(__name__)
 
 
-class ByteDanceImageGenerationStream(ImageGenerationStream):
-    """ByteDance streaming for image generation."""
+class BytePlusImageGenerationStream(ImageGenerationStream):
+    """BytePlus streaming for image generation."""
 
     def __init__(self, sse_iterator: AsyncIterator[dict[str, Any]]) -> None:
         """Initialize stream and track completed event usage."""
@@ -61,4 +61,4 @@ class ByteDanceImageGenerationStream(ImageGenerationStream):
         return ImageGenerationUsage()
 
 
-__all__ = ["ByteDanceImageGenerationStream"]
+__all__ = ["BytePlusImageGenerationStream"]

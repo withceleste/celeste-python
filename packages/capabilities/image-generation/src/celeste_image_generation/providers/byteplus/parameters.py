@@ -1,4 +1,4 @@
-"""ByteDance parameter mappers for image generation."""
+"""BytePlus parameter mappers for image generation."""
 
 from typing import Any
 
@@ -11,7 +11,7 @@ class AspectRatioMapper(ParameterMapper):
     """Map aspect_ratio to dimension string.
 
     Accepts freeform dimension strings (e.g., "2048x2048", "3840x2160")
-    validated by Dimensions constraint against ByteDance's pixel and aspect ratio bounds.
+    validated by Dimensions constraint against BytePlus's pixel and aspect ratio bounds.
     """
 
     name = ImageGenerationParameter.ASPECT_RATIO
@@ -51,7 +51,7 @@ class QualityMapper(ParameterMapper):
     ) -> dict[str, Any]:
         """Transform quality into provider request.
 
-        Maps quality levels ("1K", "2K", "4K") to ByteDance's size parameter.
+        Maps quality levels ("1K", "2K", "4K") to BytePlus's size parameter.
         Skips if size is already set by aspect_ratio (conflict resolution).
         """
         validated_value = self._validate_value(value, model)
@@ -92,10 +92,10 @@ class WatermarkMapper(ParameterMapper):
         return request
 
 
-BYTEDANCE_PARAMETER_MAPPERS: list[ParameterMapper] = [
+BYTEPLUS_PARAMETER_MAPPERS: list[ParameterMapper] = [
     AspectRatioMapper(),
     QualityMapper(),
     WatermarkMapper(),
 ]
 
-__all__ = ["BYTEDANCE_PARAMETER_MAPPERS"]
+__all__ = ["BYTEPLUS_PARAMETER_MAPPERS"]
