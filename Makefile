@@ -8,7 +8,8 @@ help:
 	@echo "  make format     - Apply Ruff formatting"
 	@echo "  make typecheck  - Run mypy type checking"
 	@echo "  make test       - Run all tests (core + packages) with coverage"
-	@echo "  make integration-test - Run integration tests (requires API keys)"
+	@echo "  make integration-test [capability]  - Run integration tests (all or specific)"
+	@echo "                                        (e.g., make integration-test image-intelligence)"
 	@echo "  make security   - Run Bandit security scan"
 	@echo "  make ci       - Run full CI/CD pipeline"
 	@echo "  make clean      - Clean cache directories"
@@ -33,15 +34,22 @@ format:
 
 # Type checking (fail fast on any error)
 typecheck:
-	@uv run mypy -p celeste && uv run mypy tests/ && uv run mypy packages/capabilities/image-generation packages/capabilities/text-generation packages/capabilities/video-generation packages/capabilities/speech-generation
+	@uv run mypy -p celeste && uv run mypy tests/ && uv run mypy packages/*/*/src/
 
 # Testing
 test:
-	uv run pytest tests/unit_tests packages/capabilities/*/tests/unit_tests --cov=celeste --cov-report=term-missing --cov-fail-under=80 -v
+	uv run pytest tests/unit_tests --cov=celeste --cov-report=term-missing --cov-fail-under=80 -v
 
 # Integration testing (requires API keys)
+# Usage: make integration-test [capability]
 integration-test:
-	uv run pytest packages/capabilities/*/tests/integration_tests/ -m integration -v --dist=worksteal -n auto
+	@cap="$(filter-out $@,$(MAKECMDGOALS))"; \
+	if [ -z "$$cap" ]; then cap="*"; fi; \
+	uv run pytest packages/capabilities/$$cap/tests/integration_tests/ -m integration -v --dist=worksteal -n auto
+
+# Catch capability names as no-op targets
+%:
+	@:
 
 # Security scanning (config reads from pyproject.toml)
 security:

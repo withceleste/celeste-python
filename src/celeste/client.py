@@ -47,7 +47,7 @@ class Client[In: Input, Out: Output, Params: Parameters](ABC, BaseModel):
 
     async def generate(
         self,
-        *args: Any,  # noqa: ANN401
+        *args: Any,
         **parameters: Unpack[Params],  # type: ignore[misc]
     ) -> Out:
         """Generate content - signature varies by capability.
@@ -74,7 +74,7 @@ class Client[In: Input, Out: Output, Params: Parameters](ABC, BaseModel):
 
     def stream(
         self,
-        *args: Any,  # noqa: ANN401
+        *args: Any,
         **parameters: Unpack[Params],  # type: ignore[misc]
     ) -> Stream[Out, Params, Chunk]:
         """Stream content - signature varies by capability.
@@ -140,7 +140,7 @@ class Client[In: Input, Out: Output, Params: Parameters](ABC, BaseModel):
     @abstractmethod
     def _create_inputs(
         self,
-        *args: Any,  # noqa: ANN401
+        *args: Any,
         **parameters: Unpack[Params],  # type: ignore[misc]
     ) -> In:
         """Map positional arguments to Input type."""
