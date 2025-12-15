@@ -2,6 +2,7 @@ import logging
 
 from pydantic import SecretStr
 
+from celeste.auth import APIKey, Authentication
 from celeste.client import Client, get_client_class, register_client
 from celeste.core import Capability, Parameter, Provider
 from celeste.credentials import credentials
@@ -61,7 +62,8 @@ def create_client(
     capability: Capability,
     provider: Provider | None = None,
     model: Model | str | None = None,
-    api_key: SecretStr | None = None,
+    api_key: str | SecretStr | None = None,
+    auth: Authentication | None = None,
 ) -> Client:
     """Create an async client for the specified AI capability.
 
@@ -69,7 +71,8 @@ def create_client(
         capability: The AI capability to use (e.g., TEXT_GENERATION).
         provider: Optional provider. Required if model is a string ID.
         model: Model object, string model ID, or None for auto-selection.
-        api_key: Optional SecretStr override. If not specified, loaded from environment.
+        api_key: Optional API key override (string or SecretStr).
+        auth: Optional Authentication object for custom auth (e.g., GoogleADC).
 
     Returns:
         Configured client instance ready for generation operations.
@@ -85,10 +88,12 @@ def create_client(
     # Resolve model
     resolved_model = _resolve_model(capability, provider, model)
 
-    # Get client class and credentials
+    # Get client class and authentication
     client_class = get_client_class(capability, resolved_model.provider)
-    resolved_key = credentials.get_credentials(
-        resolved_model.provider, override_key=api_key
+    resolved_auth = credentials.get_auth(
+        resolved_model.provider,
+        override_auth=auth,
+        override_key=api_key,
     )
 
     # Create and return client
@@ -96,12 +101,14 @@ def create_client(
         model=resolved_model,
         provider=resolved_model.provider,
         capability=capability,
-        api_key=resolved_key,
+        auth=resolved_auth,
     )
 
 
 # Exports
 __all__ = [
+    "APIKey",
+    "Authentication",
     "Capability",
     "Client",
     "ClientNotFoundError",

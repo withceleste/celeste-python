@@ -6,8 +6,9 @@ from json import JSONDecodeError
 from typing import Any, Unpack
 
 import httpx
-from pydantic import BaseModel, ConfigDict, Field, SecretStr
+from pydantic import BaseModel, ConfigDict, Field
 
+from celeste.auth import Authentication
 from celeste.core import Capability, Provider
 from celeste.exceptions import (
     ClientNotFoundError,
@@ -29,7 +30,7 @@ class Client[In: Input, Out: Output, Params: Parameters](ABC, BaseModel):
     model: Model
     provider: Provider
     capability: Capability
-    api_key: SecretStr = Field(exclude=True)
+    auth: Authentication = Field(exclude=True)
 
     def model_post_init(self, __context: object) -> None:
         """Validate capability compatibility."""
