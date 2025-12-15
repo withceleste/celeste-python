@@ -39,8 +39,8 @@ class ImagenImageGenerationClient(GoogleImagenClient, ImageGenerationClient):
 
     def _parse_usage(self, response_data: dict[str, Any]) -> ImageGenerationUsage:
         """Parse usage from response."""
-        predictions = response_data.get("predictions", [])
-        return ImageGenerationUsage(num_images=len(predictions))
+        usage = super()._parse_usage(response_data)
+        return ImageGenerationUsage(**usage)
 
     def _parse_content(
         self,

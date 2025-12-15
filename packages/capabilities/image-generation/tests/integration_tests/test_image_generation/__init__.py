@@ -1,1 +1,1 @@
-"""Integration tests for image generation capability."""
+"""Image generation integration test module."""

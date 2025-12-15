@@ -120,11 +120,6 @@ class OpenAIImagesClient:
 
         metadata = super()._build_metadata(filtered_data)  # type: ignore[misc]
 
-        # Add revised_prompt from first image if present
-        data = response_data.get("data", [])
-        if data and data[0].get("revised_prompt"):
-            metadata["revised_prompt"] = data[0]["revised_prompt"]
-
         return metadata
 
 

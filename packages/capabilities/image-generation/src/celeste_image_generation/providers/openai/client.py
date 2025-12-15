@@ -1,13 +1,11 @@
 """OpenAI client implementation for image generation."""
 
 import base64
-from collections.abc import AsyncIterator
 from typing import Any, Unpack
 
-import httpx
+from celeste_openai.images.client import OpenAIImagesClient
 
 from celeste.artifacts import ImageArtifact
-from celeste.mime_types import ApplicationMimeType
 from celeste.parameters import ParameterMapper
 from celeste_image_generation.client import ImageGenerationClient
 from celeste_image_generation.io import (
@@ -17,12 +15,11 @@ from celeste_image_generation.io import (
 )
 from celeste_image_generation.parameters import ImageGenerationParameters
 
-from . import config
 from .parameters import OPENAI_PARAMETER_MAPPERS
 from .streaming import OpenAIImageGenerationStream
 
 
-class OpenAIImageGenerationClient(ImageGenerationClient):
+class OpenAIImageGenerationClient(OpenAIImagesClient, ImageGenerationClient):
     """OpenAI client for image generation."""
 
     @classmethod
@@ -44,7 +41,8 @@ class OpenAIImageGenerationClient(ImageGenerationClient):
 
     def _parse_usage(self, response_data: dict[str, Any]) -> ImageGenerationUsage:
         """Parse usage from response."""
-        return ImageGenerationUsage()
+        usage = super()._parse_usage(response_data)
+        return ImageGenerationUsage(**usage)
 
     def _parse_content(
         self,
@@ -52,11 +50,8 @@ class OpenAIImageGenerationClient(ImageGenerationClient):
         **parameters: Unpack[ImageGenerationParameters],
     ) -> ImageArtifact:
         """Parse content from response."""
-        data = response_data.get("data", [])
-        if not data:
-            msg = "No image data in response"
-            raise ValueError(msg)
-
+        # Use mixin's _parse_content to get data array
+        data = super()._parse_content(response_data)
         image_data = data[0]
 
         b64_json = image_data.get("b64_json")
@@ -73,62 +68,13 @@ class OpenAIImageGenerationClient(ImageGenerationClient):
 
     def _parse_finish_reason(
         self, response_data: dict[str, Any]
-    ) -> ImageGenerationFinishReason | None:
-        """Parse finish reason from response."""
-        return None
-
-    def _build_metadata(self, response_data: dict[str, Any]) -> dict[str, Any]:
-        """Build metadata dictionary from response data."""
-        metadata = super()._build_metadata(response_data)
-        # Add provider-specific parsed fields
-        if response_data.get("data") and response_data["data"]:
-            revised_prompt = response_data["data"][0].get("revised_prompt")
-            if revised_prompt:
-                metadata["revised_prompt"] = revised_prompt
-        return metadata
-
-    async def _make_request(
-        self,
-        request_body: dict[str, Any],
-        **parameters: Unpack[ImageGenerationParameters],
-    ) -> httpx.Response:
-        """Make HTTP request(s) and return response object."""
-        headers = {
-            **self.auth.get_headers(),
-            "Content-Type": ApplicationMimeType.JSON,
-        }
-
-        return await self.http_client.post(
-            f"{config.BASE_URL}{config.ENDPOINT}",
-            headers=headers,
-            json_body=request_body,
-        )
+    ) -> ImageGenerationFinishReason:
+        """OpenAI Images API doesn't provide finish reasons."""
+        return ImageGenerationFinishReason(reason=None)
 
     def _stream_class(self) -> type[OpenAIImageGenerationStream]:
         """Return the Stream class for this client."""
         return OpenAIImageGenerationStream
-
-    def _make_stream_request(
-        self,
-        request_body: dict[str, Any],
-        **parameters: Unpack[ImageGenerationParameters],
-    ) -> AsyncIterator[dict[str, Any]]:
-        """Make HTTP streaming request and return async iterator of events."""
-        request_body["stream"] = True
-
-        if "partial_images" not in request_body:
-            request_body["partial_images"] = 1
-
-        headers = {
-            **self.auth.get_headers(),
-            "Content-Type": ApplicationMimeType.JSON,
-        }
-
-        return self.http_client.stream_post(
-            f"{config.BASE_URL}{config.STREAM_ENDPOINT}",
-            headers=headers,
-            json_body=request_body,
-        )
 
 
 __all__ = ["OpenAIImageGenerationClient"]
