@@ -5,7 +5,7 @@ description = "Google (Gemini API) provider package for Celeste AI"
 authors = [{name = "Kamilbenkirane", email = "kamil@withceleste.ai"}]
 license = {text = "Apache-2.0"}
 requires-python = ">=3.12"
-dependencies = ["celeste-ai", "httpx", "google-auth"]
+dependencies = ["celeste-ai", "httpx", "google-auth", "requests"]
 
 [tool.uv.sources]
 celeste-ai = { workspace = true }
@@ -16,3 +16,6 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/celeste_google"]
+
+[project.entry-points."celeste.providers"]
+google = "celeste_google:register_provider"
