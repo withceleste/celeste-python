@@ -7,6 +7,7 @@ from typing import Any
 
 import httpx
 
+from celeste.client import APIMixin
 from celeste.mime_types import ApplicationMimeType
 
 from . import config
@@ -14,7 +15,7 @@ from . import config
 logger = logging.getLogger(__name__)
 
 
-class GoogleVeoClient:
+class GoogleVeoClient(APIMixin):
     """Mixin for Veo API capabilities.
 
     Provides shared implementation for video generation using the Veo API:
@@ -39,25 +40,25 @@ class GoogleVeoClient:
         **parameters: Any,
     ) -> httpx.Response:
         """Make HTTP request with async polling for Veo video generation."""
-        model_id = self.model.id  # type: ignore[attr-defined]
+        model_id = self.model.id
         endpoint = config.GoogleVeoEndpoint.CREATE_VIDEO.format(model_id=model_id)
         url = f"{config.BASE_URL}{endpoint}"
 
-        auth_headers = self.auth.get_headers()  # type: ignore[attr-defined]
+        auth_headers = self.auth.get_headers()
         headers = {
             **auth_headers,
             "Content-Type": ApplicationMimeType.JSON,
         }
 
         logger.info(f"Initiating video generation with model {model_id}")
-        response = await self.http_client.post(  # type: ignore[attr-defined]
+        response = await self.http_client.post(
             url,
             headers=headers,
             json_body=request_body,
             timeout=config.DEFAULT_TIMEOUT,
         )
 
-        self._handle_error_response(response)  # type: ignore[attr-defined]
+        self._handle_error_response(response)
         operation_data = response.json()
 
         operation_name = operation_data["name"]
@@ -70,13 +71,13 @@ class GoogleVeoClient:
             await asyncio.sleep(config.POLL_INTERVAL)
             logger.debug(f"Polling operation status: {operation_name}")
 
-            poll_response = await self.http_client.get(  # type: ignore[attr-defined]
+            poll_response = await self.http_client.get(
                 poll_url,
                 headers=poll_headers,
                 timeout=config.DEFAULT_TIMEOUT,
             )
 
-            self._handle_error_response(poll_response)  # type: ignore[attr-defined]
+            self._handle_error_response(poll_response)
             operation_data = poll_response.json()
 
             if operation_data.get("done"):
@@ -140,17 +141,17 @@ class GoogleVeoClient:
 
         logger.info(f"Downloading video from: {download_url}")
 
-        headers = self.auth.get_headers()  # type: ignore[attr-defined]
+        headers = self.auth.get_headers()
 
-        response = await self.http_client.get(  # type: ignore[attr-defined]
+        response = await self.http_client.get(
             download_url,
             headers=headers,
             timeout=config.DEFAULT_TIMEOUT,
             follow_redirects=True,
         )
 
-        self._handle_error_response(response)  # type: ignore[attr-defined]
-        return response.content  # type: ignore[no-any-return]
+        self._handle_error_response(response)
+        return response.content
 
 
 __all__ = ["GoogleVeoClient"]

@@ -5,6 +5,7 @@ from typing import Any
 
 import httpx
 
+from celeste.client import APIMixin
 from celeste.core import UsageField
 from celeste.io import FinishReason
 from celeste.mime_types import ApplicationMimeType
@@ -12,7 +13,7 @@ from celeste.mime_types import ApplicationMimeType
 from . import config
 
 
-class BytePlusImagesClient:
+class BytePlusImagesClient(APIMixin):
     """Mixin for BytePlus Images API capabilities.
 
     Provides shared implementation for all capabilities using the Images API:
@@ -39,11 +40,11 @@ class BytePlusImagesClient:
         request_body["stream"] = False
 
         headers = {
-            **self.auth.get_headers(),  # type: ignore[attr-defined]
+            **self.auth.get_headers(),
             "Content-Type": ApplicationMimeType.JSON,
         }
 
-        return await self.http_client.post(  # type: ignore[attr-defined,no-any-return]
+        return await self.http_client.post(
             f"{config.BASE_URL}{config.BytePlusImagesEndpoint.CREATE_IMAGE}",
             headers=headers,
             json_body=request_body,
@@ -58,11 +59,11 @@ class BytePlusImagesClient:
         request_body["stream"] = True
 
         headers = {
-            **self.auth.get_headers(),  # type: ignore[attr-defined]
+            **self.auth.get_headers(),
             "Content-Type": ApplicationMimeType.JSON,
         }
 
-        return self.http_client.stream_post(  # type: ignore[attr-defined,no-any-return]
+        return self.http_client.stream_post(
             f"{config.BASE_URL}{config.BytePlusImagesEndpoint.CREATE_IMAGE}",
             headers=headers,
             json_body=request_body,
@@ -114,7 +115,7 @@ class BytePlusImagesClient:
         filtered_data = {
             k: v for k, v in response_data.items() if k not in content_fields
         }
-        metadata = super()._build_metadata(filtered_data)  # type: ignore[misc]
+        metadata = super()._build_metadata(filtered_data)
 
         # Add provider-specific parsed fields
         seed = response_data.get("seed")

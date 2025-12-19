@@ -23,7 +23,61 @@ from celeste.streaming import Stream
 from celeste.types import StructuredOutput
 
 
-class Client[In: Input, Out: Output, Params: Parameters](ABC, BaseModel):
+class APIMixin(ABC):
+    """Abstract base for provider API mixins.
+
+    Provider mixins inherit from this to gain type hints for Client attributes.
+    The actual attributes are provided by Client through multiple inheritance.
+
+    Layering:
+        - HTTPClient: Low-level HTTP transport (requests, connection pooling)
+        - APIMixin: High-level provider API logic (endpoints, request/response formats)
+        - Client: Capability-specific client (text generation, image generation, etc.)
+
+    Example:
+        class OpenAIResponsesClient(APIMixin):
+            async def _make_request(self, request_body, **parameters):
+                request_body["model"] = self.model.id  # Type-safe!
+                headers = {**self.auth.get_headers(), ...}
+                return await self.http_client.post(...)
+
+        class OpenAITextGenerationClient(OpenAIResponsesClient, TextGenerationClient):
+            pass
+    """
+
+    model: Model
+    auth: Authentication
+    provider: Provider
+
+    @property
+    @abstractmethod
+    def http_client(self) -> HTTPClient:
+        """HTTP client with connection pooling for this provider."""
+        ...
+
+    def _build_request(self, inputs: Any, **parameters: Any) -> dict[str, Any]:
+        """Build request dict from inputs and parameters.
+
+        Mixins override this and call super() to chain with Client._build_request().
+        """
+        return super()._build_request(inputs, **parameters)  # type: ignore[misc,no-any-return]
+
+    def _build_metadata(self, response_data: dict[str, Any]) -> dict[str, Any]:
+        """Build metadata dict from response data.
+
+        Mixins override this and call super() to chain with Client._build_metadata().
+        """
+        return super()._build_metadata(response_data)  # type: ignore[misc,no-any-return]
+
+    def _handle_error_response(self, response: httpx.Response) -> None:
+        """Handle error responses from provider APIs.
+
+        Stub that calls through to Client._handle_error_response via MRO.
+        """
+        super()._handle_error_response(response)  # type: ignore[misc]
+
+
+class Client[In: Input, Out: Output, Params: Parameters](APIMixin, BaseModel):
     """Base class for all capability-specific clients."""
 
     model_config = ConfigDict(from_attributes=True)
@@ -272,4 +326,4 @@ def get_client_class(
     return _clients[(capability, provider)]
 
 
-__all__ = ["Client", "get_client_class", "register_client"]
+__all__ = ["APIMixin", "Client", "get_client_class", "register_client"]

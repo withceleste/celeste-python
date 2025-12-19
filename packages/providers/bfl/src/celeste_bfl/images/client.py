@@ -6,6 +6,7 @@ from typing import Any
 
 import httpx
 
+from celeste.client import APIMixin
 from celeste.core import UsageField
 from celeste.io import FinishReason
 from celeste.mime_types import ApplicationMimeType
@@ -13,7 +14,7 @@ from celeste.mime_types import ApplicationMimeType
 from . import config
 
 
-class BFLImagesClient:
+class BFLImagesClient(APIMixin):
     """Mixin for BFL Images API operations.
 
     Provides shared implementation:
@@ -44,30 +45,30 @@ class BFLImagesClient:
         2. Poll polling_url until Ready/Failed
         3. Return response with _submit_metadata for usage parsing
         """
-        auth_headers = self.auth.get_headers()  # type: ignore[attr-defined]
+        auth_headers = self.auth.get_headers()
         headers = {
             **auth_headers,
             "Content-Type": ApplicationMimeType.JSON,
             "Accept": ApplicationMimeType.JSON,
         }
 
-        endpoint = config.BFLImagesEndpoint.CREATE_IMAGE.format(model_id=self.model.id)  # type: ignore[attr-defined]
+        endpoint = config.BFLImagesEndpoint.CREATE_IMAGE.format(model_id=self.model.id)
 
         # Phase 1: Submit job
-        submit_response = await self.http_client.post(  # type: ignore[attr-defined]
+        submit_response = await self.http_client.post(
             f"{config.BASE_URL}{endpoint}",
             headers=headers,
             json_body=request_body,
         )
 
         if submit_response.status_code != 200:
-            return submit_response  # type: ignore[no-any-return]
+            return submit_response
 
         submit_data = submit_response.json()
         polling_url = submit_data.get("polling_url")
 
         if not polling_url:
-            msg = f"No polling_url in {self.provider} response"  # type: ignore[attr-defined]
+            msg = f"No polling_url in {self.provider} response"
             raise ValueError(msg)
 
         # Phase 2: Poll for completion
@@ -80,16 +81,16 @@ class BFLImagesClient:
         while True:
             elapsed = time.monotonic() - start_time
             if elapsed >= config.POLLING_TIMEOUT:
-                msg = f"{self.provider} polling timed out after {config.POLLING_TIMEOUT} seconds"  # type: ignore[attr-defined]
+                msg = f"{self.provider} polling timed out after {config.POLLING_TIMEOUT} seconds"
                 raise TimeoutError(msg)
 
-            poll_response = await self.http_client.get(  # type: ignore[attr-defined]
+            poll_response = await self.http_client.get(
                 polling_url,
                 headers=poll_headers,
             )
 
             if poll_response.status_code != 200:
-                return poll_response  # type: ignore[no-any-return]
+                return poll_response
 
             poll_data = poll_response.json()
             status = poll_data.get("status")

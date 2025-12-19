@@ -7,6 +7,7 @@ from typing import Any
 
 import httpx
 
+from celeste.client import APIMixin
 from celeste.core import UsageField
 from celeste.io import FinishReason
 from celeste.mime_types import ApplicationMimeType
@@ -16,7 +17,7 @@ from . import config
 logger = logging.getLogger(__name__)
 
 
-class BytePlusVideosClient:
+class BytePlusVideosClient(APIMixin):
     """Mixin for BytePlus ModelArk Videos API with async polling.
 
     Provides shared implementation:
@@ -46,7 +47,7 @@ class BytePlusVideosClient:
         2. Poll CONTENT_STATUS endpoint until succeeded/failed/canceled
         3. Return response with final status data
         """
-        auth_headers = self.auth.get_headers()  # type: ignore[attr-defined]
+        auth_headers = self.auth.get_headers()
         headers = {
             **auth_headers,
             "Content-Type": ApplicationMimeType.JSON,
@@ -54,14 +55,14 @@ class BytePlusVideosClient:
 
         # Phase 1: Submit job
         logger.debug("Submitting video generation task to BytePlus")
-        submit_response = await self.http_client.post(  # type: ignore[attr-defined]
+        submit_response = await self.http_client.post(
             f"{config.BASE_URL}{config.BytePlusVideosEndpoint.CREATE_VIDEO}",
             headers=headers,
             json_body=request_body,
         )
 
         if submit_response.status_code != 200:
-            return submit_response  # type: ignore[no-any-return]
+            return submit_response
 
         submit_data = submit_response.json()
         task_id = submit_data["id"]
@@ -82,13 +83,13 @@ class BytePlusVideosClient:
             status_url = f"{config.BASE_URL}{config.BytePlusVideosEndpoint.GET_VIDEO_STATUS.format(task_id=task_id)}"
             logger.debug(f"Polling BytePlus task status: {task_id}")
 
-            status_response = await self.http_client.get(  # type: ignore[attr-defined]
+            status_response = await self.http_client.get(
                 status_url,
                 headers=headers,
             )
 
             if status_response.status_code != 200:
-                return status_response  # type: ignore[no-any-return]
+                return status_response
 
             status_data = status_response.json()
             status = status_data.get("status")

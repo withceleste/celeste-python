@@ -5,6 +5,7 @@ from typing import Any
 
 import httpx
 
+from celeste.client import APIMixin
 from celeste.core import UsageField
 from celeste.io import FinishReason
 from celeste.mime_types import ApplicationMimeType
@@ -12,7 +13,7 @@ from celeste.mime_types import ApplicationMimeType
 from . import config
 
 
-class GoogleGenerateContentClient:
+class GoogleGenerateContentClient(APIMixin):
     """Mixin for GenerateContent API capabilities.
 
     Provides shared implementation for all capabilities using the GenerateContent API:
@@ -40,13 +41,13 @@ class GoogleGenerateContentClient:
     ) -> httpx.Response:
         """Make HTTP request to generateContent endpoint."""
         endpoint = config.GoogleGenerateContentEndpoint.GENERATE_CONTENT.format(
-            model_id=self.model.id  # type: ignore[attr-defined]
+            model_id=self.model.id
         )
         headers = {
-            **self.auth.get_headers(),  # type: ignore[attr-defined]
+            **self.auth.get_headers(),
             "Content-Type": ApplicationMimeType.JSON,
         }
-        return await self.http_client.post(  # type: ignore[attr-defined,no-any-return]
+        return await self.http_client.post(
             f"{config.BASE_URL}{endpoint}",
             headers=headers,
             json_body=request_body,
@@ -59,13 +60,13 @@ class GoogleGenerateContentClient:
     ) -> AsyncIterator[dict[str, Any]]:
         """Make streaming request to streamGenerateContent endpoint."""
         endpoint = config.GoogleGenerateContentEndpoint.STREAM_GENERATE_CONTENT.format(
-            model_id=self.model.id  # type: ignore[attr-defined]
+            model_id=self.model.id
         )
         headers = {
-            **self.auth.get_headers(),  # type: ignore[attr-defined]
+            **self.auth.get_headers(),
             "Content-Type": ApplicationMimeType.JSON,
         }
-        return self.http_client.stream_post(  # type: ignore[attr-defined,no-any-return]
+        return self.http_client.stream_post(
             f"{config.BASE_URL}{endpoint}",
             headers=headers,
             json_body=request_body,
@@ -118,7 +119,7 @@ class GoogleGenerateContentClient:
         filtered_data = {
             k: v for k, v in response_data.items() if k not in content_fields
         }
-        return super()._build_metadata(filtered_data)  # type: ignore[misc,no-any-return]
+        return super()._build_metadata(filtered_data)
 
 
 __all__ = ["GoogleGenerateContentClient"]

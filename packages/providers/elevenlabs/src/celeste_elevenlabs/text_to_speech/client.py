@@ -5,12 +5,13 @@ from typing import Any
 
 import httpx
 
+from celeste.client import APIMixin
 from celeste.mime_types import ApplicationMimeType, AudioMimeType
 
 from . import config
 
 
-class ElevenLabsTextToSpeechClient:
+class ElevenLabsTextToSpeechClient(APIMixin):
     """Mixin for ElevenLabs Text-to-Speech API.
 
     Provides shared implementation for speech generation:
@@ -44,7 +45,7 @@ class ElevenLabsTextToSpeechClient:
             voice_id = parameters.get("voice", config.DEFAULT_VOICE_ID)
 
         # Set model_id
-        request_body["model_id"] = self.model.id  # type: ignore[attr-defined]
+        request_body["model_id"] = self.model.id
 
         # Build URL with voice_id in path
         endpoint = config.ElevenLabsTextToSpeechEndpoint.CREATE_SPEECH.format(
@@ -52,11 +53,11 @@ class ElevenLabsTextToSpeechClient:
         )
 
         headers = {
-            **self.auth.get_headers(),  # type: ignore[attr-defined]
+            **self.auth.get_headers(),
             "Content-Type": ApplicationMimeType.JSON,
         }
 
-        return await self.http_client.post(  # type: ignore[attr-defined,no-any-return]
+        return await self.http_client.post(
             f"{config.BASE_URL}{endpoint}",
             headers=headers,
             json_body=request_body,
@@ -78,7 +79,7 @@ class ElevenLabsTextToSpeechClient:
             voice_id = parameters.get("voice", config.DEFAULT_VOICE_ID)
 
         # Set model_id
-        request_body["model_id"] = self.model.id  # type: ignore[attr-defined]
+        request_body["model_id"] = self.model.id
 
         # Build URL with voice_id in path
         endpoint = config.ElevenLabsTextToSpeechEndpoint.STREAM_SPEECH.format(
@@ -86,7 +87,7 @@ class ElevenLabsTextToSpeechClient:
         )
 
         headers = {
-            **self.auth.get_headers(),  # type: ignore[attr-defined]
+            **self.auth.get_headers(),
             "Content-Type": ApplicationMimeType.JSON,
         }
 
@@ -106,7 +107,7 @@ class ElevenLabsTextToSpeechClient:
 
         Wraps httpx streaming to yield dicts compatible with Stream interface.
         """
-        client = await self.http_client._get_client()  # type: ignore[attr-defined]
+        client = await self.http_client._get_client()
 
         async with client.stream(
             "POST",

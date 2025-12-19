@@ -5,6 +5,7 @@ from typing import Any
 
 import httpx
 
+from celeste.client import APIMixin
 from celeste.core import UsageField
 from celeste.io import FinishReason
 from celeste.mime_types import ApplicationMimeType
@@ -12,7 +13,7 @@ from celeste.mime_types import ApplicationMimeType
 from . import config
 
 
-class AnthropicMessagesClient:
+class AnthropicMessagesClient(APIMixin):
     """Mixin for Anthropic Messages API capabilities.
 
     Provides shared implementation for all capabilities using the Messages API:
@@ -39,8 +40,8 @@ class AnthropicMessagesClient:
         **parameters: Any,
     ) -> Any:
         """Build request with Anthropic-specific defaults."""
-        request = super()._build_request(inputs, **parameters)  # type: ignore[misc]
-        request["model"] = self.model.id  # type: ignore[attr-defined]
+        request = super()._build_request(inputs, **parameters)
+        request["model"] = self.model.id
 
         # Apply max_tokens default if not set (Anthropic requires it)
         if "max_tokens" not in request:
@@ -53,7 +54,7 @@ class AnthropicMessagesClient:
         beta_features: list[str] = request_body.pop("_beta_features", [])
 
         headers: dict[str, str] = {
-            **self.auth.get_headers(),  # type: ignore[attr-defined]
+            **self.auth.get_headers(),
             config.HEADER_ANTHROPIC_VERSION: config.ANTHROPIC_VERSION,
             "Content-Type": ApplicationMimeType.JSON,
         }
@@ -75,7 +76,7 @@ class AnthropicMessagesClient:
         """Make HTTP request to Anthropic Messages API endpoint."""
         headers = self._build_headers(request_body)
 
-        return await self.http_client.post(  # type: ignore[attr-defined,no-any-return]
+        return await self.http_client.post(
             f"{config.BASE_URL}{config.AnthropicMessagesEndpoint.CREATE_MESSAGE}",
             headers=headers,
             json_body=request_body,
@@ -90,7 +91,7 @@ class AnthropicMessagesClient:
         request_body["stream"] = True
         headers = self._build_headers(request_body)
 
-        return self.http_client.stream_post(  # type: ignore[attr-defined,no-any-return]
+        return self.http_client.stream_post(
             f"{config.BASE_URL}{config.AnthropicMessagesEndpoint.CREATE_MESSAGE}",
             headers=headers,
             json_body=request_body,
@@ -147,7 +148,7 @@ class AnthropicMessagesClient:
         filtered_data = {
             k: v for k, v in response_data.items() if k not in content_fields
         }
-        return super()._build_metadata(filtered_data)  # type: ignore[misc,no-any-return]
+        return super()._build_metadata(filtered_data)
 
 
 __all__ = ["AnthropicMessagesClient"]

@@ -4,12 +4,13 @@ from typing import Any
 
 import httpx
 
+from celeste.client import APIMixin
 from celeste.mime_types import ApplicationMimeType, AudioMimeType
 
 from . import config
 
 
-class OpenAIAudioClient:
+class OpenAIAudioClient(APIMixin):
     """Mixin for OpenAI Audio API speech generation.
 
     Provides shared implementation for speech generation:
@@ -35,14 +36,14 @@ class OpenAIAudioClient:
 
         Returns the raw response with binary audio content.
         """
-        request_body["model"] = self.model.id  # type: ignore[attr-defined]
+        request_body["model"] = self.model.id
 
         headers = {
-            **self.auth.get_headers(),  # type: ignore[attr-defined]
+            **self.auth.get_headers(),
             "Content-Type": ApplicationMimeType.JSON,
         }
 
-        return await self.http_client.post(  # type: ignore[attr-defined,no-any-return]
+        return await self.http_client.post(
             f"{config.BASE_URL}{config.OpenAIAudioEndpoint.CREATE_SPEECH}",
             headers=headers,
             json_body=request_body,

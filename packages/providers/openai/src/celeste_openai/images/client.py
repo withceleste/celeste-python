@@ -9,6 +9,7 @@ from typing import Any
 
 import httpx
 
+from celeste.client import APIMixin
 from celeste.core import UsageField
 from celeste.io import FinishReason
 from celeste.mime_types import ApplicationMimeType
@@ -16,7 +17,7 @@ from celeste.mime_types import ApplicationMimeType
 from . import config
 
 
-class OpenAIImagesClient:
+class OpenAIImagesClient(APIMixin):
     """Mixin for OpenAI Images API image generation.
 
     Provides shared implementation for image generation:
@@ -40,18 +41,18 @@ class OpenAIImagesClient:
         **parameters: Any,
     ) -> httpx.Response:
         """Make HTTP request to OpenAI Images API generations endpoint."""
-        request_body["model"] = self.model.id  # type: ignore[attr-defined]
+        request_body["model"] = self.model.id
 
         # DALL-E 2/3 need b64_json response format
-        if self.model.id in ("dall-e-2", "dall-e-3"):  # type: ignore[attr-defined]
+        if self.model.id in ("dall-e-2", "dall-e-3"):
             request_body.setdefault("response_format", "b64_json")
 
         headers = {
-            **self.auth.get_headers(),  # type: ignore[attr-defined]
+            **self.auth.get_headers(),
             "Content-Type": ApplicationMimeType.JSON,
         }
 
-        return await self.http_client.post(  # type: ignore[attr-defined,no-any-return]
+        return await self.http_client.post(
             f"{config.BASE_URL}{config.OpenAIImagesEndpoint.CREATE_IMAGE}",
             headers=headers,
             json_body=request_body,
@@ -66,18 +67,18 @@ class OpenAIImagesClient:
 
         Streaming is only supported for gpt-image-1.
         """
-        request_body["model"] = self.model.id  # type: ignore[attr-defined]
+        request_body["model"] = self.model.id
         request_body["stream"] = True
 
         if "partial_images" not in request_body:
             request_body["partial_images"] = 1
 
         headers = {
-            **self.auth.get_headers(),  # type: ignore[attr-defined]
+            **self.auth.get_headers(),
             "Content-Type": ApplicationMimeType.JSON,
         }
 
-        return self.http_client.stream_post(  # type: ignore[attr-defined,no-any-return]
+        return self.http_client.stream_post(
             f"{config.BASE_URL}{config.OpenAIImagesEndpoint.CREATE_IMAGE}",
             headers=headers,
             json_body=request_body,
@@ -126,7 +127,7 @@ class OpenAIImagesClient:
             k: v for k, v in response_data.items() if k not in content_fields
         }
 
-        metadata = super()._build_metadata(filtered_data)  # type: ignore[misc]
+        metadata = super()._build_metadata(filtered_data)
 
         return metadata
 

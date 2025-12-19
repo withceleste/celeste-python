@@ -12,6 +12,7 @@ from typing import Any
 
 import httpx
 
+from celeste.client import APIMixin
 from celeste.core import UsageField
 from celeste.io import FinishReason
 from celeste.mime_types import ApplicationMimeType
@@ -21,7 +22,7 @@ from . import config
 logger = logging.getLogger(__name__)
 
 
-class OpenAIVideosClient:
+class OpenAIVideosClient(APIMixin):
     """Mixin for OpenAI Videos API video generation.
 
     Provides shared implementation for video generation:
@@ -53,10 +54,10 @@ class OpenAIVideosClient:
         2. Poll for completion
         3. Fetch video content
         """
-        request_body["model"] = self.model.id  # type: ignore[attr-defined]
+        request_body["model"] = self.model.id
 
         headers = {
-            **self.auth.get_headers(),  # type: ignore[attr-defined]
+            **self.auth.get_headers(),
             "Content-Type": ApplicationMimeType.JSON,
         }
 
@@ -66,7 +67,7 @@ class OpenAIVideosClient:
 
         if files:
             logger.info("Sending multipart request to OpenAI with input_reference")
-            response = await self.http_client.post_multipart(  # type: ignore[attr-defined]
+            response = await self.http_client.post_multipart(
                 f"{config.BASE_URL}{endpoint}",
                 headers=headers,
                 files=files,
@@ -74,13 +75,13 @@ class OpenAIVideosClient:
             )
         else:
             logger.info(f"Sending request to OpenAI: {request_body}")
-            response = await self.http_client.post(  # type: ignore[attr-defined]
+            response = await self.http_client.post(
                 f"{config.BASE_URL}{endpoint}",
                 headers=headers,
                 json_body=request_body,
             )
 
-        self._handle_error_response(response)  # type: ignore[attr-defined]
+        self._handle_error_response(response)
         video_obj = response.json()
 
         video_id = video_obj["id"]
@@ -88,11 +89,11 @@ class OpenAIVideosClient:
 
         # Poll for completion
         for _ in range(config.MAX_POLLS):
-            status_response = await self.http_client.get(  # type: ignore[attr-defined]
+            status_response = await self.http_client.get(
                 f"{config.BASE_URL}{endpoint}/{video_id}",
                 headers=headers,
             )
-            self._handle_error_response(status_response)  # type: ignore[attr-defined]
+            self._handle_error_response(status_response)
             video_obj = status_response.json()
 
             status = video_obj["status"]
@@ -115,17 +116,17 @@ class OpenAIVideosClient:
             raise TimeoutError(msg)
 
         # Fetch video content
-        content_response = await self.http_client.get(  # type: ignore[attr-defined]
+        content_response = await self.http_client.get(
             f"{config.BASE_URL}{endpoint}/{video_id}{config.CONTENT_ENDPOINT_SUFFIX}",
             headers=headers,
         )
-        self._handle_error_response(content_response)  # type: ignore[attr-defined]
+        self._handle_error_response(content_response)
         video_data = content_response.content
 
         # Build normalized response
         response_data = {
             "video_data": base64.b64encode(video_data).decode("utf-8"),
-            "model": video_obj.get("model", self.model.id),  # type: ignore[attr-defined]
+            "model": video_obj.get("model", self.model.id),
             "video_id": video_id,
             "seconds": video_obj.get("seconds"),
             "size": video_obj.get("size"),
@@ -177,7 +178,7 @@ class OpenAIVideosClient:
             k: v for k, v in response_data.items() if k not in content_fields
         }
 
-        metadata = super()._build_metadata(filtered_data)  # type: ignore[misc]
+        metadata = super()._build_metadata(filtered_data)
 
         return metadata
 
