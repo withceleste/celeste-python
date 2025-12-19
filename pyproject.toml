@@ -1,6 +1,6 @@
 [project]
 name = "celeste-ai"
-version = "0.3.1"
+version = "0.3.2"
 description = "Open source, type-safe primitives for multi-modal AI. All capabilities, all providers, one interface"
 authors = [{name = "Kamilbenkirane", email = "kamil@withceleste.ai"}]
 readme = "README.md"
