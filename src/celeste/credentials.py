@@ -26,6 +26,7 @@ PROVIDER_AUTH_CONFIG: dict[Provider, tuple[str, str, str]] = {
     Provider.BYTEPLUS: ("celeste_byteplus", "Authorization", "Bearer "),
     Provider.ELEVENLABS: ("celeste_elevenlabs", "xi-api-key", ""),
     Provider.BFL: ("celeste_bfl", "x-key", ""),
+    Provider.GRADIUM: ("celeste_gradium", "x-api-key", ""),
 }
 
 # Provider to credential field mapping
