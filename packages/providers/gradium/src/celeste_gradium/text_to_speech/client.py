@@ -53,7 +53,7 @@ class GradiumTextToSpeechClient(APIMixin):
         Raises:
             ValueError: If connection fails or error received.
         """
-        voice_id = request_body.get("voice_id", "YTpq7expH9539ERJ")  # Default: Emma
+        voice_id = request_body.get("voice_id", config.DEFAULT_VOICE_ID)
         output_format = request_body.get("output_format", "wav")
         text = request_body.get("text", "")
         json_config = request_body.get("json_config")
@@ -113,6 +113,19 @@ class GradiumTextToSpeechClient(APIMixin):
         Returns empty dict for capability clients to wrap in Usage type.
         """
         return {}
+
+    async def _make_request(
+        self,
+        request_body: dict[str, Any],
+        **parameters: Any,
+    ) -> Any:
+        """Make HTTP request - not used for Gradium (uses WebSocket).
+
+        Gradium TTS uses WebSocket via _websocket_tts().
+        This method satisfies the abstract interface but should not be called.
+        """
+        msg = "Gradium TTS uses WebSocket, use _websocket_tts() instead"
+        raise NotImplementedError(msg)
 
     def _map_output_format_to_mime_type(
         self,

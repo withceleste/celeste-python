@@ -10,3 +10,6 @@ class GradiumTextToSpeechEndpoint(StrEnum):
 
 
 BASE_URL = "wss://eu.api.gradium.ai/api"
+
+# Default voice ID (Emma - English female)
+DEFAULT_VOICE_ID = "YTpq7expH9539ERJ"

@@ -2,7 +2,6 @@
 
 from typing import Any, Unpack
 
-import httpx
 from celeste_gradium.text_to_speech.client import GradiumTextToSpeechClient
 
 from celeste.artifacts import AudioArtifact
@@ -43,19 +42,6 @@ class GradiumSpeechGenerationClient(GradiumTextToSpeechClient, SpeechGenerationC
 
         Note: This method is not used for Gradium TTS since we override generate()
         to handle WebSocket responses. Kept for interface compliance.
-        """
-        msg = "Gradium TTS uses WebSocket, use generate() override"
-        raise NotImplementedError(msg)
-
-    async def _make_request(
-        self,
-        request_body: dict[str, Any],
-        **parameters: Unpack[SpeechGenerationParameters],
-    ) -> httpx.Response:
-        """Make HTTP request.
-
-        Note: This method is not used for Gradium TTS since we override generate()
-        to use WebSocket. Kept for interface compliance.
         """
         msg = "Gradium TTS uses WebSocket, use generate() override"
         raise NotImplementedError(msg)
