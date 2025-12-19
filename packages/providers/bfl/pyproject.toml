@@ -5,6 +5,7 @@ description = "BFL (Black Forest Labs) provider package for Celeste AI"
 authors = [{name = "Kamilbenkirane", email = "kamil@withceleste.ai"}]
 license = {text = "Apache-2.0"}
 requires-python = ">=3.12"
+dependencies = ["celeste-ai", "httpx"]
 
 [tool.uv.sources]
 celeste-ai = { workspace = true }
