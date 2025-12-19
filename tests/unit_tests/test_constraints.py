@@ -292,12 +292,12 @@ class TestInt:
         with pytest.raises(ConstraintViolationError, match=r"Must be int, got 42\.5"):
             constraint(42.5)
 
-    def test_rejects_boolean_value(self) -> None:
-        """Test that bool raises ConstraintViolationError despite isinstance(True, int)."""
+    def test_accepts_boolean_value(self) -> None:
+        """Test that bool is accepted (True=1, False=0) since bool is subclass of int."""
         constraint = Int()
 
-        with pytest.raises(ConstraintViolationError, match=r"Must be int, got bool"):
-            constraint(True)
+        assert constraint(True) == 1
+        assert constraint(False) == 0
 
     def test_converts_valid_string_to_int(self) -> None:
         """Test that valid integer string is converted to int."""
