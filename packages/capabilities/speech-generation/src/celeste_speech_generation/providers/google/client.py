@@ -3,29 +3,25 @@
 import base64
 from typing import Any, Unpack
 
-import httpx
-from celeste_google.generate_content import config
+from celeste_google.cloud_tts.client import GoogleCloudTTSClient
 
 from celeste.artifacts import AudioArtifact
-from celeste.mime_types import ApplicationMimeType, AudioMimeType
+from celeste.mime_types import AudioMimeType
 from celeste.parameters import ParameterMapper
 from celeste_speech_generation.client import SpeechGenerationClient
 from celeste_speech_generation.io import (
     SpeechGenerationInput,
     SpeechGenerationUsage,
 )
-from celeste_speech_generation.parameters import SpeechGenerationParameters
+from celeste_speech_generation.parameters import (
+    SpeechGenerationParameter,
+    SpeechGenerationParameters,
+)
 
 from .parameters import GOOGLE_PARAMETER_MAPPERS
 
-# PCM Audio Format Specifications
-# Source: Google Gemini TTS docs (ffmpeg -f s16le -ar 24000 -ac 1)
-PCM_SAMPLE_RATE = 24000  # Hz
-PCM_CHANNELS = 1  # Mono
-PCM_SAMPLE_WIDTH = 2  # Bytes (16-bit)
 
-
-class GoogleSpeechGenerationClient(SpeechGenerationClient):
+class GoogleSpeechGenerationClient(GoogleCloudTTSClient, SpeechGenerationClient):
     """Google client for speech generation."""
 
     @classmethod
@@ -33,29 +29,17 @@ class GoogleSpeechGenerationClient(SpeechGenerationClient):
         return GOOGLE_PARAMETER_MAPPERS
 
     def _init_request(self, inputs: SpeechGenerationInput) -> dict[str, Any]:
-        """Initialize request from Google contents array format."""
-        contents = [
-            {
-                "parts": [{"text": inputs.text}],
-            }
-        ]
-
-        generation_config: dict[str, Any] = {
-            "responseModalities": ["AUDIO"],
-            "speechConfig": {},
-        }
-
+        """Initialize request from Cloud TTS API format."""
         return {
-            "contents": contents,
-            "generationConfig": generation_config,
+            "input": {"text": inputs.text},
+            "voice": {"modelName": self.model.id},
+            "audioConfig": {},
         }
 
     def _parse_usage(self, response_data: dict[str, Any]) -> SpeechGenerationUsage:
-        """Parse usage from response.
-
-        Google Gemini doesn't return usage metrics for TTS.
-        """
-        return SpeechGenerationUsage()
+        """Parse usage from response."""
+        usage = super()._parse_usage(response_data)
+        return SpeechGenerationUsage(**usage)
 
     def _parse_content(
         self,
@@ -63,69 +47,25 @@ class GoogleSpeechGenerationClient(SpeechGenerationClient):
         **parameters: Unpack[SpeechGenerationParameters],
     ) -> AudioArtifact:
         """Parse content from response."""
-        candidates = response_data.get("candidates", [])
-        if not candidates:
-            msg = "No candidates in response"
-            raise ValueError(msg)
+        audio_b64 = super()._parse_content(response_data)
+        audio_bytes = base64.b64decode(audio_b64)
 
-        candidate = candidates[0]
-        content = candidate.get("content", {})
-        parts = content.get("parts", [])
-
-        if not parts:
-            msg = "No parts in candidate content"
-            raise ValueError(msg)
-
-        inline_data = parts[0].get("inlineData", {})
-        base64_audio = inline_data.get("data")
-
-        if not base64_audio:
-            msg = "No audio data in response"
-            raise ValueError(msg)
-
-        # Decode base64 to get raw PCM bytes
-        # Google returns PCM audio (24kHz, 16-bit, mono)
-        pcm_bytes = base64.b64decode(base64_audio)
+        # Get output_format from parameters, default to MP3
+        output_format = parameters.get(SpeechGenerationParameter.OUTPUT_FORMAT)
+        mime_type = self._get_mime_type(output_format)
 
         return AudioArtifact(
-            data=pcm_bytes,
-            mime_type=AudioMimeType.PCM,
-            metadata={
-                "sample_rate": PCM_SAMPLE_RATE,
-                "channels": PCM_CHANNELS,
-                "sample_width": PCM_SAMPLE_WIDTH,
-            },
+            data=audio_bytes,
+            mime_type=mime_type,
+            metadata={"format": str(mime_type)},
         )
 
-    def _build_metadata(self, response_data: dict[str, Any]) -> dict[str, Any]:
-        """Build metadata dictionary from response data."""
-        # Filter content field before calling super
-        content_fields = {"candidates"}
-        filtered_data = {
-            k: v for k, v in response_data.items() if k not in content_fields
-        }
-        return super()._build_metadata(filtered_data)
+    def _get_mime_type(self, output_format: str | None) -> AudioMimeType:
+        """Get AudioMimeType from output_format parameter."""
+        if output_format is None:
+            return AudioMimeType.MP3
 
-    async def _make_request(
-        self,
-        request_body: dict[str, Any],
-        **parameters: Unpack[SpeechGenerationParameters],
-    ) -> httpx.Response:
-        """Make HTTP request(s) and return response object."""
-        endpoint = config.GoogleGenerateContentEndpoint.GENERATE_CONTENT.format(
-            model_id=self.model.id
-        )
-
-        headers = {
-            **self.auth.get_headers(),
-            "Content-Type": ApplicationMimeType.JSON,
-        }
-
-        return await self.http_client.post(
-            f"{config.BASE_URL}{endpoint}",
-            headers=headers,
-            json_body=request_body,
-        )
+        return AudioMimeType(output_format)
 
 
 __all__ = ["GoogleSpeechGenerationClient"]
