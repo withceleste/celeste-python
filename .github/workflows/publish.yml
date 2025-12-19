@@ -70,14 +70,19 @@ jobs:
           filters: |
             text-generation:
               - 'packages/capabilities/text-generation/**'
+              - '!**/pyproject.toml'
             image-generation:
               - 'packages/capabilities/image-generation/**'
+              - '!**/pyproject.toml'
             video-generation:
               - 'packages/capabilities/video-generation/**'
+              - '!**/pyproject.toml'
             speech-generation:
               - 'packages/capabilities/speech-generation/**'
+              - '!**/pyproject.toml'
             core:
               - 'src/celeste/**'
+              - '!**/pyproject.toml'
       - id: build-matrix
         run: |
           PACKAGES=()
