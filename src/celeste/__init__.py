@@ -32,6 +32,7 @@ from celeste.structured_outputs import (
 )
 from celeste.types import JsonValue
 from celeste.utils import image_to_data_uri
+from celeste.websocket import WebSocketClient, WebSocketConnection, close_all_ws_clients
 
 logger = logging.getLogger(__name__)
 
@@ -143,7 +144,10 @@ __all__ = [
     "Usage",
     "UsageField",
     "ValidationError",
+    "WebSocketClient",
+    "WebSocketConnection",
     "close_all_http_clients",
+    "close_all_ws_clients",
     "create_client",
     "get_client_class",
     "get_model",

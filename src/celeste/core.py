@@ -21,6 +21,7 @@ class Provider(StrEnum):
     PERPLEXITY = "perplexity"
     BYTEPLUS = "byteplus"
     ELEVENLABS = "elevenlabs"
+    GRADIUM = "gradium"
 
 
 class Capability(StrEnum):

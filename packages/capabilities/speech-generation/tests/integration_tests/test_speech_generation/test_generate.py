@@ -19,6 +19,7 @@ from celeste import Capability, Provider, create_client
             "eleven_flash_v2_5",
             {"voice": "Rachel", "output_format": "mp3_44100_128"},
         ),
+        (Provider.GRADIUM, "default", {}),
     ],
 )
 @pytest.mark.integration

@@ -1,6 +1,6 @@
 [project]
 name = "celeste-speech-generation"
-version = "0.3.0"
+version = "0.3.1"
 description = "Speech generation package for Celeste AI. Unified interface for all providers"
 authors = [{name = "Kamilbenkirane", email = "kamil@withceleste.ai"}]
 readme = "README.md"
@@ -17,7 +17,7 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
     "Typing :: Typed",
 ]
-keywords = ["ai", "speech-generation", "tts", "text-to-speech", "openai", "google", "elevenlabs", "audio-ai"]
+keywords = ["ai", "speech-generation", "tts", "text-to-speech", "openai", "google", "elevenlabs", "gradium", "audio-ai"]
 
 [project.urls]
 Homepage = "https://withceleste.ai"
@@ -28,6 +28,8 @@ Issues = "https://github.com/withceleste/celeste-python/issues"
 [tool.uv.sources]
 celeste-ai = { workspace = true }
 celeste-elevenlabs = { workspace = true }
+celeste-google = { workspace = true }
+celeste-gradium = { workspace = true }
 celeste-openai = { workspace = true }
 
 [project.entry-points."celeste.packages"]

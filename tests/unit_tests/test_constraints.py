@@ -1,9 +1,23 @@
 """Tests for constraint validation models."""
 
 import pytest
+from pydantic import BaseModel
 
-from celeste.constraints import Bool, Choice, Float, Int, Pattern, Range, Str
+from celeste.artifacts import ImageArtifact
+from celeste.constraints import (
+    Bool,
+    Choice,
+    Float,
+    ImageConstraint,
+    ImagesConstraint,
+    Int,
+    Pattern,
+    Range,
+    Schema,
+    Str,
+)
 from celeste.exceptions import ConstraintViolationError
+from celeste.mime_types import ImageMimeType
 
 
 class TestChoice:
@@ -262,17 +276,37 @@ class TestInt:
 
         assert result == 42
 
-    def test_accepts_boolean_as_int(self) -> None:
-        """Test that bool is accepted as int (True=1, False=0)."""
+    def test_converts_whole_float_to_int(self) -> None:
+        """Test that whole float is converted to int."""
         constraint = Int()
+
+        result = constraint(42.0)
+
+        assert result == 42
+        assert isinstance(result, int)
+
+    def test_rejects_non_whole_float(self) -> None:
+        """Test that non-whole float raises ConstraintViolationError."""
+        constraint = Int()
+
+        with pytest.raises(ConstraintViolationError, match=r"Must be int, got 42\.5"):
+            constraint(42.5)
+
+    def test_accepts_boolean_value(self) -> None:
+        """Test that bool is accepted (True=1, False=0) since bool is subclass of int."""
+        constraint = Int()
+
         assert constraint(True) == 1
         assert constraint(False) == 0
 
-    def test_accepts_valid_string(self) -> None:
-        """Test that valid integer string is converted."""
+    def test_converts_valid_string_to_int(self) -> None:
+        """Test that valid integer string is converted to int."""
         constraint = Int()
-        assert constraint("42") == 42
-        assert constraint("-10") == -10
+
+        result = constraint("42")
+
+        assert result == 42
+        assert isinstance(result, int)
 
     def test_rejects_invalid_string(self) -> None:
         """Test that non-integer string raises ConstraintViolationError."""
@@ -280,19 +314,6 @@ class TestInt:
 
         with pytest.raises(ConstraintViolationError, match=r"Must be int, got 'abc'"):
             constraint("abc")
-
-    def test_accepts_whole_float(self) -> None:
-        """Test that whole number float is converted."""
-        constraint = Int()
-        assert constraint(1.0) == 1
-        assert constraint(-5.0) == -5
-
-    def test_rejects_fractional_float(self) -> None:
-        """Test that fractional float raises ConstraintViolationError."""
-        constraint = Int()
-
-        with pytest.raises(ConstraintViolationError, match=r"Must be int, got 1.1"):
-            constraint(1.1)
 
 
 class TestFloat:
@@ -359,3 +380,211 @@ class TestBool:
 
         with pytest.raises(ConstraintViolationError, match=r"Must be bool, got str"):
             constraint("true")  # type: ignore[arg-type]
+
+
+class TestRangeSpecialValues:
+    """Test Range constraint special_values bypass behavior."""
+
+    def test_special_values_bypass_bounds(self) -> None:
+        """Values in special_values bypass min/max validation."""
+        constraint = Range(min=0, max=10, special_values=[-1, 100])
+
+        # These are outside bounds but allowed via special_values
+        assert constraint(-1) == -1
+        assert constraint(100) == 100
+
+    def test_non_special_values_still_validated(self) -> None:
+        """Values not in special_values get normal bounds validation."""
+        constraint = Range(min=0, max=10, special_values=[-1])
+
+        # -2 is not in special_values, so bounds apply
+        with pytest.raises(ConstraintViolationError, match=r"Must be between 0 and 10"):
+            constraint(-2)
+
+    def test_normal_values_with_special_values_defined(self) -> None:
+        """Normal values within bounds still work when special_values defined."""
+        constraint = Range(min=0, max=10, special_values=[-1, 100])
+
+        assert constraint(5) == 5
+        assert constraint(0) == 0
+        assert constraint(10) == 10
+
+
+class TestSchema:
+    """Test Schema constraint validation."""
+
+    def test_validates_basemodel_subclass(self) -> None:
+        """Schema accepts valid BaseModel subclass."""
+
+        class MyModel(BaseModel):
+            name: str
+
+        constraint = Schema()
+        result = constraint(MyModel)
+
+        assert result is MyModel
+
+    def test_rejects_non_basemodel_type(self) -> None:
+        """Schema rejects types that aren't BaseModel subclasses."""
+        constraint = Schema()
+
+        with pytest.raises(ConstraintViolationError, match=r"Must be BaseModel"):
+            constraint(str)  # type: ignore[arg-type]
+
+    def test_validates_list_basemodel_type_hint(self) -> None:
+        """Schema accepts list[BaseModel] type hints."""
+
+        class MyModel(BaseModel):
+            value: int
+
+        constraint = Schema()
+        result = constraint(list[MyModel])  # type: ignore[arg-type]
+
+        assert result == list[MyModel]  # type: ignore[comparison-overlap]
+
+    def test_rejects_list_of_non_models(self) -> None:
+        """Schema rejects list[T] where T is not a BaseModel subclass."""
+        constraint = Schema()
+
+        with pytest.raises(
+            ConstraintViolationError, match=r"List type must be BaseModel"
+        ):
+            constraint(list[str])  # type: ignore[arg-type]
+
+
+class TestImageConstraint:
+    """Test ImageConstraint validation for single image artifacts."""
+
+    def test_rejects_list_input(self) -> None:
+        """ImageConstraint requires single artifact, not a list."""
+        constraint = ImageConstraint()
+        artifact = ImageArtifact(data=b"test")
+
+        with pytest.raises(
+            ConstraintViolationError,
+            match=r"requires a single ImageArtifact, not a list",
+        ):
+            constraint([artifact])  # type: ignore[arg-type]
+
+    def test_validates_image_artifact_type(self) -> None:
+        """ImageConstraint rejects non-ImageArtifact types."""
+        constraint = ImageConstraint()
+
+        with pytest.raises(ConstraintViolationError, match=r"Must be ImageArtifact"):
+            constraint("not an artifact")  # type: ignore[arg-type]
+
+    def test_accepts_valid_artifact(self) -> None:
+        """Valid ImageArtifact passes through unchanged."""
+        constraint = ImageConstraint()
+        artifact = ImageArtifact(data=b"test image data")
+
+        result = constraint(artifact)
+
+        assert result is artifact
+
+    def test_filters_mime_types_when_specified(self) -> None:
+        """ImageConstraint rejects unsupported MIME types."""
+        constraint = ImageConstraint(supported_mime_types=[ImageMimeType.PNG])
+        jpeg_artifact = ImageArtifact(data=b"test", mime_type=ImageMimeType.JPEG)
+
+        with pytest.raises(ConstraintViolationError, match=r"mime_type must be one of"):
+            constraint(jpeg_artifact)
+
+    def test_accepts_supported_mime_type(self) -> None:
+        """ImageConstraint accepts artifact with supported MIME type."""
+        constraint = ImageConstraint(supported_mime_types=[ImageMimeType.PNG])
+        png_artifact = ImageArtifact(data=b"test", mime_type=ImageMimeType.PNG)
+
+        result = constraint(png_artifact)
+
+        assert result is png_artifact
+
+    def test_accepts_any_mime_when_none_specified(self) -> None:
+        """No MIME filtering when supported_mime_types is None."""
+        constraint = ImageConstraint(supported_mime_types=None)
+        artifact = ImageArtifact(data=b"test", mime_type=ImageMimeType.JPEG)
+
+        result = constraint(artifact)
+
+        assert result is artifact
+
+
+class TestImagesConstraint:
+    """Test ImagesConstraint validation for image artifact lists."""
+
+    def test_normalizes_single_artifact_to_list(self) -> None:
+        """Single ImageArtifact is wrapped in a list."""
+        constraint = ImagesConstraint()
+        artifact = ImageArtifact(data=b"test")
+
+        result = constraint(artifact)
+
+        assert isinstance(result, list)
+        assert len(result) == 1
+        assert result[0] is artifact
+
+    def test_accepts_list_of_artifacts(self) -> None:
+        """List of ImageArtifacts passes through."""
+        constraint = ImagesConstraint()
+        artifacts = [ImageArtifact(data=b"1"), ImageArtifact(data=b"2")]
+
+        result = constraint(artifacts)
+
+        assert result == artifacts
+
+    def test_enforces_max_count(self) -> None:
+        """ImagesConstraint rejects when count exceeds max_count."""
+        constraint = ImagesConstraint(max_count=2)
+        artifacts = [ImageArtifact(data=b"x") for _ in range(3)]
+
+        with pytest.raises(ConstraintViolationError, match=r"at most 2 image"):
+            constraint(artifacts)
+
+    def test_validates_each_artifact_type(self) -> None:
+        """ImagesConstraint reports index (1-indexed) of invalid artifact."""
+        constraint = ImagesConstraint(supported_mime_types=[ImageMimeType.PNG])
+        artifacts = [
+            ImageArtifact(data=b"1", mime_type=ImageMimeType.PNG),
+            "not an artifact",  # Invalid at index 2
+            ImageArtifact(data=b"3", mime_type=ImageMimeType.PNG),
+        ]
+
+        with pytest.raises(
+            ConstraintViolationError, match=r"Image 2.*Must be ImageArtifact"
+        ):
+            constraint(artifacts)  # type: ignore[arg-type]
+
+    def test_filters_mime_types_per_image(self) -> None:
+        """Each image's MIME type is validated against supported types."""
+        constraint = ImagesConstraint(supported_mime_types=[ImageMimeType.PNG])
+        artifacts = [
+            ImageArtifact(data=b"1", mime_type=ImageMimeType.PNG),
+            ImageArtifact(data=b"2", mime_type=ImageMimeType.JPEG),  # Invalid
+        ]
+
+        with pytest.raises(
+            ConstraintViolationError, match=r"Image 2.*mime_type must be one of"
+        ):
+            constraint(artifacts)
+
+    def test_handles_empty_list(self) -> None:
+        """Empty list is valid (no images to validate)."""
+        constraint = ImagesConstraint()
+
+        result = constraint([])
+
+        assert result == []
+
+    def test_accepts_all_valid_images(self) -> None:
+        """All images with valid MIME types pass validation."""
+        constraint = ImagesConstraint(
+            supported_mime_types=[ImageMimeType.PNG, ImageMimeType.JPEG]
+        )
+        artifacts = [
+            ImageArtifact(data=b"1", mime_type=ImageMimeType.PNG),
+            ImageArtifact(data=b"2", mime_type=ImageMimeType.JPEG),
+        ]
+
+        result = constraint(artifacts)
+
+        assert result == artifacts

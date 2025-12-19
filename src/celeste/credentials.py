@@ -26,6 +26,7 @@ PROVIDER_AUTH_CONFIG: dict[Provider, tuple[str, str, str]] = {
     Provider.BYTEPLUS: ("celeste_byteplus", "Authorization", "Bearer "),
     Provider.ELEVENLABS: ("celeste_elevenlabs", "xi-api-key", ""),
     Provider.BFL: ("celeste_bfl", "x-key", ""),
+    Provider.GRADIUM: ("celeste_gradium", "x-api-key", ""),
 }
 
 # Provider to credential field mapping
@@ -45,6 +46,7 @@ PROVIDER_CREDENTIAL_MAP = {
     Provider.BYTEPLUS: "byteplus_api_key",
     Provider.ELEVENLABS: "elevenlabs_api_key",
     Provider.BFL: "bfl_api_key",
+    Provider.GRADIUM: "gradium_api_key",
 }
 
 
@@ -66,6 +68,7 @@ class Credentials(BaseSettings):
     byteplus_api_key: SecretStr | None = Field(None, alias="BYTEPLUS_API_KEY")
     elevenlabs_api_key: SecretStr | None = Field(None, alias="ELEVENLABS_API_KEY")
     bfl_api_key: SecretStr | None = Field(None, alias="BFL_API_KEY")
+    gradium_api_key: SecretStr | None = Field(None, alias="GRADIUM_API_KEY")
 
     model_config = {
         "env_file": find_dotenv(),

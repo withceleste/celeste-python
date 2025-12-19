@@ -7,6 +7,7 @@ import pytest
 
 from celeste.core import Parameter
 from celeste.models import Model
+from celeste.types import StructuredOutput
 
 
 class DefaultParseOutputMapper:
@@ -20,7 +21,9 @@ class DefaultParseOutputMapper:
             request["temperature"] = value
         return request
 
-    def parse_output(self, content: object, value: object | None) -> object:
+    def parse_output(
+        self, content: StructuredOutput, value: object | None
+    ) -> StructuredOutput:
         """Default implementation: return content unchanged."""
         return content
 
@@ -41,7 +44,7 @@ class TestParameterMapperProtocol:
         ],
     )
     def test_parse_output_returns_content_unchanged(
-        self, content: object, value: object | None
+        self, content: StructuredOutput, value: object | None
     ) -> None:
         """Default parse_output implementation returns content unchanged.
 

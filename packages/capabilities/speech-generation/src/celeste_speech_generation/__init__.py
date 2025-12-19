@@ -30,6 +30,9 @@ from celeste_speech_generation.providers.elevenlabs.voices import (  # noqa: E40
 from celeste_speech_generation.providers.google.voices import (  # noqa: E402
     GOOGLE_VOICES,
 )
+from celeste_speech_generation.providers.gradium.voices import (  # noqa: E402
+    GRADIUM_VOICES,
+)
 from celeste_speech_generation.providers.openai.voices import (  # noqa: E402
     OPENAI_VOICES,
 )
@@ -37,9 +40,10 @@ from celeste_speech_generation.streaming import SpeechGenerationStream  # noqa: 
 from celeste_speech_generation.voices import Voice  # noqa: E402
 
 VOICES: list[Voice] = [
-    *GOOGLE_VOICES,
-    *OPENAI_VOICES,
     *ELEVENLABS_VOICES,
+    *GOOGLE_VOICES,
+    *GRADIUM_VOICES,
+    *OPENAI_VOICES,
 ]
 
 __all__ = [
