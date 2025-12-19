@@ -5,6 +5,8 @@ from typing import Any, Unpack
 
 import httpx
 
+from celeste_google.generate_content import config
+
 from celeste.artifacts import AudioArtifact
 from celeste.mime_types import ApplicationMimeType, AudioMimeType
 from celeste.parameters import ParameterMapper
@@ -15,8 +17,13 @@ from celeste_speech_generation.io import (
 )
 from celeste_speech_generation.parameters import SpeechGenerationParameters
 
-from . import config
 from .parameters import GOOGLE_PARAMETER_MAPPERS
+
+# PCM Audio Format Specifications
+# Source: Google Gemini TTS docs (ffmpeg -f s16le -ar 24000 -ac 1)
+PCM_SAMPLE_RATE = 24000  # Hz
+PCM_CHANNELS = 1  # Mono
+PCM_SAMPLE_WIDTH = 2  # Bytes (16-bit)
 
 
 class GoogleSpeechGenerationClient(SpeechGenerationClient):
@@ -85,9 +92,9 @@ class GoogleSpeechGenerationClient(SpeechGenerationClient):
             data=pcm_bytes,
             mime_type=AudioMimeType.PCM,
             metadata={
-                "sample_rate": config.PCM_SAMPLE_RATE,
-                "channels": config.PCM_CHANNELS,
-                "sample_width": config.PCM_SAMPLE_WIDTH,
+                "sample_rate": PCM_SAMPLE_RATE,
+                "channels": PCM_CHANNELS,
+                "sample_width": PCM_SAMPLE_WIDTH,
             },
         )
 
@@ -106,7 +113,9 @@ class GoogleSpeechGenerationClient(SpeechGenerationClient):
         **parameters: Unpack[SpeechGenerationParameters],
     ) -> httpx.Response:
         """Make HTTP request(s) and return response object."""
-        endpoint = config.ENDPOINT.format(model_id=self.model.id)
+        endpoint = config.GoogleGenerateContentEndpoint.GENERATE_CONTENT.format(
+            model_id=self.model.id
+        )
 
         headers = {
             **self.auth.get_headers(),
