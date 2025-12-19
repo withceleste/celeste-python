@@ -11,8 +11,8 @@ from celeste import Capability, Provider, create_client
         (Provider.OPENAI, "tts-1", {"voice": "alloy", "output_format": "mp3"}),
         (
             Provider.GOOGLE,
-            "gemini-2.5-flash-tts",
-            {"voice": "Zephyr", "speed": 1.0},
+            "gemini-2.5-flash-preview-tts",
+            {"voice": "Zephyr"},
         ),
         (
             Provider.ELEVENLABS,
