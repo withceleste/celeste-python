@@ -93,7 +93,7 @@ class OpenAIResponsesClient:
     def _parse_usage(self, response_data: dict[str, Any]) -> dict[str, int | None]:
         """Extract usage data from Responses API response."""
         usage_data = response_data.get("usage", {})
-        return self.map_usage_fields(usage_data)
+        return OpenAIResponsesClient.map_usage_fields(usage_data)
 
     def _parse_content(self, response_data: dict[str, Any]) -> Any:
         """Parse output array from Responses API.

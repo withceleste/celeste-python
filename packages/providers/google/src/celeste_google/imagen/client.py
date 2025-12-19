@@ -49,15 +49,22 @@ class GoogleImagenClient:
             json_body=request_body,
         )
 
-    def _parse_usage(self, response_data: dict[str, Any]) -> dict[str, int | None]:
-        """Extract usage data from Imagen API response.
+    @staticmethod
+    def map_usage_fields(usage_data: dict[str, Any]) -> dict[str, int | None]:
+        """Map Google Imagen usage fields to unified names.
 
+        Shared by client and streaming across all capabilities.
         Imagen API doesn't provide token usage, but we can extract num_images.
         """
-        predictions = response_data.get("predictions", [])
+        predictions = usage_data.get("predictions", [])
         return {
             UsageField.NUM_IMAGES: len(predictions),
         }
+
+    def _parse_usage(self, response_data: dict[str, Any]) -> dict[str, int | None]:
+        """Extract usage data from Imagen API response."""
+        predictions = response_data.get("predictions", [])
+        return GoogleImagenClient.map_usage_fields({"predictions": predictions})
 
     def _parse_content(self, response_data: dict[str, Any]) -> Any:
         """Parse predictions from response.

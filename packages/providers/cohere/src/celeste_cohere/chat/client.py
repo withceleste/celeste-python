@@ -88,7 +88,7 @@ class CohereChatClient:
     def _parse_usage(self, response_data: dict[str, Any]) -> dict[str, int | None]:
         """Extract usage data from Chat API response."""
         usage_data = response_data.get("usage", {})
-        return self.map_usage_fields(usage_data)
+        return CohereChatClient.map_usage_fields(usage_data)
 
     def _parse_content(self, response_data: dict[str, Any]) -> Any:
         """Parse content array from Chat API response message.

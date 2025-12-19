@@ -136,7 +136,7 @@ class BFLImagesClient:
     def _parse_usage(self, response_data: dict[str, Any]) -> dict[str, float | None]:
         """Extract usage data from BFL response."""
         submit_metadata = response_data.get("_submit_metadata", {})
-        return self.map_usage_fields(submit_metadata)
+        return BFLImagesClient.map_usage_fields(submit_metadata)
 
     def _parse_content(self, response_data: dict[str, Any]) -> Any:
         """Parse result from response."""

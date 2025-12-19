@@ -114,15 +114,20 @@ class BytePlusVideosClient:
 
             await asyncio.sleep(config.POLLING_INTERVAL)
 
-    def _parse_usage(self, response_data: dict[str, Any]) -> dict[str, Any]:
-        """Extract usage data from BytePlus API response.
+    @staticmethod
+    def map_usage_fields(usage_data: dict[str, Any]) -> dict[str, Any]:
+        """Map BytePlus Videos usage fields to unified names.
 
-        Returns dict with usage fields for capability clients to wrap in Usage type.
+        Shared by client and streaming across all capabilities.
         """
-        usage_data = response_data.get("usage", {})
         return {
             UsageField.TOTAL_TOKENS: usage_data.get("total_tokens"),
         }
+
+    def _parse_usage(self, response_data: dict[str, Any]) -> dict[str, Any]:
+        """Extract usage data from BytePlus API response."""
+        usage_data = response_data.get("usage", {})
+        return BytePlusVideosClient.map_usage_fields(usage_data)
 
     def _parse_finish_reason(self, response_data: dict[str, Any]) -> FinishReason:
         """BytePlus provides status but not structured finish reasons."""

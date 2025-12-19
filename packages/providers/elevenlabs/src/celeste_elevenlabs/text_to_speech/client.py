@@ -127,9 +127,18 @@ class ElevenLabsTextToSpeechClient:
                 if chunk:
                     yield {"data": chunk}
 
-    def _parse_usage(self, response_data: dict[str, Any]) -> dict[str, int | None]:
-        """ElevenLabs TTS doesn't return usage in response body."""
+    @staticmethod
+    def map_usage_fields(usage_data: dict[str, Any]) -> dict[str, int | None]:
+        """Map ElevenLabs usage fields to unified names.
+
+        Shared by client and streaming across all capabilities.
+        ElevenLabs TTS doesn't return usage in response body.
+        """
         return {}
+
+    def _parse_usage(self, response_data: dict[str, Any]) -> dict[str, int | None]:
+        """Extract usage data from ElevenLabs TTS response."""
+        return ElevenLabsTextToSpeechClient.map_usage_fields(response_data)
 
     def _map_output_format_to_mime_type(
         self, output_format: str | None

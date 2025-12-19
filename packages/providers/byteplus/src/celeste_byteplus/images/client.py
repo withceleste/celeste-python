@@ -68,18 +68,25 @@ class BytePlusImagesClient:
             json_body=request_body,
         )
 
+    @staticmethod
+    def map_usage_fields(usage_data: dict[str, Any]) -> dict[str, int | None]:
+        """Map BytePlus Images usage fields to unified names.
+
+        Shared by client and streaming across all capabilities.
+        """
+        return {
+            UsageField.TOTAL_TOKENS: usage_data.get("total_tokens"),
+            UsageField.OUTPUT_TOKENS: usage_data.get("output_tokens"),
+            UsageField.NUM_IMAGES: usage_data.get("generated_images"),
+        }
+
     def _parse_usage(self, response_data: dict[str, Any]) -> dict[str, int | None]:
         """Extract usage data from Images API response.
 
         Returns dict that capability clients wrap in their specific Usage type.
         """
         usage_data = response_data.get("usage", {})
-
-        return {
-            UsageField.TOTAL_TOKENS: usage_data.get("total_tokens"),
-            UsageField.OUTPUT_TOKENS: usage_data.get("output_tokens"),
-            UsageField.NUM_IMAGES: usage_data.get("generated_images"),
-        }
+        return BytePlusImagesClient.map_usage_fields(usage_data)
 
     def _parse_content(self, response_data: dict[str, Any]) -> Any:
         """Parse images/data array from Images API response.

@@ -110,13 +110,18 @@ class GoogleVeoClient:
             raise ValueError(msg)
         return generated_samples[0].get("video", {})
 
-    def _parse_usage(self, response_data: dict[str, Any]) -> dict[str, Any]:
-        """Extract usage data from Veo API response.
+    @staticmethod
+    def map_usage_fields(usage_data: dict[str, Any]) -> dict[str, Any]:
+        """Map Google Veo usage fields to unified names.
 
+        Shared by client and streaming across all capabilities.
         Veo API doesn't provide usage metadata.
-        Returns empty dict for capability clients to wrap in Usage type.
         """
         return {}
+
+    def _parse_usage(self, response_data: dict[str, Any]) -> dict[str, Any]:
+        """Extract usage data from Veo API response."""
+        return GoogleVeoClient.map_usage_fields(response_data)
 
     async def download_content(self, url: str) -> bytes:
         """Download video content from GCS URL.

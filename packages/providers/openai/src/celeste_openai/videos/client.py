@@ -151,14 +151,20 @@ class OpenAIVideosClient:
         """
         return {}, {}
 
-    def _parse_usage(self, response_data: dict[str, Any]) -> dict[str, Any]:
-        """Extract usage data from Videos API response.
+    @staticmethod
+    def map_usage_fields(usage_data: dict[str, Any]) -> dict[str, Any]:
+        """Map OpenAI Videos usage fields to unified names.
 
-        Returns dict with seconds for capability clients to wrap in Usage type.
+        Shared by client and streaming across all capabilities.
+        Videos API uses billing units (seconds), not tokens.
         """
         return {
-            UsageField.BILLED_UNITS: response_data.get("seconds"),
+            UsageField.BILLED_UNITS: usage_data.get("seconds"),
         }
+
+    def _parse_usage(self, response_data: dict[str, Any]) -> dict[str, Any]:
+        """Extract usage data from Videos API response."""
+        return OpenAIVideosClient.map_usage_fields(response_data)
 
     def _parse_finish_reason(self, response_data: dict[str, Any]) -> FinishReason:
         """Videos API doesn't provide finish reasons."""

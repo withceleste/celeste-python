@@ -87,7 +87,7 @@ class GoogleGenerateContentClient:
     def _parse_usage(self, response_data: dict[str, Any]) -> dict[str, int | None]:
         """Extract usage data from Gemini usageMetadata."""
         usage_metadata = response_data.get("usageMetadata", {})
-        return self.map_usage_fields(usage_metadata)
+        return GoogleGenerateContentClient.map_usage_fields(usage_metadata)
 
     def _parse_content(self, response_data: dict[str, Any]) -> Any:
         """Return all candidates from response.

@@ -48,12 +48,19 @@ class OpenAIAudioClient:
             json_body=request_body,
         )
 
-    def _parse_usage(self, response_data: dict[str, Any]) -> dict[str, int | None]:
-        """Audio API speech endpoint doesn't return usage in response body.
+    @staticmethod
+    def map_usage_fields(usage_data: dict[str, Any]) -> dict[str, int | None]:
+        """Map OpenAI Audio usage fields to unified names.
 
+        Shared by client and streaming across all capabilities.
+        Audio API speech endpoint doesn't return usage in response body.
         Usage may be available in response headers or streaming events.
         """
         return {}
+
+    def _parse_usage(self, response_data: dict[str, Any]) -> dict[str, int | None]:
+        """Extract usage data from Audio API response."""
+        return OpenAIAudioClient.map_usage_fields(response_data)
 
     def _map_response_format_to_mime_type(
         self, response_format: str | None
