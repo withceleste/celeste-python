@@ -4,6 +4,7 @@ from typing import Any
 
 import httpx
 
+from celeste.core import UsageField
 from celeste.io import FinishReason
 from celeste.mime_types import ApplicationMimeType
 
@@ -49,8 +50,14 @@ class GoogleImagenClient:
         )
 
     def _parse_usage(self, response_data: dict[str, Any]) -> dict[str, int | None]:
-        """Imagen API doesn't provide usage metadata."""
-        return {}
+        """Extract usage data from Imagen API response.
+
+        Imagen API doesn't provide token usage, but we can extract num_images.
+        """
+        predictions = response_data.get("predictions", [])
+        return {
+            UsageField.NUM_IMAGES: len(predictions),
+        }
 
     def _parse_content(self, response_data: dict[str, Any]) -> Any:
         """Parse predictions from response.

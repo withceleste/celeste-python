@@ -1,7 +1,6 @@
 """Pytest configuration and fixtures for integration tests."""
 
 from collections.abc import AsyncGenerator
-from typing import Any
 
 import pytest_asyncio
 
@@ -18,7 +17,3 @@ async def cleanup_http_clients() -> AsyncGenerator[None, None]:
     """
     yield
     await close_all_http_clients()
-
-
-def pytest_configure(config: Any) -> None:  # noqa: ANN401
-    config.addinivalue_line("markers", "integration: mark test as an integration test")
