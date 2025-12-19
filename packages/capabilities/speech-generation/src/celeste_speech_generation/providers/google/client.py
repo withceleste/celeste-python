@@ -4,7 +4,6 @@ import base64
 from typing import Any, Unpack
 
 import httpx
-
 from celeste_google.generate_content import config
 
 from celeste.artifacts import AudioArtifact
