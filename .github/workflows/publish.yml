@@ -133,7 +133,7 @@ jobs:
           GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
           MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
           COHERE_API_KEY: ${{ secrets.COHERE_API_KEY }}
-          BYTEDANCE_API_KEY: ${{ secrets.BYTEDANCE_API_KEY }}
+          BYTEPLUS_API_KEY: ${{ secrets.BYTEPLUS_API_KEY }}
           XAI_API_KEY: ${{ secrets.XAI_API_KEY }}
           ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
         run: uv run pytest packages/capabilities/${{ matrix.package }}/tests/integration_tests/ -m integration -v
