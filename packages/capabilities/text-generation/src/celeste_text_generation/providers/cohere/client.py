@@ -1,13 +1,11 @@
 """Cohere client implementation for text generation."""
 
-from collections.abc import AsyncIterator
 from typing import Any, Unpack
 
-import httpx
-from pydantic import BaseModel
+from celeste_cohere.chat.client import CohereChatClient
 
-from celeste.mime_types import ApplicationMimeType
 from celeste.parameters import ParameterMapper
+from celeste.types import StructuredOutput
 from celeste_text_generation.client import TextGenerationClient
 from celeste_text_generation.io import (
     TextGenerationFinishReason,
@@ -16,12 +14,11 @@ from celeste_text_generation.io import (
 )
 from celeste_text_generation.parameters import TextGenerationParameters
 
-from . import config
 from .parameters import COHERE_PARAMETER_MAPPERS
 from .streaming import CohereTextGenerationStream
 
 
-class CohereTextGenerationClient(TextGenerationClient):
+class CohereTextGenerationClient(CohereChatClient, TextGenerationClient):
     """Cohere client for text generation."""
 
     @classmethod
@@ -41,29 +38,14 @@ class CohereTextGenerationClient(TextGenerationClient):
 
     def _parse_usage(self, response_data: dict[str, Any]) -> TextGenerationUsage:
         """Parse usage from response."""
-        usage_data = response_data.get("usage", {})
-
-        billed_units = usage_data.get("billed_units", {})
-        tokens = usage_data.get("tokens", {})
-
-        input_tokens = billed_units.get("input_tokens")
-        output_tokens = billed_units.get("output_tokens")
-
-        if input_tokens is not None or output_tokens is not None:
-            return TextGenerationUsage(
-                input_tokens=input_tokens,
-                output_tokens=output_tokens,
-                total_tokens=tokens.get("total_tokens") if tokens else None,
-                cached_tokens=usage_data.get("cached_tokens"),
-            )
-
-        return TextGenerationUsage()
+        usage = super()._parse_usage(response_data)
+        return TextGenerationUsage(**usage)
 
     def _parse_content(
         self,
         response_data: dict[str, Any],
         **parameters: Unpack[TextGenerationParameters],
-    ) -> str | BaseModel:
+    ) -> StructuredOutput:
         """Parse content from response."""
         message = response_data.get("message", {})
         content_array = message.get("content", [])
@@ -78,66 +60,14 @@ class CohereTextGenerationClient(TextGenerationClient):
 
     def _parse_finish_reason(
         self, response_data: dict[str, Any]
-    ) -> TextGenerationFinishReason | None:
+    ) -> TextGenerationFinishReason:
         """Parse finish reason from response."""
         finish_reason_str = response_data.get("finish_reason")
-        return (
-            TextGenerationFinishReason(reason=finish_reason_str)
-            if finish_reason_str
-            else None
-        )
-
-    def _build_metadata(self, response_data: dict[str, Any]) -> dict[str, Any]:
-        """Build metadata dictionary from response data."""
-        # Filter content field before calling super
-        content_fields = {"message"}
-        filtered_data = {
-            k: v for k, v in response_data.items() if k not in content_fields
-        }
-        return super()._build_metadata(filtered_data)
-
-    async def _make_request(
-        self,
-        request_body: dict[str, Any],
-        **parameters: Unpack[TextGenerationParameters],
-    ) -> httpx.Response:
-        """Make HTTP request(s) and return response object."""
-        request_body["model"] = self.model.id
-
-        headers = {
-            **self.auth.get_headers(),
-            "Content-Type": ApplicationMimeType.JSON,
-        }
-
-        return await self.http_client.post(
-            f"{config.BASE_URL}{config.ENDPOINT}",
-            headers=headers,
-            json_body=request_body,
-        )
+        return TextGenerationFinishReason(reason=finish_reason_str)
 
     def _stream_class(self) -> type[CohereTextGenerationStream]:
         """Return the Stream class for this client."""
         return CohereTextGenerationStream
-
-    def _make_stream_request(
-        self,
-        request_body: dict[str, Any],
-        **parameters: Unpack[TextGenerationParameters],
-    ) -> AsyncIterator[dict[str, Any]]:
-        """Make HTTP streaming request and return async iterator of events."""
-        request_body["model"] = self.model.id
-        request_body["stream"] = True
-
-        headers = {
-            **self.auth.get_headers(),
-            "Content-Type": ApplicationMimeType.JSON,
-        }
-
-        return self.http_client.stream_post(
-            f"{config.BASE_URL}{config.STREAM_ENDPOINT}",
-            headers=headers,
-            json_body=request_body,
-        )
 
 
 __all__ = ["CohereTextGenerationClient"]
