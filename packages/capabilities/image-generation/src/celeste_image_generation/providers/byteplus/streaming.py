@@ -1,10 +1,14 @@
 """BytePlus streaming for image generation."""
 
+import base64
 import logging
 from collections.abc import AsyncIterator
 from typing import Any
 
+from celeste_byteplus.images.streaming import BytePlusImagesStream
+
 from celeste.artifacts import ImageArtifact
+from celeste.core import UsageField
 from celeste.mime_types import ImageMimeType
 from celeste_image_generation.io import ImageGenerationChunk, ImageGenerationUsage
 from celeste_image_generation.streaming import ImageGenerationStream
@@ -12,7 +16,7 @@ from celeste_image_generation.streaming import ImageGenerationStream
 logger = logging.getLogger(__name__)
 
 
-class BytePlusImageGenerationStream(ImageGenerationStream):
+class BytePlusImageGenerationStream(BytePlusImagesStream, ImageGenerationStream):
     """BytePlus streaming for image generation."""
 
     def __init__(self, sse_iterator: AsyncIterator[dict[str, Any]]) -> None:
@@ -21,28 +25,17 @@ class BytePlusImageGenerationStream(ImageGenerationStream):
         self._completed_usage: ImageGenerationUsage | None = None
 
     def _parse_chunk(self, chunk_data: dict[str, Any]) -> ImageGenerationChunk | None:
-        """Parse chunk from SSE event."""
-        event_type = chunk_data.get("type")
+        """Parse chunk from SSE event.
 
-        if event_type == "image_generation.partial_succeeded":
-            url = chunk_data.get("url")
-            if not url:
-                logger.warning("partial_succeeded event missing URL")
-                return None
-
-            artifact = ImageArtifact(url=url, mime_type=ImageMimeType.PNG)
-            return ImageGenerationChunk(content=artifact)
-
-        if event_type == "image_generation.completed":
-            usage_data = chunk_data.get("usage")
-            if usage_data:
-                self._completed_usage = ImageGenerationUsage(
-                    total_tokens=usage_data.get("total_tokens"),
-                )
+        Uses provider mixin to parse raw SSE event, then wraps in typed chunk.
+        """
+        raw = super()._parse_chunk(chunk_data)
+        if not raw:
             return None
 
-        if event_type == "image_generation.partial_failed":
-            error = chunk_data.get("error", {})
+        # Handle error events
+        if raw.get("is_error"):
+            error = raw.get("error", {})
             logger.error(
                 "Image generation failed: %s - %s",
                 error.get("code"),
@@ -50,11 +43,35 @@ class BytePlusImageGenerationStream(ImageGenerationStream):
             )
             return None
 
-        logger.warning("Unknown event type: %s", event_type)
-        return None
+        # Handle completed event (usage only)
+        usage_data = raw.get("usage")
+        if usage_data:
+            self._completed_usage = ImageGenerationUsage(
+                total_tokens=usage_data.get(UsageField.TOTAL_TOKENS),
+                output_tokens=usage_data.get(UsageField.OUTPUT_TOKENS),
+                num_images=usage_data.get(UsageField.NUM_IMAGES),
+            )
+            return None
+
+        # Handle partial succeeded (image content)
+        content = raw.get("content")
+        content_type = raw.get("content_type")
+        if not content:
+            return None
+
+        if content_type == "url":
+            artifact = ImageArtifact(url=content, mime_type=ImageMimeType.PNG)
+        else:  # b64_json
+            image_data = base64.b64decode(content)
+            artifact = ImageArtifact(data=image_data)
+
+        return ImageGenerationChunk(content=artifact)
 
     def _parse_usage(self, chunks: list[ImageGenerationChunk]) -> ImageGenerationUsage:
-        """Parse usage from chunks."""
+        """Parse usage from chunks.
+
+        Usage is stored from the completed event.
+        """
         if self._completed_usage is not None:
             return self._completed_usage
 
