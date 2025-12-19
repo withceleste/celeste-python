@@ -21,6 +21,7 @@ from celeste_speech_generation.io import (  # noqa: E402
     SpeechGenerationOutput,
     SpeechGenerationUsage,
 )
+from celeste_speech_generation.languages import Language  # noqa: E402
 
 # Aggregate voices from all providers (after Voice is imported)
 from celeste_speech_generation.providers.elevenlabs.voices import (  # noqa: E402
@@ -43,6 +44,7 @@ VOICES: list[Voice] = [
 
 __all__ = [
     "VOICES",
+    "Language",
     "SpeechGenerationChunk",
     "SpeechGenerationInput",
     "SpeechGenerationOutput",
