@@ -10,9 +10,6 @@ dependencies = ["celeste-ai", "httpx", "google-auth"]
 [tool.uv.sources]
 celeste-ai = { workspace = true }
 
-[project.entry-points."celeste.providers"]
-google = "celeste_google:register_provider"
-
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"

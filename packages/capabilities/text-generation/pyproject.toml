@@ -1,6 +1,6 @@
 [project]
 name = "celeste-text-generation"
-version = "0.2.10"
+version = "0.3.0"
 description = "Text generation package for Celeste AI. Unified interface for all providers"
 authors = [{name = "Kamilbenkirane", email = "kamil@withceleste.ai"}]
 readme = "README.md"
