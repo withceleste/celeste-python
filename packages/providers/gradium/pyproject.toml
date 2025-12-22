@@ -1,6 +1,6 @@
 [project]
 name = "celeste-gradium"
-version = "0.3.1"
+version = "0.3.3"
 description = "Gradium provider package for Celeste AI"
 authors = [{name = "Kamilbenkirane", email = "kamil@withceleste.ai"}]
 license = {text = "Apache-2.0"}

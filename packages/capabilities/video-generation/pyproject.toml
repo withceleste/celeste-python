@@ -1,6 +1,6 @@
 [project]
 name = "celeste-video-generation"
-version = "0.3.0"
+version = "0.3.3"
 description = "Video generation package for Celeste AI. Unified interface for all providers"
 authors = [{name = "Kamilbenkirane", email = "kamil@withceleste.ai"}]
 readme = "README.md"
@@ -19,6 +19,10 @@ classifiers = [
 ]
 keywords = ["ai", "video-generation", "sora", "runway", "openai", "google", "video-ai"]
 dependencies = [
+    "celeste-ai>=0.3.3",
+    "celeste-byteplus>=0.3.3",
+    "celeste-google>=0.3.3",
+    "celeste-openai>=0.3.3",
     "pillow>=10.0.0",
 ]
 

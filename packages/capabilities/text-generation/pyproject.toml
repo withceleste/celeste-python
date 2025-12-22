@@ -1,6 +1,6 @@
 [project]
 name = "celeste-text-generation"
-version = "0.3.0"
+version = "0.3.3"
 description = "Text generation package for Celeste AI. Unified interface for all providers"
 authors = [{name = "Kamilbenkirane", email = "kamil@withceleste.ai"}]
 readme = "README.md"
@@ -18,6 +18,15 @@ classifiers = [
     "Typing :: Typed",
 ]
 keywords = ["ai", "text-generation", "llm", "openai", "anthropic", "claude", "gemini", "mistral", "cohere"]
+dependencies = [
+    "celeste-ai>=0.3.3",
+    "celeste-anthropic>=0.3.3",
+    "celeste-cohere>=0.3.3",
+    "celeste-google>=0.3.3",
+    "celeste-mistral>=0.3.3",
+    "celeste-openai>=0.3.3",
+    "celeste-xai>=0.3.3",
+]
 
 [project.urls]
 Homepage = "https://withceleste.ai"

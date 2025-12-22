@@ -1,6 +1,6 @@
 [project]
 name = "celeste-image-generation"
-version = "0.3.0"
+version = "0.3.3"
 description = "Image generation package for Celeste AI. Unified interface for all providers"
 authors = [{name = "Kamilbenkirane", email = "kamil@withceleste.ai"}]
 readme = "README.md"
@@ -18,6 +18,13 @@ classifiers = [
     "Typing :: Typed",
 ]
 keywords = ["ai", "image-generation", "dall-e", "imagen", "openai", "google", "byteplus"]
+dependencies = [
+    "celeste-ai>=0.3.3",
+    "celeste-bfl>=0.3.3",
+    "celeste-byteplus>=0.3.3",
+    "celeste-google>=0.3.3",
+    "celeste-openai>=0.3.3",
+]
 
 [project.urls]
 Homepage = "https://withceleste.ai"

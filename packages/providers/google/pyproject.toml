@@ -1,6 +1,6 @@
 [project]
 name = "celeste-google"
-version = "0.3.2"
+version = "0.3.3"
 description = "Google (Gemini API) provider package for Celeste AI"
 authors = [{name = "Kamilbenkirane", email = "kamil@withceleste.ai"}]
 license = {text = "Apache-2.0"}
