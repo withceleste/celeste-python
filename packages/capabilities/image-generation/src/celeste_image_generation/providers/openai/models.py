@@ -56,4 +56,18 @@ MODELS: list[Model] = [
             ),
         },
     ),
+    Model(
+        id="gpt-image-1.5",
+        provider=Provider.OPENAI,
+        display_name="GPT Image 1.5",
+        streaming=False,
+        parameter_constraints={
+            ImageGenerationParameter.ASPECT_RATIO: Choice(
+                options=["1024x1024", "1536x1024", "1024x1536", "auto"]
+            ),
+            ImageGenerationParameter.QUALITY: Choice(
+                options=["low", "medium", "high", "auto"]
+            ),
+        },
+    ),
 ]
