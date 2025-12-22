@@ -1,6 +1,6 @@
 [project]
 name = "celeste-ai"
-version = "0.3.2"
+version = "0.3.3"
 description = "Open source, type-safe primitives for multi-modal AI. All capabilities, all providers, one interface"
 authors = [{name = "Kamilbenkirane", email = "kamil@withceleste.ai"}]
 readme = "README.md"
@@ -34,15 +34,15 @@ Repository = "https://github.com/withceleste/celeste-python"
 Issues = "https://github.com/withceleste/celeste-python/issues"
 
 [project.optional-dependencies]
-text-generation = ["celeste-text-generation>=0.3.0"]
-image-generation = ["celeste-image-generation>=0.3.0"]
-video-generation = ["celeste-video-generation>=0.3.0"]
-speech-generation = ["celeste-speech-generation>=0.3.0"]
+text-generation = ["celeste-text-generation>=0.3.3"]
+image-generation = ["celeste-image-generation>=0.3.3"]
+video-generation = ["celeste-video-generation>=0.3.3"]
+speech-generation = ["celeste-speech-generation>=0.3.3"]
 all = [
-    "celeste-text-generation>=0.3.0",
-    "celeste-image-generation>=0.3.0",
-    "celeste-video-generation>=0.3.0",
-    "celeste-speech-generation>=0.3.0",
+    "celeste-text-generation>=0.3.3",
+    "celeste-image-generation>=0.3.3",
+    "celeste-video-generation>=0.3.3",
+    "celeste-speech-generation>=0.3.3",
 ]
 
 [dependency-groups]
