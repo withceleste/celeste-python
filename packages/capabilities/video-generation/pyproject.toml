@@ -19,6 +19,10 @@ classifiers = [
 ]
 keywords = ["ai", "video-generation", "sora", "runway", "openai", "google", "video-ai"]
 dependencies = [
+    "celeste-ai>=0.3.0",
+    "celeste-byteplus>=0.3.0",
+    "celeste-google>=0.3.0",
+    "celeste-openai>=0.3.0",
     "pillow>=10.0.0",
 ]
 

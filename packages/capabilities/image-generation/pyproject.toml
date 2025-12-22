@@ -18,6 +18,13 @@ classifiers = [
     "Typing :: Typed",
 ]
 keywords = ["ai", "image-generation", "dall-e", "imagen", "openai", "google", "byteplus"]
+dependencies = [
+    "celeste-ai>=0.3.0",
+    "celeste-bfl>=0.3.0",
+    "celeste-byteplus>=0.3.0",
+    "celeste-google>=0.3.0",
+    "celeste-openai>=0.3.0",
+]
 
 [project.urls]
 Homepage = "https://withceleste.ai"
