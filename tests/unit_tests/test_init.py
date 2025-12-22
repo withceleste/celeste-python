@@ -91,15 +91,13 @@ class TestCreateClient:
 
             mock_get_model.assert_called_once_with("claude-3", Provider.ANTHROPIC)
 
-    def test_create_client_string_model_without_provider_raises_error(self) -> None:
-        """Test that string model ID without provider raises ValueError."""
-        # Act & Assert
-        with pytest.raises(
-            ValueError, match="provider required when model is a string ID"
-        ):
+    def test_create_client_string_model_not_found_raises_error(self) -> None:
+        """Test that unknown model ID raises ModelNotFoundError."""
+        # Act & Assert - model lookup searches all providers, raises if not found
+        with pytest.raises(ModelNotFoundError, match=r"Model.*not found"):
             create_client(
                 capability=Capability.TEXT_GENERATION,
-                model="some-model",  # provider=None - should error
+                model="nonexistent-model",
             )
 
     def test_create_client_filters_by_provider_when_specified(

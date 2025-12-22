@@ -37,13 +37,28 @@ from celeste.websocket import WebSocketClient, WebSocketConnection, close_all_ws
 logger = logging.getLogger(__name__)
 
 
+def _infer_capability(model: Model) -> Capability:
+    """Infer capability from model. Raises if ambiguous."""
+    if len(model.capabilities) == 1:
+        return next(iter(model.capabilities))
+    if len(model.capabilities) > 1:
+        caps = ", ".join(c.value for c in model.capabilities)
+        msg = f"Model '{model.id}' supports multiple capabilities: {caps}. Specify 'capability' explicitly."
+        raise ValueError(msg)
+    msg = f"Model '{model.id}' has no registered capabilities"
+    raise ValueError(msg)
+
+
 def _resolve_model(
-    capability: Capability,
+    capability: Capability | None,
     provider: Provider | None,
     model: Model | str | None,
 ) -> Model:
     """Resolve model parameter to Model object (auto-select if None, lookup if string)."""
     if model is None:
+        if capability is None:
+            msg = "Either 'capability' or 'model' must be provided"
+            raise ValueError(msg)
         # Auto-select first available model
         models = list_models(provider=provider, capability=capability)
         if not models:
@@ -54,10 +69,6 @@ def _resolve_model(
         return models[0]
 
     if isinstance(model, str):
-        # String ID requires provider
-        if not provider:
-            msg = "provider required when model is a string ID"
-            raise ValueError(msg)
         found = get_model(model, provider)
         if not found:
             raise ModelNotFoundError(model_id=model, provider=provider)
@@ -67,7 +78,7 @@ def _resolve_model(
 
 
 def create_client(
-    capability: Capability,
+    capability: Capability | None = None,
     provider: Provider | None = None,
     model: Model | str | None = None,
     api_key: str | SecretStr | None = None,
@@ -76,8 +87,10 @@ def create_client(
     """Create an async client for the specified AI capability.
 
     Args:
-        capability: The AI capability to use (e.g., TEXT_GENERATION).
-        provider: Optional provider. Required if model is a string ID.
+        capability: The AI capability to use. If not provided and model is specified,
+                    capability is inferred from the model (if unambiguous).
+        provider: Optional provider. If not specified and model ID matches multiple
+                  providers, the first match is used with a warning.
         model: Model object, string model ID, or None for auto-selection.
         api_key: Optional API key override (string or SecretStr).
         auth: Optional Authentication object for custom auth (e.g., GoogleADC).
@@ -90,14 +103,20 @@ def create_client(
         ClientNotFoundError: If no client registered for capability/provider.
         MissingCredentialsError: If required credentials are not configured.
         UnsupportedCapabilityError: If the resolved model doesn't support the requested capability.
+        ValueError: If capability cannot be inferred from model.
     """
     # Load packages lazily when create_client is called
     _load_from_entry_points()
     # Resolve model
     resolved_model = _resolve_model(capability, provider, model)
 
+    # Infer capability if not provided
+    resolved_capability = (
+        capability if capability else _infer_capability(resolved_model)
+    )
+
     # Get client class and authentication
-    client_class = get_client_class(capability, resolved_model.provider)
+    client_class = get_client_class(resolved_capability, resolved_model.provider)
     resolved_auth = credentials.get_auth(
         resolved_model.provider,
         override_auth=auth,
@@ -108,7 +127,7 @@ def create_client(
     return client_class(
         model=resolved_model,
         provider=resolved_model.provider,
-        capability=capability,
+        capability=resolved_capability,
         auth=resolved_auth,
     )
 

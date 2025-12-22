@@ -62,28 +62,6 @@ MODELS: list[Model] = [
         },
     ),
     Model(
-        id="open-mixtral-8x7b",
-        provider=Provider.MISTRAL,
-        display_name="Open Mixtral 8x7B",
-        streaming=True,
-        parameter_constraints={
-            Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
-            Parameter.MAX_TOKENS: Range(min=1, max=32768, step=1),
-            TextGenerationParameter.OUTPUT_SCHEMA: Schema(),
-        },
-    ),
-    Model(
-        id="open-mixtral-8x22b",
-        provider=Provider.MISTRAL,
-        display_name="Open Mixtral 8x22B",
-        streaming=True,
-        parameter_constraints={
-            Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
-            Parameter.MAX_TOKENS: Range(min=1, max=32768, step=1),
-            TextGenerationParameter.OUTPUT_SCHEMA: Schema(),
-        },
-    ),
-    Model(
         id="codestral-latest",
         provider=Provider.MISTRAL,
         display_name="Codestral",

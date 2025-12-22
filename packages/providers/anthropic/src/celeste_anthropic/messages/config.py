@@ -8,6 +8,8 @@ class AnthropicMessagesEndpoint(StrEnum):
 
     CREATE_MESSAGE = "/v1/messages"
     COUNT_MESSAGE_TOKENS = "/v1/messages/count_tokens"
+    LIST_MODELS = "/v1/models"
+    GET_MODEL = "/v1/models/{model_id}"
 
 
 BASE_URL = "https://api.anthropic.com"

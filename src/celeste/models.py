@@ -68,17 +68,37 @@ def register_models(models: Model | list[Model], capability: Capability) -> None
         registered.parameter_constraints.update(model.parameter_constraints)
 
 
-def get_model(model_id: str, provider: Provider) -> Model | None:
-    """Get a registered model by ID and provider.
+def get_model(model_id: str, provider: Provider | None = None) -> Model | None:
+    """Get a registered model by ID, optionally filtered by provider.
 
     Args:
         model_id: The model identifier.
-        provider: The provider that owns the model.
+        provider: Optional provider. If None and multiple providers have the
+                  model, returns the first match and emits a warning.
 
     Returns:
         Model instance if found, None otherwise.
     """
-    return _models.get((model_id, provider))
+    if provider is not None:
+        return _models.get((model_id, provider))
+
+    # Search across all providers
+    matches = [m for m in _models.values() if m.id == model_id]
+    if not matches:
+        return None
+
+    if len(matches) > 1:
+        import warnings
+
+        providers = ", ".join(m.provider.value for m in matches)
+        warnings.warn(
+            f"Model '{model_id}' found in multiple providers: {providers}. "
+            f"Using '{matches[0].provider.value}'.",
+            UserWarning,
+            stacklevel=2,
+        )
+
+    return matches[0]
 
 
 def list_models(
