@@ -61,4 +61,16 @@ MODELS: list[Model] = [
             TextGenerationParameter.OUTPUT_SCHEMA: Schema(),
         },
     ),
+    Model(
+        id="gemini-3-flash-preview",
+        provider=Provider.GOOGLE,
+        display_name="Gemini 3 Flash",
+        streaming=True,
+        parameter_constraints={
+            Parameter.TEMPERATURE: Range(min=0.0, max=2.0),
+            Parameter.MAX_TOKENS: Range(min=1, max=65536),
+            TextGenerationParameter.THINKING_LEVEL: Choice(options=["low", "high"]),
+            TextGenerationParameter.OUTPUT_SCHEMA: Schema(),
+        },
+    ),
 ]
