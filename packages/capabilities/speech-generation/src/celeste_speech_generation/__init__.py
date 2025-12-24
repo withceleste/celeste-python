@@ -2,10 +2,12 @@
 
 
 def register_package() -> None:
-    """Register speech generation package (client and models)."""
+    """Register speech generation package (client, models, and input)."""
     from celeste.client import register_client
     from celeste.core import Capability
+    from celeste.io import register_input
     from celeste.models import register_models
+    from celeste_speech_generation.io import SpeechGenerationInput
     from celeste_speech_generation.models import MODELS
     from celeste_speech_generation.providers import PROVIDERS
 
@@ -13,6 +15,7 @@ def register_package() -> None:
         register_client(Capability.SPEECH_GENERATION, provider, client_class)
 
     register_models(MODELS, capability=Capability.SPEECH_GENERATION)
+    register_input(Capability.SPEECH_GENERATION, SpeechGenerationInput)
 
 
 from celeste_speech_generation.io import (  # noqa: E402
