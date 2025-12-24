@@ -10,6 +10,7 @@ from celeste.mime_types import AudioMimeType
 from celeste.parameters import ParameterMapper
 from celeste_speech_generation.client import SpeechGenerationClient
 from celeste_speech_generation.io import (
+    SpeechGenerationFinishReason,
     SpeechGenerationInput,
     SpeechGenerationUsage,
 )
@@ -40,6 +41,13 @@ class GoogleSpeechGenerationClient(GoogleCloudTTSClient, SpeechGenerationClient)
         """Parse usage from response."""
         usage = super()._parse_usage(response_data)
         return SpeechGenerationUsage(**usage)
+
+    def _parse_finish_reason(
+        self, response_data: dict[str, Any]
+    ) -> SpeechGenerationFinishReason:
+        """Parse finish reason from response."""
+        finish_reason = super()._parse_finish_reason(response_data)
+        return SpeechGenerationFinishReason(reason=finish_reason.reason)
 
     def _parse_content(
         self,
