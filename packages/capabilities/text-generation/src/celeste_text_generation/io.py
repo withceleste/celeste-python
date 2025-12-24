@@ -1,5 +1,7 @@
 """Input and output types for text generation."""
 
+from pydantic import Field
+
 from celeste.io import Chunk, FinishReason, Input, Output, Usage
 
 
@@ -35,7 +37,8 @@ class TextGenerationUsage(Usage):
 class TextGenerationOutput[Content](Output[Content]):
     """Output with text or structured content."""
 
-    pass
+    usage: TextGenerationUsage = Field(default_factory=TextGenerationUsage)
+    finish_reason: TextGenerationFinishReason | None = None
 
 
 class TextGenerationChunk(Chunk[str]):

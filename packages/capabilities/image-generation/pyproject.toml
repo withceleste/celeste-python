@@ -1,6 +1,6 @@
 [project]
 name = "celeste-image-generation"
-version = "0.3.6"
+version = "0.3.7"
 description = "Image generation package for Celeste AI. Unified interface for all providers"
 authors = [{name = "Kamilbenkirane", email = "kamil@withceleste.ai"}]
 readme = "README.md"

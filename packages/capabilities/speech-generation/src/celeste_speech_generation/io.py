@@ -1,5 +1,7 @@
 """Input and output types for speech generation."""
 
+from pydantic import Field
+
 from celeste.artifacts import AudioArtifact
 from celeste.io import Chunk, FinishReason, Input, Output, Usage
 
@@ -23,6 +25,9 @@ class SpeechGenerationFinishReason(FinishReason):
 
 class SpeechGenerationOutput(Output[AudioArtifact]):
     """Output with audio artifact content."""
+
+    usage: SpeechGenerationUsage = Field(default_factory=SpeechGenerationUsage)
+    finish_reason: SpeechGenerationFinishReason | None = None
 
 
 class SpeechGenerationChunk(Chunk[bytes]):

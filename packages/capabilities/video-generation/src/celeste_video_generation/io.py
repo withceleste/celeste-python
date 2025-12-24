@@ -1,5 +1,7 @@
 """Input and output types for video generation."""
 
+from pydantic import Field
+
 from celeste.artifacts import VideoArtifact
 from celeste.io import Input, Output, Usage
 
@@ -23,7 +25,7 @@ class VideoGenerationUsage(Usage):
 class VideoGenerationOutput(Output[VideoArtifact]):
     """Output with VideoArtifact content."""
 
-    pass
+    usage: VideoGenerationUsage = Field(default_factory=VideoGenerationUsage)
 
 
 __all__ = [
