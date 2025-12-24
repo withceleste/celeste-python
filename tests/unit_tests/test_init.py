@@ -50,14 +50,26 @@ class TestCreateClient:
             ):
                 create_client(capability=Capability.TEXT_GENERATION)
 
-    def test_create_client_specific_model_not_found_raises_error(self) -> None:
-        """Test error when specific model/provider combination doesn't exist."""
-        with patch("celeste.get_model", autospec=True) as mock_get_model:
+    def test_create_client_unregistered_model_with_provider_emits_warning(self) -> None:
+        """Test that unregistered model with explicit provider emits warning and proceeds."""
+        with (
+            patch("celeste.get_model", autospec=True) as mock_get_model,
+            patch("celeste.get_client_class", autospec=True) as mock_get_client_class,
+        ):
             # Arrange
             mock_get_model.return_value = None
+            mock_get_client_class.side_effect = NotImplementedError(
+                "Client not registered"
+            )
 
-            # Act & Assert
-            with pytest.raises(ModelNotFoundError, match=r"Model.*not found"):
+            # Act & Assert - should warn but not raise ModelNotFoundError
+            with (
+                pytest.warns(
+                    UserWarning,
+                    match=r"Model.*not registered.*Parameter validation disabled",
+                ),
+                pytest.raises(NotImplementedError),
+            ):
                 create_client(
                     capability=Capability.TEXT_GENERATION,
                     provider=Provider.OPENAI,

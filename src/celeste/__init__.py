@@ -1,4 +1,5 @@
 import logging
+import warnings
 
 from pydantic import SecretStr
 
@@ -21,7 +22,7 @@ from celeste.exceptions import (
     ValidationError,
 )
 from celeste.http import HTTPClient, close_all_http_clients
-from celeste.io import Input, Output, Usage
+from celeste.io import Input, Output, Usage, get_input_class, register_input
 from celeste.models import Model, get_model, list_models, register_models
 from celeste.parameters import Parameters
 from celeste.registry import _load_from_entry_points
@@ -71,7 +72,26 @@ def _resolve_model(
     if isinstance(model, str):
         found = get_model(model, provider)
         if not found:
-            raise ModelNotFoundError(model_id=model, provider=provider)
+            if provider is None:
+                raise ModelNotFoundError(model_id=model, provider=provider)
+            if capability is None:
+                msg = (
+                    f"Model '{model}' not registered. Specify 'capability' explicitly."
+                )
+                raise ValueError(msg)
+            warnings.warn(
+                f"Model '{model}' not registered in Celeste for provider {provider.value}. "
+                "Parameter validation disabled.",
+                UserWarning,
+                stacklevel=3,
+            )
+            return Model(
+                id=model,
+                provider=provider,
+                display_name=model,
+                capabilities={capability},
+                streaming=True,
+            )
         return found
 
     return model
@@ -169,9 +189,11 @@ __all__ = [
     "close_all_ws_clients",
     "create_client",
     "get_client_class",
+    "get_input_class",
     "get_model",
     "image_to_data_uri",
     "list_models",
     "register_client",
+    "register_input",
     "register_models",
 ]

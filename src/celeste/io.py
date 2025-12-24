@@ -4,6 +4,8 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
+from celeste.core import Capability
+
 
 class Input(BaseModel):
     """Base class for capability-specific input types."""
@@ -41,4 +43,28 @@ class Chunk[Content](BaseModel):
     metadata: dict[str, Any] = Field(default_factory=dict)
 
 
-__all__ = ["Chunk", "FinishReason", "Input", "Output", "Usage"]
+_inputs: dict[Capability, type[Input]] = {}
+
+
+def register_input(capability: Capability, input_class: type[Input]) -> None:
+    """Register an Input class for a capability."""
+    _inputs[capability] = input_class
+
+
+def get_input_class(capability: Capability) -> type[Input]:
+    """Get the registered Input class for a capability."""
+    if capability not in _inputs:
+        msg = f"No Input class registered for capability: {capability}"
+        raise KeyError(msg)
+    return _inputs[capability]
+
+
+__all__ = [
+    "Chunk",
+    "FinishReason",
+    "Input",
+    "Output",
+    "Usage",
+    "get_input_class",
+    "register_input",
+]
