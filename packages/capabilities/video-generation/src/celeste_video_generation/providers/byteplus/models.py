@@ -96,4 +96,20 @@ MODELS: list[Model] = [
             ),
         },
     ),
+    Model(
+        id="seedance-1-5-pro-251215",
+        provider=Provider.BYTEPLUS,
+        capabilities={Capability.VIDEO_GENERATION},
+        display_name="Seedance 1.5 Pro",
+        parameter_constraints={
+            VideoGenerationParameter.DURATION: Range(min=4, max=12),
+            VideoGenerationParameter.RESOLUTION: Choice(options=["480p", "720p"]),
+            VideoGenerationParameter.FIRST_FRAME: ImageConstraint(
+                supported_mime_types=BYTEPLUS_SUPPORTED_MIME_TYPES,
+            ),
+            VideoGenerationParameter.LAST_FRAME: ImageConstraint(
+                supported_mime_types=BYTEPLUS_SUPPORTED_MIME_TYPES,
+            ),
+        },
+    ),
 ]
