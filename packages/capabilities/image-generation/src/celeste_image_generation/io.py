@@ -1,5 +1,7 @@
 """Input and output types for image generation."""
 
+from pydantic import Field
+
 from celeste.artifacts import ImageArtifact
 from celeste.io import Chunk, FinishReason, Input, Output, Usage
 
@@ -39,7 +41,8 @@ class ImageGenerationUsage(Usage):
 class ImageGenerationOutput(Output[ImageArtifact | list[ImageArtifact]]):
     """Output with ImageArtifact content (single or multiple)."""
 
-    pass
+    usage: ImageGenerationUsage = Field(default_factory=ImageGenerationUsage)
+    finish_reason: ImageGenerationFinishReason | None = None
 
 
 class ImageGenerationChunk(Chunk[ImageArtifact]):
