@@ -1,9 +1,10 @@
 """Models and model registry for Celeste."""
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, SerializeAsAny, computed_field
 
 from celeste.constraints import Constraint
-from celeste.core import Capability, Provider
+from celeste.core import Capability, InputType, Provider
+from celeste.io import get_constraint_input_type, get_required_input_types
 
 
 class Model(BaseModel):
@@ -13,13 +14,32 @@ class Model(BaseModel):
     provider: Provider
     display_name: str
     capabilities: set[Capability] = Field(default_factory=set)
-    parameter_constraints: dict[str, Constraint] = Field(default_factory=dict)
+    parameter_constraints: dict[str, SerializeAsAny[Constraint]] = Field(
+        default_factory=dict
+    )
     streaming: bool = Field(default=False)
 
     @property
     def supported_parameters(self) -> set[str]:
         """Compute supported parameter names from parameter_constraints."""
         return set(self.parameter_constraints.keys())
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def supported_input_types(self) -> dict[Capability, set[InputType]]:
+        """Input types supported per capability (derived from Input class fields)."""
+        return {cap: get_required_input_types(cap) for cap in self.capabilities}
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def optional_input_types(self) -> set[InputType]:
+        """Optional input types accepted via parameter_constraints."""
+        types: set[InputType] = set()
+        for constraint in self.parameter_constraints.values():
+            input_type = get_constraint_input_type(constraint)
+            if input_type is not None:
+                types.add(input_type)
+        return types
 
 
 # Module-level registry mapping (model_id, provider) to model

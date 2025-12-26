@@ -1,10 +1,14 @@
 """Input and output types for generation operations."""
 
-from typing import Any
+import inspect
+import types
+from typing import Any, get_args, get_origin
 
 from pydantic import BaseModel, Field
 
-from celeste.core import Capability
+from celeste.artifacts import AudioArtifact, ImageArtifact, VideoArtifact
+from celeste.constraints import Constraint
+from celeste.core import Capability, InputType
 
 
 class Input(BaseModel):
@@ -59,12 +63,88 @@ def get_input_class(capability: Capability) -> type[Input]:
     return _inputs[capability]
 
 
+# Centralized mapping: field type → InputType
+INPUT_TYPE_MAPPING: dict[type, InputType] = {
+    str: InputType.TEXT,
+    ImageArtifact: InputType.IMAGE,
+    VideoArtifact: InputType.VIDEO,
+    AudioArtifact: InputType.AUDIO,
+}
+
+
+def get_required_input_types(capability: Capability) -> set[InputType]:
+    """Derive required input types from Input class fields.
+
+    Introspects the Input class registered for a capability and returns
+    the set of InputTypes based on field annotations.
+
+    Args:
+        capability: The capability to get required input types for.
+
+    Returns:
+        Set of InputType values required by the capability's Input class.
+    """
+    input_class = get_input_class(capability)
+    return {
+        INPUT_TYPE_MAPPING[field.annotation]
+        for field in input_class.model_fields.values()
+        if field.annotation in INPUT_TYPE_MAPPING
+    }
+
+
+def _extract_input_type(param_type: type) -> InputType | None:
+    """Extract InputType from a type, handling unions and generics.
+
+    Args:
+        param_type: The type annotation to inspect.
+
+    Returns:
+        InputType if found in the type or its nested types, None otherwise.
+    """
+    # Direct match
+    if param_type in INPUT_TYPE_MAPPING:
+        return INPUT_TYPE_MAPPING[param_type]
+
+    # Handle union types (X | Y) and generics (list[X])
+    origin = get_origin(param_type)
+    if origin is types.UnionType or origin is not None:
+        for arg in get_args(param_type):
+            result = _extract_input_type(arg)
+            if result is not None:
+                return result
+
+    return None
+
+
+def get_constraint_input_type(constraint: Constraint) -> InputType | None:
+    """Get InputType from constraint's __call__ signature.
+
+    Introspects the constraint's __call__ method to find what artifact type
+    it accepts, then maps to InputType using INPUT_TYPE_MAPPING.
+
+    Args:
+        constraint: The constraint to inspect.
+
+    Returns:
+        InputType if the constraint accepts a mapped artifact type, None otherwise.
+    """
+    annotations = inspect.get_annotations(constraint.__call__, eval_str=True)
+    for param_type in annotations.values():
+        result = _extract_input_type(param_type)
+        if result is not None:
+            return result
+    return None
+
+
 __all__ = [
+    "INPUT_TYPE_MAPPING",
     "Chunk",
     "FinishReason",
     "Input",
     "Output",
     "Usage",
+    "get_constraint_input_type",
     "get_input_class",
+    "get_required_input_types",
     "register_input",
 ]

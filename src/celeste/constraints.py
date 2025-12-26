@@ -5,7 +5,7 @@ import re
 from abc import ABC, abstractmethod
 from typing import Any, get_args, get_origin
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, computed_field
 
 from celeste.artifacts import ImageArtifact
 from celeste.exceptions import ConstraintViolationError
@@ -14,6 +14,12 @@ from celeste.mime_types import ImageMimeType
 
 class Constraint(BaseModel, ABC):
     """Base constraint for parameter validation."""
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def type(self) -> str:
+        """Constraint type identifier for serialization."""
+        return self.__class__.__name__
 
     @abstractmethod
     def __call__(self, value: Any) -> Any:  # noqa: ANN401

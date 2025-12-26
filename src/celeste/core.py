@@ -49,6 +49,15 @@ class Capability(StrEnum):
     SEARCH = "search"
 
 
+class InputType(StrEnum):
+    """Input types for capabilities."""
+
+    TEXT = "text"
+    IMAGE = "image"
+    VIDEO = "video"
+    AUDIO = "audio"
+
+
 class Parameter(StrEnum):
     """Universal parameters across most capabilities."""
 
@@ -77,4 +86,4 @@ class UsageField(StrEnum):
     CACHE_READ_INPUT_TOKENS = "cache_read_input_tokens"
 
 
-__all__ = ["Capability", "Parameter", "Provider", "UsageField"]
+__all__ = ["Capability", "InputType", "Parameter", "Provider", "UsageField"]
