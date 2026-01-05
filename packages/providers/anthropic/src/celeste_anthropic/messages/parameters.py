@@ -127,6 +127,27 @@ class ThinkingMapper(ParameterMapper):
         return request
 
 
+class WebSearchMapper(ParameterMapper):
+    """Map web_search to Anthropic tools field."""
+
+    def map(
+        self,
+        request: dict[str, Any],
+        value: object,
+        model: Model,
+    ) -> dict[str, Any]:
+        """Transform web_search into provider request."""
+        validated_value = self._validate_value(value, model)
+        if not validated_value:
+            return request
+
+        request.setdefault("tools", []).append({
+            "type": "web_search_20250305",
+            "name": "web_search",
+        })
+        return request
+
+
 class OutputSchemaMapper(ParameterMapper):
     """Map output_schema to Anthropic native structured outputs (output_format).
 
@@ -202,4 +223,5 @@ __all__ = [
     "ThinkingMapper",
     "TopKMapper",
     "TopPMapper",
+    "WebSearchMapper",
 ]

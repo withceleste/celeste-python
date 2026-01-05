@@ -1,7 +1,7 @@
 """Anthropic models for text generation."""
 
 from celeste import Model, Provider
-from celeste.constraints import Range, Schema
+from celeste.constraints import Bool, Range, Schema
 from celeste.core import Parameter
 from celeste_text_generation.parameters import TextGenerationParameter
 
@@ -15,6 +15,7 @@ MODELS: list[Model] = [
             Parameter.MAX_TOKENS: Range(min=1, max=64000),
             TextGenerationParameter.THINKING_BUDGET: Range(min=-1, max=64000),
             TextGenerationParameter.OUTPUT_SCHEMA: Schema(),
+            TextGenerationParameter.WEB_SEARCH: Bool(),
         },
     ),
     Model(
@@ -25,6 +26,7 @@ MODELS: list[Model] = [
         parameter_constraints={
             Parameter.MAX_TOKENS: Range(min=1, max=64000),
             TextGenerationParameter.THINKING_BUDGET: Range(min=-1, max=32000),
+            TextGenerationParameter.WEB_SEARCH: Bool(),
         },
     ),
     Model(
@@ -36,6 +38,7 @@ MODELS: list[Model] = [
             Parameter.MAX_TOKENS: Range(min=1, max=32000),
             TextGenerationParameter.THINKING_BUDGET: Range(min=-1, max=32000),
             TextGenerationParameter.OUTPUT_SCHEMA: Schema(),
+            TextGenerationParameter.WEB_SEARCH: Bool(),
         },
     ),
     Model(
@@ -47,6 +50,7 @@ MODELS: list[Model] = [
             Parameter.MAX_TOKENS: Range(min=1, max=64000),
             TextGenerationParameter.THINKING_BUDGET: Range(min=-1, max=32000),
             TextGenerationParameter.OUTPUT_SCHEMA: Schema(),
+            TextGenerationParameter.WEB_SEARCH: Bool(),
         },
     ),
     Model(
@@ -57,6 +61,7 @@ MODELS: list[Model] = [
         parameter_constraints={
             Parameter.MAX_TOKENS: Range(min=1, max=64000),
             TextGenerationParameter.THINKING_BUDGET: Range(min=-1, max=64000),
+            TextGenerationParameter.WEB_SEARCH: Bool(),
         },
     ),
     Model(
@@ -67,6 +72,7 @@ MODELS: list[Model] = [
         parameter_constraints={
             Parameter.MAX_TOKENS: Range(min=1, max=32000),
             TextGenerationParameter.THINKING_BUDGET: Range(min=-1, max=32000),
+            TextGenerationParameter.WEB_SEARCH: Bool(),
         },
     ),
 ]
