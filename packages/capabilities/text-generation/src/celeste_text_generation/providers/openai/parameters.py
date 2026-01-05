@@ -15,6 +15,9 @@ from celeste_openai.responses.parameters import (
 from celeste_openai.responses.parameters import (
     VerbosityMapper as _VerbosityMapper,
 )
+from celeste_openai.responses.parameters import (
+    WebSearchMapper as _WebSearchMapper,
+)
 
 from celeste.core import Parameter
 from celeste.parameters import ParameterMapper
@@ -41,12 +44,17 @@ class OutputSchemaMapper(_OutputSchemaMapper):
     name = TextGenerationParameter.OUTPUT_SCHEMA
 
 
+class WebSearchMapper(_WebSearchMapper):
+    name = TextGenerationParameter.WEB_SEARCH
+
+
 OPENAI_PARAMETER_MAPPERS: list[ParameterMapper] = [
     TemperatureMapper(),
     MaxTokensMapper(),
     ThinkingBudgetMapper(),
     VerbosityMapper(),
     OutputSchemaMapper(),
+    WebSearchMapper(),
 ]
 
 __all__ = ["OPENAI_PARAMETER_MAPPERS"]

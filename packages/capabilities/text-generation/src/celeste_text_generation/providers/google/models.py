@@ -1,7 +1,7 @@
 """Google models for text generation."""
 
 from celeste import Model, Provider
-from celeste.constraints import Choice, Range, Schema
+from celeste.constraints import Bool, Choice, Range, Schema
 from celeste.core import Parameter
 from celeste_text_generation.parameters import TextGenerationParameter
 
@@ -17,6 +17,7 @@ MODELS: list[Model] = [
             # Flash: allows -1 (dynamic), 0 (disable), or >= 0
             TextGenerationParameter.THINKING_BUDGET: Range(min=-1, max=24576),
             TextGenerationParameter.OUTPUT_SCHEMA: Schema(),
+            TextGenerationParameter.WEB_SEARCH: Bool(),
         },
     ),
     Model(
@@ -32,6 +33,7 @@ MODELS: list[Model] = [
                 min=512, max=24576, special_values=[-1, 0]
             ),
             TextGenerationParameter.OUTPUT_SCHEMA: Schema(),
+            TextGenerationParameter.WEB_SEARCH: Bool(),
         },
     ),
     Model(
@@ -47,6 +49,7 @@ MODELS: list[Model] = [
                 min=128, max=32768, special_values=[-1]
             ),
             TextGenerationParameter.OUTPUT_SCHEMA: Schema(),
+            TextGenerationParameter.WEB_SEARCH: Bool(),
         },
     ),
     Model(
@@ -59,6 +62,7 @@ MODELS: list[Model] = [
             Parameter.MAX_TOKENS: Range(min=1, max=65536),
             TextGenerationParameter.THINKING_LEVEL: Choice(options=["low", "high"]),
             TextGenerationParameter.OUTPUT_SCHEMA: Schema(),
+            TextGenerationParameter.WEB_SEARCH: Bool(),
         },
     ),
     Model(
@@ -71,6 +75,7 @@ MODELS: list[Model] = [
             Parameter.MAX_TOKENS: Range(min=1, max=65536),
             TextGenerationParameter.THINKING_LEVEL: Choice(options=["low", "high"]),
             TextGenerationParameter.OUTPUT_SCHEMA: Schema(),
+            TextGenerationParameter.WEB_SEARCH: Bool(),
         },
     ),
 ]

@@ -14,6 +14,9 @@ class TextGenerationParameter(StrEnum):
     THINKING_LEVEL = "thinking_level"
     OUTPUT_SCHEMA = "output_schema"
     VERBOSITY = "verbosity"
+    WEB_SEARCH = "web_search"
+    X_SEARCH = "x_search"
+    CODE_EXECUTION = "code_execution"
 
 
 class TextGenerationParameters(Parameters):
@@ -25,3 +28,6 @@ class TextGenerationParameters(Parameters):
     thinking_level: str | None
     verbosity: str | None
     output_schema: type[BaseModel] | None
+    web_search: bool | None
+    x_search: bool | None
+    code_execution: bool | None

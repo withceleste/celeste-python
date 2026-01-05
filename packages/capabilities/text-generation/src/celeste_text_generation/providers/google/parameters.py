@@ -15,6 +15,9 @@ from celeste_google.generate_content.parameters import (
 from celeste_google.generate_content.parameters import (
     ThinkingLevelMapper as _ThinkingLevelMapper,
 )
+from celeste_google.generate_content.parameters import (
+    WebSearchMapper as _WebSearchMapper,
+)
 
 from celeste.core import Parameter
 from celeste.parameters import ParameterMapper
@@ -41,12 +44,17 @@ class OutputSchemaMapper(_OutputSchemaMapper):
     name = TextGenerationParameter.OUTPUT_SCHEMA
 
 
+class WebSearchMapper(_WebSearchMapper):
+    name = TextGenerationParameter.WEB_SEARCH
+
+
 GOOGLE_PARAMETER_MAPPERS: list[ParameterMapper] = [
     TemperatureMapper(),
     MaxTokensMapper(),
     ThinkingBudgetMapper(),
     ThinkingLevelMapper(),
     OutputSchemaMapper(),
+    WebSearchMapper(),
 ]
 
 __all__ = ["GOOGLE_PARAMETER_MAPPERS"]

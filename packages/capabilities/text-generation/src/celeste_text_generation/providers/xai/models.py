@@ -1,7 +1,7 @@
 """XAI models for text generation."""
 
 from celeste import Model, Provider
-from celeste.constraints import Choice, Range, Schema
+from celeste.constraints import Bool, Choice, Range, Schema
 from celeste.core import Parameter
 from celeste_text_generation.parameters import TextGenerationParameter
 
@@ -15,6 +15,9 @@ MODELS: list[Model] = [
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0),
             Parameter.MAX_TOKENS: Range(min=1, max=30000),
             TextGenerationParameter.OUTPUT_SCHEMA: Schema(),
+            TextGenerationParameter.WEB_SEARCH: Bool(),
+            TextGenerationParameter.X_SEARCH: Bool(),
+            TextGenerationParameter.CODE_EXECUTION: Bool(),
         },
     ),
     Model(
@@ -26,6 +29,9 @@ MODELS: list[Model] = [
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0),
             Parameter.MAX_TOKENS: Range(min=1, max=30000),
             TextGenerationParameter.OUTPUT_SCHEMA: Schema(),
+            TextGenerationParameter.WEB_SEARCH: Bool(),
+            TextGenerationParameter.X_SEARCH: Bool(),
+            TextGenerationParameter.CODE_EXECUTION: Bool(),
         },
     ),
     Model(
@@ -37,6 +43,9 @@ MODELS: list[Model] = [
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0),
             Parameter.MAX_TOKENS: Range(min=1, max=30000),
             TextGenerationParameter.OUTPUT_SCHEMA: Schema(),
+            TextGenerationParameter.WEB_SEARCH: Bool(),
+            TextGenerationParameter.X_SEARCH: Bool(),
+            TextGenerationParameter.CODE_EXECUTION: Bool(),
         },
     ),
     Model(
@@ -48,6 +57,9 @@ MODELS: list[Model] = [
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0),
             Parameter.MAX_TOKENS: Range(min=1, max=30000),
             TextGenerationParameter.OUTPUT_SCHEMA: Schema(),
+            TextGenerationParameter.WEB_SEARCH: Bool(),
+            TextGenerationParameter.X_SEARCH: Bool(),
+            TextGenerationParameter.CODE_EXECUTION: Bool(),
         },
     ),
     Model(
@@ -59,6 +71,9 @@ MODELS: list[Model] = [
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0),
             Parameter.MAX_TOKENS: Range(min=1, max=64000),
             TextGenerationParameter.OUTPUT_SCHEMA: Schema(),
+            TextGenerationParameter.WEB_SEARCH: Bool(),
+            TextGenerationParameter.X_SEARCH: Bool(),
+            TextGenerationParameter.CODE_EXECUTION: Bool(),
         },
     ),
     Model(
@@ -69,8 +84,11 @@ MODELS: list[Model] = [
         parameter_constraints={
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0),
             Parameter.MAX_TOKENS: Range(min=1, max=16000),
-            TextGenerationParameter.THINKING_LEVEL: Choice(options=["low", "high"]),
+            TextGenerationParameter.THINKING_BUDGET: Choice(options=["low", "high"]),
             TextGenerationParameter.OUTPUT_SCHEMA: Schema(),
+            TextGenerationParameter.WEB_SEARCH: Bool(),
+            TextGenerationParameter.X_SEARCH: Bool(),
+            TextGenerationParameter.CODE_EXECUTION: Bool(),
         },
     ),
 ]
