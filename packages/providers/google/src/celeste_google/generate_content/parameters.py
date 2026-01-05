@@ -1,4 +1,4 @@
-"""Google Gemini API parameter mappers."""
+"""Google GenerateContent API parameter mappers."""
 
 import base64
 import json

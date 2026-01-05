@@ -47,6 +47,24 @@ class MaxTokensMapper(ParameterMapper):
         return request
 
 
+class WebSearchMapper(ParameterMapper):
+    """Map web_search to Mistral tools field."""
+
+    def map(
+        self,
+        request: dict[str, Any],
+        value: object,
+        model: Model,
+    ) -> dict[str, Any]:
+        """Transform web_search into provider request."""
+        validated_value = self._validate_value(value, model)
+        if not validated_value:
+            return request
+
+        request.setdefault("tools", []).append({"type": "web_search"})
+        return request
+
+
 class OutputSchemaMapper(ParameterMapper):
     """Map output_schema to Mistral structured outputs format.
 
@@ -111,4 +129,4 @@ class OutputSchemaMapper(ParameterMapper):
         return TypeAdapter(value).validate_python(parsed)
 
 
-__all__ = ["MaxTokensMapper", "OutputSchemaMapper", "TemperatureMapper"]
+__all__ = ["MaxTokensMapper", "OutputSchemaMapper", "TemperatureMapper", "WebSearchMapper"]

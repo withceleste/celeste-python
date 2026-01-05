@@ -4,7 +4,7 @@ from enum import StrEnum
 
 
 class GoogleGenerateContentEndpoint(StrEnum):
-    """Endpoints for GenerateContent API."""
+    """Endpoints for Google GenerateContent API."""
 
     GENERATE_CONTENT = "/v1beta/models/{model_id}:generateContent"
     STREAM_GENERATE_CONTENT = "/v1beta/models/{model_id}:streamGenerateContent?alt=sse"

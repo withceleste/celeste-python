@@ -1,7 +1,7 @@
 """Mistral models for text generation."""
 
 from celeste import Model, Provider
-from celeste.constraints import Range, Schema
+from celeste.constraints import Bool, Range, Schema
 from celeste.core import Parameter
 from celeste_text_generation.parameters import TextGenerationParameter
 
@@ -15,6 +15,7 @@ MODELS: list[Model] = [
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
             Parameter.MAX_TOKENS: Range(min=1, max=32768, step=1),
             TextGenerationParameter.OUTPUT_SCHEMA: Schema(),
+            TextGenerationParameter.WEB_SEARCH: Bool(),
         },
     ),
     Model(
@@ -26,6 +27,7 @@ MODELS: list[Model] = [
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
             Parameter.MAX_TOKENS: Range(min=1, max=32768, step=1),
             TextGenerationParameter.OUTPUT_SCHEMA: Schema(),
+            TextGenerationParameter.WEB_SEARCH: Bool(),
         },
     ),
     Model(
@@ -37,6 +39,7 @@ MODELS: list[Model] = [
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
             Parameter.MAX_TOKENS: Range(min=1, max=32768, step=1),
             TextGenerationParameter.OUTPUT_SCHEMA: Schema(),
+            TextGenerationParameter.WEB_SEARCH: Bool(),
         },
     ),
     Model(
@@ -48,6 +51,7 @@ MODELS: list[Model] = [
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
             Parameter.MAX_TOKENS: Range(min=1, max=32768, step=1),
             TextGenerationParameter.OUTPUT_SCHEMA: Schema(),
+            TextGenerationParameter.WEB_SEARCH: Bool(),
         },
     ),
     Model(
@@ -59,6 +63,7 @@ MODELS: list[Model] = [
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
             Parameter.MAX_TOKENS: Range(min=1, max=32768, step=1),
             TextGenerationParameter.OUTPUT_SCHEMA: Schema(),
+            TextGenerationParameter.WEB_SEARCH: Bool(),
         },
     ),
     Model(
@@ -70,6 +75,7 @@ MODELS: list[Model] = [
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
             Parameter.MAX_TOKENS: Range(min=1, max=32768, step=1),
             TextGenerationParameter.OUTPUT_SCHEMA: Schema(),
+            TextGenerationParameter.WEB_SEARCH: Bool(),
         },
     ),
     Model(
@@ -81,6 +87,7 @@ MODELS: list[Model] = [
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
             Parameter.MAX_TOKENS: Range(min=1, max=32768, step=1),
             TextGenerationParameter.OUTPUT_SCHEMA: Schema(),
+            TextGenerationParameter.WEB_SEARCH: Bool(),
         },
     ),
     Model(
@@ -92,6 +99,7 @@ MODELS: list[Model] = [
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
             Parameter.MAX_TOKENS: Range(min=1, max=32768, step=1),
             TextGenerationParameter.OUTPUT_SCHEMA: Schema(),
+            TextGenerationParameter.WEB_SEARCH: Bool(),
         },
     ),
     Model(
@@ -103,6 +111,7 @@ MODELS: list[Model] = [
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
             Parameter.MAX_TOKENS: Range(min=1, max=32768, step=1),
             TextGenerationParameter.OUTPUT_SCHEMA: Schema(),
+            TextGenerationParameter.WEB_SEARCH: Bool(),
         },
     ),
     Model(
@@ -114,6 +123,7 @@ MODELS: list[Model] = [
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
             Parameter.MAX_TOKENS: Range(min=1, max=32768, step=1),
             TextGenerationParameter.OUTPUT_SCHEMA: Schema(),
+            TextGenerationParameter.WEB_SEARCH: Bool(),
         },
     ),
     Model(
@@ -125,6 +135,7 @@ MODELS: list[Model] = [
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
             Parameter.MAX_TOKENS: Range(min=1, max=32768, step=1),
             TextGenerationParameter.OUTPUT_SCHEMA: Schema(),
+            TextGenerationParameter.WEB_SEARCH: Bool(),
         },
     ),
     Model(
@@ -136,6 +147,7 @@ MODELS: list[Model] = [
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
             Parameter.MAX_TOKENS: Range(min=1, max=32768, step=1),
             TextGenerationParameter.OUTPUT_SCHEMA: Schema(),
+            TextGenerationParameter.WEB_SEARCH: Bool(),
         },
     ),
     Model(
@@ -147,6 +159,7 @@ MODELS: list[Model] = [
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
             Parameter.MAX_TOKENS: Range(min=1, max=32768, step=1),
             TextGenerationParameter.OUTPUT_SCHEMA: Schema(),
+            TextGenerationParameter.WEB_SEARCH: Bool(),
         },
     ),
     Model(
@@ -158,6 +171,7 @@ MODELS: list[Model] = [
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
             Parameter.MAX_TOKENS: Range(min=1, max=32768, step=1),
             TextGenerationParameter.OUTPUT_SCHEMA: Schema(),
+            TextGenerationParameter.WEB_SEARCH: Bool(),
         },
     ),
     Model(
@@ -170,6 +184,7 @@ MODELS: list[Model] = [
             Parameter.MAX_TOKENS: Range(min=1, max=32768, step=1),
             TextGenerationParameter.THINKING_BUDGET: Range(min=-1, max=32768, step=1),
             TextGenerationParameter.OUTPUT_SCHEMA: Schema(),
+            TextGenerationParameter.WEB_SEARCH: Bool(),
         },
     ),
     Model(
@@ -182,6 +197,7 @@ MODELS: list[Model] = [
             Parameter.MAX_TOKENS: Range(min=1, max=32768, step=1),
             TextGenerationParameter.THINKING_BUDGET: Range(min=-1, max=32768, step=1),
             TextGenerationParameter.OUTPUT_SCHEMA: Schema(),
+            TextGenerationParameter.WEB_SEARCH: Bool(),
         },
     ),
 ]

@@ -1,4 +1,4 @@
-"""Google GenerateContent API client with shared implementation."""
+"""Google GenerateContent API client mixin."""
 
 from collections.abc import AsyncIterator
 from typing import Any
