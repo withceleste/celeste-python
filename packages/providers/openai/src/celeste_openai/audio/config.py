@@ -4,7 +4,7 @@ from enum import StrEnum
 
 
 class OpenAIAudioEndpoint(StrEnum):
-    """Endpoints for Audio API."""
+    """Endpoints for OpenAI Audio API."""
 
     CREATE_SPEECH = "/v1/audio/speech"
     CREATE_TRANSCRIPTION = "/v1/audio/transcriptions"

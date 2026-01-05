@@ -4,7 +4,7 @@ from enum import StrEnum
 
 
 class OpenAIResponsesEndpoint(StrEnum):
-    """Endpoints for Responses API."""
+    """Endpoints for OpenAI Responses API."""
 
     CREATE_RESPONSE = "/v1/responses"
     LIST_MODELS = "/v1/models"

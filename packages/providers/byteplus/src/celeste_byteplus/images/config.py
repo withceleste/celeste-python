@@ -4,7 +4,7 @@ from enum import StrEnum
 
 
 class BytePlusImagesEndpoint(StrEnum):
-    """Endpoints for Images API."""
+    """Endpoints for BytePlus Images API."""
 
     CREATE_IMAGE = "/api/v3/images/generations"
 

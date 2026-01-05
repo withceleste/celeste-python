@@ -4,7 +4,7 @@ from enum import StrEnum
 
 
 class GoogleImagenEndpoint(StrEnum):
-    """Endpoints for Imagen API."""
+    """Endpoints for Google Imagen API."""
 
     CREATE_IMAGE = "/v1beta/models/{model_id}:predict"
 

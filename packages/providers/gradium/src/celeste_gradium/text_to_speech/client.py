@@ -1,4 +1,4 @@
-"""Gradium Text-to-Speech API client with shared implementation."""
+"""Gradium TextToSpeech API client mixin."""
 
 import base64
 import json

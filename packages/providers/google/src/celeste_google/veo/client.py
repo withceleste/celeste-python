@@ -1,4 +1,4 @@
-"""Google Veo API client with shared implementation."""
+"""Google Veo API client mixin."""
 
 import asyncio
 import json

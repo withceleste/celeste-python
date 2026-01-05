@@ -1,4 +1,4 @@
-"""Mistral Chat API client with shared implementation."""
+"""Mistral Chat API client mixin."""
 
 from collections.abc import AsyncIterator
 from typing import Any

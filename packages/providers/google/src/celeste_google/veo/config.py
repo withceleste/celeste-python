@@ -4,7 +4,7 @@ from enum import StrEnum
 
 
 class GoogleVeoEndpoint(StrEnum):
-    """Endpoints for Veo API."""
+    """Endpoints for Google Veo API."""
 
     CREATE_VIDEO = "/v1beta/models/{model_id}:predictLongRunning"
     GET_OPERATION = "/v1beta/{operation_name}"

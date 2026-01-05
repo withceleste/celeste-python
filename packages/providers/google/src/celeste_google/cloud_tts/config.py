@@ -4,7 +4,7 @@ from enum import StrEnum
 
 
 class GoogleCloudTTSEndpoint(StrEnum):
-    """Endpoints for CloudTTS API."""
+    """Endpoints for Google CloudTTS API."""
 
     CREATE_SPEECH = "/v1/text:synthesize"
     LIST_VOICES = "/v1/voices"

@@ -4,7 +4,7 @@ from enum import StrEnum
 
 
 class CohereChatEndpoint(StrEnum):
-    """Endpoints for Chat API."""
+    """Endpoints for Cohere Chat API."""
 
     CREATE_CHAT = "/v2/chat"
     LIST_MODELS = "/v2/models"

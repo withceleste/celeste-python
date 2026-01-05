@@ -1,4 +1,4 @@
-"""Google Imagen API client with shared implementation."""
+"""Google Imagen API client mixin."""
 
 from typing import Any
 

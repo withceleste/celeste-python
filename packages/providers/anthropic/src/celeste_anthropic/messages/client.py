@@ -1,4 +1,4 @@
-"""Anthropic Messages API client with shared implementation."""
+"""Anthropic Messages API client mixin."""
 
 from collections.abc import AsyncIterator
 from typing import Any

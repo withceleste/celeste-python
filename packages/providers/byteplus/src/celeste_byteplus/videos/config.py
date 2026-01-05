@@ -4,7 +4,7 @@ from enum import StrEnum
 
 
 class BytePlusVideosEndpoint(StrEnum):
-    """Endpoints for Videos API."""
+    """Endpoints for BytePlus Videos API."""
 
     CREATE_VIDEO = "/api/v3/contents/generations/tasks"
     GET_VIDEO_STATUS = "/api/v3/contents/generations/tasks/{task_id}"

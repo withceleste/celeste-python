@@ -1,4 +1,4 @@
-"""ElevenLabs Text-to-Speech API client with shared implementation."""
+"""ElevenLabs TextToSpeech API client mixin."""
 
 from collections.abc import AsyncIterator
 from typing import Any

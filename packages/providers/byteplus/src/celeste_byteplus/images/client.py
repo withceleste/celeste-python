@@ -1,4 +1,4 @@
-"""BytePlus Images API client with shared implementation."""
+"""BytePlus Images API client mixin."""
 
 from collections.abc import AsyncIterator
 from typing import Any

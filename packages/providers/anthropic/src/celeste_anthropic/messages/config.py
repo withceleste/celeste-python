@@ -4,7 +4,7 @@ from enum import StrEnum
 
 
 class AnthropicMessagesEndpoint(StrEnum):
-    """Endpoints for Messages API."""
+    """Endpoints for Anthropic Messages API."""
 
     CREATE_MESSAGE = "/v1/messages"
     COUNT_MESSAGE_TOKENS = "/v1/messages/count_tokens"

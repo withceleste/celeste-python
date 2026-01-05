@@ -4,7 +4,7 @@ from enum import StrEnum
 
 
 class OpenAIVideosEndpoint(StrEnum):
-    """Endpoints for Videos API."""
+    """Endpoints for OpenAI Videos API."""
 
     CREATE_VIDEO = "/v1/videos"
 

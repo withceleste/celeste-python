@@ -1,4 +1,4 @@
-"""BFL Images API client with shared implementation."""
+"""BFL Images API client mixin."""
 
 import asyncio
 import time

@@ -4,7 +4,7 @@ from enum import StrEnum
 
 
 class ElevenLabsTextToSpeechEndpoint(StrEnum):
-    """Endpoints for Text-to-Speech API."""
+    """Endpoints for ElevenLabs Text-to-Speech API."""
 
     CREATE_SPEECH = "/v1/text-to-speech/{voice_id}"
     STREAM_SPEECH = "/v1/text-to-speech/{voice_id}/stream"

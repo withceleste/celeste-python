@@ -4,7 +4,7 @@ from enum import StrEnum
 
 
 class MistralChatEndpoint(StrEnum):
-    """Endpoints for Chat API."""
+    """Endpoints for Mistral Chat API."""
 
     CREATE_CHAT_COMPLETION = "/v1/chat/completions"
     CREATE_FIM_COMPLETION = "/v1/fim/completions"

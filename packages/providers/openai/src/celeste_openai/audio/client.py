@@ -1,4 +1,4 @@
-"""OpenAI Audio API client with shared implementation."""
+"""OpenAI Audio API client mixin."""
 
 from typing import Any
 

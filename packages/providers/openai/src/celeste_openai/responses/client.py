@@ -1,4 +1,4 @@
-"""OpenAI Responses API client with shared implementation."""
+"""OpenAI Responses API client mixin."""
 
 from collections.abc import AsyncIterator
 from typing import Any

@@ -1,4 +1,4 @@
-"""ElevenLabs Text To Speech API parameter mappers."""
+"""ElevenLabs TextToSpeech API parameter mappers."""
 
 from typing import Any
 

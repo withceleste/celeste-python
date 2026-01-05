@@ -4,7 +4,7 @@ from enum import StrEnum
 
 
 class OpenAIImagesEndpoint(StrEnum):
-    """Endpoints for Images API."""
+    """Endpoints for OpenAI Images API."""
 
     CREATE_IMAGE = "/v1/images/generations"
     CREATE_EDIT = "/v1/images/edits"

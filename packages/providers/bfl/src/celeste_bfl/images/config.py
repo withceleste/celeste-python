@@ -4,7 +4,7 @@ from enum import StrEnum
 
 
 class BFLImagesEndpoint(StrEnum):
-    """Endpoints for Images API."""
+    """Endpoints for BFL Images API."""
 
     CREATE_IMAGE = "/v1/{model_id}"
 

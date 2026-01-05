@@ -1,4 +1,4 @@
-"""BytePlus Videos API client with shared implementation."""
+"""BytePlus Videos API client mixin."""
 
 import asyncio
 import logging

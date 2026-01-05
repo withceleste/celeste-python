@@ -1,4 +1,4 @@
-"""Gradium TTS API parameter mappers."""
+"""Gradium TextToSpeech API parameter mappers."""
 
 from typing import Any
 
