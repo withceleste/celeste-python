@@ -1,8 +1,9 @@
 """Unified artifact types for Celeste."""
 
+import base64
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_serializer
 
 from celeste.mime_types import AudioMimeType, ImageMimeType, MimeType, VideoMimeType
 
@@ -23,6 +24,13 @@ class Artifact(BaseModel):
     path: str | None = None
     mime_type: MimeType | None = None
     metadata: dict[str, Any] = Field(default_factory=dict)
+
+    @field_serializer("data")
+    def serialize_data(self, value: bytes | None) -> str | None:
+        """Serialize bytes as base64 string for JSON compatibility."""
+        if value is None:
+            return None
+        return base64.b64encode(value).decode("ascii")
 
     @property
     def has_content(self) -> bool:

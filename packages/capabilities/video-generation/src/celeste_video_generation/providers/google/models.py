@@ -45,7 +45,7 @@ MODELS: list[Model] = [
         display_name="Veo 3.1 (Preview)",
         parameter_constraints={
             VideoGenerationParameter.ASPECT_RATIO: Choice(options=["16:9", "9:16"]),
-            VideoGenerationParameter.RESOLUTION: Choice(options=["720p", "1080p"]),
+            VideoGenerationParameter.RESOLUTION: Choice(options=["720p", "1080p", "4k"]),
             VideoGenerationParameter.DURATION: Choice(options=[4, 6, 8]),
             VideoGenerationParameter.REFERENCE_IMAGES: ImagesConstraint(
                 supported_mime_types=VEO_SUPPORTED_MIME_TYPES,
@@ -65,7 +65,7 @@ MODELS: list[Model] = [
         display_name="Veo 3.1 Fast (Preview)",
         parameter_constraints={
             VideoGenerationParameter.ASPECT_RATIO: Choice(options=["16:9", "9:16"]),
-            VideoGenerationParameter.RESOLUTION: Choice(options=["720p", "1080p"]),
+            VideoGenerationParameter.RESOLUTION: Choice(options=["720p", "1080p", "4k"]),
             VideoGenerationParameter.DURATION: Choice(options=[4, 6, 8]),
             VideoGenerationParameter.FIRST_FRAME: ImageConstraint(
                 supported_mime_types=VEO_SUPPORTED_MIME_TYPES,
