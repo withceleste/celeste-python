@@ -69,8 +69,12 @@ def test_sync_generate() -> None:
         model="imagen-4.0-fast-generate-001",
     )
 
-    response = client.sync.generate(prompt="A red circle")
+    response = client.sync.generate(prompt="A red circle", num_images=1)
 
     assert isinstance(response, ImageOutput)
-    assert isinstance(response.content, ImageArtifact)
-    assert response.content.has_content
+    # Content may be list or single artifact depending on provider
+    content = (
+        response.content[0] if isinstance(response.content, list) else response.content
+    )
+    assert isinstance(content, ImageArtifact)
+    assert content.has_content
