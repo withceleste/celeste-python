@@ -27,6 +27,7 @@ dependencies = [
     "websockets>=15.0",
     "asgiref>=3.11.0",
     "filetype>=1.2.0",
+    "google-auth>=2.0.0",
 ]
 
 [project.urls]
