@@ -110,6 +110,9 @@ MODELS: list[Model] = [
             TextGenerationParameter.THINKING_BUDGET: Choice(
                 options=["low", "medium", "high", "xhigh"]
             ),
+            TextGenerationParameter.VERBOSITY: Choice(
+                options=["low", "medium", "high"]
+            ),
             TextGenerationParameter.OUTPUT_SCHEMA: Schema(),
         },
     ),
