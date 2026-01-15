@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field
 
 from celeste.artifacts import AudioArtifact, ImageArtifact, VideoArtifact
 from celeste.constraints import Constraint
-from celeste.core import Capability, InputType
+from celeste.core import InputType
 
 
 class Input(BaseModel):
@@ -47,22 +47,6 @@ class Chunk[Content](BaseModel):
     metadata: dict[str, Any] = Field(default_factory=dict)
 
 
-_inputs: dict[Capability, type[Input]] = {}
-
-
-def register_input(capability: Capability, input_class: type[Input]) -> None:
-    """Register an Input class for a capability."""
-    _inputs[capability] = input_class
-
-
-def get_input_class(capability: Capability) -> type[Input]:
-    """Get the registered Input class for a capability."""
-    if capability not in _inputs:
-        msg = f"No Input class registered for capability: {capability}"
-        raise KeyError(msg)
-    return _inputs[capability]
-
-
 # Centralized mapping: field type → InputType
 INPUT_TYPE_MAPPING: dict[type, InputType] = {
     str: InputType.TEXT,
@@ -70,26 +54,6 @@ INPUT_TYPE_MAPPING: dict[type, InputType] = {
     VideoArtifact: InputType.VIDEO,
     AudioArtifact: InputType.AUDIO,
 }
-
-
-def get_required_input_types(capability: Capability) -> set[InputType]:
-    """Derive required input types from Input class fields.
-
-    Introspects the Input class registered for a capability and returns
-    the set of InputTypes based on field annotations.
-
-    Args:
-        capability: The capability to get required input types for.
-
-    Returns:
-        Set of InputType values required by the capability's Input class.
-    """
-    input_class = get_input_class(capability)
-    return {
-        INPUT_TYPE_MAPPING[field.annotation]
-        for field in input_class.model_fields.values()
-        if field.annotation in INPUT_TYPE_MAPPING
-    }
 
 
 def _extract_input_type(param_type: type) -> InputType | None:
@@ -144,7 +108,4 @@ __all__ = [
     "Output",
     "Usage",
     "get_constraint_input_type",
-    "get_input_class",
-    "get_required_input_types",
-    "register_input",
 ]

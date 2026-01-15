@@ -11,6 +11,7 @@ class ApplicationMimeType(MimeType):
     """Standard MIME types for application data."""
 
     JSON = "application/json"
+    OCTET_STREAM = "application/octet-stream"
 
 
 class ImageMimeType(MimeType):

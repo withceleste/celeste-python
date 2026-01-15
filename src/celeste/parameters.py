@@ -6,7 +6,7 @@ from typing import Any, TypedDict
 
 from celeste.exceptions import UnsupportedParameterError
 from celeste.models import Model
-from celeste.types import StructuredOutput
+from celeste.types import TextContent
 
 
 class Parameters(TypedDict, total=False):
@@ -33,9 +33,7 @@ class ParameterMapper(ABC):
         """
         ...
 
-    def parse_output(
-        self, content: StructuredOutput, value: object | None
-    ) -> StructuredOutput:
+    def parse_output(self, content: TextContent, value: object | None) -> TextContent:
         """Optionally transform parsed content based on parameter value (default: return unchanged)."""
         return content
 

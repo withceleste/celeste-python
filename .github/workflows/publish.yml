@@ -41,84 +41,8 @@ jobs:
     uses: ./.github/workflows/ci.yml
     secrets: inherit
 
-  detect-changes:
-    needs: run-ci
-    runs-on: ubuntu-latest
-    outputs:
-      packages: ${{ steps.build-matrix.outputs.packages }}
-      has-changes: ${{ steps.build-matrix.outputs.has-changes }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - id: get-base
-        run: |
-          # Get previous tag to compare against (tag pushes don't have github.event.before)
-          PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
-          if [ -z "$PREVIOUS_TAG" ]; then
-            echo "base=" >> $GITHUB_OUTPUT
-            echo "run-all=true" >> $GITHUB_OUTPUT
-          else
-            echo "base=$PREVIOUS_TAG" >> $GITHUB_OUTPUT
-            echo "run-all=false" >> $GITHUB_OUTPUT
-          fi
-      - uses: dorny/paths-filter@v3
-        id: filter
-        if: steps.get-base.outputs.run-all != 'true'
-        with:
-          base: ${{ steps.get-base.outputs.base }}
-          filters: |
-            text-generation:
-              - 'packages/capabilities/text-generation/**'
-              - '!**/pyproject.toml'
-            image-generation:
-              - 'packages/capabilities/image-generation/**'
-              - '!**/pyproject.toml'
-            video-generation:
-              - 'packages/capabilities/video-generation/**'
-              - '!**/pyproject.toml'
-            speech-generation:
-              - 'packages/capabilities/speech-generation/**'
-              - '!**/pyproject.toml'
-            core:
-              - 'src/celeste/**'
-              - '!**/pyproject.toml'
-      - id: build-matrix
-        run: |
-          PACKAGES=()
-
-          # If first release or paths-filter was skipped, run all
-          if [[ "${{ steps.get-base.outputs.run-all }}" == "true" ]]; then
-            PACKAGES=("text-generation" "image-generation" "video-generation" "speech-generation")
-          else
-            CORE="${{ steps.filter.outputs.core }}"
-            if [[ "$CORE" == "true" || "${{ steps.filter.outputs.text-generation }}" == "true" ]]; then
-              PACKAGES+=("text-generation")
-            fi
-            if [[ "$CORE" == "true" || "${{ steps.filter.outputs.image-generation }}" == "true" ]]; then
-              PACKAGES+=("image-generation")
-            fi
-            if [[ "$CORE" == "true" || "${{ steps.filter.outputs.video-generation }}" == "true" ]]; then
-              PACKAGES+=("video-generation")
-            fi
-            if [[ "$CORE" == "true" || "${{ steps.filter.outputs.speech-generation }}" == "true" ]]; then
-              PACKAGES+=("speech-generation")
-            fi
-          fi
-
-          # Convert to JSON array
-          JSON=$(printf '%s\n' "${PACKAGES[@]}" | jq -R . | jq -s -c .)
-          echo "packages=$JSON" >> $GITHUB_OUTPUT
-
-          if [[ ${#PACKAGES[@]} -gt 0 ]]; then
-            echo "has-changes=true" >> $GITHUB_OUTPUT
-          else
-            echo "has-changes=false" >> $GITHUB_OUTPUT
-          fi
-
   integration-tests:
-    needs: [validate-release, run-ci, detect-changes]
-    if: needs.detect-changes.outputs.has-changes == 'true'
+    needs: [validate-release, run-ci]
     runs-on: ubuntu-latest
     timeout-minutes: 30
     environment:
@@ -126,10 +50,6 @@ jobs:
     permissions:
       contents: read
       id-token: write
-    strategy:
-      fail-fast: false
-      matrix:
-        package: ${{ fromJSON(needs.detect-changes.outputs.packages) }}
     steps:
       - uses: actions/checkout@v4
       - id: auth
@@ -150,10 +70,10 @@ jobs:
           XAI_API_KEY: ${{ secrets.XAI_API_KEY }}
           ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
           GRADIUM_API_KEY: ${{ secrets.GRADIUM_API_KEY }}
-        run: uv run pytest packages/capabilities/${{ matrix.package }}/tests/integration_tests/ -m integration -v
+        run: uv run pytest tests/integration_tests -m integration -v --dist=worksteal -n auto
 
   build:
-    needs: [validate-release, run-ci, detect-changes, integration-tests]
+    needs: [validate-release, run-ci, integration-tests]
     if: |
       always() &&
       needs.validate-release.result == 'success' &&
@@ -165,7 +85,7 @@ jobs:
         with:
           fetch-depth: 1
       - uses: ./.github/actions/setup-python-uv
-      - run: uv build --all-packages
+      - run: uv build
       - run: |
           uv pip install twine
           uv run twine check dist/*

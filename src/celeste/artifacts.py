@@ -1,10 +1,16 @@
 """Unified artifact types for Celeste."""
 
+import base64
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_serializer
 
-from celeste.mime_types import AudioMimeType, ImageMimeType, MimeType, VideoMimeType
+from celeste.mime_types import (
+    AudioMimeType,
+    ImageMimeType,
+    MimeType,
+    VideoMimeType,
+)
 
 
 class Artifact(BaseModel):
@@ -24,6 +30,13 @@ class Artifact(BaseModel):
     mime_type: MimeType | None = None
     metadata: dict[str, Any] = Field(default_factory=dict)
 
+    @field_serializer("data", when_used="json")
+    def serialize_data(self, value: bytes | None) -> str | None:
+        """Serialize bytes as base64 string for JSON compatibility."""
+        if value is None:
+            return None
+        return base64.b64encode(value).decode("ascii")
+
     @property
     def has_content(self) -> bool:
         """Check if artifact has any content."""
@@ -32,6 +45,24 @@ class Artifact(BaseModel):
             or self.data
             or (self.path and self.path.strip())
         )
+
+    def get_bytes(self) -> bytes:
+        """Get raw bytes, reading from path if needed.
+
+        Raises:
+            ValueError: If artifact has no data or path.
+        """
+        if self.data:
+            return self.data
+        if self.path:
+            with open(self.path, "rb") as f:
+                return f.read()
+        msg = "Artifact must have data or path to get bytes"
+        raise ValueError(msg)
+
+    def get_base64(self) -> str:
+        """Get base64-encoded string of the content."""
+        return base64.b64encode(self.get_bytes()).decode("utf-8")
 
 
 class ImageArtifact(Artifact):

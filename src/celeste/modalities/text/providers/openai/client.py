@@ -1,0 +1,166 @@
+"""OpenAI text client."""
+
+from typing import Any, Unpack
+
+from celeste.parameters import ParameterMapper
+from celeste.providers.openai.responses.client import (
+    OpenAIResponsesClient as OpenAIResponsesMixin,
+)
+from celeste.providers.openai.responses.streaming import (
+    OpenAIResponsesStream as _OpenAIResponsesStream,
+)
+from celeste.types import ImageContent, TextContent, VideoContent
+from celeste.utils import build_image_data_url
+
+from ...client import TextClient
+from ...io import (
+    TextChunk,
+    TextFinishReason,
+    TextInput,
+    TextOutput,
+    TextUsage,
+)
+from ...parameters import TextParameters
+from ...streaming import TextStream
+from .parameters import OPENAI_PARAMETER_MAPPERS
+
+
+class OpenAITextStream(_OpenAIResponsesStream, TextStream):
+    """OpenAI streaming for text modality."""
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+        self._response_data: dict[str, Any] | None = None
+
+    def _parse_chunk_usage(self, event_data: dict[str, Any]) -> TextUsage | None:
+        """Parse and wrap usage from SSE event."""
+        usage = super()._parse_chunk_usage(event_data)
+        if usage:
+            return TextUsage(**usage)
+        return None
+
+    def _parse_chunk_finish_reason(
+        self, event_data: dict[str, Any]
+    ) -> TextFinishReason | None:
+        """Parse and wrap finish reason from SSE event."""
+        finish_reason = super()._parse_chunk_finish_reason(event_data)
+        if finish_reason:
+            return TextFinishReason(reason=finish_reason.reason)
+        return None
+
+    def _parse_chunk(self, event_data: dict[str, Any]) -> TextChunk | None:
+        """Parse one SSE event into a typed chunk."""
+        event_type = event_data.get("type")
+        if event_type == "response.completed":
+            response = event_data.get("response")
+            if isinstance(response, dict):
+                self._response_data = response
+
+        content = self._parse_chunk_content(event_data)
+        if content is None:
+            usage = self._parse_chunk_usage(event_data)
+            finish_reason = self._parse_chunk_finish_reason(event_data)
+            if usage is None and finish_reason is None:
+                return None
+            content = ""
+
+        return TextChunk(
+            content=content,
+            finish_reason=self._parse_chunk_finish_reason(event_data),
+            usage=self._parse_chunk_usage(event_data),
+            metadata={"event_data": event_data},
+        )
+
+    def _aggregate_content(self, chunks: list[TextChunk]) -> str:
+        """Aggregate streamed text content."""
+        return "".join(chunk.content for chunk in chunks)
+
+    def _aggregate_event_data(self, chunks: list[TextChunk]) -> list[dict[str, Any]]:
+        """Collect raw events (filtering happens in _build_stream_metadata)."""
+        events: list[dict[str, Any]] = []
+        if self._response_data is not None:
+            events.append(self._response_data)
+        for chunk in chunks:
+            event_data = chunk.metadata.get("event_data")
+            if isinstance(event_data, dict):
+                events.append(event_data)
+        return events
+
+
+class OpenAITextClient(OpenAIResponsesMixin, TextClient):
+    """OpenAI text client using Responses API."""
+
+    @classmethod
+    def parameter_mappers(cls) -> list[ParameterMapper]:
+        return OPENAI_PARAMETER_MAPPERS
+
+    async def generate(
+        self,
+        prompt: str,
+        **parameters: Unpack[TextParameters],
+    ) -> TextOutput:
+        """Generate text from prompt."""
+        inputs = TextInput(prompt=prompt)
+        return await self._predict(inputs, **parameters)
+
+    async def analyze(
+        self,
+        prompt: str,
+        *,
+        image: ImageContent | None = None,
+        video: VideoContent | None = None,
+        **parameters: Unpack[TextParameters],
+    ) -> TextOutput:
+        """Analyze image(s) or video(s) with prompt."""
+        inputs = TextInput(prompt=prompt, image=image, video=video)
+        return await self._predict(inputs, **parameters)
+
+    def _init_request(self, inputs: TextInput) -> dict[str, Any]:
+        """Initialize request with input content."""
+        content: list[dict[str, Any]] = []
+
+        if inputs.image is not None:
+            images = inputs.image if isinstance(inputs.image, list) else [inputs.image]
+            for img in images:
+                content.append(
+                    {"type": "input_image", "image_url": build_image_data_url(img)}
+                )
+
+        content.append({"type": "input_text", "text": inputs.prompt})
+
+        return {"input": [{"role": "user", "content": content}]}
+
+    def _parse_usage(self, response_data: dict[str, Any]) -> TextUsage:
+        """Parse usage from response."""
+        usage = super()._parse_usage(response_data)
+        return TextUsage(**usage)
+
+    def _parse_content(
+        self,
+        response_data: dict[str, Any],
+        **parameters: Unpack[TextParameters],
+    ) -> TextContent:
+        """Parse text content from response."""
+        output = super()._parse_content(response_data)
+
+        # Extract text from OpenAI Responses API format
+        for item in output:
+            if item.get("type") == "message":
+                for part in item.get("content", []):
+                    if part.get("type") == "output_text":
+                        text = part.get("text") or ""
+                        return self._transform_output(text, **parameters)
+
+        return self._transform_output("", **parameters)
+
+    def _parse_finish_reason(self, response_data: dict[str, Any]) -> TextFinishReason:
+        """Parse finish reason from response."""
+        base_reason = super()._parse_finish_reason(response_data)
+        return TextFinishReason(reason=base_reason.reason)
+
+    def _stream_class(self) -> type[TextStream]:
+        """Return the Stream class for this provider."""
+        return OpenAITextStream
+
+
+__all__ = ["OpenAITextClient", "OpenAITextStream"]

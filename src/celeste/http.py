@@ -1,5 +1,6 @@
 """HTTP client with persistent connection pooling for AI provider APIs."""
 
+import asyncio
 import json
 import logging
 from collections.abc import AsyncIterator
@@ -8,7 +9,7 @@ from typing import Any
 import httpx
 from httpx_sse import aconnect_sse
 
-from celeste.core import Capability, Provider
+from celeste.core import Modality, Provider
 
 logger = logging.getLogger(__name__)
 
@@ -32,17 +33,26 @@ class HTTPClient:
             max_keepalive_connections: Maximum idle keepalive connections.
         """
         self._client: httpx.AsyncClient | None = None
+        self._client_loop: int | None = None
         self._max_connections = max_connections
         self._max_keepalive_connections = max_keepalive_connections
 
     async def _get_client(self) -> httpx.AsyncClient:
         """Get or create httpx.AsyncClient with connection pooling."""
+        current_loop = asyncio.get_running_loop()
+
+        # Recreate client if event loop changed (prevents "Event loop is closed" errors)
+        if self._client is not None and self._client_loop != id(current_loop):
+            self._client = None
+
         if self._client is None:
             limits = httpx.Limits(
                 max_connections=self._max_connections,
                 max_keepalive_connections=self._max_keepalive_connections,
             )
             self._client = httpx.AsyncClient(limits=limits)  # nosec B113
+            self._client_loop = id(current_loop)
+
         return self._client
 
     async def post(
@@ -197,24 +207,22 @@ class HTTPClient:
 
 
 # Module-level registry of shared HTTPClient instances
-_http_clients: dict[tuple[Provider, Capability], HTTPClient] = {}
+_http_clients: dict[tuple[Provider, Modality], HTTPClient] = {}
 
 
-def get_http_client(provider: Provider, capability: Capability) -> HTTPClient:
-    """Get or create shared HTTP client for provider and capability combination.
+def get_http_client(provider: Provider, modality: Modality) -> HTTPClient:
+    """Get or create shared HTTP client for provider and modality combination.
 
     Args:
         provider: The AI provider.
-        capability: The capability being used.
+        modality: The modality being used.
 
     Returns:
-        Shared HTTPClient instance for this provider and capability.
+        Shared HTTPClient instance for this provider and modality.
     """
-    key = (provider, capability)
-
+    key = (provider, modality)
     if key not in _http_clients:
         _http_clients[key] = HTTPClient()
-
     return _http_clients[key]
 
 

@@ -8,23 +8,8 @@ import pytest
 from pydantic import SecretStr
 
 from celeste.core import Provider
-from celeste.credentials import PROVIDER_CREDENTIAL_MAP, Credentials
+from celeste.credentials import Credentials, get_auth_config, register_auth
 from celeste.exceptions import MissingCredentialsError
-
-# Single source of truth for environment variable names
-ENV_VAR_NAMES = [
-    "OPENAI_API_KEY",
-    "ANTHROPIC_API_KEY",
-    "GOOGLE_API_KEY",
-    "MISTRAL_API_KEY",
-    "HUGGINGFACE_TOKEN",
-    "STABILITYAI_API_KEY",
-    "REPLICATE_API_TOKEN",
-    "COHERE_API_KEY",
-    "XAI_API_KEY",
-    "LUMA_API_KEY",
-    "TOPAZLABS_API_KEY",
-]
 
 
 @pytest.fixture(autouse=True)
@@ -60,6 +45,52 @@ def clean_environment(monkeypatch: pytest.MonkeyPatch) -> Generator[None, None, 
     # Clear all environment variables
     with patch.dict(os.environ, clear=True):
         yield
+
+
+@pytest.fixture(autouse=True)
+def clean_auth_registry(
+    clean_environment: Generator[None, None, None],
+) -> Generator[None, None, None]:
+    """Keep auth registry deterministic across tests.
+
+    Tests must not depend on provider package import side-effects.
+    """
+    import importlib
+
+    credentials_module = importlib.import_module("celeste.credentials")
+
+    credentials_module._auth_registry.clear()
+    yield
+    credentials_module._auth_registry.clear()
+
+
+@pytest.fixture(autouse=True)
+def register_test_providers(clean_auth_registry: Generator[None, None, None]) -> None:
+    """Register a small set of providers for unit tests."""
+    register_auth(  # nosec B106 - env var name, not actual secret
+        provider=Provider.OPENAI,
+        secret_name="OPENAI_API_KEY",
+        header="Authorization",
+        prefix="Bearer ",
+    )
+    register_auth(  # nosec B106 - env var name, not actual secret
+        provider=Provider.ANTHROPIC,
+        secret_name="ANTHROPIC_API_KEY",
+        header="x-api-key",
+        prefix="",
+    )
+    register_auth(  # nosec B106 - env var name, not actual secret
+        provider=Provider.GOOGLE,
+        secret_name="GOOGLE_API_KEY",
+        header="x-goog-api-key",
+        prefix="",
+    )
+    register_auth(  # nosec B106 - env var name, not actual secret
+        provider=Provider.MISTRAL,
+        secret_name="MISTRAL_API_KEY",
+        header="Authorization",
+        prefix="Bearer ",
+    )
 
 
 class TestCredentialsLoading:
@@ -99,14 +130,19 @@ class TestCredentialsLoading:
     def test_empty_credentials(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Test when no credentials are set."""
         # Arrange - clear any existing env vars
-        for env_var in ENV_VAR_NAMES:
+        for env_var in (
+            "OPENAI_API_KEY",
+            "ANTHROPIC_API_KEY",
+            "GOOGLE_API_KEY",
+            "MISTRAL_API_KEY",
+        ):
             monkeypatch.delenv(env_var, raising=False)
 
         # Act
         creds = Credentials()  # type: ignore[call-arg]
 
-        # Assert - verify ALL credential fields are None
-        for _provider, field_name in PROVIDER_CREDENTIAL_MAP.items():
+        # Assert - verify all configured fields are None
+        for field_name in type(creds).model_fields:
             assert getattr(creds, field_name) is None, (
                 f"{field_name} should be None when no env vars set"
             )
@@ -229,8 +265,13 @@ class TestListAvailableProviders:
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """Test empty list when no credentials configured."""
-        # Arrange - clear all credential env vars
-        for env_var in ENV_VAR_NAMES:
+        # Arrange - clear any registered provider env vars (defensive)
+        for env_var in (
+            "OPENAI_API_KEY",
+            "ANTHROPIC_API_KEY",
+            "GOOGLE_API_KEY",
+            "MISTRAL_API_KEY",
+        ):
             monkeypatch.delenv(env_var, raising=False)
         creds = Credentials()  # type: ignore[call-arg]
 
@@ -307,30 +348,14 @@ class TestCredentialSecurity:
 
 
 class TestProviderMapping:
-    """Test integrity of provider-credential mapping."""
+    """Test integrity of registry-driven credential configuration."""
 
-    def test_all_mapped_fields_exist(self) -> None:
-        """Test all fields in mapping exist on Credentials class."""
-        # Arrange
-        creds = Credentials()  # type: ignore[call-arg]
-
-        # Act & Assert - verify each mapping points to a real field
-        for provider, field_name in PROVIDER_CREDENTIAL_MAP.items():
-            assert hasattr(creds, field_name), (
-                f"Missing field {field_name} for {provider}"
-            )
-
-    def test_all_providers_have_credential_mapping(self) -> None:
-        """Every Provider enum value has a corresponding entry in PROVIDER_CREDENTIAL_MAP."""
-        # Get all providers that should have credentials
-        # Note: All providers in Provider enum require credentials
-        all_providers = list(Provider)
-
-        # Verify each provider has a mapping
-        for provider in all_providers:
-            assert provider in PROVIDER_CREDENTIAL_MAP, (
-                f"Provider {provider.value} missing from PROVIDER_CREDENTIAL_MAP"
-            )
+    def test_get_auth_config_for_registered_providers(self) -> None:
+        """Registered providers should have an auth config."""
+        secret_name, header, prefix = get_auth_config(Provider.OPENAI)  # type: ignore[misc]
+        assert secret_name == "OPENAI_API_KEY"  # nosec B105 - env var name
+        assert header == "Authorization"
+        assert prefix == "Bearer "
 
 
 class TestEdgeCases:

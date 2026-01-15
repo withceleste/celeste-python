@@ -30,12 +30,7 @@ jobs:
       - uses: ./.github/actions/setup-python-uv
         with:
           python-version: ${{ inputs.python-version || '3.12' }}
-      - run: |
-          if [ -d "packages" ]; then
-            uv run ruff format --check src/celeste tests/ packages/
-          else
-            uv run ruff format --check src/celeste tests/
-          fi
+      - run: uv run ruff format --check src/celeste tests/
 
   lint:
     runs-on: ubuntu-latest
@@ -46,12 +41,7 @@ jobs:
       - uses: ./.github/actions/setup-python-uv
         with:
           python-version: ${{ inputs.python-version || '3.12' }}
-      - run: |
-          if [ -d "packages" ]; then
-            uv run ruff check --output-format=github src/celeste tests/ packages/
-          else
-            uv run ruff check --output-format=github src/celeste tests/
-          fi
+      - run: uv run ruff check --output-format=github src/celeste tests/
 
   type-check:
     runs-on: ubuntu-latest
@@ -62,12 +52,7 @@ jobs:
       - uses: ./.github/actions/setup-python-uv
         with:
           python-version: ${{ inputs.python-version || '3.12' }}
-      - run: |
-          if [ -d "packages" ]; then
-            uv run mypy -p celeste && uv run mypy tests/ && uv run mypy packages/capabilities/image-generation packages/capabilities/text-generation packages/capabilities/video-generation packages/capabilities/speech-generation
-          else
-            uv run mypy -p celeste && uv run mypy tests/
-          fi
+      - run: uv run mypy -p celeste && uv run mypy tests/
 
   security:
     runs-on: ubuntu-latest
@@ -78,12 +63,7 @@ jobs:
       - uses: ./.github/actions/setup-python-uv
         with:
           python-version: ${{ inputs.python-version || '3.12' }}
-      - run: |
-          if [ -d "packages" ]; then
-            uv run bandit -c pyproject.toml -r src/ packages/ -f screen
-          else
-            uv run bandit -c pyproject.toml -r src/ -f screen
-          fi
+      - run: uv run bandit -c pyproject.toml -r src/ -f screen
 
   test:
     if: ${{ !inputs.skip-tests }}

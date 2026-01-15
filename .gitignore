@@ -157,9 +157,5 @@ uv.lock
 
 # Security reports
 bandit-report.json
-mureka.md
 
-# Temporary/audit files
-CHANGELOG_SINCE_RELEASE.md
-MIGRATION_AUDIT_REPORT.md
 scripts/

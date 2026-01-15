@@ -3,8 +3,10 @@
 import pytest
 from pydantic import BaseModel
 
-from celeste.artifacts import ImageArtifact
+from celeste.artifacts import AudioArtifact, ImageArtifact, VideoArtifact
 from celeste.constraints import (
+    AudioConstraint,
+    AudiosConstraint,
     Bool,
     Choice,
     Float,
@@ -15,9 +17,11 @@ from celeste.constraints import (
     Range,
     Schema,
     Str,
+    VideoConstraint,
+    VideosConstraint,
 )
 from celeste.exceptions import ConstraintViolationError
-from celeste.mime_types import ImageMimeType
+from celeste.mime_types import AudioMimeType, ImageMimeType, VideoMimeType
 
 
 class TestChoice:
@@ -293,7 +297,7 @@ class TestInt:
             constraint(42.5)
 
     def test_accepts_boolean_value(self) -> None:
-        """Test that bool is accepted (True=1, False=0) since bool is subclass of int."""
+        """Test that bool is accepted (bool is subclass of int in Python)."""
         constraint = Int()
 
         assert constraint(True) == 1
@@ -583,6 +587,282 @@ class TestImagesConstraint:
         artifacts = [
             ImageArtifact(data=b"1", mime_type=ImageMimeType.PNG),
             ImageArtifact(data=b"2", mime_type=ImageMimeType.JPEG),
+        ]
+
+        result = constraint(artifacts)
+
+        assert result == artifacts
+
+
+class TestVideoConstraint:
+    """Test VideoConstraint validation for single video artifacts."""
+
+    def test_rejects_list_input(self) -> None:
+        """VideoConstraint requires single artifact, not a list."""
+        constraint = VideoConstraint()
+        artifact = VideoArtifact(data=b"test")
+
+        with pytest.raises(
+            ConstraintViolationError,
+            match=r"requires a single VideoArtifact, not a list",
+        ):
+            constraint([artifact])  # type: ignore[arg-type]
+
+    def test_validates_video_artifact_type(self) -> None:
+        """VideoConstraint rejects non-VideoArtifact types."""
+        constraint = VideoConstraint()
+
+        with pytest.raises(ConstraintViolationError, match=r"Must be VideoArtifact"):
+            constraint("not an artifact")  # type: ignore[arg-type]
+
+    def test_accepts_valid_artifact(self) -> None:
+        """Valid VideoArtifact passes through unchanged."""
+        constraint = VideoConstraint()
+        artifact = VideoArtifact(data=b"test video data")
+
+        result = constraint(artifact)
+
+        assert result is artifact
+
+    def test_filters_mime_types_when_specified(self) -> None:
+        """VideoConstraint rejects unsupported MIME types."""
+        constraint = VideoConstraint(supported_mime_types=[VideoMimeType.MP4])
+        webm_artifact = VideoArtifact(data=b"test", mime_type=VideoMimeType.MOV)
+
+        with pytest.raises(ConstraintViolationError, match=r"mime_type must be one of"):
+            constraint(webm_artifact)
+
+    def test_accepts_supported_mime_type(self) -> None:
+        """VideoConstraint accepts artifact with supported MIME type."""
+        constraint = VideoConstraint(supported_mime_types=[VideoMimeType.MP4])
+        mp4_artifact = VideoArtifact(data=b"test", mime_type=VideoMimeType.MP4)
+
+        result = constraint(mp4_artifact)
+
+        assert result is mp4_artifact
+
+    def test_accepts_any_mime_when_none_specified(self) -> None:
+        """No MIME filtering when supported_mime_types is None."""
+        constraint = VideoConstraint(supported_mime_types=None)
+        artifact = VideoArtifact(data=b"test", mime_type=VideoMimeType.MOV)
+
+        result = constraint(artifact)
+
+        assert result is artifact
+
+
+class TestVideosConstraint:
+    """Test VideosConstraint validation for video artifact lists."""
+
+    def test_normalizes_single_artifact_to_list(self) -> None:
+        """Single VideoArtifact is wrapped in a list."""
+        constraint = VideosConstraint()
+        artifact = VideoArtifact(data=b"test")
+
+        result = constraint(artifact)
+
+        assert isinstance(result, list)
+        assert len(result) == 1
+        assert result[0] is artifact
+
+    def test_accepts_list_of_artifacts(self) -> None:
+        """List of VideoArtifacts passes through."""
+        constraint = VideosConstraint()
+        artifacts = [VideoArtifact(data=b"1"), VideoArtifact(data=b"2")]
+
+        result = constraint(artifacts)
+
+        assert result == artifacts
+
+    def test_enforces_max_count(self) -> None:
+        """VideosConstraint rejects when count exceeds max_count."""
+        constraint = VideosConstraint(max_count=2)
+        artifacts = [VideoArtifact(data=b"x") for _ in range(3)]
+
+        with pytest.raises(ConstraintViolationError, match=r"at most 2 video"):
+            constraint(artifacts)
+
+    def test_validates_each_artifact_type(self) -> None:
+        """VideosConstraint reports index (1-indexed) of invalid artifact."""
+        constraint = VideosConstraint(supported_mime_types=[VideoMimeType.MP4])
+        artifacts = [
+            VideoArtifact(data=b"1", mime_type=VideoMimeType.MP4),
+            "not an artifact",  # Invalid at index 2
+            VideoArtifact(data=b"3", mime_type=VideoMimeType.MP4),
+        ]
+
+        with pytest.raises(
+            ConstraintViolationError, match=r"Video 2.*Must be VideoArtifact"
+        ):
+            constraint(artifacts)  # type: ignore[arg-type]
+
+    def test_filters_mime_types_per_video(self) -> None:
+        """Each video's MIME type is validated against supported types."""
+        constraint = VideosConstraint(supported_mime_types=[VideoMimeType.MP4])
+        artifacts = [
+            VideoArtifact(data=b"1", mime_type=VideoMimeType.MP4),
+            VideoArtifact(data=b"2", mime_type=VideoMimeType.MOV),  # Invalid
+        ]
+
+        with pytest.raises(
+            ConstraintViolationError, match=r"Video 2.*mime_type must be one of"
+        ):
+            constraint(artifacts)
+
+    def test_handles_empty_list(self) -> None:
+        """Empty list is valid (no videos to validate)."""
+        constraint = VideosConstraint()
+
+        result = constraint([])
+
+        assert result == []
+
+    def test_accepts_all_valid_videos(self) -> None:
+        """All videos with valid MIME types pass validation."""
+        constraint = VideosConstraint(
+            supported_mime_types=[VideoMimeType.MP4, VideoMimeType.MOV]
+        )
+        artifacts = [
+            VideoArtifact(data=b"1", mime_type=VideoMimeType.MP4),
+            VideoArtifact(data=b"2", mime_type=VideoMimeType.MOV),
+        ]
+
+        result = constraint(artifacts)
+
+        assert result == artifacts
+
+
+class TestAudioConstraint:
+    """Test AudioConstraint validation for single audio artifacts."""
+
+    def test_rejects_list_input(self) -> None:
+        """AudioConstraint requires single artifact, not a list."""
+        constraint = AudioConstraint()
+        artifact = AudioArtifact(data=b"test")
+
+        with pytest.raises(
+            ConstraintViolationError,
+            match=r"requires a single AudioArtifact, not a list",
+        ):
+            constraint([artifact])  # type: ignore[arg-type]
+
+    def test_validates_audio_artifact_type(self) -> None:
+        """AudioConstraint rejects non-AudioArtifact types."""
+        constraint = AudioConstraint()
+
+        with pytest.raises(ConstraintViolationError, match=r"Must be AudioArtifact"):
+            constraint("not an artifact")  # type: ignore[arg-type]
+
+    def test_accepts_valid_artifact(self) -> None:
+        """Valid AudioArtifact passes through unchanged."""
+        constraint = AudioConstraint()
+        artifact = AudioArtifact(data=b"test audio data")
+
+        result = constraint(artifact)
+
+        assert result is artifact
+
+    def test_filters_mime_types_when_specified(self) -> None:
+        """AudioConstraint rejects unsupported MIME types."""
+        constraint = AudioConstraint(supported_mime_types=[AudioMimeType.MP3])
+        wav_artifact = AudioArtifact(data=b"test", mime_type=AudioMimeType.WAV)
+
+        with pytest.raises(ConstraintViolationError, match=r"mime_type must be one of"):
+            constraint(wav_artifact)
+
+    def test_accepts_supported_mime_type(self) -> None:
+        """AudioConstraint accepts artifact with supported MIME type."""
+        constraint = AudioConstraint(supported_mime_types=[AudioMimeType.MP3])
+        mp3_artifact = AudioArtifact(data=b"test", mime_type=AudioMimeType.MP3)
+
+        result = constraint(mp3_artifact)
+
+        assert result is mp3_artifact
+
+    def test_accepts_any_mime_when_none_specified(self) -> None:
+        """No MIME filtering when supported_mime_types is None."""
+        constraint = AudioConstraint(supported_mime_types=None)
+        artifact = AudioArtifact(data=b"test", mime_type=AudioMimeType.WAV)
+
+        result = constraint(artifact)
+
+        assert result is artifact
+
+
+class TestAudiosConstraint:
+    """Test AudiosConstraint validation for audio artifact lists."""
+
+    def test_normalizes_single_artifact_to_list(self) -> None:
+        """Single AudioArtifact is wrapped in a list."""
+        constraint = AudiosConstraint()
+        artifact = AudioArtifact(data=b"test")
+
+        result = constraint(artifact)
+
+        assert isinstance(result, list)
+        assert len(result) == 1
+        assert result[0] is artifact
+
+    def test_accepts_list_of_artifacts(self) -> None:
+        """List of AudioArtifacts passes through."""
+        constraint = AudiosConstraint()
+        artifacts = [AudioArtifact(data=b"1"), AudioArtifact(data=b"2")]
+
+        result = constraint(artifacts)
+
+        assert result == artifacts
+
+    def test_enforces_max_count(self) -> None:
+        """AudiosConstraint rejects when count exceeds max_count."""
+        constraint = AudiosConstraint(max_count=2)
+        artifacts = [AudioArtifact(data=b"x") for _ in range(3)]
+
+        with pytest.raises(ConstraintViolationError, match=r"at most 2 audio"):
+            constraint(artifacts)
+
+    def test_validates_each_artifact_type(self) -> None:
+        """AudiosConstraint reports index (1-indexed) of invalid artifact."""
+        constraint = AudiosConstraint(supported_mime_types=[AudioMimeType.MP3])
+        artifacts = [
+            AudioArtifact(data=b"1", mime_type=AudioMimeType.MP3),
+            "not an artifact",  # Invalid at index 2
+            AudioArtifact(data=b"3", mime_type=AudioMimeType.MP3),
+        ]
+
+        with pytest.raises(
+            ConstraintViolationError, match=r"Audio 2.*Must be AudioArtifact"
+        ):
+            constraint(artifacts)  # type: ignore[arg-type]
+
+    def test_filters_mime_types_per_audio(self) -> None:
+        """Each audio's MIME type is validated against supported types."""
+        constraint = AudiosConstraint(supported_mime_types=[AudioMimeType.MP3])
+        artifacts = [
+            AudioArtifact(data=b"1", mime_type=AudioMimeType.MP3),
+            AudioArtifact(data=b"2", mime_type=AudioMimeType.WAV),  # Invalid
+        ]
+
+        with pytest.raises(
+            ConstraintViolationError, match=r"Audio 2.*mime_type must be one of"
+        ):
+            constraint(artifacts)
+
+    def test_handles_empty_list(self) -> None:
+        """Empty list is valid (no audios to validate)."""
+        constraint = AudiosConstraint()
+
+        result = constraint([])
+
+        assert result == []
+
+    def test_accepts_all_valid_audios(self) -> None:
+        """All audios with valid MIME types pass validation."""
+        constraint = AudiosConstraint(
+            supported_mime_types=[AudioMimeType.MP3, AudioMimeType.WAV]
+        )
+        artifacts = [
+            AudioArtifact(data=b"1", mime_type=AudioMimeType.MP3),
+            AudioArtifact(data=b"2", mime_type=AudioMimeType.WAV),
         ]
 
         result = constraint(artifacts)

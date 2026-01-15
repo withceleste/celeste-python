@@ -1,13 +1,13 @@
 [project]
 name = "celeste-ai"
-version = "0.3.9"
+version = "0.9.0"
 description = "Open source, type-safe primitives for multi-modal AI. All capabilities, all providers, one interface"
 authors = [{name = "Kamilbenkirane", email = "kamil@withceleste.ai"}]
 readme = "README.md"
 license = {text = "MIT"}
 requires-python = ">=3.12"
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
@@ -17,14 +17,16 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
     "Typing :: Typed",
 ]
-keywords = ["ai", "multimodal", "sdk", "openai", "anthropic", "claude", "gemini", "text-generation", "image-generation", "video-generation", "speech-generation", "embeddings"]
+keywords = ["ai", "multimodal", "sdk", "openai", "anthropic", "claude", "gemini", "text-generation", "image-generation", "video-generation", "speech-generation", "text-embeddings"]
 dependencies = [
     "pydantic>=2.0",
     "pydantic-settings>=2.0",
     "httpx>=0.27.0",
     "httpx-sse>=0.4.0",
     "python-dotenv>=1.0.0",
-    "websockets>=13.0",
+    "websockets>=15.0",
+    "asgiref>=3.11.0",
+    "filetype>=1.2.0",
 ]
 
 [project.urls]
@@ -33,43 +35,17 @@ Documentation = "https://withceleste.ai/docs"
 Repository = "https://github.com/withceleste/celeste-python"
 Issues = "https://github.com/withceleste/celeste-python/issues"
 
-[project.optional-dependencies]
-text-generation = ["celeste-text-generation>=0.3.6"]
-image-generation = ["celeste-image-generation>=0.3.6"]
-video-generation = ["celeste-video-generation>=0.3.6"]
-speech-generation = ["celeste-speech-generation>=0.3.6"]
-all = [
-    "celeste-text-generation>=0.3.6",
-    "celeste-image-generation>=0.3.6",
-    "celeste-video-generation>=0.3.6",
-    "celeste-speech-generation>=0.3.6",
-]
-
 [dependency-groups]
 dev = [
     "pytest>=8.0",
     "pytest-cov>=7.0",
-    "pytest-randomly>=4.0",
     "pytest-asyncio>=1.2.0",
     "pytest-xdist>=3.0.0",
     "ruff>=0.8.0",
     "mypy>=1.13.0",
-    "types-requests>=2.31.0",
     "bandit[toml]>=1.7.5",
     "pre-commit>=3.5.0",
 ]
-
-[tool.uv.workspace]
-members = [
-    "packages/providers/*",
-    "packages/capabilities/*",
-]
-
-[tool.uv.sources]
-celeste-text-generation = { workspace = true }
-celeste-image-generation = { workspace = true }
-celeste-video-generation = { workspace = true }
-celeste-speech-generation = { workspace = true }
 
 [build-system]
 requires = ["hatchling"]
@@ -83,13 +59,7 @@ minversion = "8.0"
 testpaths = ["tests"]
 addopts = "-ra --strict-markers --strict-config"
 asyncio_mode = "auto"
-pythonpath = [
-    "src",
-    "packages/capabilities/text-generation/src",
-    "packages/capabilities/image-generation/src",
-    "packages/capabilities/video-generation/src",
-    "packages/capabilities/speech-generation/src",
-]
+pythonpath = ["src"]
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
     "smoke: quick checks for critical paths",
@@ -99,6 +69,12 @@ markers = [
 [tool.coverage.run]
 branch = true
 # dynamic_context handled by pytest-cov's --cov-context option
+omit = [
+    # Provider implementations (tested via integration tests, not unit tests)
+    "src/celeste/providers/*",
+    "src/celeste/modalities/*",
+    "src/celeste/namespaces/*"
+]
 
 [tool.coverage.report]
 show_missing = true
@@ -160,7 +136,7 @@ strict_equality = true
 module = "tests.*"
 disallow_untyped_defs = false  # Relax for tests
 disallow_incomplete_defs = false
-disable_error_code = ["override", "return-value", "arg-type", "call-arg", "assignment", "no-any-return"]
+disable_error_code = ["override", "return-value", "arg-type", "call-arg", "assignment", "no-any-return", "attr-defined", "unused-ignore"]
 
 [[tool.mypy.overrides]]
 module = "httpx"
@@ -171,17 +147,37 @@ module = "httpx_sse"
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
+module = "websockets.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "filetype"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "google.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
 module = [
-    "celeste_text_generation.client",
-    "celeste_text_generation.providers.*",
-    "celeste_image_generation.client",
-    "celeste_image_generation.providers.*",
-    "celeste_video_generation.client",
-    "celeste_video_generation.providers.*",
-    "celeste_speech_generation.client",
-    "celeste_speech_generation.providers.*",
+    "celeste.modalities.text.client",
+    "celeste.modalities.text.streaming",
+    "celeste.modalities.text.providers.*",
+    "celeste.modalities.images.client",
+    "celeste.modalities.images.streaming",
+    "celeste.modalities.images.providers.*",
+    "celeste.modalities.videos.client",
+    "celeste.modalities.videos.providers.*",
+    "celeste.modalities.audio.client",
+    "celeste.modalities.audio.streaming",
+    "celeste.modalities.audio.providers.*",
+    "celeste.modalities.embeddings.client",
+    "celeste.modalities.embeddings.providers.*",
+    "celeste.providers.*.client",
+    "celeste.providers.*.*",
+    "celeste.namespaces.domains",
 ]
-disable_error_code = ["override", "return-value", "arg-type", "call-arg", "assignment", "no-any-return"]
+disable_error_code = ["override", "return-value", "arg-type", "call-arg", "assignment", "no-any-return", "attr-defined"]
 
 [tool.bandit]
 exclude_dirs = [".venv", "__pycache__"]

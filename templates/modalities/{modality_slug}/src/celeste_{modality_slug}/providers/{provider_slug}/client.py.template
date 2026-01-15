@@ -1,0 +1,141 @@
+"""{Provider} {modality} client."""
+
+from typing import Any, Unpack
+
+from celeste.artifacts import {Artifact}Artifact
+from celeste.parameters import ParameterMapper
+from celeste.providers.{provider}.{api} import config
+from celeste.providers.{provider}.{api}.client import {Provider}{Api}Client as {Provider}{Api}Mixin
+from celeste.providers.{provider}.{api}.streaming import {Provider}{Api}Stream as _{Provider}{Api}Stream
+from celeste.types import {Content}
+
+from ...client import {Modality}Client
+from ...io import (
+    {Modality}Chunk,
+    {Modality}FinishReason,
+    {Modality}Input,
+    {Modality}Output,
+    {Modality}Usage,
+)
+from ...parameters import {Modality}Parameters
+from ...streaming import {Modality}Stream
+from .parameters import {PROVIDER}_PARAMETER_MAPPERS
+
+
+class {Provider}{Modality}Stream(_{Provider}{Api}Stream, {Modality}Stream):
+    """{Provider} streaming for {modality} modality."""
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:  # noqa: ANN401
+        super().__init__(*args, **kwargs)
+        self._message_start: dict[str, Any] | None = None
+
+    def _parse_chunk_usage(
+        self, event_data: dict[str, Any]
+    ) -> {Modality}Usage | None:
+        """Parse and wrap usage from SSE event."""
+        usage = super()._parse_chunk_usage(event_data)
+        if usage:
+            return {Modality}Usage(**usage)
+        return None
+
+    def _parse_chunk_finish_reason(
+        self, event_data: dict[str, Any]
+    ) -> {Modality}FinishReason | None:
+        """Parse and wrap finish reason from SSE event."""
+        finish_reason = super()._parse_chunk_finish_reason(event_data)
+        if finish_reason:
+            return {Modality}FinishReason(reason=finish_reason.reason)
+        return None
+
+    def _parse_chunk(self, event_data: dict[str, Any]) -> {Modality}Chunk | None:
+        """Parse one SSE event into a typed chunk."""
+        # TODO: Handle provider-specific start events (e.g., message_start)
+        # if event_data.get("type") == "message_start":
+        #     self._message_start = event_data.get("message")
+        #     return None
+
+        content = self._parse_chunk_content(event_data)
+        if content is None:
+            usage = self._parse_chunk_usage(event_data)
+            finish_reason = self._parse_chunk_finish_reason(event_data)
+            if usage is None and finish_reason is None:
+                return None
+            content = ""  # Or appropriate default for modality
+
+        return {Modality}Chunk(
+            content=content,
+            finish_reason=self._parse_chunk_finish_reason(event_data),
+            usage=self._parse_chunk_usage(event_data),
+            metadata={"event_data": event_data},
+        )
+
+    def _aggregate_content(self, chunks: list[{Modality}Chunk]) -> Any:
+        """Aggregate streamed content (modality-specific).
+
+        Examples:
+        - Text: "".join(chunk.content for chunk in chunks)
+        - Images: chunks[-1].content
+        """
+        # TODO: Implement modality-specific content aggregation
+        msg = "Implement content aggregation"
+        raise NotImplementedError(msg)
+
+    def _aggregate_event_data(self, chunks: list[{Modality}Chunk]) -> list[dict[str, Any]]:
+        """Collect raw events (filtering happens in _build_stream_metadata)."""
+        events: list[dict[str, Any]] = []
+        if self._message_start is not None:
+            events.append({"type": "message_start", "message": self._message_start})
+        for chunk in chunks:
+            event_data = chunk.metadata.get("event_data")
+            if isinstance(event_data, dict):
+                events.append(event_data)
+        return events
+
+
+class {Provider}{Modality}Client({Provider}{Api}Mixin, {Modality}Client):
+    """{Provider} {modality} client."""
+
+    @classmethod
+    def parameter_mappers(cls) -> list[ParameterMapper]:
+        return {PROVIDER}_PARAMETER_MAPPERS
+
+    def _stream_class(self) -> type[{Modality}Stream]:
+        """Return the Stream class for this provider."""
+        return {Provider}{Modality}Stream
+
+    async def generate(
+        self,
+        prompt: str,
+        **parameters: Unpack[{Modality}Parameters],
+    ) -> {Modality}Output:
+        """Generate {modality} from prompt."""
+        inputs = {Modality}Input(prompt=prompt)
+        return await self._predict(
+            inputs,
+            endpoint=config.{Provider}{Api}Endpoint.{ENDPOINT},
+            **parameters,
+        )
+
+    def _parse_usage(self, response_data: dict[str, Any]) -> {Modality}Usage:
+        """Parse usage from response."""
+        usage = super()._parse_usage(response_data)
+        return {Modality}Usage(**usage)
+
+    def _parse_content(
+        self,
+        response_data: dict[str, Any],
+        **parameters: Unpack[{Modality}Parameters],
+    ) -> {Content}:
+        """Parse content from response."""
+        data = super()._parse_content(response_data)
+        # TODO: Implement provider-specific content extraction
+        msg = "Implement content extraction"
+        raise NotImplementedError(msg)
+
+    def _parse_finish_reason(self, response_data: dict[str, Any]) -> {Modality}FinishReason:
+        """Parse finish reason from response."""
+        finish_reason = super()._parse_finish_reason(response_data)
+        return {Modality}FinishReason(reason=finish_reason.reason)
+
+
+__all__ = ["{Provider}{Modality}Client", "{Provider}{Modality}Stream"]

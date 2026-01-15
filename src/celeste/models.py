@@ -3,8 +3,8 @@
 from pydantic import BaseModel, Field, SerializeAsAny, computed_field
 
 from celeste.constraints import Constraint
-from celeste.core import Capability, InputType, Provider
-from celeste.io import get_constraint_input_type, get_required_input_types
+from celeste.core import Capability, InputType, Modality, Operation, Provider
+from celeste.io import get_constraint_input_type
 
 
 class Model(BaseModel):
@@ -14,6 +14,7 @@ class Model(BaseModel):
     provider: Provider
     display_name: str
     capabilities: set[Capability] = Field(default_factory=set)
+    operations: dict[Modality, set[Operation]] = Field(default_factory=dict)
     parameter_constraints: dict[str, SerializeAsAny[Constraint]] = Field(
         default_factory=dict
     )
@@ -23,12 +24,6 @@ class Model(BaseModel):
     def supported_parameters(self) -> set[str]:
         """Compute supported parameter names from parameter_constraints."""
         return set(self.parameter_constraints.keys())
-
-    @computed_field  # type: ignore[prop-decorator]
-    @property
-    def supported_input_types(self) -> dict[Capability, set[InputType]]:
-        """Input types supported per capability (derived from Input class fields)."""
-        return {cap: get_required_input_types(cap) for cap in self.capabilities}
 
     @computed_field  # type: ignore[prop-decorator]
     @property
@@ -46,17 +41,37 @@ class Model(BaseModel):
 _models: dict[tuple[str, Provider], Model] = {}
 
 
-def register_models(models: Model | list[Model], capability: Capability) -> None:
+def register_models(
+    models: Model | list[Model],
+    capability: Capability | None = None,
+    *,
+    modality: Modality | None = None,
+    operation: Operation | None = None,
+) -> None:
     """Register one or more models in the global registry.
 
     Args:
         models: Single Model instance or list of Models to register.
                Each model is indexed by (model_id, provider) tuple.
         capability: The capability these models are being registered for.
+            .. deprecated::
+                Use modality and operation parameters instead.
+        modality: The modality these models belong to (e.g., Modality.IMAGES).
+        operation: The operation these models support (e.g., Operation.GENERATE).
 
     Raises:
         ValueError: If display_name differs for duplicate (id, provider) pairs.
     """
+    import warnings
+
+    # Deprecation warning for capability parameter
+    if capability is not None:
+        warnings.warn(
+            "capability parameter is deprecated, use modality and operation instead",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+
     if isinstance(models, Model):
         models = [models]
 
@@ -83,9 +98,20 @@ def register_models(models: Model | list[Model], capability: Capability) -> None
                 f"'{registered.display_name}' vs '{model.display_name}'"
             )
 
-        # Update capabilities and constraints (single code path)
-        registered.capabilities.add(capability)
+        # Update constraints
         registered.parameter_constraints.update(model.parameter_constraints)
+
+        # Merge model's pre-existing operations (v1.0 path)
+        for mod, ops in model.operations.items():
+            registered.operations.setdefault(mod, set()).update(ops)
+
+        # Handle capability-based registration (backward compatibility)
+        if capability is not None:
+            registered.capabilities.add(capability)
+
+        # Handle modality-based registration (new path)
+        if modality is not None and operation is not None:
+            registered.operations.setdefault(modality, set()).add(operation)
 
 
 def get_model(model_id: str, provider: Provider | None = None) -> Model | None:
@@ -124,20 +150,20 @@ def get_model(model_id: str, provider: Provider | None = None) -> Model | None:
 def list_models(
     provider: Provider | None = None,
     capability: Capability | None = None,
+    modality: Modality | None = None,
+    operation: Operation | None = None,
 ) -> list[Model]:
-    """List all registered models, optionally filtered by provider and/or capability.
+    """List all registered models, optionally filtered by provider, capability, modality, and/or operation.
 
     Args:
-        provider: Optional provider filter. If provided, only models from this provider are returned.
-        capability: Optional capability filter. If provided, only models supporting this capability are returned.
+        provider: Optional provider filter.
+        capability: Optional capability filter (deprecated, use modality/operation).
+        modality: Optional modality filter.
+        operation: Optional operation filter (requires modality).
 
     Returns:
         List of Model instances matching the filters.
     """
-    # Load packages lazily to avoid circular imports
-    from celeste.registry import _load_from_entry_points
-
-    _load_from_entry_points()
     models = list(_models.values())
 
     if provider is not None:
@@ -145,6 +171,16 @@ def list_models(
 
     if capability is not None:
         models = [m for m in models if capability in m.capabilities]
+
+    if modality is not None and operation is not None:
+        # Filter by modality AND operation together
+        models = [m for m in models if operation in m.operations.get(modality, set())]
+    elif modality is not None:
+        models = [m for m in models if modality in m.operations]
+    elif operation is not None:
+        models = [
+            m for m in models if any(operation in ops for ops in m.operations.values())
+        ]
 
     return models
 

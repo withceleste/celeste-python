@@ -1,4 +1,4 @@
-"""Base client and client registry for AI capabilities."""
+"""Base client for modality-specific AI operations."""
 
 from abc import ABC, abstractmethod
 from collections.abc import AsyncIterator
@@ -9,39 +9,35 @@ import httpx
 from pydantic import BaseModel, ConfigDict, Field
 
 from celeste.auth import Authentication
-from celeste.core import Capability, Provider
-from celeste.exceptions import (
-    ClientNotFoundError,
-    StreamingNotSupportedError,
-    UnsupportedCapabilityError,
-)
+from celeste.core import Modality, Provider
+from celeste.exceptions import StreamingNotSupportedError
 from celeste.http import HTTPClient, get_http_client
 from celeste.io import Chunk, FinishReason, Input, Output, Usage
 from celeste.models import Model
 from celeste.parameters import ParameterMapper, Parameters
 from celeste.streaming import Stream
-from celeste.types import StructuredOutput
+from celeste.types import TextContent
 
 
 class APIMixin(ABC):
     """Abstract base for provider API mixins.
 
-    Provider mixins inherit from this to gain type hints for Client attributes.
-    The actual attributes are provided by Client through multiple inheritance.
+    Provider mixins inherit from this to gain type hints for ModalityClient attributes.
+    The actual attributes are provided by ModalityClient through multiple inheritance.
 
     Layering:
         - HTTPClient: Low-level HTTP transport (requests, connection pooling)
         - APIMixin: High-level provider API logic (endpoints, request/response formats)
-        - Client: Capability-specific client (text generation, image generation, etc.)
+        - ModalityClient: Modality-specific client (text, images, audio, etc.)
 
     Example:
-        class OpenAIResponsesClient(APIMixin):
+        class OpenAIResponsesMixin(APIMixin):
             async def _make_request(self, request_body, **parameters):
                 request_body["model"] = self.model.id  # Type-safe!
                 headers = {**self.auth.get_headers(), ...}
                 return await self.http_client.post(...)
 
-        class OpenAITextGenerationClient(OpenAIResponsesClient, TextGenerationClient):
+        class OpenAITextClient(OpenAIResponsesMixin, TextClient):
             pass
     """
 
@@ -55,71 +51,124 @@ class APIMixin(ABC):
         """HTTP client with connection pooling for this provider."""
         ...
 
-    def _build_request(self, inputs: Any, **parameters: Any) -> dict[str, Any]:
+    @staticmethod
+    def _deep_merge(
+        target: dict[str, Any],
+        source: dict[str, Any],
+    ) -> dict[str, Any]:
+        """Deep merge source dictionary into target dictionary.
+
+        Args:
+            target: The dictionary to merge into.
+            source: The dictionary to merge from.
+
+        Returns:
+            The merged dictionary (modified target).
+        """
+        for key, value in source.items():
+            if (
+                key in target
+                and isinstance(target[key], dict)
+                and isinstance(value, dict)
+            ):
+                APIMixin._deep_merge(target[key], value)
+            else:
+                target[key] = value
+        return target
+
+    def _build_request(
+        self,
+        inputs: Any,
+        extra_body: dict[str, Any] | None = None,
+        streaming: bool = False,
+        **parameters: Any,
+    ) -> dict[str, Any]:
         """Build request dict from inputs and parameters.
 
-        Mixins override this and call super() to chain with Client._build_request().
+        Mixins override this and call super() to chain with ModalityClient._build_request().
         """
-        return super()._build_request(inputs, **parameters)  # type: ignore[misc,no-any-return]
+        return super()._build_request(  # type: ignore[misc,no-any-return]
+            inputs, extra_body=extra_body, streaming=streaming, **parameters
+        )
 
     def _build_metadata(self, response_data: dict[str, Any]) -> dict[str, Any]:
         """Build metadata dict from response data.
 
-        Mixins override this and call super() to chain with Client._build_metadata().
+        Mixins override this and call super() to chain with ModalityClient._build_metadata().
         """
         return super()._build_metadata(response_data)  # type: ignore[misc,no-any-return]
 
     def _handle_error_response(self, response: httpx.Response) -> None:
         """Handle error responses from provider APIs.
 
-        Stub that calls through to Client._handle_error_response via MRO.
+        Stub that calls through to ModalityClient._handle_error_response via MRO.
         """
         super()._handle_error_response(response)  # type: ignore[misc]
 
 
-class Client[In: Input, Out: Output, Params: Parameters](APIMixin, BaseModel):
-    """Base class for all capability-specific clients."""
+class ModalityClient[In: Input, Out: Output, Params: Parameters, Content](
+    APIMixin, BaseModel
+):
+    """Base class for unified modality clients.
 
-    model_config = ConfigDict(from_attributes=True)
+    Operation methods in subclasses delegate to _predict().
 
+    Example:
+        class ImagesClient(ModalityClient[ImagesInput, ImagesOutput, ImagesParameters, ImageContent]):
+            modality = Modality.IMAGES
+
+            async def generate(self, prompt: str, **parameters) -> ImageGenerationOutput:
+                inputs = ImageGenerationInput(prompt=prompt)
+                return await self._predict(inputs, **parameters)
+    """
+
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    modality: Modality
     model: Model
     provider: Provider
-    capability: Capability
     auth: Authentication = Field(exclude=True)
-
-    def model_post_init(self, __context: object) -> None:
-        """Validate capability compatibility."""
-        if self.capability not in self.model.capabilities:
-            raise UnsupportedCapabilityError(
-                model_id=self.model.id,
-                capability=self.capability,
-            )
 
     @property
     def http_client(self) -> HTTPClient:
-        """Shared HTTP client with connection pooling for this provider."""
-        return get_http_client(self.provider, self.capability)
+        """Shared HTTP client with connection pooling."""
+        return get_http_client(self.provider, self.modality)
 
-    async def generate(
+    # Namespace properties - implemented by modality clients
+    @property
+    def sync(self) -> Any:
+        """Sync namespace for blocking operations."""
+        ...
+
+    @property
+    def stream(self) -> Any:
+        """Stream namespace for streaming operations."""
+        ...
+
+    async def _predict(
         self,
-        *args: Any,
+        inputs: In,
+        *,
+        endpoint: str | None = None,
+        extra_body: dict[str, Any] | None = None,
         **parameters: Unpack[Params],  # type: ignore[misc]
     ) -> Out:
-        """Generate content - signature varies by capability.
+        """Generic prediction - called by operation methods.
 
         Args:
-            *args: Capability-specific positional arguments (prompt, image, video, etc.).
-            **parameters: Capability-specific keyword arguments (temperature, max_tokens, etc.).
+            inputs: Operation-specific input object.
+            endpoint: Optional endpoint path (e.g., "/generations").
+            extra_body: Additional parameters to merge into the request body.
+            **parameters: Operation-specific keyword arguments.
 
         Returns:
-            Output of the parameterized type (e.g., TextGenerationOutput).
+            Output of the parameterized type.
         """
-        inputs = self._create_inputs(*args, **parameters)
         inputs, parameters = self._validate_artifacts(inputs, **parameters)
-        request_body = self._build_request(inputs, **parameters)
-        response = await self._make_request(request_body, **parameters)
-        self._handle_error_response(response)
-        response_data = response.json()
+        request_body = self._build_request(inputs, extra_body=extra_body, **parameters)
+        response_data = await self._make_request(
+            request_body, endpoint=endpoint, **parameters
+        )
         return self._output_class()(
             content=self._parse_content(response_data, **parameters),
             usage=self._parse_usage(response_data),
@@ -127,16 +176,23 @@ class Client[In: Input, Out: Output, Params: Parameters](APIMixin, BaseModel):
             metadata=self._build_metadata(response_data),
         )
 
-    def stream(
+    def _stream(
         self,
-        *args: Any,
+        inputs: In,
+        stream_class: type[Stream[Out, Params, Chunk]],
+        extra_body: dict[str, Any] | None = None,
         **parameters: Unpack[Params],  # type: ignore[misc]
     ) -> Stream[Out, Params, Chunk]:
-        """Stream content - signature varies by capability.
+        """Generic streaming - called by operation methods.
+
+        Transport-agnostic: provider implements _make_stream_request() with
+        whatever transport is appropriate (HTTP SSE, WebSocket, etc.).
 
         Args:
-            *args: Capability-specific positional arguments (same as generate).
-            **parameters: Capability-specific keyword arguments (same as generate).
+            inputs: Operation-specific input object.
+            stream_class: The Stream class to instantiate.
+            extra_body: Additional parameters to merge into the request body.
+            **parameters: Operation-specific keyword arguments.
 
         Returns:
             Stream yielding chunks and providing final Output.
@@ -147,13 +203,15 @@ class Client[In: Input, Out: Output, Params: Parameters](APIMixin, BaseModel):
         if not self.model.streaming:
             raise StreamingNotSupportedError(model_id=self.model.id)
 
-        inputs = self._create_inputs(*args, **parameters)
         inputs, parameters = self._validate_artifacts(inputs, **parameters)
-        request_body = self._build_request(inputs, **parameters)
+        request_body = self._build_request(
+            inputs, extra_body=extra_body, streaming=True, **parameters
+        )
         sse_iterator = self._make_stream_request(request_body, **parameters)
-        return self._stream_class()(
+        return stream_class(
             sse_iterator,
             transform_output=self._transform_output,
+            client=self,
             **parameters,
         )
 
@@ -161,11 +219,6 @@ class Client[In: Input, Out: Output, Params: Parameters](APIMixin, BaseModel):
     @abstractmethod
     def parameter_mappers(cls) -> list[ParameterMapper]:
         """Provider-specific parameter mappers."""
-        ...
-
-    @abstractmethod
-    def _init_request(self, inputs: In) -> dict[str, Any]:
-        """Initialize provider-specific base request structure."""
         ...
 
     @abstractmethod
@@ -178,47 +231,32 @@ class Client[In: Input, Out: Output, Params: Parameters](APIMixin, BaseModel):
         self,
         response_data: dict[str, Any],
         **parameters: Unpack[Params],  # type: ignore[misc]
-    ) -> StructuredOutput:
+    ) -> Content:
         """Parse content from provider response."""
         ...
 
     def _parse_finish_reason(
         self, response_data: dict[str, Any]
     ) -> FinishReason | None:
-        """Parse finish reason from provider response.
-
-        Default implementation returns None. Override in capability-specific
-        clients that support finish reasons (e.g., text-generation, image-generation).
-        """
+        """Parse finish reason from provider response."""
         return None
-
-    @abstractmethod
-    def _create_inputs(
-        self,
-        *args: Any,
-        **parameters: Unpack[Params],  # type: ignore[misc]
-    ) -> In:
-        """Map positional arguments to Input type."""
-        ...
 
     @classmethod
     @abstractmethod
     def _output_class(cls) -> type[Out]:
-        """Return the Output class for this client."""
+        """Return the Output class for this modality."""
         ...
 
     @abstractmethod
     async def _make_request(
         self,
         request_body: dict[str, Any],
+        *,
+        endpoint: str | None = None,
         **parameters: Unpack[Params],  # type: ignore[misc]
-    ) -> httpx.Response:
-        """Make HTTP request(s) and return response object."""
+    ) -> dict[str, Any]:
+        """Make HTTP request(s) and return response data."""
         ...
-
-    def _stream_class(self) -> type[Stream[Out, Params, Chunk]]:
-        """Return the Stream class for this client."""
-        raise StreamingNotSupportedError(model_id=self.model.id)
 
     def _make_stream_request(
         self,
@@ -226,6 +264,10 @@ class Client[In: Input, Out: Output, Params: Parameters](APIMixin, BaseModel):
         **parameters: Unpack[Params],  # type: ignore[misc]
     ) -> AsyncIterator[dict[str, Any]]:
         """Make HTTP streaming request and return async iterator of events."""
+        raise StreamingNotSupportedError(model_id=self.model.id)
+
+    def _stream_class(self) -> type[Stream[Out, Params, Chunk]]:
+        """Return the Stream class for this client."""
         raise StreamingNotSupportedError(model_id=self.model.id)
 
     def _validate_artifacts(
@@ -241,6 +283,8 @@ class Client[In: Input, Out: Output, Params: Parameters](APIMixin, BaseModel):
         return {
             "model": self.model.id,
             "provider": self.provider,
+            "modality": self.modality,
+            "raw_response": response_data,
         }
 
     def _handle_error_response(self, response: httpx.Response) -> None:
@@ -260,9 +304,9 @@ class Client[In: Input, Out: Output, Params: Parameters](APIMixin, BaseModel):
 
     def _transform_output(
         self,
-        content: StructuredOutput,
+        content: TextContent,
         **parameters: Unpack[Params],  # type: ignore[misc]
-    ) -> StructuredOutput:
+    ) -> TextContent:
         """Transform content using parameter mapper output transformations."""
         for mapper in self.parameter_mappers():
             value = parameters.get(mapper.name)
@@ -270,60 +314,33 @@ class Client[In: Input, Out: Output, Params: Parameters](APIMixin, BaseModel):
                 content = mapper.parse_output(content, value)
         return content
 
+    @abstractmethod
+    def _init_request(self, inputs: In) -> dict[str, Any]:
+        """Initialize provider-specific request structure from inputs."""
+        ...
+
     def _build_request(
         self,
         inputs: In,
+        extra_body: dict[str, Any] | None = None,
+        streaming: bool = False,
         **parameters: Unpack[Params],  # type: ignore[misc]
     ) -> dict[str, Any]:
         """Build complete request by combining base request with parameters."""
+        _ = streaming  # Passed through to provider mixins
         request = self._init_request(inputs)
 
         for mapper in self.parameter_mappers():
             value = parameters.get(mapper.name)
             request = mapper.map(request, value, self.model)
 
+        if extra_body:
+            self._deep_merge(request, extra_body)
+
         return request
 
 
-_clients: dict[tuple[Capability, Provider], type[Client[Any, Any, Any]]] = {}
-
-
-def register_client(
-    capability: Capability,
-    provider: Provider,
-    client_class: type[Client[Any, Any, Any]],
-) -> None:
-    """Register a provider-specific client class for a capability.
-
-    Args:
-        capability: The capability this client implements.
-        provider: The provider this client uses.
-        client_class: The client class to register.
-    """
-    _clients[(capability, provider)] = client_class
-
-
-def get_client_class(
-    capability: Capability, provider: Provider
-) -> type[Client[Any, Any, Any]]:
-    """Get the registered client class for a capability and provider.
-
-    Args:
-        capability: The capability to get a client for.
-        provider: The provider to use.
-
-    Returns:
-        The registered client class.
-
-    Raises:
-        ClientNotFoundError: If no client is registered for this capability/provider.
-    """
-    if (capability, provider) not in _clients:
-        raise ClientNotFoundError(
-            capability=capability,
-            provider=provider,
-        )
-    return _clients[(capability, provider)]
-
-
-__all__ = ["APIMixin", "Client", "get_client_class", "register_client"]
+__all__ = [
+    "APIMixin",
+    "ModalityClient",
+]

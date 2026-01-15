@@ -1,0 +1,33 @@
+"""{Provider} models for {modality} modality."""
+
+from celeste import Model, Provider
+from celeste.constraints import Choice, Range  # Add others as needed: Bool, Dimensions, Int, Pattern, Schema
+from celeste.core import Modality, Operation
+
+from ...parameters import {Modality}Parameter
+
+MODELS: list[Model] = [
+    Model(
+        id="{model_id}",
+        provider=Provider.{PROVIDER},
+        display_name="{Model Display Name}",
+        operations={Modality.{MODALITY}: {Operation.GENERATE}},
+        parameter_constraints={
+            {Modality}Parameter.ASPECT_RATIO: Choice(
+                options=["1024x1024", "1792x1024", "1024x1792"]
+            ),
+            # {Modality}Parameter.QUALITY: Choice(options=["standard", "hd"]),
+            # {Modality}Parameter.NUM_IMAGES: Range(min=1, max=4),
+        },
+    ),
+    # Model(
+    #     id="{another_model_id}",
+    #     provider=Provider.{PROVIDER},
+    #     display_name="{Another Model}",
+    #     operations={Modality.{MODALITY}: {Operation.GENERATE, Operation.EDIT}},
+    #     streaming=True,
+    #     parameter_constraints={
+    #         {Modality}Parameter.ASPECT_RATIO: Choice(options=["1:1", "16:9"]),
+    #     },
+    # ),
+]

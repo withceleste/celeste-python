@@ -1,0 +1,17 @@
+"""{Provider} provider package for Celeste AI."""
+
+from celeste.core import Provider
+from celeste.credentials import register_auth
+
+# Register provider auth config when package is imported.
+#
+# Fill in these placeholders per provider:
+# - Provider enum: Provider.{PROVIDER}
+# - secret_name: environment variable name (e.g. "OPENAI_API_KEY")
+# - header/prefix: auth header format
+register_auth(  # nosec B106 - env var name, not hardcoded password
+    provider=Provider.{PROVIDER},
+    secret_name="{SECRET_NAME}",
+    header="{AUTH_HEADER}",
+    prefix="{AUTH_PREFIX}",
+)
