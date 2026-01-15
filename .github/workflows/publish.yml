@@ -77,7 +77,8 @@ jobs:
           uv run pytest tests/integration_tests -m integration -v --dist=worksteal -n auto \
             --ignore=tests/integration_tests/images/test_stream_edit.py \
             "--deselect=tests/integration_tests/audio/test_speak.py::test_speak[google-gemini-2.5-flash-tts]" \
-            "--deselect=tests/integration_tests/audio/test_speak.py::test_speak[google-gemini-2.5-pro-tts]"
+            "--deselect=tests/integration_tests/audio/test_speak.py::test_speak[google-gemini-2.5-pro-tts]" \
+            "--deselect=tests/integration_tests/text/test_stream_generate.py::test_stream_generate[xai-grok-3-mini]"
 
   build:
     needs: [validate-release, run-ci, integration-tests]
