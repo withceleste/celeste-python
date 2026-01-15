@@ -101,6 +101,19 @@ MODELS: list[Model] = [
         },
     ),
     Model(
+        id="gpt-5.2-codex",
+        provider=Provider.OPENAI,
+        display_name="GPT-5.2 Codex",
+        streaming=True,
+        parameter_constraints={
+            Parameter.MAX_TOKENS: Range(min=1, max=128000),
+            TextGenerationParameter.THINKING_BUDGET: Choice(
+                options=["low", "medium", "high", "xhigh"]
+            ),
+            TextGenerationParameter.OUTPUT_SCHEMA: Schema(),
+        },
+    ),
+    Model(
         id="gpt-5.2-chat-latest",
         provider=Provider.OPENAI,
         display_name="GPT-5.2 Instant",
