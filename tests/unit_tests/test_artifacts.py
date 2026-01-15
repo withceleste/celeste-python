@@ -1,5 +1,6 @@
 """High-value tests for artifact classes - focusing on real-world usage patterns."""
 
+from pathlib import Path
 from typing import Any
 
 import pytest
@@ -207,3 +208,88 @@ class TestAudioArtifact:
                 url="https://example.com/audio.mp3",
                 mime_type=invalid_mime_type,  # type: ignore[arg-type]
             )
+
+
+class TestArtifactGetBytes:
+    """Test get_bytes() method."""
+
+    def test_get_bytes_from_data(self) -> None:
+        """Test get_bytes returns data when available."""
+        artifact = Artifact(data=b"test binary data")
+        assert artifact.get_bytes() == b"test binary data"
+
+    def test_get_bytes_from_path(self, tmp_path: Path) -> None:
+        """Test get_bytes reads from file path."""
+        test_file = tmp_path / "test.bin"
+        test_file.write_bytes(b"file content")
+
+        artifact = Artifact(path=str(test_file))
+        assert artifact.get_bytes() == b"file content"
+
+    def test_get_bytes_prefers_data_over_path(self, tmp_path: Path) -> None:
+        """Test get_bytes prefers data when both data and path are set."""
+        test_file = tmp_path / "test.bin"
+        test_file.write_bytes(b"file content")
+
+        artifact = Artifact(data=b"in-memory data", path=str(test_file))
+        assert artifact.get_bytes() == b"in-memory data"
+
+    def test_get_bytes_raises_without_data_or_path(self) -> None:
+        """Test get_bytes raises ValueError when no data or path."""
+        artifact = Artifact(url="https://example.com/file")
+        with pytest.raises(ValueError, match="Artifact must have data or path"):
+            artifact.get_bytes()
+
+    def test_get_bytes_raises_for_empty_artifact(self) -> None:
+        """Test get_bytes raises ValueError for empty artifact."""
+        artifact = Artifact()
+        with pytest.raises(ValueError, match="Artifact must have data or path"):
+            artifact.get_bytes()
+
+
+class TestArtifactGetBase64:
+    """Test get_base64() method."""
+
+    def test_get_base64_from_data(self) -> None:
+        """Test get_base64 encodes data correctly."""
+        artifact = Artifact(data=b"test binary data")
+        result = artifact.get_base64()
+        import base64
+
+        assert base64.b64decode(result) == b"test binary data"
+
+    def test_get_base64_from_path(self, tmp_path: Path) -> None:
+        """Test get_base64 reads and encodes file."""
+        test_file = tmp_path / "test.bin"
+        test_file.write_bytes(b"file content")
+
+        artifact = Artifact(path=str(test_file))
+        result = artifact.get_base64()
+        import base64
+
+        assert base64.b64decode(result) == b"file content"
+
+
+class TestArtifactSerialization:
+    """Test artifact serialization behavior."""
+
+    def test_artifact_serialize_data_with_none(self) -> None:
+        """Test that serialize_data handles None value correctly."""
+        artifact = Artifact()
+        # serialize_data is called during JSON serialization when data is None
+        # This tests the field_serializer behavior
+        json_data = artifact.model_dump(mode="json")
+        assert json_data.get("data") is None
+
+    def test_artifact_serialize_data_with_bytes(self) -> None:
+        """Test that serialize_data converts bytes to base64 string."""
+        artifact = Artifact(data=b"test binary data")
+        # serialize_data is called during JSON serialization
+        json_data = artifact.model_dump(mode="json")
+        assert json_data.get("data") is not None
+        assert isinstance(json_data["data"], str)
+        # Verify it's valid base64
+        import base64
+
+        decoded = base64.b64decode(json_data["data"])
+        assert decoded == b"test binary data"

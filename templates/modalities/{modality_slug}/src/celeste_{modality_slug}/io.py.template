@@ -1,0 +1,62 @@
+"""IO types for {modality} modality.
+
+{Modality} modality handles:
+- {Modality} generation (prompt -> {content})
+- Analysis of any media type (text/image/video/audio + prompt -> {content})
+
+Types are unified per-modality since generate and analyze produce identical outputs.
+"""
+
+from pydantic import Field
+
+from celeste.io import Chunk, FinishReason, Input, Output, Usage
+from celeste.types import AudioContent, ImageContent, {Content}, VideoContent
+
+
+class {Modality}Input(Input):
+    """Input for {modality} operations."""
+
+    prompt: str
+    text: str | list[str] | None = None
+    image: ImageContent | None = None
+    video: VideoContent | None = None
+    audio: AudioContent | None = None
+
+
+class {Modality}FinishReason(FinishReason):
+    """{Modality} finish reason."""
+
+    reason: str | None = None
+    message: str | None = None
+
+
+class {Modality}Usage(Usage):
+    """{Modality} usage metrics."""
+
+    total_tokens: int | None = None
+    input_tokens: int | None = None
+    output_tokens: int | None = None
+    reasoning_tokens: int | None = None
+
+
+class {Modality}Output(Output[{Content}]):
+    """Output from {modality} operations."""
+
+    usage: {Modality}Usage = Field(default_factory={Modality}Usage)
+    finish_reason: {Modality}FinishReason | None = None
+
+
+class {Modality}Chunk(Chunk[{Content}]):
+    """Chunk for {modality} streaming."""
+
+    finish_reason: {Modality}FinishReason | None = None
+    usage: {Modality}Usage | None = None
+
+
+__all__ = [
+    "{Modality}Chunk",
+    "{Modality}FinishReason",
+    "{Modality}Input",
+    "{Modality}Output",
+    "{Modality}Usage",
+]

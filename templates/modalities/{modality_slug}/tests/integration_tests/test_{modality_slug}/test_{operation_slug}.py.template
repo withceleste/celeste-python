@@ -1,0 +1,107 @@
+"""Integration tests for {modality} {operation} operation."""
+
+# TODO: REMOVE THIS BLOCK AFTER READING ========================================
+# COST GUIDANCE: Choose the appropriate testing strategy based on modality cost.
+#
+# CHEAP MODALITIES (text, embeddings):
+#   - Use list_models() for dynamic model discovery (current template)
+#   - Test ALL registered models automatically
+#
+# EXPENSIVE MODALITIES (images, videos, audio):
+#   - Use explicit provider/model pairs in @pytest.mark.parametrize
+#   - Test ONE model per provider (cheapest option with minimal parameters)
+#   - Replace the parametrize block with:
+#
+#     @pytest.mark.parametrize(
+#         ("provider", "model", "parameters"),
+#         [
+#             (Provider.OPENAI, "cheapest-model-id", {}),
+#             (Provider.GOOGLE, "cheapest-model-id", {"quality": "low"}),
+#         ],
+#     )
+#     async def test_{operation}(provider: Provider, model: str, parameters: dict):
+#         client = create_client(modality=Modality.{MODALITY}, provider=provider, model=model)
+#         response = await client.{operation}(prompt="...", **parameters)
+#
+# MULTI-MEDIA OPERATIONS:
+#   - If an operation accepts multiple input types (e.g., ANALYZE with image OR video),
+#     create separate test files with suffix: test_{operation}_image.py, test_{operation}_video.py
+#   - Filter by InputType: `InputType.IMAGE in m.optional_input_types`
+#
+# END TODO =====================================================================
+
+import warnings
+
+# Suppress deprecation warnings from legacy capability packages
+warnings.filterwarnings(
+    "ignore",
+    message=".*capability parameter is deprecated.*",
+    category=DeprecationWarning,
+)
+
+import pytest  # noqa: E402
+
+from celeste import (  # noqa: E402
+    Modality,
+    Model,
+    Operation,
+    create_client,
+    list_models,
+)
+from celeste.modalities.{modality} import {Modality}Output, {Modality}Usage  # noqa: E402
+
+
+@pytest.mark.parametrize(
+    "model",
+    [
+        m
+        for m in list_models(modality=Modality.{MODALITY}, operation=Operation.{OPERATION})
+        if not m.streaming  # Streaming models tested in test_stream_{operation}
+        and not m.optional_input_types  # Media-capable models tested in test_*_analyze_*
+    ],
+    ids=lambda m: f"{m.provider.value}-{m.id}",
+)
+@pytest.mark.integration
+@pytest.mark.asyncio
+async def test_{operation}(model: Model) -> None:
+    """Test {modality} {operation} for all registered models.
+
+    Dynamically discovers all models via list_models() and verifies each one
+    can {operation}. Failures indicate deprecated or misconfigured models.
+    """
+    client = create_client(
+        modality=Modality.{MODALITY},
+        model=model,
+    )
+
+    response = await client.{operation}(prompt="Hello")
+
+    assert isinstance(response, {Modality}Output), (
+        f"Expected {Modality}Output, got {type(response)}"
+    )
+    assert response.content is not None, (
+        f"Model {model.provider.value}/{model.id} returned None content"
+    )
+    assert isinstance(response.usage, {Modality}Usage), (
+        f"Expected {Modality}Usage, got {type(response.usage)}"
+    )
+
+
+@pytest.mark.integration
+def test_sync_{operation}() -> None:
+    """Test sync wrapper works correctly.
+
+    Single model smoke test - sync is just async_to_sync wrapper.
+    """
+    models = list_models(modality=Modality.{MODALITY}, operation=Operation.{OPERATION})
+    model = models[0]
+
+    client = create_client(
+        modality=Modality.{MODALITY},
+        model=model,
+    )
+
+    response = client.sync.{operation}(prompt="Hello")
+
+    assert isinstance(response, {Modality}Output)
+    assert response.content is not None

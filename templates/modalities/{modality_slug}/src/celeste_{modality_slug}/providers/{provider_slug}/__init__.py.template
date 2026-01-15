@@ -1,0 +1,6 @@
+"""{Provider} provider for {modality} modality."""
+
+from .client import {Provider}{Modality}Client
+from .models import MODELS
+
+__all__ = ["MODELS", "{Provider}{Modality}Client"]

@@ -1,0 +1,16 @@
+"""Images providers."""
+
+from celeste.core import Provider
+
+from ..client import ImagesClient
+from .bfl import BFLImagesClient
+from .byteplus import BytePlusImagesClient
+from .google import GoogleImagesClient
+from .openai import OpenAIImagesClient
+
+PROVIDERS: dict[Provider, type[ImagesClient]] = {
+    Provider.BFL: BFLImagesClient,
+    Provider.BYTEPLUS: BytePlusImagesClient,
+    Provider.GOOGLE: GoogleImagesClient,
+    Provider.OPENAI: OpenAIImagesClient,
+}

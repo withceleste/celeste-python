@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock
 import pytest
 from pydantic import Field
 
-from celeste.exceptions import StreamEmptyError, StreamNotExhaustedError
+from celeste.exceptions import StreamNotExhaustedError
 from celeste.io import Chunk, FinishReason, Output, Usage
 from celeste.parameters import Parameters
 from celeste.streaming import Stream
@@ -476,10 +476,13 @@ class TestStreamRepr:
 
 
 class TestStreamEmptyStreamError:
-    """Test Stream empty stream error handling."""
+    """Test Stream empty stream handling - empty streams are allowed by design."""
 
-    async def test_empty_stream_raises_runtime_error(self) -> None:
-        """Stream must raise StreamEmptyError when exhausted with no chunks."""
+    async def test_empty_stream_completes_successfully(self) -> None:
+        """Empty streams complete successfully without raising StreamEmptyError.
+
+        This is by design to support reasoning models that use all tokens for thinking.
+        """
 
         # Arrange - Create stream where all events return None from _parse_chunk
         async def empty_iter() -> AsyncIterator[dict[str, Any]]:
@@ -488,15 +491,25 @@ class TestStreamEmptyStreamError:
 
         stream = ConcreteStream(empty_iter())
 
-        # Act & Assert - Exhaustion raises StreamEmptyError
-        with pytest.raises(
-            StreamEmptyError, match=r"Stream completed but no chunks were produced"
-        ):
-            async for _ in stream:
-                pass
+        # Act - Empty stream should iterate without raising StreamEmptyError
+        chunks = []
+        async for chunk in stream:
+            chunks.append(chunk)
 
-    async def test_stream_with_only_lifecycle_events_raises_error(self) -> None:
-        """Stream raises StreamEmptyError when SSE yields events but all chunks are filtered to None."""
+        # Assert - No chunks were yielded
+        assert len(chunks) == 0
+
+        # Assert - Stream is closed
+        assert stream._closed
+
+        # Assert - Accessing output raises StreamNotExhaustedError (no output was parsed)
+        with pytest.raises(StreamNotExhaustedError):
+            _ = stream.output
+
+    async def test_stream_with_only_lifecycle_events_completes_successfully(
+        self,
+    ) -> None:
+        """Stream with only lifecycle events completes successfully without raising StreamEmptyError."""
         # Arrange - Events that all return None from _parse_chunk
         events = [
             {"type": "ping"},  # Lifecycle event (no delta/content)
@@ -506,12 +519,20 @@ class TestStreamEmptyStreamError:
         ]
         stream = ConcreteStream(_async_iter(events))
 
-        # Act & Assert - Should raise StreamEmptyError when exhausted
-        with pytest.raises(
-            StreamEmptyError, match=r"Stream completed but no chunks were produced"
-        ):
-            async for _ in stream:
-                pass
+        # Act - Stream should iterate without raising StreamEmptyError
+        chunks = []
+        async for chunk in stream:
+            chunks.append(chunk)
+
+        # Assert - No chunks were yielded
+        assert len(chunks) == 0
+
+        # Assert - Stream is closed
+        assert stream._closed
+
+        # Assert - Accessing output raises StreamNotExhaustedError (no output was parsed)
+        with pytest.raises(StreamNotExhaustedError):
+            _ = stream.output
 
 
 class TestStreamExceptionHandling:

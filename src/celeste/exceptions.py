@@ -21,6 +21,7 @@ class ModelNotFoundError(ModelError):
         model_id: str | None = None,
         provider: str | None = None,
         capability: str | None = None,
+        modality: str | None = None,
     ) -> None:
         """Initialize with model details.
 
@@ -28,14 +29,20 @@ class ModelNotFoundError(ModelError):
             model_id: Optional specific model ID that was not found.
             provider: Optional provider name.
             capability: Optional capability name (used when no specific model_id).
+            modality: Optional modality name (used when no specific model_id).
         """
         self.model_id = model_id
         self.provider = provider
         self.capability = capability
+        self.modality = modality
 
         # Generate appropriate error message based on available parameters
         if model_id and provider:
             msg = f"Model '{model_id}' not found for provider {provider}"
+        elif modality and provider:
+            msg = f"No model found for modality '{modality}' with provider {provider}"
+        elif modality:
+            msg = f"No model found for modality '{modality}'"
         elif capability and provider:
             msg = (
                 f"No model found for capability '{capability}' with provider {provider}"
@@ -73,15 +80,49 @@ class ClientError(Error):
 
 
 class ClientNotFoundError(ClientError):
-    """Raised when no client is registered for a capability/provider combination."""
+    """Raised when no client is registered for a capability/modality/provider combination."""
 
-    def __init__(self, capability: str, provider: str) -> None:
-        """Initialize with capability and provider details."""
+    def __init__(
+        self,
+        capability: str | None = None,
+        provider: str | None = None,
+        modality: str | None = None,
+        operation: str | None = None,
+    ) -> None:
+        """Initialize with capability/modality and provider details."""
         self.capability = capability
         self.provider = provider
-        super().__init__(
-            f"No client registered for {capability} with provider {provider}"
-        )
+        self.modality = modality
+        self.operation = operation
+
+        # Build message based on available parameters
+        if modality and operation and provider:
+            msg = f"No client registered for modality '{modality}', operation '{operation}' with provider {provider}"
+        elif modality and provider:
+            msg = f"No client registered for modality '{modality}' with provider {provider}"
+        elif modality:
+            msg = f"No client registered for modality '{modality}'"
+        elif capability and provider:
+            msg = f"No client registered for {capability} with provider {provider}"
+        else:
+            msg = "No client registered"
+
+        super().__init__(msg)
+
+
+class ModalityNotFoundError(ClientError):
+    """Raised when no modality client is registered for a modality/provider combination."""
+
+    def __init__(self, modality: str, provider: str | None = None) -> None:
+        """Initialize with modality and provider details."""
+        self.modality = modality
+        self.provider = provider
+        if provider:
+            super().__init__(
+                f"No client registered for modality '{modality}' with provider {provider}"
+            )
+        else:
+            super().__init__(f"No client registered for modality '{modality}'")
 
 
 class StreamingError(Error):
@@ -176,6 +217,7 @@ __all__ = [
     "ConstraintViolationError",
     "Error",
     "MissingCredentialsError",
+    "ModalityNotFoundError",
     "ModelNotFoundError",
     "StreamEmptyError",
     "StreamNotExhaustedError",

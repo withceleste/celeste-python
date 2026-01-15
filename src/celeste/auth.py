@@ -17,21 +17,22 @@ class Authentication(ABC, BaseModel):
         ...
 
 
-class APIKey(Authentication):
-    """API key authentication.
+class AuthHeader(Authentication):
+    """Authentication via HTTP header with configurable header name and prefix.
 
-    Supports configurable header name and prefix for different provider formats:
-    - OpenAI: Authorization: Bearer <key>
-    - Anthropic: x-api-key: <key>
-    - Google: x-goog-api-key: <key>
-    - ElevenLabs: xi-api-key: <key>
+    This is the primitive for header-based authentication. Different providers
+    use different header names and prefixes:
+    - OpenAI: Authorization: Bearer <secret>
+    - Anthropic: x-api-key: <secret>
+    - Google: x-goog-api-key: <secret>
+    - ElevenLabs: xi-api-key: <secret>
     """
 
-    key: SecretStr
+    secret: SecretStr
     header: str = "Authorization"
     prefix: str = "Bearer "
 
-    @field_validator("key", mode="before")
+    @field_validator("secret", mode="before")
     @classmethod
     def convert_to_secret(cls, v: str | SecretStr) -> SecretStr:
         """Accept plain strings, auto-convert to SecretStr."""
@@ -40,8 +41,12 @@ class APIKey(Authentication):
         return v
 
     def get_headers(self) -> dict[str, str]:
-        """Return API key authentication header."""
-        return {self.header: f"{self.prefix}{self.key.get_secret_value()}"}
+        """Return authentication header."""
+        return {self.header: f"{self.prefix}{self.secret.get_secret_value()}"}
+
+
+# Backwards compatibility alias
+APIKey = AuthHeader
 
 
 def register_auth(auth_type: str, auth_class: type[Authentication]) -> None:
@@ -66,10 +71,6 @@ def get_auth_class(auth_type: str) -> type[Authentication]:
     Raises:
         ValueError: If auth type is not registered.
     """
-    from celeste.registry import _load_providers_from_entry_points
-
-    _load_providers_from_entry_points()
-
     if auth_type not in _auth_classes:
         msg = f"Unknown auth type: {auth_type}. Available: {list(_auth_classes.keys())}"
         raise ValueError(msg)
@@ -77,4 +78,4 @@ def get_auth_class(auth_type: str) -> type[Authentication]:
     return _auth_classes[auth_type]
 
 
-__all__ = ["APIKey", "Authentication", "get_auth_class", "register_auth"]
+__all__ = ["APIKey", "AuthHeader", "Authentication", "get_auth_class", "register_auth"]

@@ -1,0 +1,20 @@
+"""Configuration for {Provider} {Api} API."""
+
+from enum import StrEnum
+
+
+class {Provider}{Api}Endpoint(StrEnum):
+    """Endpoints for {Provider} {Api} API."""
+
+    # Endpoint names use action verbs: CREATE, GET, LIST, DELETE, STREAM
+    # Examples:
+    #   CREATE_IMAGE = "/v1/images/generations"
+    #   CREATE_EDIT = "/v1/images/edits"
+    #   CREATE_SPEECH = "/v1/text-to-speech/{voice_id}"
+    #   STREAM_SPEECH = "/v1/text-to-speech/{voice_id}/stream"
+    #   GET_OPERATION = "/v1/{operation_name}"
+    #   LIST_MODELS = "/v1/models"
+    pass
+
+
+BASE_URL = "https://api.{provider}.com"

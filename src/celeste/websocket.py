@@ -8,7 +8,7 @@ from typing import Any
 from websockets.asyncio.client import ClientConnection
 from websockets.asyncio.client import connect as ws_connect
 
-from celeste.core import Capability, Provider
+from celeste.core import Modality, Provider
 
 logger = logging.getLogger(__name__)
 
@@ -95,20 +95,20 @@ class WebSocketConnection:
 
 
 # Module-level registry (mirrors http.py pattern)
-_ws_clients: dict[tuple[Provider, Capability], WebSocketClient] = {}
+_ws_clients: dict[tuple[Provider, Modality], WebSocketClient] = {}
 
 
-def get_ws_client(provider: Provider, capability: Capability) -> WebSocketClient:
-    """Get or create shared WebSocket client for provider/capability.
+def get_ws_client(provider: Provider, modality: Modality) -> WebSocketClient:
+    """Get or create shared WebSocket client for provider/modality.
 
     Args:
         provider: The AI provider.
-        capability: The capability being used.
+        modality: The modality being used.
 
     Returns:
-        Shared WebSocketClient instance for this provider and capability.
+        Shared WebSocketClient instance for this provider and modality.
     """
-    key = (provider, capability)
+    key = (provider, modality)
     if key not in _ws_clients:
         _ws_clients[key] = WebSocketClient()
     return _ws_clients[key]

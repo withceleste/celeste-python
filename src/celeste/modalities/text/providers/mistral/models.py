@@ -1,0 +1,235 @@
+"""Mistral models for text modality."""
+
+from celeste.constraints import ImagesConstraint, Range, Schema
+from celeste.core import Modality, Operation, Parameter, Provider
+from celeste.models import Model
+
+from ...parameters import TextParameter
+
+MODELS: list[Model] = [
+    Model(
+        id="mistral-large-latest",
+        provider=Provider.MISTRAL,
+        display_name="Mistral Large",
+        operations={Modality.TEXT: {Operation.GENERATE}},
+        streaming=True,
+        parameter_constraints={
+            Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
+            Parameter.MAX_TOKENS: Range(min=1, max=32768, step=1),
+            TextParameter.OUTPUT_SCHEMA: Schema(),
+        },
+    ),
+    Model(
+        id="mistral-medium-latest",
+        provider=Provider.MISTRAL,
+        display_name="Mistral Medium",
+        operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
+        streaming=True,
+        parameter_constraints={
+            Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
+            Parameter.MAX_TOKENS: Range(min=1, max=32768, step=1),
+            TextParameter.OUTPUT_SCHEMA: Schema(),
+            TextParameter.IMAGE: ImagesConstraint(),
+        },
+    ),
+    Model(
+        id="mistral-small-latest",
+        provider=Provider.MISTRAL,
+        display_name="Mistral Small",
+        operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
+        streaming=True,
+        parameter_constraints={
+            Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
+            Parameter.MAX_TOKENS: Range(min=1, max=32768, step=1),
+            TextParameter.OUTPUT_SCHEMA: Schema(),
+            TextParameter.IMAGE: ImagesConstraint(),
+        },
+    ),
+    Model(
+        id="mistral-tiny",
+        provider=Provider.MISTRAL,
+        display_name="Mistral Tiny",
+        operations={Modality.TEXT: {Operation.GENERATE}},
+        streaming=True,
+        parameter_constraints={
+            Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
+            Parameter.MAX_TOKENS: Range(min=1, max=32768, step=1),
+            TextParameter.OUTPUT_SCHEMA: Schema(),
+        },
+    ),
+    Model(
+        id="open-mistral-7b",
+        provider=Provider.MISTRAL,
+        display_name="Open Mistral 7B",
+        operations={Modality.TEXT: {Operation.GENERATE}},
+        streaming=True,
+        parameter_constraints={
+            Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
+            Parameter.MAX_TOKENS: Range(min=1, max=32768, step=1),
+            TextParameter.OUTPUT_SCHEMA: Schema(),
+        },
+    ),
+    Model(
+        id="codestral-latest",
+        provider=Provider.MISTRAL,
+        display_name="Codestral",
+        operations={Modality.TEXT: {Operation.GENERATE}},
+        streaming=True,
+        parameter_constraints={
+            Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
+            Parameter.MAX_TOKENS: Range(min=1, max=32768, step=1),
+            TextParameter.OUTPUT_SCHEMA: Schema(),
+        },
+    ),
+    Model(
+        id="devstral-medium-latest",
+        provider=Provider.MISTRAL,
+        display_name="Devstral Medium",
+        operations={Modality.TEXT: {Operation.GENERATE}},
+        streaming=True,
+        parameter_constraints={
+            Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
+            Parameter.MAX_TOKENS: Range(min=1, max=32768, step=1),
+            TextParameter.OUTPUT_SCHEMA: Schema(),
+        },
+    ),
+    Model(
+        id="devstral-2512",
+        provider=Provider.MISTRAL,
+        display_name="Devstral 2",
+        operations={Modality.TEXT: {Operation.GENERATE}},
+        streaming=True,
+        parameter_constraints={
+            Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
+            Parameter.MAX_TOKENS: Range(min=1, max=32768, step=1),
+            TextParameter.OUTPUT_SCHEMA: Schema(),
+        },
+    ),
+    Model(
+        id="labs-devstral-small-2512",
+        provider=Provider.MISTRAL,
+        display_name="Devstral 2 Small",
+        operations={Modality.TEXT: {Operation.GENERATE}},
+        streaming=True,
+        parameter_constraints={
+            Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
+            Parameter.MAX_TOKENS: Range(min=1, max=32768, step=1),
+            TextParameter.OUTPUT_SCHEMA: Schema(),
+        },
+    ),
+    Model(
+        id="pixtral-12b-2409",
+        provider=Provider.MISTRAL,
+        display_name="Pixtral 12B",
+        operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
+        streaming=True,
+        parameter_constraints={
+            Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
+            Parameter.MAX_TOKENS: Range(min=1, max=32768, step=1),
+            TextParameter.OUTPUT_SCHEMA: Schema(),
+            TextParameter.IMAGE: ImagesConstraint(),
+        },
+    ),
+    Model(
+        id="pixtral-12b-latest",
+        provider=Provider.MISTRAL,
+        display_name="Pixtral 12B",
+        operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
+        streaming=True,
+        parameter_constraints={
+            Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
+            Parameter.MAX_TOKENS: Range(min=1, max=32768, step=1),
+            TextParameter.OUTPUT_SCHEMA: Schema(),
+            TextParameter.IMAGE: ImagesConstraint(),
+        },
+    ),
+    Model(
+        id="pixtral-large-latest",
+        provider=Provider.MISTRAL,
+        display_name="Pixtral Large",
+        operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
+        streaming=True,
+        parameter_constraints={
+            Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
+            Parameter.MAX_TOKENS: Range(min=1, max=32768, step=1),
+            TextParameter.OUTPUT_SCHEMA: Schema(),
+            TextParameter.IMAGE: ImagesConstraint(),
+        },
+    ),
+    Model(
+        id="ministral-3b-latest",
+        provider=Provider.MISTRAL,
+        display_name="Ministral 3B",
+        operations={Modality.TEXT: {Operation.GENERATE}},
+        streaming=True,
+        parameter_constraints={
+            Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
+            Parameter.MAX_TOKENS: Range(min=1, max=32768, step=1),
+            TextParameter.OUTPUT_SCHEMA: Schema(),
+        },
+    ),
+    Model(
+        id="ministral-8b-latest",
+        provider=Provider.MISTRAL,
+        display_name="Ministral 8B",
+        operations={Modality.TEXT: {Operation.GENERATE}},
+        streaming=True,
+        parameter_constraints={
+            Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
+            Parameter.MAX_TOKENS: Range(min=1, max=32768, step=1),
+            TextParameter.OUTPUT_SCHEMA: Schema(),
+        },
+    ),
+    Model(
+        id="ministral-14b-latest",
+        provider=Provider.MISTRAL,
+        display_name="Ministral 14B",
+        operations={Modality.TEXT: {Operation.GENERATE}},
+        streaming=True,
+        parameter_constraints={
+            Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
+            Parameter.MAX_TOKENS: Range(min=1, max=32768, step=1),
+            TextParameter.OUTPUT_SCHEMA: Schema(),
+        },
+    ),
+    Model(
+        id="voxtral-mini-2507",
+        provider=Provider.MISTRAL,
+        display_name="Voxtral Mini",
+        operations={Modality.TEXT: {Operation.GENERATE}},
+        streaming=True,
+        parameter_constraints={
+            Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
+            Parameter.MAX_TOKENS: Range(min=1, max=32768, step=1),
+            TextParameter.OUTPUT_SCHEMA: Schema(),
+        },
+    ),
+    Model(
+        id="magistral-small-latest",
+        provider=Provider.MISTRAL,
+        display_name="Magistral Small",
+        operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
+        streaming=True,
+        parameter_constraints={
+            Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
+            Parameter.MAX_TOKENS: Range(min=1, max=32768, step=1),
+            TextParameter.THINKING_BUDGET: Range(min=-1, max=32768, step=1),
+            TextParameter.OUTPUT_SCHEMA: Schema(),
+            TextParameter.IMAGE: ImagesConstraint(),
+        },
+    ),
+    Model(
+        id="magistral-medium-latest",
+        provider=Provider.MISTRAL,
+        display_name="Magistral Medium",
+        operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
+        streaming=True,
+        parameter_constraints={
+            Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
+            Parameter.MAX_TOKENS: Range(min=1, max=32768, step=1),
+            TextParameter.THINKING_BUDGET: Range(min=-1, max=32768, step=1),
+            TextParameter.OUTPUT_SCHEMA: Schema(),
+            TextParameter.IMAGE: ImagesConstraint(),
+        },
+    ),
+]

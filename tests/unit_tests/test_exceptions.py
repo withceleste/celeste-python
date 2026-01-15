@@ -8,12 +8,14 @@ from celeste.exceptions import (
     ConstraintViolationError,
     Error,
     MissingCredentialsError,
+    ModalityNotFoundError,
     ModelNotFoundError,
     StreamEmptyError,
     StreamingNotSupportedError,
     StreamNotExhaustedError,
     UnsupportedCapabilityError,
     UnsupportedParameterError,
+    UnsupportedProviderError,
 )
 from celeste.models import Model
 
@@ -249,3 +251,120 @@ class TestExceptionUsability:
         except UnsupportedParameterError as e:
             assert e.parameter == "seed"
             assert e.model_id == "gpt-4"
+
+
+class TestModelNotFoundErrorMessagePaths:
+    """Test ModelNotFoundError message construction for all parameter combinations."""
+
+    def test_message_with_modality_and_provider(self) -> None:
+        """Test ModelNotFoundError message when modality and provider specified."""
+        exc = ModelNotFoundError(modality="text", provider="openai")
+        assert exc.modality == "text"
+        assert exc.provider == "openai"
+        assert "No model found for modality 'text' with provider openai" in str(exc)
+
+    def test_message_with_modality_only(self) -> None:
+        """Test ModelNotFoundError message when only modality specified."""
+        exc = ModelNotFoundError(modality="images")
+        assert exc.modality == "images"
+        assert exc.provider is None
+        assert "No model found for modality 'images'" in str(exc)
+
+    def test_message_with_model_id_and_provider(self) -> None:
+        """Test ModelNotFoundError message when model_id and provider specified."""
+        exc = ModelNotFoundError(model_id="test-model", provider="anthropic")
+        assert exc.model_id == "test-model"
+        assert exc.provider == "anthropic"
+        assert "Model 'test-model' not found for provider anthropic" in str(exc)
+
+
+class TestClientNotFoundErrorMessagePaths:
+    """Test ClientNotFoundError message construction for all parameter combinations."""
+
+    def test_message_with_modality_operation_and_provider(self) -> None:
+        """Test ClientNotFoundError message when modality, operation, and provider specified."""
+        exc = ClientNotFoundError(
+            modality="text", operation="generate", provider="openai"
+        )
+        assert exc.modality == "text"
+        assert exc.operation == "generate"
+        assert exc.provider == "openai"
+        assert (
+            "No client registered for modality 'text', operation 'generate' with provider openai"
+            in str(exc)
+        )
+
+    def test_message_with_modality_and_provider(self) -> None:
+        """Test ClientNotFoundError message when modality and provider specified."""
+        exc = ClientNotFoundError(modality="images", provider="openai")
+        assert exc.modality == "images"
+        assert exc.provider == "openai"
+        assert "No client registered for modality 'images' with provider openai" in str(
+            exc
+        )
+
+    def test_message_with_modality_only(self) -> None:
+        """Test ClientNotFoundError message when only modality specified."""
+        exc = ClientNotFoundError(modality="videos")
+        assert exc.modality == "videos"
+        assert "No client registered for modality 'videos'" in str(exc)
+
+    def test_message_with_capability_and_provider(self) -> None:
+        """Test ClientNotFoundError message when capability and provider specified."""
+        exc = ClientNotFoundError(capability="text-generation", provider="openai")
+        assert exc.capability == "text-generation"
+        assert exc.provider == "openai"
+        assert "No client registered for text-generation with provider openai" in str(
+            exc
+        )
+
+    def test_message_with_no_parameters(self) -> None:
+        """Test ClientNotFoundError message when no parameters specified."""
+        exc = ClientNotFoundError()
+        assert "No client registered" in str(exc)
+
+
+class TestModalityNotFoundError:
+    """Test ModalityNotFoundError exception."""
+
+    def test_creates_with_modality_and_provider(self) -> None:
+        """Test exception stores modality and provider attributes."""
+        exc = ModalityNotFoundError("text", "openai")
+        assert exc.modality == "text"
+        assert exc.provider == "openai"
+        assert "No client registered for modality 'text' with provider openai" in str(
+            exc
+        )
+
+    def test_creates_with_modality_only(self) -> None:
+        """Test exception stores modality attribute when provider is None."""
+        exc = ModalityNotFoundError("images")
+        assert exc.modality == "images"
+        assert exc.provider is None
+        assert "No client registered for modality 'images'" in str(exc)
+
+
+class TestUnsupportedProviderError:
+    """Test UnsupportedProviderError exception."""
+
+    def test_creates_with_provider(self) -> None:
+        """Test exception stores provider attribute."""
+        exc = UnsupportedProviderError("unknown_provider")
+        assert exc.provider == "unknown_provider"
+        assert "unknown_provider" in str(exc)
+
+    def test_message_is_descriptive(self) -> None:
+        """Test exception message clearly indicates the problem."""
+        exc = UnsupportedProviderError("custom_provider")
+        message = str(exc)
+        assert "custom_provider" in message
+        assert "no credential mapping" in message.lower()
+        assert "not configured" in message.lower()
+
+    def test_inherits_from_credentials_error(self) -> None:
+        """Test UnsupportedProviderError inherits from CredentialsError."""
+        from celeste.exceptions import CredentialsError
+
+        exc = UnsupportedProviderError("test_provider")
+        assert isinstance(exc, CredentialsError)
+        assert isinstance(exc, Error)

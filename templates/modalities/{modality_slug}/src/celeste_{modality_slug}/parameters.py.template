@@ -1,0 +1,54 @@
+"""Parameters for {modality} modality.
+
+Unified parameters for all {modality} operations (generate, analyze).
+Model `parameter_constraints` enforces which parameters are valid per model.
+"""
+
+from enum import StrEnum
+
+from pydantic import BaseModel
+
+from celeste.parameters import Parameters
+
+
+class {Modality}Parameter(StrEnum):
+    """Unified parameter names for {modality} modality."""
+
+    # Common parameters
+    TEMPERATURE = "temperature"
+    MAX_TOKENS = "max_tokens"
+    SEED = "seed"
+
+    # {Modality}-specific parameters (customize as needed)
+    # THINKING_BUDGET = "thinking_budget"
+    # THINKING_LEVEL = "thinking_level"
+    # OUTPUT_SCHEMA = "output_schema"
+    # WEB_SEARCH = "web_search"
+    # VERBOSITY = "verbosity"
+
+    # Media input declarations (for optional_input_types)
+    # IMAGE = "image"
+    # VIDEO = "video"
+    # AUDIO = "audio"
+
+
+class {Modality}Parameters(Parameters):
+    """Parameters for {modality} operations."""
+
+    # Common parameters
+    temperature: float
+    max_tokens: int
+    seed: int
+
+    # {Modality}-specific parameters (customize as needed)
+    # thinking_budget: int | str
+    # thinking_level: str
+    # output_schema: type[BaseModel]
+    # web_search: bool
+    # verbosity: str
+
+
+__all__ = [
+    "{Modality}Parameter",
+    "{Modality}Parameters",
+]

@@ -1,0 +1,214 @@
+"""{Modality} modality client."""
+
+from typing import Unpack
+
+from asgiref.sync import async_to_sync
+
+from celeste.client import ModalityClient
+from celeste.core import InputType, Modality
+from celeste.types import AudioContent, ImageContent, {Content}, VideoContent
+
+from .io import {Modality}Input, {Modality}Output
+from .parameters import {Modality}Parameters
+from .streaming import {Modality}Stream
+
+
+class {Modality}Client(ModalityClient[{Modality}Input, {Modality}Output, {Modality}Parameters, {Content}]):
+    """Base {modality} client.
+
+    Providers implement operation methods (generate, analyze).
+    """
+
+    modality: Modality = Modality.{MODALITY}
+
+    @classmethod
+    def _output_class(cls) -> type[{Modality}Output]:
+        """Return the Output class for {modality} modality."""
+        return {Modality}Output
+
+    def _check_media_support(
+        self,
+        image: ImageContent | None,
+        video: VideoContent | None,
+        audio: AudioContent | None,
+    ) -> None:
+        """Check model supports the provided media types.
+
+        Raises:
+            NotImplementedError: If media type is provided but model doesn't support it.
+        """
+        if image is not None and InputType.IMAGE not in self.model.optional_input_types:
+            msg = f"Model {self.model.id} does not support image input"
+            raise NotImplementedError(msg)
+        if video is not None and InputType.VIDEO not in self.model.optional_input_types:
+            msg = f"Model {self.model.id} does not support video input"
+            raise NotImplementedError(msg)
+        if audio is not None and InputType.AUDIO not in self.model.optional_input_types:
+            msg = f"Model {self.model.id} does not support audio input"
+            raise NotImplementedError(msg)
+
+    @property
+    def stream(self) -> "{Modality}StreamNamespace":
+        """Streaming namespace for {modality} operations."""
+        return {Modality}StreamNamespace(self)
+
+    @property
+    def sync(self) -> "{Modality}SyncNamespace":
+        """Sync namespace for {modality} operations."""
+        return {Modality}SyncNamespace(self)
+
+
+class {Modality}StreamNamespace:
+    """Streaming namespace for {modality} operations.
+
+    Provides `client.stream.generate()` and `client.stream.analyze()`.
+    """
+
+    def __init__(self, client: {Modality}Client) -> None:
+        self._client = client
+
+    def generate(
+        self,
+        prompt: str,
+        **parameters: Unpack[{Modality}Parameters],
+    ) -> {Modality}Stream:
+        """Stream {modality} generation.
+
+        Usage:
+            async for chunk in client.stream.generate("Hello"):
+                print(chunk.content)
+        """
+        inputs = {Modality}Input(prompt=prompt)
+        return self._client._stream(
+            inputs,
+            stream_class=self._client._stream_class(),
+            **parameters,
+        )
+
+    def analyze(
+        self,
+        prompt: str,
+        *,
+        image: ImageContent | None = None,
+        video: VideoContent | None = None,
+        audio: AudioContent | None = None,
+        **parameters: Unpack[{Modality}Parameters],
+    ) -> {Modality}Stream:
+        """Stream media analysis (image, video, or audio).
+
+        Usage:
+            async for chunk in client.stream.analyze("Describe", image=img):
+                print(chunk.content)
+        """
+        self._client._check_media_support(image=image, video=video, audio=audio)
+        inputs = {Modality}Input(prompt=prompt, image=image, video=video, audio=audio)
+        return self._client._stream(
+            inputs,
+            stream_class=self._client._stream_class(),
+            **parameters,
+        )
+
+
+class {Modality}SyncNamespace:
+    """Sync namespace for {modality} operations.
+
+    Provides `client.sync.generate()` and `client.sync.analyze()`.
+    """
+
+    def __init__(self, client: {Modality}Client) -> None:
+        self._client = client
+
+    def generate(
+        self,
+        prompt: str,
+        **parameters: Unpack[{Modality}Parameters],
+    ) -> {Modality}Output:
+        """Blocking {modality} generation.
+
+        Usage:
+            result = client.sync.generate("Hello")
+            print(result.content)
+        """
+        inputs = {Modality}Input(prompt=prompt)
+        return async_to_sync(self._client._predict)(inputs, **parameters)
+
+    def analyze(
+        self,
+        prompt: str,
+        *,
+        image: ImageContent | None = None,
+        video: VideoContent | None = None,
+        audio: AudioContent | None = None,
+        **parameters: Unpack[{Modality}Parameters],
+    ) -> {Modality}Output:
+        """Blocking media analysis (image, video, or audio).
+
+        Usage:
+            result = client.sync.analyze("Describe", image=img)
+            print(result.content)
+        """
+        self._client._check_media_support(image=image, video=video, audio=audio)
+        inputs = {Modality}Input(prompt=prompt, image=image, video=video, audio=audio)
+        return async_to_sync(self._client._predict)(inputs, **parameters)
+
+    @property
+    def stream(self) -> "{Modality}SyncStreamNamespace":
+        """Sync streaming namespace."""
+        return {Modality}SyncStreamNamespace(self._client)
+
+
+class {Modality}SyncStreamNamespace:
+    """Sync streaming namespace - returns Stream instance with sync iteration support."""
+
+    def __init__(self, client: {Modality}Client) -> None:
+        self._client = client
+
+    def generate(
+        self,
+        prompt: str,
+        **parameters: Unpack[{Modality}Parameters],
+    ) -> {Modality}Stream:
+        """Sync streaming {modality} generation.
+
+        Returns Stream instance that supports both async and sync iteration.
+
+        Usage:
+            stream = client.sync.stream.generate("Hello")
+            for chunk in stream:  # Sync iteration (bridges async internally)
+                print(chunk.content, end="")
+            print(stream.output.usage)
+        """
+        # Return same stream as async version - __iter__/__next__ handle sync iteration
+        return self._client.stream.generate(prompt, **parameters)
+
+    def analyze(
+        self,
+        prompt: str,
+        *,
+        image: ImageContent | None = None,
+        video: VideoContent | None = None,
+        audio: AudioContent | None = None,
+        **parameters: Unpack[{Modality}Parameters],
+    ) -> {Modality}Stream:
+        """Sync streaming media analysis (image, video, or audio).
+
+        Returns Stream instance that supports both async and sync iteration.
+
+        Usage:
+            stream = client.sync.stream.analyze("Describe", image=img)
+            for chunk in stream:  # Sync iteration (bridges async internally)
+                print(chunk.content, end="")
+            print(stream.output.usage)
+        """
+        # Return same stream as async version - __iter__/__next__ handle sync iteration
+        return self._client.stream.analyze(
+            prompt, image=image, video=video, audio=audio, **parameters
+        )
+
+
+__all__ = [
+    "{Modality}Client",
+    "{Modality}StreamNamespace",
+    "{Modality}SyncNamespace",
+    "{Modality}SyncStreamNamespace",
+]

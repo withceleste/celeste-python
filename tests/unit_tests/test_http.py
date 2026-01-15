@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import httpx
 import pytest
 
-from celeste.core import Capability, Provider
+from celeste.core import Modality, Provider
 from celeste.http import (
     HTTPClient,
     clear_http_clients,
@@ -361,7 +361,7 @@ class TestHTTPClientRegistry:
         """get_http_client must return the same HTTPClient for identical provider/capability."""
         # Arrange
         provider = Provider.OPENAI
-        capability = Capability.TEXT_GENERATION
+        capability = Modality.TEXT
 
         # Act
         client1 = get_http_client(provider, capability)
@@ -375,7 +375,7 @@ class TestHTTPClientRegistry:
     ) -> None:
         """get_http_client must return different HTTPClients for different providers."""
         # Arrange
-        capability = Capability.TEXT_GENERATION
+        capability = Modality.TEXT
 
         # Act
         openai_client = get_http_client(Provider.OPENAI, capability)
@@ -392,8 +392,8 @@ class TestHTTPClientRegistry:
         provider = Provider.OPENAI
 
         # Act
-        text_client = get_http_client(provider, Capability.TEXT_GENERATION)
-        image_client = get_http_client(provider, Capability.IMAGE_GENERATION)
+        text_client = get_http_client(provider, Modality.TEXT)
+        image_client = get_http_client(provider, Modality.IMAGES)
 
         # Assert - Must be different instances
         assert text_client is not image_client
@@ -401,18 +401,14 @@ class TestHTTPClientRegistry:
     def test_registry_isolation_prevents_cross_contamination(self) -> None:
         """Registry must maintain complete isolation between different provider/capability pairs."""
         # Arrange - Create clients for different combinations
-        openai_text = get_http_client(Provider.OPENAI, Capability.TEXT_GENERATION)
-        openai_image = get_http_client(Provider.OPENAI, Capability.IMAGE_GENERATION)
-        anthropic_text = get_http_client(Provider.ANTHROPIC, Capability.TEXT_GENERATION)
+        openai_text = get_http_client(Provider.OPENAI, Modality.TEXT)
+        openai_image = get_http_client(Provider.OPENAI, Modality.IMAGES)
+        anthropic_text = get_http_client(Provider.ANTHROPIC, Modality.TEXT)
 
         # Act - Retrieve them again
-        openai_text_again = get_http_client(Provider.OPENAI, Capability.TEXT_GENERATION)
-        openai_image_again = get_http_client(
-            Provider.OPENAI, Capability.IMAGE_GENERATION
-        )
-        anthropic_text_again = get_http_client(
-            Provider.ANTHROPIC, Capability.TEXT_GENERATION
-        )
+        openai_text_again = get_http_client(Provider.OPENAI, Modality.TEXT)
+        openai_image_again = get_http_client(Provider.OPENAI, Modality.IMAGES)
+        anthropic_text_again = get_http_client(Provider.ANTHROPIC, Modality.TEXT)
 
         # Assert - Same pairs return same instances, different pairs return different instances
         assert openai_text is openai_text_again
@@ -450,8 +446,8 @@ class TestHTTPClientCleanup:
         from celeste.http import _http_clients, get_http_client
 
         # Arrange - Create multiple clients
-        client1 = get_http_client(Provider.OPENAI, Capability.TEXT_GENERATION)
-        client2 = get_http_client(Provider.ANTHROPIC, Capability.TEXT_GENERATION)
+        client1 = get_http_client(Provider.OPENAI, Modality.TEXT)
+        client2 = get_http_client(Provider.ANTHROPIC, Modality.TEXT)
 
         # Initialize both clients to create httpx.AsyncClient instances
         with patch("celeste.http.httpx.AsyncClient", return_value=mock_httpx_client):
@@ -494,8 +490,8 @@ class TestHTTPClientCleanup:
         mock_client2.post = AsyncMock(return_value=httpx.Response(200))
         mock_client2.aclose = AsyncMock()
 
-        client1 = get_http_client(Provider.OPENAI, Capability.TEXT_GENERATION)
-        client2 = get_http_client(Provider.ANTHROPIC, Capability.TEXT_GENERATION)
+        client1 = get_http_client(Provider.OPENAI, Modality.TEXT)
+        client2 = get_http_client(Provider.ANTHROPIC, Modality.TEXT)
 
         # Initialize clients with different mock instances
         with patch("celeste.http.httpx.AsyncClient") as mock_constructor:
@@ -528,7 +524,7 @@ class TestHTTPClientCleanup:
         mock_client1.post = AsyncMock(return_value=httpx.Response(200))
         mock_client1.aclose = AsyncMock()
 
-        client1 = get_http_client(Provider.OPENAI, Capability.TEXT_GENERATION)
+        client1 = get_http_client(Provider.OPENAI, Modality.TEXT)
 
         # Initialize client
         with patch("celeste.http.httpx.AsyncClient", return_value=mock_client1):
@@ -567,9 +563,9 @@ class TestHTTPClientCleanup:
         mock_client3.post = AsyncMock(return_value=httpx.Response(200))
         mock_client3.aclose = AsyncMock()
 
-        client1 = get_http_client(Provider.OPENAI, Capability.TEXT_GENERATION)
-        client2 = get_http_client(Provider.OPENAI, Capability.IMAGE_GENERATION)
-        client3 = get_http_client(Provider.ANTHROPIC, Capability.TEXT_GENERATION)
+        client1 = get_http_client(Provider.OPENAI, Modality.TEXT)
+        client2 = get_http_client(Provider.OPENAI, Modality.IMAGES)
+        client3 = get_http_client(Provider.ANTHROPIC, Modality.TEXT)
 
         # Initialize all clients
         with patch("celeste.http.httpx.AsyncClient") as mock_constructor:
@@ -616,8 +612,8 @@ class TestHTTPClientCleanup:
         mock_client2.post = AsyncMock(return_value=httpx.Response(200))
         mock_client2.aclose = AsyncMock()
 
-        client1 = get_http_client(Provider.OPENAI, Capability.TEXT_GENERATION)
-        client2 = get_http_client(Provider.ANTHROPIC, Capability.TEXT_GENERATION)
+        client1 = get_http_client(Provider.OPENAI, Modality.TEXT)
+        client2 = get_http_client(Provider.ANTHROPIC, Modality.TEXT)
 
         # Initialize both clients
         with patch("celeste.http.httpx.AsyncClient") as mock_constructor:

@@ -22,30 +22,28 @@ sync:
 
 # Linting
 lint:
-	uv run ruff check src/celeste tests/ packages/
+	uv run ruff check src/celeste tests/
 
 # Linting with auto-fix
 lint-fix:
-	uv run ruff check --fix src/celeste tests/ packages/
+	uv run ruff check --fix src/celeste tests/
 
 # Formatting
 format:
-	uv run ruff format src/celeste tests/ packages/
+	uv run ruff format src/celeste tests/
 
 # Type checking (fail fast on any error)
 typecheck:
-	@uv run mypy -p celeste && uv run mypy tests/ && uv run mypy packages/*/*/src/
+	@uv run mypy -p celeste && uv run mypy tests/
 
 # Testing
 test:
 	uv run pytest tests/unit_tests --cov=celeste --cov-report=term-missing --cov-fail-under=80 -v
 
 # Integration testing (requires API keys)
-# Usage: make integration-test [capability]
+# Runs tests from tests/integration_tests/
 integration-test:
-	@cap="$(filter-out $@,$(MAKECMDGOALS))"; \
-	if [ -z "$$cap" ]; then cap="*"; fi; \
-	uv run pytest packages/capabilities/$$cap/tests/integration_tests/ -m integration -v --dist=worksteal -n auto
+	uv run pytest tests/integration_tests/ -m integration -v --dist=worksteal -n auto
 
 # Catch capability names as no-op targets
 %:
@@ -53,7 +51,7 @@ integration-test:
 
 # Security scanning (config reads from pyproject.toml)
 security:
-	uv run bandit -c pyproject.toml -r src/ packages/ -f screen
+	uv run bandit -c pyproject.toml -r src/ -f screen
 
 # Full CI/CD pipeline - what GitHub Actions will run
 ci:

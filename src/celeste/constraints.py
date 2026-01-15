@@ -7,9 +7,10 @@ from typing import Any, get_args, get_origin
 
 from pydantic import BaseModel, Field, computed_field
 
-from celeste.artifacts import ImageArtifact
+from celeste.artifacts import AudioArtifact, ImageArtifact, VideoArtifact
 from celeste.exceptions import ConstraintViolationError
-from celeste.mime_types import ImageMimeType
+from celeste.mime_types import AudioMimeType, ImageMimeType, VideoMimeType
+from celeste.types import AudioContent, ImageContent, VideoContent
 
 
 class Constraint(BaseModel, ABC):
@@ -107,6 +108,71 @@ class Pattern(Constraint):
             raise ConstraintViolationError(msg)
 
         return value
+
+
+class Dimensions(Constraint):
+    """Dimension string constraint with pixel and aspect ratio bounds."""
+
+    min_pixels: int
+    max_pixels: int
+    min_aspect_ratio: float
+    max_aspect_ratio: float
+    presets: dict[str, str] | None = None
+
+    def __call__(self, value: str) -> str:
+        """Validate dimension string against pixel and aspect ratio bounds."""
+        if not isinstance(value, str):
+            msg = f"Must be string, got {type(value).__name__}"
+            raise ConstraintViolationError(msg)
+
+        # Check if value is a preset key
+        if self.presets and value in self.presets:
+            actual_value = self.presets[value]
+        else:
+            actual_value = value
+
+        # Parse dimension format "WIDTHxHEIGHT"
+        parts = actual_value.lower().split("x")
+        if len(parts) != 2:
+            msg = f"Invalid dimension format: {actual_value!r}. Expected 'WIDTHxHEIGHT'"
+            raise ConstraintViolationError(msg)
+
+        # Validate parts are numeric
+        if not parts[0].isdigit() or not parts[1].isdigit():
+            msg = (
+                f"Invalid dimension format: {actual_value!r}. "
+                f"Width and height must be positive integers"
+            )
+            raise ConstraintViolationError(msg)
+
+        width = int(parts[0])
+        height = int(parts[1])
+
+        # Validate dimensions are positive
+        if width <= 0 or height <= 0:
+            msg = f"Width and height must be positive, got {width}x{height}"
+            raise ConstraintViolationError(msg)
+
+        # Validate total pixels
+        total_pixels = width * height
+        if not (self.min_pixels <= total_pixels <= self.max_pixels):
+            msg = (
+                f"Total pixels {total_pixels:,} outside valid range "
+                f"[{self.min_pixels:,}, {self.max_pixels:,}]"
+            )
+            raise ConstraintViolationError(msg)
+
+        # Validate aspect ratio
+        aspect_ratio = width / height
+        if not (self.min_aspect_ratio <= aspect_ratio <= self.max_aspect_ratio):
+            msg = (
+                f"Aspect ratio {aspect_ratio:.3f} outside valid range "
+                f"[{self.min_aspect_ratio:.3f}, {self.max_aspect_ratio:.3f}]"
+            )
+            raise ConstraintViolationError(msg)
+
+        # Return normalized format
+        return f"{width}x{height}"
 
 
 class Str(Constraint):
@@ -238,9 +304,7 @@ class ImagesConstraint(Constraint):
     max_count: int | None = None
     """Maximum number of images."""
 
-    def __call__(
-        self, value: ImageArtifact | list[ImageArtifact]
-    ) -> list[ImageArtifact]:
+    def __call__(self, value: ImageContent) -> list[ImageArtifact]:
         """Validate image artifact(s) against constraint and normalize to list."""
         # Normalize: if single ImageArtifact is passed, wrap it in a list
         images = value if isinstance(value, list) else [value]
@@ -266,10 +330,139 @@ class ImagesConstraint(Constraint):
         return images
 
 
+class VideoConstraint(Constraint):
+    """Constraint for validating a single video artifact - validates mime_type."""
+
+    supported_mime_types: list[VideoMimeType] | None = None
+    """Supported MIME types for the video."""
+
+    def __call__(self, value: VideoArtifact) -> VideoArtifact:
+        """Validate single video artifact against constraint."""
+        if isinstance(value, list):
+            msg = "VideoConstraint requires a single VideoArtifact, not a list"
+            raise ConstraintViolationError(msg)
+
+        if not isinstance(value, VideoArtifact):
+            msg = f"Must be VideoArtifact, got {type(value).__name__}"
+            raise ConstraintViolationError(msg)
+
+        if (
+            self.supported_mime_types is not None
+            and value.mime_type not in self.supported_mime_types
+        ):
+            supported_values = [mt.value for mt in self.supported_mime_types]
+            got_value = value.mime_type.value if value.mime_type else None
+            msg = f"mime_type must be one of {supported_values}, got {got_value!r}"
+            raise ConstraintViolationError(msg)
+
+        return value
+
+
+class VideosConstraint(Constraint):
+    """Constraint for validating video artifacts list - validates mime_type and count limits."""
+
+    supported_mime_types: list[VideoMimeType] | None = None
+    """Supported MIME types."""
+
+    max_count: int | None = None
+    """Maximum number of videos."""
+
+    def __call__(self, value: VideoContent) -> list[VideoArtifact]:
+        """Validate video artifact(s) against constraint and normalize to list."""
+        # Normalize: if single VideoArtifact is passed, wrap it in a list
+        videos = value if isinstance(value, list) else [value]
+
+        if self.max_count is not None and len(videos) > self.max_count:
+            msg = f"Must have at most {self.max_count} video(s), got {len(videos)}"
+            raise ConstraintViolationError(msg)
+
+        if self.supported_mime_types is not None:
+            for i, vid in enumerate(videos):
+                if not isinstance(vid, VideoArtifact):
+                    msg = f"Video {i + 1}: Must be VideoArtifact, got {type(vid).__name__}"
+                    raise ConstraintViolationError(msg)
+                if vid.mime_type not in self.supported_mime_types:
+                    supported_values = [mt.value for mt in self.supported_mime_types]
+                    got_value = vid.mime_type.value if vid.mime_type else None
+                    msg = (
+                        f"Video {i + 1}: mime_type must be one of {supported_values}, "
+                        f"got {got_value!r}"
+                    )
+                    raise ConstraintViolationError(msg)
+
+        return videos
+
+
+class AudioConstraint(Constraint):
+    """Constraint for validating a single audio artifact - validates mime_type."""
+
+    supported_mime_types: list[AudioMimeType] | None = None
+    """Supported MIME types for the audio."""
+
+    def __call__(self, value: AudioArtifact) -> AudioArtifact:
+        """Validate single audio artifact against constraint."""
+        if isinstance(value, list):
+            msg = "AudioConstraint requires a single AudioArtifact, not a list"
+            raise ConstraintViolationError(msg)
+
+        if not isinstance(value, AudioArtifact):
+            msg = f"Must be AudioArtifact, got {type(value).__name__}"
+            raise ConstraintViolationError(msg)
+
+        if (
+            self.supported_mime_types is not None
+            and value.mime_type not in self.supported_mime_types
+        ):
+            supported_values = [mt.value for mt in self.supported_mime_types]
+            got_value = value.mime_type.value if value.mime_type else None
+            msg = f"mime_type must be one of {supported_values}, got {got_value!r}"
+            raise ConstraintViolationError(msg)
+
+        return value
+
+
+class AudiosConstraint(Constraint):
+    """Constraint for validating audio artifacts list - validates mime_type and count limits."""
+
+    supported_mime_types: list[AudioMimeType] | None = None
+    """Supported MIME types."""
+
+    max_count: int | None = None
+    """Maximum number of audios."""
+
+    def __call__(self, value: AudioContent) -> list[AudioArtifact]:
+        """Validate audio artifact(s) against constraint and normalize to list."""
+        # Normalize: if single AudioArtifact is passed, wrap it in a list
+        audios = value if isinstance(value, list) else [value]
+
+        if self.max_count is not None and len(audios) > self.max_count:
+            msg = f"Must have at most {self.max_count} audio(s), got {len(audios)}"
+            raise ConstraintViolationError(msg)
+
+        if self.supported_mime_types is not None:
+            for i, aud in enumerate(audios):
+                if not isinstance(aud, AudioArtifact):
+                    msg = f"Audio {i + 1}: Must be AudioArtifact, got {type(aud).__name__}"
+                    raise ConstraintViolationError(msg)
+                if aud.mime_type not in self.supported_mime_types:
+                    supported_values = [mt.value for mt in self.supported_mime_types]
+                    got_value = aud.mime_type.value if aud.mime_type else None
+                    msg = (
+                        f"Audio {i + 1}: mime_type must be one of {supported_values}, "
+                        f"got {got_value!r}"
+                    )
+                    raise ConstraintViolationError(msg)
+
+        return audios
+
+
 __all__ = [
+    "AudioConstraint",
+    "AudiosConstraint",
     "Bool",
     "Choice",
     "Constraint",
+    "Dimensions",
     "Float",
     "ImageConstraint",
     "ImagesConstraint",
@@ -278,4 +471,6 @@ __all__ = [
     "Range",
     "Schema",
     "Str",
+    "VideoConstraint",
+    "VideosConstraint",
 ]

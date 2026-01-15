@@ -1,0 +1,25 @@
+"""Celeste {Modality} modality."""
+
+from .client import {Modality}Client, {Modality}StreamNamespace
+from .io import (
+    {Modality}Chunk,
+    {Modality}FinishReason,
+    {Modality}Input,
+    {Modality}Output,
+    {Modality}Usage,
+)
+from .parameters import {Modality}Parameter, {Modality}Parameters
+from .streaming import {Modality}Stream
+
+__all__ = [
+    "{Modality}Chunk",
+    "{Modality}Client",
+    "{Modality}FinishReason",
+    "{Modality}Input",
+    "{Modality}Output",
+    "{Modality}Parameter",
+    "{Modality}Parameters",
+    "{Modality}Stream",
+    "{Modality}StreamNamespace",
+    "{Modality}Usage",
+]

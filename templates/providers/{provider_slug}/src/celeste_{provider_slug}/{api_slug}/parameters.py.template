@@ -1,0 +1,61 @@
+"""{Provider} {Api} API parameter mappers.
+
+Naming convention:
+- Mapper class name MUST match the provider's API parameter name
+- Example: API param "web_search" → class WebSearchMapper (not SearchMapper)
+- Example: API param "aspectRatio" → class AspectRatioMapper
+- The request key should match the provider's expected field name exactly
+"""
+
+from typing import Any
+
+from celeste.models import Model
+from celeste.parameters import ParameterMapper
+
+
+# PATTERN 1: Simple flat mapping
+# Use when provider expects flat request body: {"param": value}
+class ExampleParamMapper(ParameterMapper):
+    """Map example_param to {Provider} example_param field."""
+
+    def map(
+        self,
+        request: dict[str, Any],
+        value: object,
+        model: Model,
+    ) -> dict[str, Any]:
+        """Transform example_param into provider request."""
+        validated_value = self._validate_value(value, model)
+        if validated_value is None:
+            return request
+
+        # Key matches API parameter name exactly
+        request["example_param"] = validated_value
+        return request
+
+
+# PATTERN 2: Nested mapping
+# Use when provider expects nested structure: {"parameters": {"param": value}}
+class NestedParamMapper(ParameterMapper):
+    """Map nested_param to {Provider} parameters.nestedParam field."""
+
+    def map(
+        self,
+        request: dict[str, Any],
+        value: object,
+        model: Model,
+    ) -> dict[str, Any]:
+        """Transform nested_param into provider request."""
+        validated_value = self._validate_value(value, model)
+        if validated_value is None:
+            return request
+
+        # Key matches API parameter name exactly (camelCase for this provider)
+        request.setdefault("parameters", {})["nestedParam"] = validated_value
+        return request
+
+
+__all__ = [
+    "ExampleParamMapper",
+    "NestedParamMapper",
+]

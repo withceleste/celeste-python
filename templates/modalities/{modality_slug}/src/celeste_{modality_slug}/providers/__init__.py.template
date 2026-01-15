@@ -1,0 +1,18 @@
+"""{Modality} providers.
+
+Placeholder Reference:
+- {Modality}  -> PascalCase modality name (e.g., Images, Text, Speech)
+- {modality}  -> lowercase modality name (e.g., images, text, speech)
+"""
+
+from celeste.core import Provider
+
+from ..client import {Modality}Client
+from .openai import OpenAI{Modality}Client
+
+# from .google import Google{Modality}Client
+
+PROVIDERS: dict[Provider, type[{Modality}Client]] = {
+    Provider.OPENAI: OpenAI{Modality}Client,
+    # Provider.GOOGLE: Google{Modality}Client,
+}

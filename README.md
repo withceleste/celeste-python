@@ -6,13 +6,13 @@
 
 **The primitive layer for multi-modal AI**
 
-All capabilities. All providers. One interface.
+All modalities. All providers. One interface.
 
 Primitives, not frameworks.
 
 [![Python](https://img.shields.io/badge/Python-3.12+-blue?style=for-the-badge)](https://www.python.org/)
 [![License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](LICENSE)
-[![PyPI](https://img.shields.io/badge/PyPI-celeste--ai-green?style=for-the-badge)](https://pypi.org/project/celeste-ai/)
+[![PyPI](https://img.shields.io/pypi/v/celeste-ai?style=for-the-badge)](https://pypi.org/project/celeste-ai/)
 
 <a href="https://github.com/withceleste/celeste-python" target="_parent">
   <img alt="" src="https://img.shields.io/github/stars/withceleste/celeste-python.svg?style=social&label=Star" alt="GitHub stars" />
@@ -28,10 +28,11 @@ Primitives, not frameworks.
 
 </div>
 
+> 🚀 This is the v1 Beta release. We're validating the new architecture before the stable v1.0 release. Feedback welcome!
+
 # Celeste AI
 
-
-Type-safe, capability-provider-agnostic primitives .
+Type-safe, modality/provider-agnostic primitives.
 
 - **Unified Interface:** One API for OpenAI, Anthropic, Gemini, Mistral, and 14+ others.
 - **True Multi-Modal:** Text, Image, Audio, Video, Embeddings, Search —all first-class citizens.
@@ -42,21 +43,20 @@ Type-safe, capability-provider-agnostic primitives .
 
 ## 🚀 Quick Start
 ```python
-from celeste import create_client
-
+import celeste
 
 # "We need a catchy slogan for our new eco-friendly sneaker."
-client = create_client(
-    capability="text-generation",
-    model="gpt-5"
+slogan = await celeste.text.generate(
+    "Write a slogan for an eco-friendly sneaker.",
+    model="gpt-5",
 )
-slogan = await client.generate("Write a slogan for an eco-friendly sneaker.")
 print(slogan.content)
 ```
 
 
 ## 🎨 Multimodal example
 ```python
+import celeste
 from pydantic import BaseModel, Field
 
 class ProductCampaign(BaseModel):
@@ -65,27 +65,27 @@ class ProductCampaign(BaseModel):
 
 # 2. Extract Campaign Assets (Anthropic)
 # -----------------------------------------------------
-extract_client = create_client(Capability.TEXT_GENERATION, model="claude-opus-4-1")
-campaign_output = await extract_client.generate(
+campaign_output = await celeste.text.generate(
     f"Create campaign assets for slogan: {slogan.content}",
-    output_schema=ProductCampaign
+    model="claude-opus-4-1",
+    output_schema=ProductCampaign,
 )
 campaign = campaign_output.content
 
 # 3. Generate Ad Visual (Flux)
 # -----------------------------------------------------
-image_client = create_client(Capability.IMAGE_GENERATION, model="flux-2-flex")
-image_output = await image_client.generate(
+image_output = await celeste.images.generate(
     campaign.visual_prompt,
+    model="flux-2-flex",
     aspect_ratio="1:1"
 )
 image = image_output.content
 
 # 4. Generate Radio Spot (ElevenLabs)
 # -----------------------------------------------------
-speech_client = create_client(Capability.SPEECH_GENERATION, model="eleven_v3")
-speech_output = await speech_client.generate(
+speech_output = await celeste.audio.speak(
     campaign.audio_script,
+    model="eleven_v3",
     voice="adam"
 )
 speech = speech_output.content
@@ -183,36 +183,89 @@ user = response.parsed
 
 ```python
 # ✅ Celeste Way
-from celeste import create_client, Capability
+import celeste
 
-
-client = create_client(
-    Capability.TEXT_GENERATION,
-    model=google_model_id  # <--- Choose any model from any provider
-)
-
-response = await client.generate(
-    prompt="Extract user info: John is 30",
-    output_schema=User  # <--- Unified parameter working across all providers
+response = await celeste.text.generate(
+    "Extract user info: John is 30",
+    model=google_model_id,  # <--- Choose any model from any provider
+    output_schema=User,  # <--- Unified parameter working across all providers
 )
 user = response.content  # Already parsed as User instance
 ```
 
 ---
-## 🪶 Install what you need
+## 🧭 Namespace API (recommended)
+Namespaces are domain-first: start from the resource you want to work with (e.g., videos) even if the input is text. Under the hood, Celeste maps (domain, operation) to the output modality (e.g., `celeste.images.analyze(...)` routes to the text modality because analysis returns text).
+```python
+import celeste
+
+# Async (default)
+result = await celeste.images.analyze(
+    image=img,
+    prompt="Describe this image",
+    model="gpt-4o"
+)
+
+# Sync
+result = celeste.images.sync.analyze(
+    image=img,
+    prompt="Describe this image",
+    model="gpt-4o"
+)
+
+# Async streaming
+async for chunk in celeste.text.stream.generate("Hello", model="gpt-4o"):
+    print(chunk.content, end="")
+
+# Sync streaming
+for chunk in celeste.text.sync.stream.generate("Hello", model="gpt-4o"):
+    print(chunk.content, end="")
+```
+
+---
+## ⚙️ Advanced: create_client
+For explicit configuration or client reuse, use `create_client` with modality + operation. This is modality-first: you choose the output type and operation explicitly.
+
+```python
+from celeste import create_client, Modality, Operation
+
+client = create_client(
+    modality=Modality.TEXT,
+    operation=Operation.GENERATE,
+    model=google_model_id,
+)
+response = await client.generate("Extract user info: John is 30", output_schema=User)
+```
+
+> `capability` is still supported but deprecated. Prefer `modality` + `operation`.
+
+---
+## 🪶 Install
 ```bash
-uv add "celeste-ai[text-generation]"  # Text only
-uv add "celeste-ai[image-generation]" # Image generation
-uv add "celeste-ai[all]"              # Everything
+pip install celeste-ai
+# or
+uv add celeste-ai
 ```
 ---
+## 🔁 Behavior changes since v0.3.9
+- Capabilities → modalities + operations.
+- Namespace API is now the default entry point.
+- `create_client` now uses `modality` + `operation`; `capability` is deprecated.
+- `analyze` for image/audio/video routes through the text modality.
+- Namespaces are domain-first (resource you work with); `create_client` is modality-first (output type). Domain + operation maps to modality.
+- `extra_body` allows provider-specific parameters without first-class mapping.
+- Single-package install (no extras).
 
+---
 ## 🔧 Type-Safe by Design
 
 ```python
 # Full IDE autocomplete
-response = await client.generate(
-    prompt="Explain AI",
+import celeste
+
+response = await celeste.text.generate(
+    "Explain AI",
+    model="gpt-4o-mini",
     temperature=0.7,    # ✅ Validated (0.0-2.0)
     max_tokens=100,     # ✅ Validated (int)
 )

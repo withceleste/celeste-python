@@ -1,0 +1,40 @@
+"""Pytest configuration and fixtures for integration tests."""
+
+from collections.abc import AsyncGenerator
+
+import pytest_asyncio
+
+from celeste.http import close_all_http_clients
+
+
+@pytest_asyncio.fixture(autouse=True)
+async def cleanup_http_clients() -> AsyncGenerator[None, None]:
+    """Ensure HTTP clients are closed after each test.
+
+    This fixture runs automatically after each test to ensure HTTP clients
+    are properly closed before pytest-asyncio closes the event loop.
+    This prevents "Event loop is closed" errors when using pytest-xdist.
+    """
+    yield
+    await close_all_http_clients()
+
+
+# =============================================================================
+# Add modality-specific fixtures below as needed.
+# =============================================================================
+#
+# Example: Test assets (images, videos, audio files)
+# --------------------------------------------------
+# from pathlib import Path
+# import pytest
+# from celeste.artifacts import ImageArtifact
+# from celeste.mime_types import ImageMimeType
+#
+# ASSETS_DIR = Path(__file__).parent / "assets"
+#
+# @pytest.fixture
+# def test_image() -> ImageArtifact:
+#     """Provide a test image."""
+#     return ImageArtifact(
+#         path=str(ASSETS_DIR / "test.png"), mime_type=ImageMimeType.PNG
+#     )
