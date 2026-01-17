@@ -5,7 +5,7 @@ from typing import Any, Unpack
 from celeste.parameters import ParameterMapper
 from celeste.providers.groq.chat.client import GroqChatClient
 from celeste.providers.groq.chat.streaming import GroqChatStream as _GroqChatStream
-from celeste.types import ImageContent, TextContent, VideoContent
+from celeste.types import ImageContent, Message, TextContent, VideoContent
 from celeste.utils import build_image_data_url
 
 from ...client import TextClient
@@ -80,29 +80,39 @@ class GroqTextClient(GroqChatClient, TextClient):
 
     async def generate(
         self,
-        prompt: str,
+        prompt: str | None = None,
+        *,
+        messages: list[Message] | None = None,
         **parameters: Unpack[TextParameters],
     ) -> TextOutput:
         """Generate text from prompt."""
-        inputs = TextInput(prompt=prompt)
+        inputs = TextInput(prompt=prompt, messages=messages)
         return await self._predict(inputs, **parameters)
 
     async def analyze(
         self,
-        prompt: str,
+        prompt: str | None = None,
         *,
+        messages: list[Message] | None = None,
         image: ImageContent | None = None,
         video: VideoContent | None = None,
         **parameters: Unpack[TextParameters],
     ) -> TextOutput:
-        """Analyze image(s) or video(s) with prompt."""
-        inputs = TextInput(prompt=prompt, image=image, video=video)
+        """Analyze image(s) or video(s) with prompt or messages."""
+        inputs = TextInput(
+            prompt=prompt, messages=messages, image=image, video=video
+        )
         return await self._predict(inputs, **parameters)
 
     def _init_request(self, inputs: TextInput) -> dict[str, Any]:
         """Initialize request from Groq messages array format."""
+        # If messages provided, use them directly (messages take precedence)
+        if inputs.messages is not None:
+            return {"messages": [message.model_dump() for message in inputs.messages]}
+
+        # Fall back to prompt-based input
         if inputs.image is None:
-            content: str | list[dict[str, Any]] = inputs.prompt
+            content: str | list[dict[str, Any]] = inputs.prompt or ""
         else:
             images = inputs.image if isinstance(inputs.image, list) else [inputs.image]
             content = [
@@ -112,7 +122,7 @@ class GroqTextClient(GroqChatClient, TextClient):
                 }
                 for img in images
             ]
-            content.append({"type": "text", "text": inputs.prompt})
+            content.append({"type": "text", "text": inputs.prompt or ""})
 
         return {"messages": [{"role": "user", "content": content}]}
 

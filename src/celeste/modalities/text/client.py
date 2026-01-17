@@ -1,12 +1,12 @@
 """Text modality client."""
 
-from typing import Unpack
+from typing import Any, Unpack
 
 from asgiref.sync import async_to_sync
 
 from celeste.client import ModalityClient
 from celeste.core import InputType, Modality
-from celeste.types import AudioContent, ImageContent, TextContent, VideoContent
+from celeste.types import AudioContent, ImageContent, Message, TextContent, VideoContent
 
 from .io import TextInput, TextOutput
 from .parameters import TextParameters
@@ -69,7 +69,11 @@ class TextStreamNamespace:
 
     def generate(
         self,
-        prompt: str,
+        prompt: str | None = None,
+        *,
+        messages: list[Message] | None = None,
+        base_url: str | None = None,
+        extra_body: dict[str, Any] | None = None,
         **parameters: Unpack[TextParameters],
     ) -> TextStream:
         """Stream text generation.
@@ -78,20 +82,25 @@ class TextStreamNamespace:
             async for chunk in client.stream.generate("Hello"):
                 print(chunk.content)
         """
-        inputs = TextInput(prompt=prompt)
+        inputs = TextInput(prompt=prompt, messages=messages)
         return self._client._stream(
             inputs,
             stream_class=self._client._stream_class(),
+            base_url=base_url,
+            extra_body=extra_body,
             **parameters,
         )
 
     def analyze(
         self,
-        prompt: str,
+        prompt: str | None = None,
         *,
+        messages: list[Message] | None = None,
         image: ImageContent | None = None,
         video: VideoContent | None = None,
         audio: AudioContent | None = None,
+        base_url: str | None = None,
+        extra_body: dict[str, Any] | None = None,
         **parameters: Unpack[TextParameters],
     ) -> TextStream:
         """Stream media analysis (image, video, or audio).
@@ -106,11 +115,16 @@ class TextStreamNamespace:
             async for chunk in client.stream.analyze("Transcribe", audio=aud):
                 print(chunk.content)
         """
-        self._client._check_media_support(image=image, video=video, audio=audio)
-        inputs = TextInput(prompt=prompt, image=image, video=video, audio=audio)
+        if messages is None:
+            self._client._check_media_support(image=image, video=video, audio=audio)
+        inputs = TextInput(
+            prompt=prompt, messages=messages, image=image, video=video, audio=audio
+        )
         return self._client._stream(
             inputs,
             stream_class=self._client._stream_class(),
+            base_url=base_url,
+            extra_body=extra_body,
             **parameters,
         )
 
@@ -126,7 +140,11 @@ class TextSyncNamespace:
 
     def generate(
         self,
-        prompt: str,
+        prompt: str | None = None,
+        *,
+        messages: list[Message] | None = None,
+        base_url: str | None = None,
+        extra_body: dict[str, Any] | None = None,
         **parameters: Unpack[TextParameters],
     ) -> TextOutput:
         """Blocking text generation.
@@ -135,16 +153,21 @@ class TextSyncNamespace:
             result = client.sync.generate("Hello")
             print(result.content)
         """
-        inputs = TextInput(prompt=prompt)
-        return async_to_sync(self._client._predict)(inputs, **parameters)
+        inputs = TextInput(prompt=prompt, messages=messages)
+        return async_to_sync(self._client._predict)(
+            inputs, base_url=base_url, extra_body=extra_body, **parameters
+        )
 
     def analyze(
         self,
-        prompt: str,
+        prompt: str | None = None,
         *,
+        messages: list[Message] | None = None,
         image: ImageContent | None = None,
         video: VideoContent | None = None,
         audio: AudioContent | None = None,
+        base_url: str | None = None,
+        extra_body: dict[str, Any] | None = None,
         **parameters: Unpack[TextParameters],
     ) -> TextOutput:
         """Blocking media analysis (image, video, or audio).
@@ -159,9 +182,14 @@ class TextSyncNamespace:
             result = client.sync.analyze("Transcribe", audio=aud)
             print(result.content)
         """
-        self._client._check_media_support(image=image, video=video, audio=audio)
-        inputs = TextInput(prompt=prompt, image=image, video=video, audio=audio)
-        return async_to_sync(self._client._predict)(inputs, **parameters)
+        if messages is None:
+            self._client._check_media_support(image=image, video=video, audio=audio)
+        inputs = TextInput(
+            prompt=prompt, messages=messages, image=image, video=video, audio=audio
+        )
+        return async_to_sync(self._client._predict)(
+            inputs, base_url=base_url, extra_body=extra_body, **parameters
+        )
 
     @property
     def stream(self) -> "TextSyncStreamNamespace":
@@ -177,7 +205,11 @@ class TextSyncStreamNamespace:
 
     def generate(
         self,
-        prompt: str,
+        prompt: str | None = None,
+        *,
+        messages: list[Message] | None = None,
+        base_url: str | None = None,
+        extra_body: dict[str, Any] | None = None,
         **parameters: Unpack[TextParameters],
     ) -> TextStream:
         """Sync streaming text generation.
@@ -191,15 +223,24 @@ class TextSyncStreamNamespace:
             print(stream.output.usage)
         """
         # Return same stream as async version - __iter__/__next__ handle sync iteration
-        return self._client.stream.generate(prompt, **parameters)
+        return self._client.stream.generate(
+            prompt,
+            messages=messages,
+            base_url=base_url,
+            extra_body=extra_body,
+            **parameters,
+        )
 
     def analyze(
         self,
-        prompt: str,
+        prompt: str | None = None,
         *,
+        messages: list[Message] | None = None,
         image: ImageContent | None = None,
         video: VideoContent | None = None,
         audio: AudioContent | None = None,
+        base_url: str | None = None,
+        extra_body: dict[str, Any] | None = None,
         **parameters: Unpack[TextParameters],
     ) -> TextStream:
         """Sync streaming media analysis (image, video, or audio).
@@ -224,7 +265,14 @@ class TextSyncStreamNamespace:
         """
         # Return same stream as async version - __iter__/__next__ handle sync iteration
         return self._client.stream.analyze(
-            prompt, image=image, video=video, audio=audio, **parameters
+            prompt,
+            messages=messages,
+            image=image,
+            video=video,
+            audio=audio,
+            base_url=base_url,
+            extra_body=extra_body,
+            **parameters,
         )
 
 

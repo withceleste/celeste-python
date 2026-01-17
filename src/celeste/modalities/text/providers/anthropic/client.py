@@ -10,7 +10,7 @@ from celeste.providers.anthropic.messages.client import AnthropicMessagesClient
 from celeste.providers.anthropic.messages.streaming import (
     AnthropicMessagesStream as _AnthropicMessagesStream,
 )
-from celeste.types import ImageContent, TextContent, VideoContent
+from celeste.types import ImageContent, Message, TextContent, VideoContent
 from celeste.utils import detect_mime_type
 
 from ...client import TextClient
@@ -98,36 +98,70 @@ class AnthropicTextClient(AnthropicMessagesClient, TextClient):
 
     async def generate(
         self,
-        prompt: str,
+        prompt: str | None = None,
+        *,
+        messages: list[Message] | None = None,
         **parameters: Unpack[TextParameters],
     ) -> TextOutput:
         """Generate text from prompt."""
-        inputs = TextInput(prompt=prompt)
+        inputs = TextInput(prompt=prompt, messages=messages)
         return await self._predict(inputs, **parameters)
 
     async def analyze(
         self,
         prompt: str,
         *,
+        messages: list[Message] | None = None,
         image: ImageContent | None = None,
         video: VideoContent | None = None,
         **parameters: Unpack[TextParameters],
     ) -> TextOutput:
         """Analyze image(s) or video(s) with prompt."""
-        inputs = TextInput(prompt=prompt, image=image, video=video)
+        inputs = TextInput(
+            prompt=prompt, messages=messages, image=image, video=video
+        )
         return await self._predict(inputs, **parameters)
 
     def _init_request(self, inputs: TextInput) -> dict[str, Any]:
         """Initialize request from Anthropic Messages API format."""
+        if inputs.messages is not None:
+            system_blocks: list[dict[str, Any]] = []
+            messages: list[dict[str, Any]] = []
+
+            for message in inputs.messages:
+                role = message.role
+                content = message.content
+                if role in {"system", "developer"}:
+                    if isinstance(content, list):
+                        for block in content:
+                            if isinstance(block, dict):
+                                system_blocks.append(block)
+                            else:
+                                system_blocks.append(
+                                    {"type": "text", "text": str(block)}
+                                )
+                    elif isinstance(content, dict):
+                        system_blocks.append(content)
+                    elif content is not None:
+                        system_blocks.append({"type": "text", "text": str(content)})
+                    continue
+
+                messages.append({"role": role, "content": content})
+
+            request: dict[str, Any] = {"messages": messages}
+            if system_blocks:
+                request["system"] = system_blocks
+            return request
+
         if inputs.image is None:
-            content: str | list[dict[str, Any]] = inputs.prompt
+            content: str | list[dict[str, Any]] = inputs.prompt or ""
         else:
             images = inputs.image if isinstance(inputs.image, list) else [inputs.image]
             content = []
             for img in images:
                 source = self._build_image_source(img)
                 content.append({"type": "image", "source": source})
-            content.append({"type": "text", "text": inputs.prompt})
+            content.append({"type": "text", "text": inputs.prompt or ""})
 
         return {"messages": [{"role": "user", "content": content}]}
 

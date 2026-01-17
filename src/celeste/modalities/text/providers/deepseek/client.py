@@ -7,7 +7,7 @@ from celeste.providers.deepseek.chat.client import DeepSeekChatClient
 from celeste.providers.deepseek.chat.streaming import (
     DeepSeekChatStream as _DeepSeekChatStream,
 )
-from celeste.types import TextContent
+from celeste.types import Message, TextContent
 
 from ...client import TextClient
 from ...io import (
@@ -81,19 +81,26 @@ class DeepSeekTextClient(DeepSeekChatClient, TextClient):
 
     async def generate(
         self,
-        prompt: str,
+        prompt: str | None = None,
+        *,
+        messages: list[Message] | None = None,
         **parameters: Unpack[TextParameters],
     ) -> TextOutput:
         """Generate text from prompt."""
-        inputs = TextInput(prompt=prompt)
+        inputs = TextInput(prompt=prompt, messages=messages)
         return await self._predict(inputs, **parameters)
 
     def _init_request(self, inputs: TextInput) -> dict[str, Any]:
         """Initialize request from DeepSeek messages array format."""
+        # If messages provided, use them directly (messages take precedence)
+        if inputs.messages is not None:
+            return {"messages": [message.model_dump() for message in inputs.messages]}
+
+        # Fall back to prompt-based input
         messages = [
             {
                 "role": "user",
-                "content": inputs.prompt,
+                "content": inputs.prompt or "",
             }
         ]
 

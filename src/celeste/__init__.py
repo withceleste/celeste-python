@@ -50,7 +50,7 @@ from celeste.structured_outputs import (
     StrictJsonSchemaGenerator,
     StrictRefResolvingJsonSchemaGenerator,
 )
-from celeste.types import JsonValue
+from celeste.types import Content, JsonValue, Message, Role
 from celeste.websocket import WebSocketClient, WebSocketConnection, close_all_ws_clients
 
 logger = logging.getLogger(__name__)
@@ -243,11 +243,13 @@ __all__ = [
     "Authentication",
     "Capability",
     "ClientNotFoundError",
+    "Content",
     "ConstraintViolationError",
     "Error",
     "HTTPClient",
     "Input",
     "JsonValue",
+    "Message",
     "MissingCredentialsError",
     "Modality",
     "ModalityClient",
@@ -258,6 +260,7 @@ __all__ = [
     "Parameter",
     "Parameters",
     "Provider",
+    "Role",
     "RefResolvingJsonSchemaGenerator",
     "StreamEmptyError",
     "StreamNotExhaustedError",

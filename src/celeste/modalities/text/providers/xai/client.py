@@ -7,7 +7,7 @@ from celeste.providers.xai.responses.client import XAIResponsesClient
 from celeste.providers.xai.responses.streaming import (
     XAIResponsesStream as _XAIResponsesStream,
 )
-from celeste.types import ImageContent, TextContent, VideoContent
+from celeste.types import ImageContent, Message, TextContent, VideoContent
 from celeste.utils import build_image_data_url
 
 from ...client import TextClient
@@ -94,29 +94,37 @@ class XAITextClient(XAIResponsesClient, TextClient):
 
     async def generate(
         self,
-        prompt: str,
+        prompt: str | None = None,
+        *,
+        messages: list[Message] | None = None,
         **parameters: Unpack[TextParameters],
     ) -> TextOutput:
         """Generate text from prompt."""
-        inputs = TextInput(prompt=prompt)
+        inputs = TextInput(prompt=prompt, messages=messages)
         return await self._predict(inputs, **parameters)
 
     async def analyze(
         self,
-        prompt: str,
+        prompt: str | None = None,
         *,
+        messages: list[Message] | None = None,
         image: ImageContent | None = None,
         video: VideoContent | None = None,
         **parameters: Unpack[TextParameters],
     ) -> TextOutput:
-        """Analyze image(s) or video(s) with prompt."""
-        inputs = TextInput(prompt=prompt, image=image, video=video)
+        """Analyze image(s) or video(s) with prompt or messages."""
+        inputs = TextInput(
+            prompt=prompt, messages=messages, image=image, video=video
+        )
         return await self._predict(inputs, **parameters)
 
     def _init_request(self, inputs: TextInput) -> dict[str, Any]:
         """Initialize request from XAI Responses API format."""
+        if inputs.messages is not None:
+            return {"input": [message.model_dump() for message in inputs.messages]}
+
         if inputs.image is None:
-            return {"input": inputs.prompt}
+            return {"input": inputs.prompt or ""}
 
         # Multimodal: build content array with images + text
         images = inputs.image if isinstance(inputs.image, list) else [inputs.image]
@@ -125,7 +133,7 @@ class XAITextClient(XAIResponsesClient, TextClient):
             content.append(
                 {"type": "input_image", "image_url": build_image_data_url(img)}
             )
-        content.append({"type": "input_text", "text": inputs.prompt})
+        content.append({"type": "input_text", "text": inputs.prompt or ""})
 
         return {"input": [{"role": "user", "content": content}]}
 

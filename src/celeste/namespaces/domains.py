@@ -4,7 +4,7 @@ Each namespace provides methods for operations on a specific domain (resource ty
 The namespace routes to the appropriate modality client based on the operation.
 """
 
-from typing import Unpack
+from typing import Any, Unpack
 
 from pydantic import SecretStr
 
@@ -19,12 +19,12 @@ from celeste.modalities.embeddings.parameters import EmbeddingsParameters
 from celeste.modalities.images.io import ImageOutput
 from celeste.modalities.images.parameters import ImageParameters
 from celeste.modalities.images.streaming import ImagesStream
-from celeste.modalities.text.io import TextOutput
+from celeste.modalities.text.io import TextInput, TextOutput
 from celeste.modalities.text.parameters import TextParameters
 from celeste.modalities.text.streaming import TextStream
 from celeste.modalities.videos.io import VideoOutput
 from celeste.modalities.videos.parameters import VideoParameters
-from celeste.types import AudioContent, ImageContent, VideoContent
+from celeste.types import AudioContent, ImageContent, Message, VideoContent
 
 
 class SyncStreamTextNamespace:
@@ -32,11 +32,14 @@ class SyncStreamTextNamespace:
 
     def generate(
         self,
-        prompt: str,
+        prompt: str | None = None,
         *,
+        messages: list[Message] | None = None,
         model: str,
         provider: Provider | None = None,
         api_key: str | SecretStr | None = None,
+        base_url: str | None = None,
+        extra_body: dict[str, Any] | None = None,
         **params: Unpack[TextParameters],
     ) -> TextStream:
         """Sync streaming text generation."""
@@ -47,7 +50,13 @@ class SyncStreamTextNamespace:
             provider=provider,
             api_key=api_key,
         )
-        return client.sync.stream.generate(prompt, **params)
+        return client.sync.stream.generate(
+            prompt,
+            messages=messages,
+            base_url=base_url,
+            extra_body=extra_body,
+            **params,
+        )
 
 
 class StreamTextNamespace:
@@ -55,11 +64,14 @@ class StreamTextNamespace:
 
     def generate(
         self,
-        prompt: str,
+        prompt: str | None = None,
         *,
+        messages: list[Message] | None = None,
         model: str,
         provider: Provider | None = None,
         api_key: str | SecretStr | None = None,
+        base_url: str | None = None,
+        extra_body: dict[str, Any] | None = None,
         **params: Unpack[TextParameters],
     ) -> TextStream:
         """Async streaming text generation."""
@@ -70,7 +82,13 @@ class StreamTextNamespace:
             provider=provider,
             api_key=api_key,
         )
-        return client.stream.generate(prompt, **params)
+        return client.stream.generate(
+            prompt,
+            messages=messages,
+            base_url=base_url,
+            extra_body=extra_body,
+            **params,
+        )
 
 
 class SyncTextNamespace:
@@ -78,11 +96,14 @@ class SyncTextNamespace:
 
     def generate(
         self,
-        prompt: str,
+        prompt: str | None = None,
         *,
+        messages: list[Message] | None = None,
         model: str,
         provider: Provider | None = None,
         api_key: str | SecretStr | None = None,
+        base_url: str | None = None,
+        extra_body: dict[str, Any] | None = None,
         **params: Unpack[TextParameters],
     ) -> TextOutput:
         """Blocking text generation."""
@@ -93,7 +114,13 @@ class SyncTextNamespace:
             provider=provider,
             api_key=api_key,
         )
-        return client.sync.generate(prompt, **params)
+        return client.sync.generate(
+            prompt,
+            messages=messages,
+            base_url=base_url,
+            extra_body=extra_body,
+            **params,
+        )
 
     def embed(
         self,
@@ -128,20 +155,26 @@ class TextNamespace:
 
     async def generate(
         self,
-        prompt: str,
+        prompt: str | None = None,
         *,
+        messages: list[Message] | None = None,
         model: str,
         provider: Provider | None = None,
         api_key: str | SecretStr | None = None,
+        base_url: str | None = None,
+        extra_body: dict[str, Any] | None = None,
         **parameters: Unpack[TextParameters],
     ) -> TextOutput:
         """Generate text from a prompt.
 
         Args:
             prompt: The text prompt for generation.
+            messages: List of messages for multi-turn conversations.
             model: Model ID to use (required).
             provider: Optional provider override.
             api_key: Optional API key override.
+            base_url: Optional base URL for OpenResponses providers.
+            extra_body: Optional provider-specific request body fields.
             **parameters: Additional model parameters.
 
         Returns:
@@ -154,7 +187,10 @@ class TextNamespace:
             provider=provider,
             api_key=api_key,
         )
-        return await client.generate(prompt, **parameters)
+        inputs = TextInput(prompt=prompt, messages=messages)
+        return await client._predict(
+            inputs, base_url=base_url, extra_body=extra_body, **parameters
+        )
 
     async def embed(
         self,
@@ -242,8 +278,9 @@ class SyncStreamImagesNamespace:
     def analyze(
         self,
         image: ImageContent,
-        prompt: str,
+        prompt: str | None = None,
         *,
+        messages: list[Message] | None = None,
         model: str,
         provider: Provider | None = None,
         api_key: str | SecretStr | None = None,
@@ -257,7 +294,9 @@ class SyncStreamImagesNamespace:
             provider=provider,
             api_key=api_key,
         )
-        return client.sync.stream.analyze(prompt, image=image, **params)
+        return client.sync.stream.analyze(
+            prompt, messages=messages, image=image, **params
+        )
 
 
 class StreamImagesNamespace:
@@ -305,8 +344,9 @@ class StreamImagesNamespace:
     def analyze(
         self,
         image: ImageContent,
-        prompt: str,
+        prompt: str | None = None,
         *,
+        messages: list[Message] | None = None,
         model: str,
         provider: Provider | None = None,
         api_key: str | SecretStr | None = None,
@@ -320,7 +360,7 @@ class StreamImagesNamespace:
             provider=provider,
             api_key=api_key,
         )
-        return client.stream.analyze(prompt, image=image, **params)
+        return client.stream.analyze(prompt, messages=messages, image=image, **params)
 
 
 class SyncImagesNamespace:
@@ -368,8 +408,9 @@ class SyncImagesNamespace:
     def analyze(
         self,
         image: ImageContent,
-        prompt: str,
+        prompt: str | None = None,
         *,
+        messages: list[Message] | None = None,
         model: str,
         provider: Provider | None = None,
         api_key: str | SecretStr | None = None,
@@ -383,7 +424,7 @@ class SyncImagesNamespace:
             provider=provider,
             api_key=api_key,
         )
-        return client.sync.analyze(prompt, image=image, **params)
+        return client.sync.analyze(prompt, messages=messages, image=image, **params)
 
     @property
     def stream(self) -> SyncStreamImagesNamespace:
@@ -462,8 +503,9 @@ class ImagesNamespace:
     async def analyze(
         self,
         image: ImageContent,
-        prompt: str,
+        prompt: str | None = None,
         *,
+        messages: list[Message] | None = None,
         model: str,
         provider: Provider | None = None,
         api_key: str | SecretStr | None = None,
@@ -474,6 +516,7 @@ class ImagesNamespace:
         Args:
             image: Image or list of images to analyze.
             prompt: Question or instruction about the image.
+            messages: List of messages for multi-turn conversations.
             model: Model ID to use (required).
             provider: Optional provider override.
             api_key: Optional API key override.
@@ -489,7 +532,7 @@ class ImagesNamespace:
             provider=provider,
             api_key=api_key,
         )
-        return await client.analyze(prompt, image=image, **parameters)
+        return await client.analyze(prompt, messages=messages, image=image, **parameters)
 
     @property
     def sync(self) -> SyncImagesNamespace:
@@ -527,8 +570,9 @@ class SyncStreamAudioNamespace:
     def analyze(
         self,
         audio: AudioContent,
-        prompt: str,
+        prompt: str | None = None,
         *,
+        messages: list[Message] | None = None,
         model: str,
         provider: Provider | None = None,
         api_key: str | SecretStr | None = None,
@@ -542,7 +586,9 @@ class SyncStreamAudioNamespace:
             provider=provider,
             api_key=api_key,
         )
-        return client.sync.stream.analyze(prompt, audio=audio, **params)
+        return client.sync.stream.analyze(
+            prompt, messages=messages, audio=audio, **params
+        )
 
 
 class StreamAudioNamespace:
@@ -570,8 +616,9 @@ class StreamAudioNamespace:
     def analyze(
         self,
         audio: AudioContent,
-        prompt: str,
+        prompt: str | None = None,
         *,
+        messages: list[Message] | None = None,
         model: str,
         provider: Provider | None = None,
         api_key: str | SecretStr | None = None,
@@ -585,7 +632,7 @@ class StreamAudioNamespace:
             provider=provider,
             api_key=api_key,
         )
-        return client.stream.analyze(prompt, audio=audio, **params)
+        return client.stream.analyze(prompt, messages=messages, audio=audio, **params)
 
 
 class SyncAudioNamespace:
@@ -613,8 +660,9 @@ class SyncAudioNamespace:
     def analyze(
         self,
         audio: AudioContent,
-        prompt: str,
+        prompt: str | None = None,
         *,
+        messages: list[Message] | None = None,
         model: str,
         provider: Provider | None = None,
         api_key: str | SecretStr | None = None,
@@ -628,7 +676,7 @@ class SyncAudioNamespace:
             provider=provider,
             api_key=api_key,
         )
-        return client.sync.analyze(prompt, audio=audio, **params)
+        return client.sync.analyze(prompt, messages=messages, audio=audio, **params)
 
     @property
     def stream(self) -> SyncStreamAudioNamespace:
@@ -675,8 +723,9 @@ class AudioNamespace:
     async def analyze(
         self,
         audio: AudioContent,
-        prompt: str,
+        prompt: str | None = None,
         *,
+        messages: list[Message] | None = None,
         model: str,
         provider: Provider | None = None,
         api_key: str | SecretStr | None = None,
@@ -687,6 +736,7 @@ class AudioNamespace:
         Args:
             audio: Audio or list of audio files to analyze.
             prompt: Question or instruction about the audio.
+            messages: List of messages for multi-turn conversations.
             model: Model ID to use (required).
             provider: Optional provider override.
             api_key: Optional API key override.
@@ -702,7 +752,9 @@ class AudioNamespace:
             provider=provider,
             api_key=api_key,
         )
-        return await client.analyze(prompt, audio=audio, **parameters)
+        return await client.analyze(
+            prompt, messages=messages, audio=audio, **parameters
+        )
 
     @property
     def sync(self) -> SyncAudioNamespace:
@@ -721,8 +773,9 @@ class SyncStreamVideosNamespace:
     def analyze(
         self,
         video: VideoContent,
-        prompt: str,
+        prompt: str | None = None,
         *,
+        messages: list[Message] | None = None,
         model: str,
         provider: Provider | None = None,
         api_key: str | SecretStr | None = None,
@@ -736,7 +789,9 @@ class SyncStreamVideosNamespace:
             provider=provider,
             api_key=api_key,
         )
-        return client.sync.stream.analyze(prompt, video=video, **params)
+        return client.sync.stream.analyze(
+            prompt, messages=messages, video=video, **params
+        )
 
 
 class StreamVideosNamespace:
@@ -745,8 +800,9 @@ class StreamVideosNamespace:
     def analyze(
         self,
         video: VideoContent,
-        prompt: str,
+        prompt: str | None = None,
         *,
+        messages: list[Message] | None = None,
         model: str,
         provider: Provider | None = None,
         api_key: str | SecretStr | None = None,
@@ -760,7 +816,7 @@ class StreamVideosNamespace:
             provider=provider,
             api_key=api_key,
         )
-        return client.stream.analyze(prompt, video=video, **params)
+        return client.stream.analyze(prompt, messages=messages, video=video, **params)
 
 
 class SyncVideosNamespace:
@@ -788,8 +844,9 @@ class SyncVideosNamespace:
     def analyze(
         self,
         video: VideoContent,
-        prompt: str,
+        prompt: str | None = None,
         *,
+        messages: list[Message] | None = None,
         model: str,
         provider: Provider | None = None,
         api_key: str | SecretStr | None = None,
@@ -803,7 +860,7 @@ class SyncVideosNamespace:
             provider=provider,
             api_key=api_key,
         )
-        return client.sync.analyze(prompt, video=video, **params)
+        return client.sync.analyze(prompt, messages=messages, video=video, **params)
 
     @property
     def stream(self) -> SyncStreamVideosNamespace:
@@ -850,8 +907,9 @@ class VideosNamespace:
     async def analyze(
         self,
         video: VideoContent,
-        prompt: str,
+        prompt: str | None = None,
         *,
+        messages: list[Message] | None = None,
         model: str,
         provider: Provider | None = None,
         api_key: str | SecretStr | None = None,
@@ -862,6 +920,7 @@ class VideosNamespace:
         Args:
             video: Video or list of videos to analyze.
             prompt: Question or instruction about the video.
+            messages: List of messages for multi-turn conversations.
             model: Model ID to use (required).
             provider: Optional provider override.
             api_key: Optional API key override.
@@ -877,7 +936,9 @@ class VideosNamespace:
             provider=provider,
             api_key=api_key,
         )
-        return await client.analyze(prompt, video=video, **parameters)
+        return await client.analyze(
+            prompt, messages=messages, video=video, **parameters
+        )
 
     @property
     def sync(self) -> SyncVideosNamespace:

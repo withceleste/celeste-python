@@ -9,7 +9,7 @@ from celeste.providers.openai.responses.client import (
 from celeste.providers.openai.responses.streaming import (
     OpenAIResponsesStream as _OpenAIResponsesStream,
 )
-from celeste.types import ImageContent, TextContent, VideoContent
+from celeste.types import ImageContent, Message, TextContent, VideoContent
 from celeste.utils import build_image_data_url
 
 from ...client import TextClient
@@ -96,27 +96,37 @@ class OpenAITextClient(OpenAIResponsesMixin, TextClient):
 
     async def generate(
         self,
-        prompt: str,
+        prompt: str | None = None,
+        *,
+        messages: list[Message] | None = None,
         **parameters: Unpack[TextParameters],
     ) -> TextOutput:
         """Generate text from prompt."""
-        inputs = TextInput(prompt=prompt)
+        inputs = TextInput(prompt=prompt, messages=messages)
         return await self._predict(inputs, **parameters)
 
     async def analyze(
         self,
-        prompt: str,
+        prompt: str | None = None,
         *,
+        messages: list[Message] | None = None,
         image: ImageContent | None = None,
         video: VideoContent | None = None,
         **parameters: Unpack[TextParameters],
     ) -> TextOutput:
-        """Analyze image(s) or video(s) with prompt."""
-        inputs = TextInput(prompt=prompt, image=image, video=video)
+        """Analyze image(s) or video(s) with prompt or messages."""
+        inputs = TextInput(
+            prompt=prompt, messages=messages, image=image, video=video
+        )
         return await self._predict(inputs, **parameters)
 
     def _init_request(self, inputs: TextInput) -> dict[str, Any]:
         """Initialize request with input content."""
+        # If messages provided, use them directly (messages take precedence)
+        if inputs.messages is not None:
+            return {"input": [message.model_dump() for message in inputs.messages]}
+
+        # Fall back to prompt-based input
         content: list[dict[str, Any]] = []
 
         if inputs.image is not None:
@@ -126,7 +136,7 @@ class OpenAITextClient(OpenAIResponsesMixin, TextClient):
                     {"type": "input_image", "image_url": build_image_data_url(img)}
                 )
 
-        content.append({"type": "input_text", "text": inputs.prompt})
+        content.append({"type": "input_text", "text": inputs.prompt or ""})
 
         return {"input": [{"role": "user", "content": content}]}
 

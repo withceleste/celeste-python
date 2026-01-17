@@ -7,7 +7,7 @@ from celeste.providers.mistral.chat.client import MistralChatClient
 from celeste.providers.mistral.chat.streaming import (
     MistralChatStream as _MistralChatStream,
 )
-from celeste.types import ImageContent, TextContent, VideoContent
+from celeste.types import ImageContent, Message, TextContent, VideoContent
 from celeste.utils import build_image_data_url
 
 from ...client import TextClient
@@ -82,36 +82,46 @@ class MistralTextClient(MistralChatClient, TextClient):
 
     async def generate(
         self,
-        prompt: str,
+        prompt: str | None = None,
+        *,
+        messages: list[Message] | None = None,
         **parameters: Unpack[TextParameters],
     ) -> TextOutput:
         """Generate text from prompt."""
-        inputs = TextInput(prompt=prompt)
+        inputs = TextInput(prompt=prompt, messages=messages)
         return await self._predict(inputs, **parameters)
 
     async def analyze(
         self,
-        prompt: str,
+        prompt: str | None = None,
         *,
+        messages: list[Message] | None = None,
         image: ImageContent | None = None,
         video: VideoContent | None = None,
         **parameters: Unpack[TextParameters],
     ) -> TextOutput:
-        """Analyze image(s) or video(s) with prompt."""
-        inputs = TextInput(prompt=prompt, image=image, video=video)
+        """Analyze image(s) or video(s) with prompt or messages."""
+        inputs = TextInput(
+            prompt=prompt, messages=messages, image=image, video=video
+        )
         return await self._predict(inputs, **parameters)
 
     def _init_request(self, inputs: TextInput) -> dict[str, Any]:
         """Initialize request from Mistral messages array format."""
+        # If messages provided, use them directly (messages take precedence)
+        if inputs.messages is not None:
+            return {"messages": [message.model_dump() for message in inputs.messages]}
+
+        # Fall back to prompt-based input
         if inputs.image is None:
-            content: str | list[dict[str, Any]] = inputs.prompt
+            content: str | list[dict[str, Any]] = inputs.prompt or ""
         else:
             images = inputs.image if isinstance(inputs.image, list) else [inputs.image]
             content = [
                 {"type": "image_url", "image_url": {"url": build_image_data_url(img)}}
                 for img in images
             ]
-            content.append({"type": "text", "text": inputs.prompt})
+            content.append({"type": "text", "text": inputs.prompt or ""})
 
         return {"messages": [{"role": "user", "content": content}]}
 

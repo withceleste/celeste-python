@@ -10,7 +10,7 @@ from celeste.providers.google.generate_content.client import GoogleGenerateConte
 from celeste.providers.google.generate_content.streaming import (
     GoogleGenerateContentStream as _GoogleGenerateContentStream,
 )
-from celeste.types import AudioContent, ImageContent, TextContent, VideoContent
+from celeste.types import AudioContent, ImageContent, Message, TextContent, VideoContent
 from celeste.utils import detect_mime_type
 
 from ...client import TextClient
@@ -85,11 +85,13 @@ class GoogleTextClient(GoogleGenerateContentClient, TextClient):
 
     async def generate(
         self,
-        prompt: str,
+        prompt: str | None = None,
+        *,
+        messages: list[Message] | None = None,
         **parameters: Unpack[TextParameters],
     ) -> TextOutput:
         """Generate text from prompt."""
-        inputs = TextInput(prompt=prompt)
+        inputs = TextInput(prompt=prompt, messages=messages)
         return await self._predict(
             inputs,
             endpoint=google_config.GoogleGenerateContentEndpoint.GENERATE_CONTENT,
@@ -98,15 +100,22 @@ class GoogleTextClient(GoogleGenerateContentClient, TextClient):
 
     async def analyze(
         self,
-        prompt: str,
+        prompt: str | None = None,
         *,
+        messages: list[Message] | None = None,
         image: ImageContent | None = None,
         video: VideoContent | None = None,
         audio: AudioContent | None = None,
         **parameters: Unpack[TextParameters],
     ) -> TextOutput:
-        """Analyze image(s), video(s), or audio with prompt."""
-        inputs = TextInput(prompt=prompt, image=image, video=video, audio=audio)
+        """Analyze image(s), video(s), or audio with prompt or messages."""
+        inputs = TextInput(
+            prompt=prompt,
+            messages=messages,
+            image=image,
+            video=video,
+            audio=audio,
+        )
         return await self._predict(
             inputs,
             endpoint=google_config.GoogleGenerateContentEndpoint.GENERATE_CONTENT,
@@ -115,6 +124,41 @@ class GoogleTextClient(GoogleGenerateContentClient, TextClient):
 
     def _init_request(self, inputs: TextInput) -> dict[str, Any]:
         """Initialize request from Google contents array format."""
+        # If messages provided, use them with special handling for system/developer
+        if inputs.messages is not None:
+
+            def normalize_part(part: Any) -> dict[str, Any]:
+                """Normalize a content part to Google's format."""
+                if isinstance(part, str):
+                    return {"text": part}
+                if isinstance(part, dict):
+                    return part
+                return {"text": str(part)}
+
+            def content_to_parts(content: Any) -> list[dict[str, Any]]:
+                """Convert message content to Google parts array."""
+                if isinstance(content, str):
+                    return [{"text": content}]
+                if isinstance(content, list):
+                    return [normalize_part(p) for p in content]
+                return [normalize_part(content)]
+
+            system_parts: list[dict[str, Any]] = []
+            contents: list[dict[str, Any]] = []
+
+            for msg in inputs.messages:
+                if msg.role in ("system", "developer"):
+                    system_parts.extend(content_to_parts(msg.content))
+                else:
+                    role = "model" if msg.role == "assistant" else msg.role
+                    contents.append({"role": role, "parts": content_to_parts(msg.content)})
+
+            result: dict[str, Any] = {"contents": contents}
+            if system_parts:
+                result["system_instruction"] = {"parts": system_parts}
+            return result
+
+        # Fall back to prompt-based input
         parts: list[dict[str, Any]] = []
 
         if inputs.image is not None:
@@ -132,7 +176,7 @@ class GoogleTextClient(GoogleGenerateContentClient, TextClient):
             for aud in audios:
                 parts.append(self._build_audio_part(aud))
 
-        parts.append({"text": inputs.prompt})
+        parts.append({"text": inputs.prompt or ""})
 
         return {"contents": [{"role": "user", "parts": parts}]}
 
