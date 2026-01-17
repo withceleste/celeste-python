@@ -91,7 +91,7 @@ Date: 2026-01-15
 - File updated: `README.md`.
 
 ## Release Prep
-- Set package version to `0.9.0` for the public v1 beta.
+- Set package version to `0.9.1` for the public v1 beta.
 - Updated development status classifier to Beta.
 - Removed notebook/scraping-only runtime deps from install requirements (ipykernel, matplotlib, beautifulsoup4).
 - File updated: `pyproject.toml`.
