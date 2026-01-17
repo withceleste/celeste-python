@@ -135,9 +135,7 @@ class OpenResponsesTextClient(OpenResponsesMixin, TextClient):
         **parameters: Unpack[TextParameters],
     ) -> TextOutput:
         """Analyze image(s) or video(s) with prompt or messages."""
-        inputs = TextInput(
-            prompt=prompt, messages=messages, image=image, video=video
-        )
+        inputs = TextInput(prompt=prompt, messages=messages, image=image, video=video)
         return await self._predict(
             inputs, base_url=base_url, extra_body=extra_body, **parameters
         )

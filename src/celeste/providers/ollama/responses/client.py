@@ -5,8 +5,14 @@ from celeste.providers.openresponses.responses.streaming import OpenResponsesStr
 
 from .config import DEFAULT_BASE_URL
 
-# Re-export with Ollama naming
-OllamaClient = OpenResponsesClient
+
+class OllamaClient(OpenResponsesClient):
+    """Ollama API client mixin (OpenResponses protocol)."""
+
+    pass
+
+
+# Re-export stream class
 OllamaStream = OpenResponsesStream
 
 __all__ = ["DEFAULT_BASE_URL", "OllamaClient", "OllamaStream"]
