@@ -93,8 +93,15 @@ def _provider_api_client_files() -> list[Path]:
     root = _repo_root()
     providers_dir = root / "src" / "celeste" / "providers"
 
+    # Wrapper providers that just re-export another provider's client
+    # These don't need to match the template contract
+    wrapper_providers = {"ollama"}
+
     out: list[Path] = []
     for provider_dir in sorted([p for p in providers_dir.iterdir() if p.is_dir()]):
+        # Skip wrapper providers
+        if provider_dir.name in wrapper_providers:
+            continue
         # Each provider has API subdirs (e.g., openai/responses, openai/images)
         for api_dir in sorted([p for p in provider_dir.iterdir() if p.is_dir()]):
             client_path = api_dir / "client.py"
