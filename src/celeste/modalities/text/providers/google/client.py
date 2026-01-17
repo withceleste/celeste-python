@@ -151,7 +151,9 @@ class GoogleTextClient(GoogleGenerateContentClient, TextClient):
                     system_parts.extend(content_to_parts(msg.content))
                 else:
                     role = "model" if msg.role == "assistant" else msg.role
-                    contents.append({"role": role, "parts": content_to_parts(msg.content)})
+                    contents.append(
+                        {"role": role, "parts": content_to_parts(msg.content)}
+                    )
 
             result: dict[str, Any] = {"contents": contents}
             if system_parts:

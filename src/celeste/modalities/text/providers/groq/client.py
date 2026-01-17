@@ -99,9 +99,7 @@ class GroqTextClient(GroqChatClient, TextClient):
         **parameters: Unpack[TextParameters],
     ) -> TextOutput:
         """Analyze image(s) or video(s) with prompt or messages."""
-        inputs = TextInput(
-            prompt=prompt, messages=messages, image=image, video=video
-        )
+        inputs = TextInput(prompt=prompt, messages=messages, image=image, video=video)
         return await self._predict(inputs, **parameters)
 
     def _init_request(self, inputs: TextInput) -> dict[str, Any]:

@@ -117,9 +117,7 @@ class AnthropicTextClient(AnthropicMessagesClient, TextClient):
         **parameters: Unpack[TextParameters],
     ) -> TextOutput:
         """Analyze image(s) or video(s) with prompt."""
-        inputs = TextInput(
-            prompt=prompt, messages=messages, image=image, video=video
-        )
+        inputs = TextInput(prompt=prompt, messages=messages, image=image, video=video)
         return await self._predict(inputs, **parameters)
 
     def _init_request(self, inputs: TextInput) -> dict[str, Any]:
@@ -154,16 +152,16 @@ class AnthropicTextClient(AnthropicMessagesClient, TextClient):
             return request
 
         if inputs.image is None:
-            content: str | list[dict[str, Any]] = inputs.prompt or ""
+            prompt_content: str | list[dict[str, Any]] = inputs.prompt or ""
         else:
             images = inputs.image if isinstance(inputs.image, list) else [inputs.image]
-            content = []
+            prompt_content = []
             for img in images:
                 source = self._build_image_source(img)
-                content.append({"type": "image", "source": source})
-            content.append({"type": "text", "text": inputs.prompt or ""})
+                prompt_content.append({"type": "image", "source": source})
+            prompt_content.append({"type": "text", "text": inputs.prompt or ""})
 
-        return {"messages": [{"role": "user", "content": content}]}
+        return {"messages": [{"role": "user", "content": prompt_content}]}
 
     def _build_image_source(self, img: ImageArtifact) -> dict[str, Any]:
         """Build Anthropic image source dict from ImageArtifact."""

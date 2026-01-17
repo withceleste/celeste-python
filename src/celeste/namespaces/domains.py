@@ -532,7 +532,9 @@ class ImagesNamespace:
             provider=provider,
             api_key=api_key,
         )
-        return await client.analyze(prompt, messages=messages, image=image, **parameters)
+        return await client.analyze(
+            prompt, messages=messages, image=image, **parameters
+        )
 
     @property
     def sync(self) -> SyncImagesNamespace:
