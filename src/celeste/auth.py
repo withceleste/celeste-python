@@ -45,6 +45,14 @@ class AuthHeader(Authentication):
         return {self.header: f"{self.prefix}{self.secret.get_secret_value()}"}
 
 
+class NoAuth(Authentication):
+    """Authentication that returns no headers (local providers)."""
+
+    def get_headers(self) -> dict[str, str]:
+        """Return empty headers for unauthenticated requests."""
+        return {}
+
+
 # Backwards compatibility alias
 APIKey = AuthHeader
 
@@ -78,4 +86,11 @@ def get_auth_class(auth_type: str) -> type[Authentication]:
     return _auth_classes[auth_type]
 
 
-__all__ = ["APIKey", "AuthHeader", "Authentication", "get_auth_class", "register_auth"]
+__all__ = [
+    "APIKey",
+    "AuthHeader",
+    "Authentication",
+    "NoAuth",
+    "get_auth_class",
+    "register_auth",
+]

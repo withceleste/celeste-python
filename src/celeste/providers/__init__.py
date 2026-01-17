@@ -12,6 +12,8 @@ from celeste.providers import (
     groq,
     mistral,
     moonshot,
+    ollama,
+    openresponses,
     openai,
     xai,
 )
@@ -28,6 +30,8 @@ __all__ = [
     "groq",
     "mistral",
     "moonshot",
+    "ollama",
+    "openresponses",
     "openai",
     "xai",
 ]

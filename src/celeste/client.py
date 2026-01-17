@@ -180,6 +180,9 @@ class ModalityClient[In: Input, Out: Output, Params: Parameters, Content](
         self,
         inputs: In,
         stream_class: type[Stream[Out, Params, Chunk]],
+        *,
+        endpoint: str | None = None,
+        base_url: str | None = None,
         extra_body: dict[str, Any] | None = None,
         **parameters: Unpack[Params],  # type: ignore[misc]
     ) -> Stream[Out, Params, Chunk]:
@@ -207,7 +210,9 @@ class ModalityClient[In: Input, Out: Output, Params: Parameters, Content](
         request_body = self._build_request(
             inputs, extra_body=extra_body, streaming=True, **parameters
         )
-        sse_iterator = self._make_stream_request(request_body, **parameters)
+        sse_iterator = self._make_stream_request(
+            request_body, endpoint=endpoint, base_url=base_url, **parameters
+        )
         return stream_class(
             sse_iterator,
             transform_output=self._transform_output,

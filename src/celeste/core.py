@@ -25,6 +25,8 @@ class Provider(StrEnum):
     ELEVENLABS = "elevenlabs"
     GROQ = "groq"
     GRADIUM = "gradium"
+    OPENRESPONSES = "openresponses"
+    OLLAMA = "ollama"
 
 
 class Modality(StrEnum):
