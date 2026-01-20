@@ -10,6 +10,8 @@ All modalities. All providers. One interface.
 
 Primitives, not frameworks.
 
+
+
 [![Python](https://img.shields.io/badge/Python-3.12+-blue?style=for-the-badge)](https://www.python.org/)
 [![License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](LICENSE)
 [![PyPI](https://img.shields.io/pypi/v/celeste-ai?style=for-the-badge)](https://pypi.org/project/celeste-ai/)
@@ -45,53 +47,13 @@ Type-safe, modality/provider-agnostic primitives.
 ```python
 import celeste
 
-# "We need a catchy slogan for our new eco-friendly sneaker."
-slogan = await celeste.text.generate(
-    "Write a slogan for an eco-friendly sneaker.",
-    model="gpt-5",
-)
-print(slogan.content)
+# One SDK. Every modality. Any provider.
+text   = await celeste.text.generate("Explain quantum computing", model="claude-opus-4-5")
+image  = await celeste.images.generate("A serene mountain lake at dawn", model="flux-2-pro")
+speech = await celeste.audio.speak("Welcome to the future", model="eleven_v3")
+video  = await celeste.videos.analyze(video_file, prompt="Summarize this clip", model="gemini-3-pro")
+embeddings = await celeste.text.embed(["lorep ipsum", "dolor sit amet"], model="gemini-embedding-001")
 ```
-
-
-## 🎨 Multimodal example
-```python
-import celeste
-from pydantic import BaseModel, Field
-
-class ProductCampaign(BaseModel):
-    visual_prompt: str
-    audio_script: str
-
-# 2. Extract Campaign Assets (Anthropic)
-# -----------------------------------------------------
-campaign_output = await celeste.text.generate(
-    f"Create campaign assets for slogan: {slogan.content}",
-    model="claude-opus-4-1",
-    output_schema=ProductCampaign,
-)
-campaign = campaign_output.content
-
-# 3. Generate Ad Visual (Flux)
-# -----------------------------------------------------
-image_output = await celeste.images.generate(
-    campaign.visual_prompt,
-    model="flux-2-flex",
-    aspect_ratio="1:1"
-)
-image = image_output.content
-
-# 4. Generate Radio Spot (ElevenLabs)
-# -----------------------------------------------------
-speech_output = await celeste.audio.speak(
-    campaign.audio_script,
-    model="eleven_v3",
-    voice="adam"
-)
-speech = speech_output.content
-```
-
-No special cases. No separate libraries. **One consistent interface.**
 
 
 
@@ -129,8 +91,23 @@ No special cases. No separate libraries. **One consistent interface.**
 
 ---
 
-## 🔄 Switch providers in one line
 
+## Operations by Domain
+
+| Action | Text | Images | Audio | Video |
+| :--- | :---: | :---: | :---: | :---: |
+| **Generate** | ✓ | ✓ | ○ | ✓ |
+| **Edit** | — | ✓ | — | — |
+| **Analyze** | — | ✓ | ✓ | ✓ |
+| **Upscale** | — | ○ | — | ○ |
+| **Speak** | — | — | ✓ | — |
+| **Transcribe** | — | — | ✓ | — |
+| **Embed** | ✓ | ○ | — | ○ |
+
+<sub>✓ Available · ○ Planned</sub>
+
+
+## 🔄 Switch providers in one line
 
 ```python
 from pydantic import BaseModel
@@ -193,46 +170,18 @@ response = await celeste.text.generate(
 user = response.content  # Already parsed as User instance
 ```
 
----
-## 🧭 Namespace API (recommended)
-Namespaces are domain-first: start from the resource you want to work with (e.g., videos) even if the input is text. Under the hood, Celeste maps (domain, operation) to the output modality (e.g., `celeste.images.analyze(...)` routes to the text modality because analysis returns text).
-```python
-import celeste
 
-# Async (default)
-result = await celeste.images.analyze(
-    image=img,
-    prompt="Describe this image",
-    model="gpt-4o"
-)
-
-# Sync
-result = celeste.images.sync.analyze(
-    image=img,
-    prompt="Describe this image",
-    model="gpt-4o"
-)
-
-# Async streaming
-async for chunk in celeste.text.stream.generate("Hello", model="gpt-4o"):
-    print(chunk.content, end="")
-
-# Sync streaming
-for chunk in celeste.text.sync.stream.generate("Hello", model="gpt-4o"):
-    print(chunk.content, end="")
-```
-
----
-## ⚙️ Advanced: create_client
+## ⚙️ Advanced: Create Client
 For explicit configuration or client reuse, use `create_client` with modality + operation. This is modality-first: you choose the output type and operation explicitly.
 
 ```python
-from celeste import create_client, Modality, Operation
+from celeste import create_client, Modality, Operation, Provider
 
 client = create_client(
     modality=Modality.TEXT,
     operation=Operation.GENERATE,
-    model=google_model_id,
+    provider=Provider.OLLAMA,
+    model="llama3.2",
 )
 response = await client.generate("Extract user info: John is 30", output_schema=User)
 ```
@@ -242,19 +191,10 @@ response = await client.generate("Extract user info: John is 30", output_schema=
 ---
 ## 🪶 Install
 ```bash
-pip install celeste-ai
-# or
 uv add celeste-ai
+# or
+pip install celeste-ai
 ```
----
-## 🔁 Behavior changes since v0.3.9
-- Capabilities → modalities + operations.
-- Namespace API is now the default entry point.
-- `create_client` now uses `modality` + `operation`; `capability` is deprecated.
-- `analyze` for image/audio/video routes through the text modality.
-- Namespaces are domain-first (resource you work with); `create_client` is modality-first (output type). Domain + operation maps to modality.
-- `extra_body` allows provider-specific parameters without first-class mapping.
-- Single-package install (no extras).
 
 ---
 ## 🔧 Type-Safe by Design
@@ -293,7 +233,7 @@ We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 MIT license – see [LICENSE](LICENSE) for details.
 
----
+
 
 <div align="center">
 
