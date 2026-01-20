@@ -68,20 +68,18 @@ embeddings = await celeste.text.embed(["lorep ipsum", "dolor sit amet"], model="
 
 
 <img src="https://www.google.com/favicon.ico" width="32" height="32" alt="Google" title="Google">
-<img src="https://www.anthropic.com/favicon.ico" width="32" height="32" alt="Anthropic" title="Anthropic">
 <img src="https://www.google.com/s2/favicons?domain=openai.com&sz=64" width="32" height="32" alt="OpenAI" title="OpenAI">
 <img src="https://mistral.ai/favicon.ico" width="32" height="32" alt="Mistral" title="Mistral">
+<img src="https://www.anthropic.com/favicon.ico" width="32" height="32" alt="Anthropic" title="Anthropic">
 <img src="https://cohere.com/favicon.ico" width="32" height="32" alt="Cohere" title="Cohere">
 <img src="https://x.ai/favicon.ico" width="32" height="32" alt="xAI" title="xAI">
 <img src="https://www.google.com/s2/favicons?domain=deepseek.com&sz=32" width="32" height="32" alt="DeepSeek" title="DeepSeek">
-<img src="https://www.google.com/s2/favicons?domain=groq.com&sz=32" width="32" height="32" alt="Groq" title="Groq">
-<img src="https://www.google.com/s2/favicons?domain=perplexity.ai&sz=32" width="32" height="32" alt="Perplexity" title="Perplexity">
 <img src="https://ollama.com/public/apple-touch-icon.png" width="32" height="32" alt="Ollama" title="Ollama">
-<img src="https://huggingface.co/favicon.ico" width="32" height="32" alt="Hugging Face" title="Hugging Face">
-<img src="https://www.google.com/s2/favicons?domain=replicate.com&sz=32" width="32" height="32" alt="Replicate" title="Replicate">
-<img src="https://www.google.com/s2/favicons?domain=stability.ai&sz=32" width="32" height="32" alt="Stability AI" title="Stability AI">
-<img src="https://www.google.com/s2/favicons?domain=runwayml.com&sz=32" width="32" height="32" alt="Runway" title="Runway">
+<img src="https://www.google.com/s2/favicons?domain=groq.com&sz=32" width="32" height="32" alt="Groq" title="Groq">
 <img src="https://www.google.com/s2/favicons?domain=elevenlabs.io&sz=32" width="32" height="32" alt="ElevenLabs" title="ElevenLabs">
+<img src="https://www.google.com/s2/favicons?domain=seed.bytedance.com&sz=32" width="32" height="32" alt="BytePlus" title="BytePlus">
+<img src="https://www.google.com/s2/favicons?domain=blackforestlabs.ai&sz=32" width="32" height="32" alt="Black Forest Labs" title="Black Forest Labs">
+
 
 **and many more**
 
