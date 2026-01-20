@@ -37,12 +37,12 @@ class AuthHeader(Authentication):
     def convert_to_secret(cls, v: str | SecretStr) -> SecretStr:
         """Accept plain strings, auto-convert to SecretStr."""
         if isinstance(v, str):
-            return SecretStr(v)
+            return SecretStr(v.strip())
         return v
 
     def get_headers(self) -> dict[str, str]:
         """Return authentication header."""
-        return {self.header: f"{self.prefix}{self.secret.get_secret_value()}"}
+        return {self.header: f"{self.prefix}{self.secret.get_secret_value().strip()}"}
 
 
 class NoAuth(Authentication):
