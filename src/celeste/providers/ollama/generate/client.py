@@ -6,7 +6,6 @@ from typing import Any
 
 from celeste.client import APIMixin
 from celeste.core import UsageField
-from celeste.exceptions import StreamingNotSupportedError
 from celeste.io import FinishReason
 from celeste.mime_types import ApplicationMimeType
 
@@ -18,7 +17,7 @@ class OllamaGenerateClient(APIMixin):
 
     Provides shared HTTP implementation for Ollama's native API:
     - _make_request() - HTTP POST to /api/generate
-    - _make_stream_request() - Not supported (NDJSON, not SSE)
+    - _make_stream_request() - NDJSON streaming
     - _parse_usage() - Extract usage dict from response
     - _parse_content() - Extract image from response
     - _parse_finish_reason() - Check done field
@@ -77,8 +76,22 @@ class OllamaGenerateClient(APIMixin):
         base_url: str | None = None,
         **parameters: Any,
     ) -> AsyncIterator[dict[str, Any]]:
-        """Ollama Generate uses NDJSON streaming, not SSE. Not supported in v1."""
-        raise StreamingNotSupportedError(model_id=self.model.id)
+        """Make NDJSON streaming request to Ollama Generate API."""
+        if endpoint is None:
+            endpoint = config.OllamaGenerateEndpoint.GENERATE
+        if base_url is None:
+            base_url = config.DEFAULT_BASE_URL
+
+        headers = {
+            **self.auth.get_headers(),
+            "Content-Type": ApplicationMimeType.JSON,
+        }
+
+        return self.http_client.stream_post_ndjson(
+            f"{base_url}{endpoint}",
+            headers=headers,
+            json_body=request_body,
+        )
 
     @staticmethod
     def map_usage_fields(usage_data: dict[str, Any]) -> dict[str, int | float | None]:

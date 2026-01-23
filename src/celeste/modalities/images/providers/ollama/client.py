@@ -7,11 +7,71 @@ from celeste.artifacts import ImageArtifact
 from celeste.parameters import ParameterMapper
 from celeste.providers.ollama.generate import config
 from celeste.providers.ollama.generate.client import OllamaGenerateClient
+from celeste.providers.ollama.generate.streaming import (
+    OllamaGenerateStream as _OllamaGenerateStream,
+)
 
 from ...client import ImagesClient
-from ...io import ImageFinishReason, ImageInput, ImageOutput, ImageUsage
+from ...io import (
+    ImageChunk,
+    ImageFinishReason,
+    ImageInput,
+    ImageOutput,
+    ImageUsage,
+)
 from ...parameters import ImageParameters
+from ...streaming import ImagesStream
 from .parameters import OLLAMA_PARAMETER_MAPPERS
+
+
+class OllamaImagesStream(_OllamaGenerateStream, ImagesStream):
+    """Ollama NDJSON streaming for images."""
+
+    def _parse_chunk_usage(self, event_data: dict[str, Any]) -> ImageUsage | None:
+        """Parse and wrap usage from NDJSON event."""
+        usage = super()._parse_chunk_usage(event_data)
+        if usage:
+            return ImageUsage(**usage)
+        return None
+
+    def _parse_chunk_finish_reason(
+        self, event_data: dict[str, Any]
+    ) -> ImageFinishReason | None:
+        """Parse and wrap finish reason from NDJSON event."""
+        finish_reason = super()._parse_chunk_finish_reason(event_data)
+        if finish_reason:
+            return ImageFinishReason(reason=finish_reason.reason)
+        return None
+
+    def _parse_chunk(self, event_data: dict[str, Any]) -> ImageChunk | None:
+        """Parse NDJSON event into ImageChunk."""
+        b64_image = self._parse_chunk_content(event_data)
+
+        if not b64_image:
+            return ImageChunk(
+                content=ImageArtifact(data=b""),
+                metadata=self._parse_chunk_metadata(event_data),
+            )
+
+        image_bytes = base64.b64decode(b64_image)
+        return ImageChunk(
+            content=ImageArtifact(data=image_bytes),
+            finish_reason=self._parse_chunk_finish_reason(event_data),
+            usage=self._parse_chunk_usage(event_data),
+            metadata=self._parse_chunk_metadata(event_data),
+        )
+
+    def _aggregate_content(self, chunks: list[ImageChunk]) -> ImageArtifact:
+        """Get final image from chunks."""
+        for chunk in reversed(chunks):
+            if chunk.content is not None:
+                return chunk.content
+        msg = "No image in stream"
+        raise ValueError(msg)
+
+    def _aggregate_event_data(self, chunks: list[ImageChunk]) -> list[dict[str, Any]]:
+        """Collect metadata from chunks."""
+        return [chunk.metadata for chunk in chunks if chunk.metadata]
 
 
 class OllamaImagesClient(OllamaGenerateClient, ImagesClient):
@@ -63,5 +123,9 @@ class OllamaImagesClient(OllamaGenerateClient, ImagesClient):
         finish_reason = super()._parse_finish_reason(response_data)
         return ImageFinishReason(reason=finish_reason.reason)
 
+    def _stream_class(self) -> type[ImagesStream]:
+        """Return the Stream class for Ollama images."""
+        return OllamaImagesStream
 
-__all__ = ["OllamaImagesClient"]
+
+__all__ = ["OllamaImagesClient", "OllamaImagesStream"]

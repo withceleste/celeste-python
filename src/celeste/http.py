@@ -191,6 +191,40 @@ class HTTPClient:
                 except json.JSONDecodeError:
                     continue  # Skip non-JSON control messages (provider-agnostic)
 
+    async def stream_post_ndjson(
+        self,
+        url: str,
+        headers: dict[str, str],
+        json_body: dict[str, Any],
+        timeout: float = DEFAULT_TIMEOUT,
+    ) -> AsyncIterator[dict[str, Any]]:
+        """Stream POST request using NDJSON (newline-delimited JSON).
+
+        Unlike SSE (stream_post), NDJSON returns one JSON object per line.
+        Used by Ollama's native API.
+
+        Args:
+            url: API endpoint URL.
+            headers: HTTP headers (including authentication).
+            json_body: JSON request body.
+            timeout: Timeout in seconds (default: DEFAULT_TIMEOUT).
+
+        Yields:
+            Parsed JSON objects from NDJSON stream.
+        """
+        client = await self._get_client()
+        async with client.stream(
+            "POST",
+            url,
+            json=json_body,
+            headers=headers,
+            timeout=timeout,
+        ) as response:
+            response.raise_for_status()
+            async for line in response.aiter_lines():
+                if line:
+                    yield json.loads(line)
+
     async def aclose(self) -> None:
         """Close HTTP client and cleanup all connections."""
         if self._client is not None:
