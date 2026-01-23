@@ -4,7 +4,6 @@ from abc import ABC, abstractmethod
 from enum import StrEnum
 from typing import Any, TypedDict
 
-from celeste.exceptions import UnsupportedParameterError
 from celeste.models import Model
 from celeste.types import TextContent
 
@@ -38,20 +37,13 @@ class ParameterMapper(ABC):
         return content
 
     def _validate_value(self, value: Any, model: Model) -> Any:  # noqa: ANN401
-        """Validate parameter value using model constraint.
-
-        Raises:
-            UnsupportedParameterError: If parameter is not supported by the model.
-        """
+        """Validate parameter value using model constraint if present, otherwise pass through."""
         if value is None:
             return None
 
         constraint = model.parameter_constraints.get(self.name)
         if constraint is None:
-            raise UnsupportedParameterError(
-                parameter=self.name,
-                model_id=model.id,
-            )
+            return value
 
         return constraint(value)
 
