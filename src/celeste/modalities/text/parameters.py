@@ -1,7 +1,7 @@
 """Parameters for text modality.
 
 Unified parameters for all text operations (generate, analyze).
-Model `parameter_constraints` enforces which parameters are valid per model.
+Model `parameter_constraints` validates parameter values when defined; unconstrained parameters pass through.
 """
 
 from enum import StrEnum
