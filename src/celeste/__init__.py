@@ -113,7 +113,7 @@ def _resolve_model(
                 msg = f"Model '{model}' not registered. Specify 'modality' explicitly."
                 raise ValueError(msg)
             warnings.warn(
-                f"Model '{model}' not registered in Celeste for provider {provider.value}. "
+                f"Model '{model}' not registered in Celeste for provider {provider}. "
                 "Parameter validation disabled.",
                 UserWarning,
                 stacklevel=3,
@@ -209,11 +209,12 @@ def create_client(
     resolved_operation = (
         Operation(operation) if isinstance(operation, str) else operation
     )
+    resolved_provider = Provider(provider) if isinstance(provider, str) else provider
 
     resolved_model = _resolve_model(
         modality=resolved_modality,
         operation=resolved_operation,
-        provider=provider,
+        provider=resolved_provider,
         model=model,
     )
 
