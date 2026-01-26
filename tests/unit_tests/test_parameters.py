@@ -7,7 +7,7 @@ import pytest
 
 from celeste.constraints import Range, Str
 from celeste.core import Parameter, Provider
-from celeste.exceptions import ConstraintViolationError, UnsupportedParameterError
+from celeste.exceptions import ConstraintViolationError
 from celeste.models import Model
 from celeste.types import TextContent
 
@@ -108,8 +108,8 @@ class TestParameterMapperBaseClass:
         result = mapper._validate_value(None, model)
         assert result is None
 
-    def test_validate_value_with_unsupported_parameter_raises(self) -> None:
-        """Test that _validate_value raises UnsupportedParameterError when parameter not in model."""
+    def test_validate_value_with_missing_constraint_passes_through(self) -> None:
+        """Missing constraints pass through without error."""
         from celeste.parameters import ParameterMapper
 
         class TestMapper(ParameterMapper):
@@ -125,16 +125,13 @@ class TestParameterMapperBaseClass:
 
         mapper = TestMapper()
         model = Model(
-            id="test-model",
+            id="test-model-no-constraints",
             provider=Provider.OPENAI,
             display_name="Test Model",
-            parameter_constraints={},  # No constraints = parameter not supported
+            parameter_constraints={},  # No constraints
         )
-        with pytest.raises(
-            UnsupportedParameterError,
-            match="Parameter 'temperature' is not supported by model 'test-model'",
-        ):
-            mapper._validate_value(0.7, model)
+        result = mapper._validate_value(0.7, model)
+        assert result == 0.7
 
     def test_validate_value_with_valid_constraint_calls_constraint(self) -> None:
         """Test that _validate_value calls constraint when parameter is supported."""

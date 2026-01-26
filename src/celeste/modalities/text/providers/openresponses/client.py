@@ -2,7 +2,6 @@
 
 from typing import Any, Unpack
 
-from celeste.constraints import Float, ImagesConstraint, Int, Schema
 from celeste.parameters import ParameterMapper
 from celeste.providers.openresponses.responses.client import (
     OpenResponsesClient as OpenResponsesMixin,
@@ -21,7 +20,7 @@ from ...io import (
     TextOutput,
     TextUsage,
 )
-from ...parameters import TextParameter, TextParameters
+from ...parameters import TextParameters
 from ...streaming import TextStream
 from .parameters import OPENRESPONSES_PARAMETER_MAPPERS
 
@@ -90,19 +89,6 @@ class OpenResponsesTextStream(_OpenResponsesStream, TextStream):
 
 class OpenResponsesTextClient(OpenResponsesMixin, TextClient):
     """OpenResponses text client using Responses API."""
-
-    def model_post_init(self, __context: object) -> None:
-        """Ensure defaults for common parameters on unregistered models."""
-        super().model_post_init(__context)
-        constraints = self.model.parameter_constraints
-        if TextParameter.TEMPERATURE not in constraints:
-            constraints[TextParameter.TEMPERATURE] = Float()
-        if TextParameter.MAX_TOKENS not in constraints:
-            constraints[TextParameter.MAX_TOKENS] = Int()
-        if TextParameter.OUTPUT_SCHEMA not in constraints:
-            constraints[TextParameter.OUTPUT_SCHEMA] = Schema()
-        if TextParameter.IMAGE not in constraints:
-            constraints[TextParameter.IMAGE] = ImagesConstraint()
 
     @classmethod
     def parameter_mappers(cls) -> list[ParameterMapper]:

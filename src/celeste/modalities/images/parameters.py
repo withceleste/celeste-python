@@ -16,6 +16,7 @@ class ImageParameter(StrEnum):
     WATERMARK = "watermark"
     REFERENCE_IMAGES = "reference_images"
     PROMPT_UPSAMPLING = "prompt_upsampling"
+    NEGATIVE_PROMPT = "negative_prompt"
     SEED = "seed"
     SAFETY_TOLERANCE = "safety_tolerance"
     OUTPUT_FORMAT = "output_format"
@@ -34,6 +35,7 @@ class ImageParameters(Parameters):
     watermark: bool
     reference_images: list[ImageArtifact]
     prompt_upsampling: bool
+    negative_prompt: str
     seed: int
     safety_tolerance: int
     output_format: str
