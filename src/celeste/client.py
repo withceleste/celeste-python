@@ -1,5 +1,7 @@
 """Base client for modality-specific AI operations."""
 
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from collections.abc import AsyncIterator
 from json import JSONDecodeError
@@ -15,6 +17,7 @@ from celeste.http import HTTPClient, get_http_client
 from celeste.io import Chunk, FinishReason, Input, Output, Usage
 from celeste.models import Model
 from celeste.parameters import ParameterMapper, Parameters
+from celeste.pricing import Cost, CostTracker, calculate_cost
 from celeste.streaming import Stream
 from celeste.types import TextContent
 
@@ -128,6 +131,7 @@ class ModalityClient[In: Input, Out: Output, Params: Parameters, Content](
     model: Model
     provider: Provider
     auth: Authentication = Field(exclude=True)
+    cost_tracker: CostTracker | None = Field(default=None, exclude=True)
 
     @property
     def http_client(self) -> HTTPClient:
@@ -169,10 +173,18 @@ class ModalityClient[In: Input, Out: Output, Params: Parameters, Content](
         response_data = await self._make_request(
             request_body, endpoint=endpoint, **parameters
         )
+        usage = self._parse_usage(response_data)
+        cost = self._calculate_cost(usage)
+
+        # Track cost if tracker is configured
+        if self.cost_tracker is not None:
+            self.cost_tracker.add(cost)
+
         return self._output_class()(
             content=self._parse_content(response_data, **parameters),
-            usage=self._parse_usage(response_data),
+            usage=usage,
             finish_reason=self._parse_finish_reason(response_data),
+            cost=cost,
             metadata=self._build_metadata(response_data),
         )
 
@@ -245,6 +257,22 @@ class ModalityClient[In: Input, Out: Output, Params: Parameters, Content](
     ) -> FinishReason | None:
         """Parse finish reason from provider response."""
         return None
+
+    def _calculate_cost(self, usage: Usage) -> Cost | None:
+        """Calculate cost from usage data.
+
+        Uses the pricing registry to look up model pricing and calculate cost.
+        Returns None if pricing is not initialized or not available for this model.
+
+        Args:
+            usage: Usage object with token counts and other metrics.
+
+        Returns:
+            Cost object with breakdown, or None if pricing not available.
+        """
+        # Convert Usage object to dict for calculator
+        usage_dict = usage.model_dump(exclude_none=True)
+        return calculate_cost(usage_dict, self.model.id, self.provider)
 
     @classmethod
     @abstractmethod

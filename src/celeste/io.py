@@ -1,5 +1,7 @@
 """Input and output types for generation operations."""
 
+from __future__ import annotations
+
 import inspect
 import types
 from typing import Any, get_args, get_origin
@@ -9,6 +11,7 @@ from pydantic import BaseModel, Field
 from celeste.artifacts import AudioArtifact, ImageArtifact, VideoArtifact
 from celeste.constraints import Constraint
 from celeste.core import InputType
+from celeste.pricing.cost import Cost
 
 
 class Input(BaseModel):
@@ -35,6 +38,7 @@ class Output[Content](BaseModel):
     content: Content
     usage: Usage = Field(default_factory=Usage)
     finish_reason: FinishReason | None = None
+    cost: Cost | None = None
     metadata: dict[str, Any] = Field(default_factory=dict)
 
 
@@ -44,6 +48,7 @@ class Chunk[Content](BaseModel):
     content: Content
     finish_reason: FinishReason | None = None
     usage: Usage | None = None
+    cost: Cost | None = None
     metadata: dict[str, Any] = Field(default_factory=dict)
 
 

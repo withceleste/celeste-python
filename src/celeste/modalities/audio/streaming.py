@@ -6,6 +6,7 @@ from typing import Any, Unpack
 
 from celeste.artifacts import AudioArtifact
 from celeste.client import ModalityClient
+from celeste.pricing import Cost
 from celeste.streaming import Stream
 
 from .io import (
@@ -43,6 +44,16 @@ class AudioStream(Stream[AudioOutput, AudioParameters, AudioChunk]):
                 return chunk.usage
         return AudioUsage()
 
+    def _aggregate_cost(self, chunks: list[AudioChunk]) -> Cost | None:
+        """Aggregate cost across chunks (use last chunk's cost or calculate from usage)."""
+        # First try to find cost in chunks
+        for chunk in reversed(chunks):
+            if chunk.cost:
+                return chunk.cost
+        # Fall back to calculating from aggregated usage
+        usage = self._aggregate_usage(chunks)
+        return self._client._calculate_cost(usage)
+
     def _aggregate_finish_reason(
         self,
         chunks: list[AudioChunk],
@@ -78,10 +89,18 @@ class AudioStream(Stream[AudioOutput, AudioParameters, AudioChunk]):
         raw_content = self._aggregate_content(chunks)
         content: AudioArtifact = self._transform_output(raw_content, **parameters)
         raw_events = self._aggregate_event_data(chunks)
+        usage = self._aggregate_usage(chunks)
+        cost = self._aggregate_cost(chunks)
+
+        # Track cost if tracker is configured
+        if self._client.cost_tracker is not None:
+            self._client.cost_tracker.add(cost)
+
         return AudioOutput(
             content=content,
-            usage=self._aggregate_usage(chunks),
+            usage=usage,
             finish_reason=self._aggregate_finish_reason(chunks),
+            cost=cost,
             metadata=self._build_stream_metadata(raw_events),
         )
 
