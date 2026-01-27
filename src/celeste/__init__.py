@@ -45,6 +45,14 @@ from celeste.modalities.videos.models import MODELS as _videos_models
 from celeste.modalities.videos.providers import PROVIDERS as _videos_providers
 from celeste.models import Model, _models, get_model, list_models, register_models
 from celeste.parameters import Parameters
+from celeste.pricing import (
+    Cost,
+    CostBreakdown,
+    CostTracker,
+    initialize_pricing,
+    is_initialized,
+    register_model_pricing,
+)
 from celeste.structured_outputs import (
     RefResolvingJsonSchemaGenerator,
     StrictJsonSchemaGenerator,
@@ -246,6 +254,9 @@ __all__ = [
     "ClientNotFoundError",
     "ConstraintViolationError",
     "Content",
+    "Cost",
+    "CostBreakdown",
+    "CostTracker",
     "Error",
     "HTTPClient",
     "Input",
@@ -282,7 +293,10 @@ __all__ = [
     "create_client",
     "get_model",
     "images",
+    "initialize_pricing",
+    "is_initialized",
     "list_models",
+    "register_model_pricing",
     "register_models",
     "text",
     "videos",
