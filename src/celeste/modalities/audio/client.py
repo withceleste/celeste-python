@@ -74,7 +74,9 @@ class AudioSyncNamespace:
     ) -> AudioOutput:
         """Blocking speech generation."""
         inputs = AudioInput(text=text)
-        return async_to_sync(self._client._predict)(inputs, extra_body=extra_body, **parameters)
+        return async_to_sync(self._client._predict)(
+            inputs, extra_body=extra_body, **parameters
+        )
 
     @property
     def stream(self) -> "AudioSyncStreamNamespace":

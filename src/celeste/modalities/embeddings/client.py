@@ -79,7 +79,9 @@ class EmbeddingsSyncNamespace:
         **parameters: Unpack[EmbeddingsParameters],
     ) -> EmbeddingsOutput:
         """Blocking embeddings generation."""
-        return async_to_sync(self._client.embed)(text, extra_body=extra_body, **parameters)
+        return async_to_sync(self._client.embed)(
+            text, extra_body=extra_body, **parameters
+        )
 
 
 __all__ = [

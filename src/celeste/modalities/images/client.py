@@ -103,7 +103,9 @@ class ImagesSyncNamespace:
             result.content.show()
         """
         inputs = ImageInput(prompt=prompt)
-        return async_to_sync(self._client._predict)(inputs, extra_body=extra_body, **parameters)
+        return async_to_sync(self._client._predict)(
+            inputs, extra_body=extra_body, **parameters
+        )
 
     def edit(
         self,
@@ -120,7 +122,9 @@ class ImagesSyncNamespace:
             result.content.show()
         """
         inputs = ImageInput(prompt=prompt, image=image)
-        return async_to_sync(self._client._predict)(inputs, extra_body=extra_body, **parameters)
+        return async_to_sync(self._client._predict)(
+            inputs, extra_body=extra_body, **parameters
+        )
 
     @property
     def stream(self) -> "ImagesSyncStreamNamespace":
@@ -172,7 +176,9 @@ class ImagesSyncStreamNamespace:
                 print(chunk.content)
             print(stream.output.usage)
         """
-        return self._client.stream.edit(image, prompt, extra_body=extra_body, **parameters)
+        return self._client.stream.edit(
+            image, prompt, extra_body=extra_body, **parameters
+        )
 
 
 __all__ = [
