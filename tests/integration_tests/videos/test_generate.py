@@ -29,6 +29,8 @@ from celeste.modalities.videos import VideoOutput, VideoUsage  # noqa: E402
             "seedance-1-0-lite-t2v-250428",
             {"duration": 2, "resolution": "480p"},
         ),
+        # xAI Grok Imagine: duration 1-15s, 480p/720p
+        (Provider.XAI, "grok-imagine-video", {"duration": 2}),
     ],
 )
 @pytest.mark.integration

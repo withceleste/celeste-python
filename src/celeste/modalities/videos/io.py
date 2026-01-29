@@ -7,9 +7,10 @@ from celeste.io import Chunk, FinishReason, Input, Output, Usage
 
 
 class VideoInput(Input):
-    """Input for video generation operations."""
+    """Input for video generation and edit operations."""
 
     prompt: str
+    video: VideoArtifact | None = None  # For edit operations
 
 
 class VideoFinishReason(FinishReason):
