@@ -23,6 +23,7 @@ from celeste.modalities.images import ImageOutput, ImageUsage  # noqa: E402
         (Provider.GOOGLE, "imagen-4.0-fast-generate-001", {"num_images": 1}),
         (Provider.BYTEPLUS, "seedream-4-0-250828", {}),
         (Provider.BFL, "flux-2-pro", {}),
+        (Provider.XAI, "grok-imagine-image", {}),
     ],
 )
 @pytest.mark.integration
