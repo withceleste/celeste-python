@@ -29,7 +29,11 @@ class XAIImagesClient(XAIImagesMixin, ImagesClient):
         """Initialize request from inputs."""
         request: dict[str, Any] = {"prompt": inputs.prompt}
         if inputs.image is not None:
-            request["image"] = inputs.image
+            # xAI accepts URL or base64 string
+            if inputs.image.url:
+                request["image"] = inputs.image.url
+            else:
+                request["image"] = inputs.image.get_base64()
         return request
 
     async def generate(
