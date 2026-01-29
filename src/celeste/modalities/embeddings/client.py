@@ -1,6 +1,6 @@
 """Embeddings modality client."""
 
-from typing import Unpack
+from typing import Any, Unpack
 
 from asgiref.sync import async_to_sync
 
@@ -29,12 +29,15 @@ class EmbeddingsClient(
     async def embed(
         self,
         text: str | list[str],
+        *,
+        extra_body: dict[str, Any] | None = None,
         **parameters: Unpack[EmbeddingsParameters],
     ) -> EmbeddingsOutput:
         """Generate embeddings from text.
 
         Args:
             text: Text to embed. Single string or list of strings.
+            extra_body: Additional provider-specific fields to merge into request.
             **parameters: Embedding parameters (e.g., dimensions).
 
         Returns:
@@ -43,7 +46,7 @@ class EmbeddingsClient(
             - list[list[float]] if text was a list
         """
         inputs = EmbeddingsInput(text=text)
-        output = await self._predict(inputs, **parameters)
+        output = await self._predict(inputs, extra_body=extra_body, **parameters)
 
         # If single text input, unwrap from batch format to single embedding
         if (
@@ -71,10 +74,12 @@ class EmbeddingsSyncNamespace:
     def embed(
         self,
         text: str | list[str],
+        *,
+        extra_body: dict[str, Any] | None = None,
         **parameters: Unpack[EmbeddingsParameters],
     ) -> EmbeddingsOutput:
         """Blocking embeddings generation."""
-        return async_to_sync(self._client.embed)(text, **parameters)
+        return async_to_sync(self._client.embed)(text, extra_body=extra_body, **parameters)
 
 
 __all__ = [
