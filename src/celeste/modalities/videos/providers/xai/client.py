@@ -24,9 +24,6 @@ class XAIVideosClient(XAIVideosMixin, VideosClient):
         """Initialize request from inputs."""
         request: dict[str, Any] = {"prompt": inputs.prompt}
         if inputs.video is not None:
-            if not inputs.video.url:
-                msg = "xAI video edit requires a video with a URL (base64/path not supported)"
-                raise ValueError(msg)
             request["video"] = {"url": inputs.video.url}
         return request
 
