@@ -84,7 +84,7 @@ class GeminiImagesClient(GoogleGenerateContentClient, ImagesClient):
         return {
             "contents": [{"parts": parts}],
             "generationConfig": {
-                "responseModalities": ["Image"],
+                "responseModalities": ["TEXT", "IMAGE"],
                 "imageConfig": {},
             },
         }
