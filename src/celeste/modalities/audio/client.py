@@ -1,6 +1,6 @@
 """Audio modality client."""
 
-from typing import Unpack
+from typing import Any, Unpack
 
 from asgiref.sync import async_to_sync
 
@@ -45,6 +45,8 @@ class AudioStreamNamespace:
     def speak(
         self,
         text: str,
+        *,
+        extra_body: dict[str, Any] | None = None,
         **parameters: Unpack[AudioParameters],
     ) -> AudioStream:
         """Stream speech generation."""
@@ -52,6 +54,7 @@ class AudioStreamNamespace:
         return self._client._stream(
             inputs,
             stream_class=self._client._stream_class(),
+            extra_body=extra_body,
             **parameters,
         )
 
@@ -65,11 +68,15 @@ class AudioSyncNamespace:
     def speak(
         self,
         text: str,
+        *,
+        extra_body: dict[str, Any] | None = None,
         **parameters: Unpack[AudioParameters],
     ) -> AudioOutput:
         """Blocking speech generation."""
         inputs = AudioInput(text=text)
-        return async_to_sync(self._client._predict)(inputs, **parameters)
+        return async_to_sync(self._client._predict)(
+            inputs, extra_body=extra_body, **parameters
+        )
 
     @property
     def stream(self) -> "AudioSyncStreamNamespace":
@@ -86,6 +93,8 @@ class AudioSyncStreamNamespace:
     def speak(
         self,
         text: str,
+        *,
+        extra_body: dict[str, Any] | None = None,
         **parameters: Unpack[AudioParameters],
     ) -> AudioStream:
         """Sync streaming speech generation.
@@ -99,7 +108,7 @@ class AudioSyncStreamNamespace:
             stream.output.content.save("output.mp3")
         """
         # Return same stream as async version - __iter__/__next__ handle sync iteration
-        return self._client.stream.speak(text, **parameters)
+        return self._client.stream.speak(text, extra_body=extra_body, **parameters)
 
 
 __all__ = [

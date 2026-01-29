@@ -1,6 +1,6 @@
 """{Modality} modality client."""
 
-from typing import Unpack
+from typing import Any, Unpack
 
 from asgiref.sync import async_to_sync
 
@@ -70,6 +70,8 @@ class {Modality}StreamNamespace:
     def generate(
         self,
         prompt: str,
+        *,
+        extra_body: dict[str, Any] | None = None,
         **parameters: Unpack[{Modality}Parameters],
     ) -> {Modality}Stream:
         """Stream {modality} generation.
@@ -82,6 +84,7 @@ class {Modality}StreamNamespace:
         return self._client._stream(
             inputs,
             stream_class=self._client._stream_class(),
+            extra_body=extra_body,
             **parameters,
         )
 
@@ -92,6 +95,7 @@ class {Modality}StreamNamespace:
         image: ImageContent | None = None,
         video: VideoContent | None = None,
         audio: AudioContent | None = None,
+        extra_body: dict[str, Any] | None = None,
         **parameters: Unpack[{Modality}Parameters],
     ) -> {Modality}Stream:
         """Stream media analysis (image, video, or audio).
@@ -105,6 +109,7 @@ class {Modality}StreamNamespace:
         return self._client._stream(
             inputs,
             stream_class=self._client._stream_class(),
+            extra_body=extra_body,
             **parameters,
         )
 
@@ -121,6 +126,8 @@ class {Modality}SyncNamespace:
     def generate(
         self,
         prompt: str,
+        *,
+        extra_body: dict[str, Any] | None = None,
         **parameters: Unpack[{Modality}Parameters],
     ) -> {Modality}Output:
         """Blocking {modality} generation.
@@ -130,7 +137,7 @@ class {Modality}SyncNamespace:
             print(result.content)
         """
         inputs = {Modality}Input(prompt=prompt)
-        return async_to_sync(self._client._predict)(inputs, **parameters)
+        return async_to_sync(self._client._predict)(inputs, extra_body=extra_body, **parameters)
 
     def analyze(
         self,
@@ -139,6 +146,7 @@ class {Modality}SyncNamespace:
         image: ImageContent | None = None,
         video: VideoContent | None = None,
         audio: AudioContent | None = None,
+        extra_body: dict[str, Any] | None = None,
         **parameters: Unpack[{Modality}Parameters],
     ) -> {Modality}Output:
         """Blocking media analysis (image, video, or audio).
@@ -149,7 +157,7 @@ class {Modality}SyncNamespace:
         """
         self._client._check_media_support(image=image, video=video, audio=audio)
         inputs = {Modality}Input(prompt=prompt, image=image, video=video, audio=audio)
-        return async_to_sync(self._client._predict)(inputs, **parameters)
+        return async_to_sync(self._client._predict)(inputs, extra_body=extra_body, **parameters)
 
     @property
     def stream(self) -> "{Modality}SyncStreamNamespace":
@@ -166,6 +174,8 @@ class {Modality}SyncStreamNamespace:
     def generate(
         self,
         prompt: str,
+        *,
+        extra_body: dict[str, Any] | None = None,
         **parameters: Unpack[{Modality}Parameters],
     ) -> {Modality}Stream:
         """Sync streaming {modality} generation.
@@ -179,7 +189,7 @@ class {Modality}SyncStreamNamespace:
             print(stream.output.usage)
         """
         # Return same stream as async version - __iter__/__next__ handle sync iteration
-        return self._client.stream.generate(prompt, **parameters)
+        return self._client.stream.generate(prompt, extra_body=extra_body, **parameters)
 
     def analyze(
         self,
@@ -188,6 +198,7 @@ class {Modality}SyncStreamNamespace:
         image: ImageContent | None = None,
         video: VideoContent | None = None,
         audio: AudioContent | None = None,
+        extra_body: dict[str, Any] | None = None,
         **parameters: Unpack[{Modality}Parameters],
     ) -> {Modality}Stream:
         """Sync streaming media analysis (image, video, or audio).
@@ -202,7 +213,7 @@ class {Modality}SyncStreamNamespace:
         """
         # Return same stream as async version - __iter__/__next__ handle sync iteration
         return self._client.stream.analyze(
-            prompt, image=image, video=video, audio=audio, **parameters
+            prompt, image=image, video=video, audio=audio, extra_body=extra_body, **parameters
         )
 
 

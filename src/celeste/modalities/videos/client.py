@@ -1,6 +1,6 @@
 """Videos modality client."""
 
-from typing import Unpack
+from typing import Any, Unpack
 
 from asgiref.sync import async_to_sync
 
@@ -42,6 +42,8 @@ class VideosSyncNamespace:
     def generate(
         self,
         prompt: str,
+        *,
+        extra_body: dict[str, Any] | None = None,
         **parameters: Unpack[VideoParameters],
     ) -> VideoOutput:
         """Blocking video generation.
@@ -51,7 +53,9 @@ class VideosSyncNamespace:
             result.content.save("video.mp4")
         """
         inputs = VideoInput(prompt=prompt)
-        return async_to_sync(self._client._predict)(inputs, **parameters)
+        return async_to_sync(self._client._predict)(
+            inputs, extra_body=extra_body, **parameters
+        )
 
 
 __all__ = [
