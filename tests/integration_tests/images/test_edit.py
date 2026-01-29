@@ -22,6 +22,7 @@ from celeste.modalities.images import ImageOutput, ImageUsage  # noqa: E402
         (Provider.OPENAI, "gpt-image-1-mini"),
         (Provider.GOOGLE, "gemini-2.5-flash-image"),
         (Provider.BFL, "flux-2-pro"),
+        (Provider.XAI, "grok-imagine-image"),
     ],
 )
 @pytest.mark.integration
