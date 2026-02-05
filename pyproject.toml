@@ -1,6 +1,6 @@
 [project]
 name = "celeste-ai"
-version = "0.9.6"
+version = "0.9.7"
 description = "Open source, type-safe primitives for multi-modal AI. All capabilities, all providers, one interface"
 authors = [{name = "Kamilbenkirane", email = "kamil@withceleste.ai"}]
 readme = "README.md"
@@ -28,6 +28,8 @@ dependencies = [
     "asgiref>=3.11.0",
     "filetype>=1.2.0",
     "google-auth>=2.0.0",
+    "ipykernel>=7.1.0",
+    "requests>=2.32.5",
 ]
 
 [project.urls]
