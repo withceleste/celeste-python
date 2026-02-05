@@ -1,4 +1,4 @@
-a# Contributing to Celeste
+# Contributing to Celeste
 
 ## TL;DR
 
