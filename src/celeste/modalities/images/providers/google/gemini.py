@@ -82,7 +82,7 @@ class GeminiImagesClient(GoogleGenerateContentClient, ImagesClient):
         parts.append({"text": inputs.prompt})
 
         return {
-            "contents": [{"parts": parts}],
+            "contents": [{"role": "user", "parts": parts}],
             "generationConfig": {
                 "responseModalities": ["TEXT", "IMAGE"],
                 "imageConfig": {},

@@ -7,6 +7,7 @@ from celeste.client import APIMixin
 from celeste.core import UsageField
 from celeste.io import FinishReason
 from celeste.mime_types import ApplicationMimeType
+from celeste.providers.google.auth import GoogleADC
 
 from . import config
 
@@ -30,6 +31,36 @@ class DeepSeekChatClient(APIMixin):
                 content = message.get("content") or ""
                 return self._transform_output(content, **parameters)
     """
+
+    def _get_vertex_endpoint(self, deepseek_endpoint: str) -> str:
+        """Map DeepSeek endpoint to Vertex AI endpoint."""
+        mapping: dict[str, str] = {
+            config.DeepSeekChatEndpoint.CREATE_CHAT: config.VertexDeepSeekEndpoint.CREATE_CHAT,
+        }
+        vertex_endpoint = mapping.get(deepseek_endpoint)
+        if vertex_endpoint is None:
+            raise ValueError(f"No Vertex AI endpoint mapping for: {deepseek_endpoint}")
+        return vertex_endpoint
+
+    def _build_url(self, endpoint: str) -> str:
+        """Build full URL based on auth type.
+
+        - GoogleADC auth -> Vertex AI endpoints (OpenAI-compatible)
+        - API key auth -> DeepSeek API endpoints
+        """
+        if isinstance(self.auth, GoogleADC):
+            project_id = self.auth.resolved_project_id
+            if project_id is None:
+                raise ValueError(
+                    "Vertex AI requires a project_id. "
+                    "Pass project_id to GoogleADC() or ensure credentials have a project."
+                )
+
+            vertex_endpoint = self._get_vertex_endpoint(endpoint)
+            base_url = self.auth.get_vertex_base_url()
+            return f"{base_url}{vertex_endpoint.format(project_id=project_id, location=self.auth.location)}"
+
+        return f"{config.BASE_URL}{endpoint}"
 
     def _build_request(
         self,
@@ -64,7 +95,7 @@ class DeepSeekChatClient(APIMixin):
         }
 
         response = await self.http_client.post(
-            f"{config.BASE_URL}{endpoint}",
+            self._build_url(endpoint),
             headers=headers,
             json_body=request_body,
         )
@@ -89,7 +120,7 @@ class DeepSeekChatClient(APIMixin):
         }
 
         return self.http_client.stream_post(
-            f"{config.BASE_URL}{endpoint}",
+            self._build_url(endpoint),
             headers=headers,
             json_body=request_body,
         )
@@ -100,8 +131,8 @@ class DeepSeekChatClient(APIMixin):
 
         Shared by client and streaming across all capabilities.
         """
-        prompt_tokens_details = usage_data.get("prompt_tokens_details", {})
-        completion_tokens_details = usage_data.get("completion_tokens_details", {})
+        prompt_tokens_details = usage_data.get("prompt_tokens_details") or {}
+        completion_tokens_details = usage_data.get("completion_tokens_details") or {}
         return {
             UsageField.INPUT_TOKENS: usage_data.get("prompt_tokens"),
             UsageField.OUTPUT_TOKENS: usage_data.get("completion_tokens"),

@@ -51,7 +51,9 @@ class GoogleVideosClient(GoogleVeoMixin, VideosClient):
     ) -> VideoArtifact:
         """Parse content from response."""
         video_data = super()._parse_content(response_data)
-        return VideoArtifact(url=video_data.get("uri"))
+        return VideoArtifact(
+            url=video_data.get("uri") or video_data.get("gcsUri"),
+        )
 
     def _parse_finish_reason(self, response_data: dict[str, Any]) -> VideoFinishReason:
         """Parse finish reason from response."""
