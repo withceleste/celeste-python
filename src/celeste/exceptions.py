@@ -170,6 +170,16 @@ class StreamEmptyError(StreamingError):
         super().__init__("Stream completed but no chunks were produced")
 
 
+class MissingDependencyError(Error):
+    """Raised when a required optional dependency is not installed."""
+
+    def __init__(self, *, library: str, extra: str) -> None:
+        super().__init__(
+            f"Missing required dependency `{library}`. "
+            f'Install it with: pip install "celeste-ai[{extra}]"'
+        )
+
+
 class CredentialsError(Error):
     """Errors related to API credentials."""
 
@@ -217,6 +227,7 @@ __all__ = [
     "ConstraintViolationError",
     "Error",
     "MissingCredentialsError",
+    "MissingDependencyError",
     "ModalityNotFoundError",
     "ModelNotFoundError",
     "StreamEmptyError",
