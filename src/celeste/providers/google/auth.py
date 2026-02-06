@@ -6,6 +6,9 @@ from pydantic import ConfigDict
 
 from celeste.auth import Authentication
 
+VERTEX_BASE_URL = "https://{location}-aiplatform.googleapis.com"
+VERTEX_GLOBAL_BASE_URL = "https://aiplatform.googleapis.com"
+
 
 class GoogleADC(Authentication):
     """Google Application Default Credentials authentication.
@@ -18,6 +21,7 @@ class GoogleADC(Authentication):
 
     scopes: ClassVar[list[str]] = ["https://www.googleapis.com/auth/cloud-platform"]
     project_id: str | None = None
+    location: str = "global"
 
     model_config: ClassVar[ConfigDict] = ConfigDict(arbitrary_types_allowed=True)
 
@@ -35,8 +39,13 @@ class GoogleADC(Authentication):
 
     def _get_access_token(self) -> tuple[str, str | None]:
         """Get OAuth access token using Application Default Credentials."""
-        import google.auth
-        import google.auth.transport.requests
+        try:
+            import google.auth
+            import google.auth.transport.requests
+        except ImportError:
+            from celeste.exceptions import MissingDependencyError
+
+            raise MissingDependencyError(library="google-auth", extra="gcp") from None
 
         if self._credentials is None:
             self._credentials, self._project = google.auth.default(scopes=self.scopes)
@@ -46,6 +55,19 @@ class GoogleADC(Authentication):
             self._credentials.refresh(self._auth_request)
 
         return self._credentials.token, self.project_id or self._project
+
+    @property
+    def resolved_project_id(self) -> str | None:
+        """Return effective project_id (explicit or from ADC credentials)."""
+        if self._credentials is None:
+            self._get_access_token()
+        return self.project_id or self._project
+
+    def get_vertex_base_url(self) -> str:
+        """Return the Vertex AI base URL for the configured location."""
+        if self.location == "global":
+            return VERTEX_GLOBAL_BASE_URL
+        return VERTEX_BASE_URL.format(location=self.location)
 
 
 __all__ = ["GoogleADC"]
