@@ -5,6 +5,7 @@ from typing import Any, ClassVar
 from pydantic import ConfigDict
 
 from celeste.auth import Authentication
+from celeste.exceptions import MissingDependencyError
 
 VERTEX_BASE_URL = "https://{location}-aiplatform.googleapis.com"
 VERTEX_GLOBAL_BASE_URL = "https://aiplatform.googleapis.com"
@@ -42,10 +43,8 @@ class GoogleADC(Authentication):
         try:
             import google.auth
             import google.auth.transport.requests
-        except ImportError:
-            from celeste.exceptions import MissingDependencyError
-
-            raise MissingDependencyError(library="google-auth", extra="gcp") from None
+        except ImportError as e:
+            raise MissingDependencyError(library="google-auth", extra="gcp") from e
 
         if self._credentials is None:
             self._credentials, self._project = google.auth.default(scopes=self.scopes)
