@@ -19,6 +19,7 @@ from celeste import (  # noqa: E402
     list_models,
 )
 from celeste.modalities.text import TextChunk, TextUsage  # noqa: E402
+from celeste.providers.google.auth import GoogleADC  # noqa: E402
 
 TEST_MAX_TOKENS = 200
 
@@ -91,3 +92,33 @@ def test_sync_stream_generate() -> None:
 
     for _chunk in client.sync.stream.generate(prompt="Hi", max_tokens=TEST_MAX_TOKENS):
         pass  # Just exhaust the stream
+
+
+@pytest.mark.parametrize(
+    ("provider", "model", "location"),
+    [
+        ("google", "gemini-2.5-flash", "global"),
+        ("anthropic", "claude-haiku-4-5", "us-east5"),
+        ("mistral", "mistral-small-2503", "us-central1"),
+        ("deepseek", "deepseek-ai/deepseek-v3.2-maas", "global"),
+    ],
+)
+@pytest.mark.integration
+@pytest.mark.asyncio
+async def test_vertex_stream_generate(provider: str, model: str, location: str) -> None:
+    """Test streaming text generation via Vertex AI - one model per provider."""
+    client = create_client(
+        modality=Modality.TEXT,
+        provider=provider,
+        model=model,
+        auth=GoogleADC(location=location),
+    )
+
+    chunks: list[TextChunk] = []
+    async for chunk in client.stream.generate(prompt="Hi", max_tokens=TEST_MAX_TOKENS):
+        chunks.append(chunk)
+
+    if not chunks:
+        return
+
+    assert all(isinstance(c, TextChunk) for c in chunks)

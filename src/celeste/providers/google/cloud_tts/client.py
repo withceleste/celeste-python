@@ -51,7 +51,8 @@ class GoogleCloudTTSClient(APIMixin):
     def model_post_init(self, _context: Any) -> None:
         """Override auth to use ADC for Cloud TTS (not API key like Gemini)."""
         super().model_post_init(_context)  # type: ignore[misc]
-        object.__setattr__(self, "auth", GoogleADC())
+        if not isinstance(self.auth, GoogleADC):
+            object.__setattr__(self, "auth", GoogleADC())
 
     async def _make_request(
         self,

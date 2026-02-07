@@ -14,6 +14,7 @@ import pytest  # noqa: E402
 from celeste import Modality, Provider, create_client  # noqa: E402
 from celeste.artifacts import VideoArtifact  # noqa: E402
 from celeste.modalities.videos import VideoOutput, VideoUsage  # noqa: E402
+from celeste.providers.google.auth import GoogleADC  # noqa: E402
 
 
 @pytest.mark.parametrize(
@@ -85,6 +86,28 @@ def test_sync_generate() -> None:
         prompt="A ball rolling",
         duration=2,
         resolution="480p",
+    )
+
+    assert isinstance(response, VideoOutput)
+    assert isinstance(response.content, VideoArtifact)
+    assert response.content.has_content
+
+
+@pytest.mark.integration
+@pytest.mark.slow
+@pytest.mark.asyncio
+async def test_vertex_generate() -> None:
+    """Test video generation via Vertex AI."""
+    client = create_client(
+        modality=Modality.VIDEOS,
+        provider=Provider.GOOGLE,
+        model="veo-3.0-fast-generate-001",
+        auth=GoogleADC(location="us-central1"),
+    )
+
+    response = await client.generate(
+        prompt="A cat walking on the beach",
+        duration=4,
     )
 
     assert isinstance(response, VideoOutput)

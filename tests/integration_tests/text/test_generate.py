@@ -19,6 +19,7 @@ from celeste import (  # noqa: E402
     list_models,
 )
 from celeste.modalities.text import TextOutput, TextUsage  # noqa: E402
+from celeste.providers.google.auth import GoogleADC  # noqa: E402
 
 TEST_MAX_TOKENS = 200
 
@@ -87,3 +88,31 @@ def test_sync_generate() -> None:
 
     assert isinstance(response, TextOutput)
     assert response.content or response.finish_reason is not None
+
+
+@pytest.mark.parametrize(
+    ("provider", "model", "location"),
+    [
+        ("google", "gemini-2.5-flash", "global"),
+        ("anthropic", "claude-haiku-4-5", "us-east5"),
+        ("mistral", "mistral-small-2503", "us-central1"),
+        ("deepseek", "deepseek-ai/deepseek-v3.2-maas", "global"),
+    ],
+)
+@pytest.mark.integration
+@pytest.mark.asyncio
+async def test_vertex_generate(provider: str, model: str, location: str) -> None:
+    """Test text generation via Vertex AI - one model per provider."""
+    client = create_client(
+        modality=Modality.TEXT,
+        provider=provider,
+        model=model,
+        auth=GoogleADC(location=location),
+    )
+
+    response = await client.generate(prompt="Hi", max_tokens=TEST_MAX_TOKENS)
+
+    assert isinstance(response, TextOutput)
+    if not response.content:
+        assert response.finish_reason is not None
+    assert isinstance(response.usage, TextUsage)

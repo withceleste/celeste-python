@@ -296,9 +296,8 @@ class ModalityClient[In: Input, Out: Output, Params: Parameters, Content](
         """Handle error responses from provider APIs."""
         if not response.is_success:
             try:
-                error_data = response.json()
-                error_msg = error_data.get("error", {}).get("message", response.text)
-            except JSONDecodeError:
+                error_msg = response.json()["error"]["message"]
+            except (JSONDecodeError, KeyError, TypeError, IndexError):
                 error_msg = response.text or f"HTTP {response.status_code}"
 
             raise httpx.HTTPStatusError(

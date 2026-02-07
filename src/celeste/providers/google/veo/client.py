@@ -10,6 +10,7 @@ from celeste.exceptions import StreamingNotSupportedError
 from celeste.io import FinishReason
 from celeste.mime_types import ApplicationMimeType
 
+from ..auth import GoogleADC
 from . import config
 
 logger = logging.getLogger(__name__)
@@ -34,6 +35,79 @@ class GoogleVeoClient(APIMixin):
                 return VideoArtifact(data=video_bytes, mime_type=VideoMimeType.MP4, ...)
     """
 
+    def _get_vertex_endpoint(self, gemini_endpoint: str) -> str:
+        """Map Gemini Veo endpoint to Vertex AI endpoint."""
+        mapping: dict[str, str] = {
+            config.GoogleVeoEndpoint.CREATE_VIDEO: config.VertexVeoEndpoint.CREATE_VIDEO,
+        }
+        vertex_endpoint = mapping.get(gemini_endpoint)
+        if vertex_endpoint is None:
+            raise ValueError(f"No Vertex AI endpoint mapping for: {gemini_endpoint}")
+        return vertex_endpoint
+
+    def _build_url(self, endpoint: str) -> str:
+        """Build full URL based on auth type."""
+        if isinstance(self.auth, GoogleADC):
+            project_id = self.auth.resolved_project_id
+            if project_id is None:
+                raise ValueError(
+                    "Vertex AI requires a project_id. "
+                    "Pass project_id to GoogleADC() or ensure credentials have a project."
+                )
+
+            vertex_endpoint = self._get_vertex_endpoint(endpoint)
+            base_url = self.auth.get_vertex_base_url()
+            return f"{base_url}{vertex_endpoint.format(project_id=project_id, location=self.auth.location, model_id=self.model.id)}"
+
+        return f"{config.BASE_URL}{endpoint.format(model_id=self.model.id)}"
+
+    def _build_poll_url(self, operation_name: str) -> str:
+        """Build polling URL for long-running operations based on auth type."""
+        if isinstance(self.auth, GoogleADC):
+            project_id = self.auth.resolved_project_id
+            base_url = self.auth.get_vertex_base_url()
+            poll_path = config.VertexVeoEndpoint.FETCH_OPERATION.format(
+                project_id=project_id,
+                location=self.auth.location,
+                model_id=self.model.id,
+            )
+            return f"{base_url}{poll_path}"
+
+        poll_path = config.GoogleVeoEndpoint.GET_OPERATION.format(
+            operation_name=operation_name
+        )
+        return f"{config.BASE_URL}{poll_path}"
+
+    async def _make_poll_request(self, operation_name: str) -> dict[str, Any]:
+        """Poll a long-running operation.
+
+        Vertex AI uses POST to fetchPredictOperation with operationName in body.
+        AI Studio uses GET to /v1beta/{operation_name}.
+        """
+        headers = {
+            **self.auth.get_headers(),
+            "Content-Type": ApplicationMimeType.JSON,
+        }
+        poll_url = self._build_poll_url(operation_name)
+
+        if isinstance(self.auth, GoogleADC):
+            response = await self.http_client.post(
+                poll_url,
+                headers=headers,
+                json_body={"operationName": operation_name},
+                timeout=config.DEFAULT_TIMEOUT,
+            )
+        else:
+            response = await self.http_client.get(
+                poll_url,
+                headers=headers,
+                timeout=config.DEFAULT_TIMEOUT,
+            )
+
+        self._handle_error_response(response)
+        data: dict[str, Any] = response.json()
+        return data
+
     def _make_stream_request(
         self,
         request_body: dict[str, Any],
@@ -54,8 +128,6 @@ class GoogleVeoClient(APIMixin):
         """Make HTTP request with async polling for Veo video generation."""
         if endpoint is None:
             endpoint = config.GoogleVeoEndpoint.CREATE_VIDEO
-        endpoint = endpoint.format(model_id=self.model.id)
-        url = f"{config.BASE_URL}{endpoint}"
 
         auth_headers = self.auth.get_headers()
         headers = {
@@ -65,7 +137,7 @@ class GoogleVeoClient(APIMixin):
 
         logger.info(f"Initiating video generation with model {self.model.id}")
         response = await self.http_client.post(
-            url,
+            self._build_url(endpoint),
             headers=headers,
             json_body=request_body,
             timeout=config.DEFAULT_TIMEOUT,
@@ -77,21 +149,11 @@ class GoogleVeoClient(APIMixin):
         operation_name = operation_data["name"]
         logger.info(f"Video generation started: {operation_name}")
 
-        poll_url = f"{config.BASE_URL}{config.GoogleVeoEndpoint.GET_OPERATION.format(operation_name=operation_name)}"
-        poll_headers = auth_headers
-
         while True:
             await asyncio.sleep(config.POLL_INTERVAL)
             logger.debug(f"Polling operation status: {operation_name}")
 
-            poll_response = await self.http_client.get(
-                poll_url,
-                headers=poll_headers,
-                timeout=config.DEFAULT_TIMEOUT,
-            )
-
-            self._handle_error_response(poll_response)
-            operation_data = poll_response.json()
+            operation_data = await self._make_poll_request(operation_name)
 
             if operation_data.get("done"):
                 if "error" in operation_data:
@@ -111,10 +173,18 @@ class GoogleVeoClient(APIMixin):
 
         Returns generic dict with video data that capability clients wrap in artifacts.
         """
-        generate_response = response_data.get("response", {}).get(
-            "generateVideoResponse", {}
+        response = response_data.get("response", {})
+
+        if isinstance(self.auth, GoogleADC):
+            videos = response.get("videos", [])
+            if not videos:
+                msg = "No videos in response"
+                raise ValueError(msg)
+            return videos[0]
+
+        generated_samples = response.get("generateVideoResponse", {}).get(
+            "generatedSamples", []
         )
-        generated_samples = generate_response.get("generatedSamples", [])
         if not generated_samples:
             msg = "No generated samples in response"
             raise ValueError(msg)

@@ -8,6 +8,7 @@ from celeste.exceptions import StreamingNotSupportedError
 from celeste.io import FinishReason
 from celeste.mime_types import ApplicationMimeType
 
+from ..auth import GoogleADC
 from . import config
 
 
@@ -36,11 +37,42 @@ class GoogleEmbeddingsClient(APIMixin):
     - _make_request() - HTTP POST to embedContent or batchEmbedContents endpoint
     - _parse_content() - Extract embedding vectors (generic)
 
+    Auth-based endpoint selection:
+    - GoogleADC auth -> Vertex AI endpoints
+    - API key auth -> Gemini API endpoints
+
     Capability clients extend via super():
         class GoogleEmbeddingsClient(GoogleEmbeddingsClient, EmbeddingsClient):
             def _parse_content(self, response_data, **params):
                 return super()._parse_content(response_data)  # No transformation needed
     """
+
+    def _get_vertex_endpoint(self, gemini_endpoint: str) -> str:
+        """Map Gemini Embeddings endpoint to Vertex AI endpoint."""
+        mapping: dict[str, str] = {
+            config.GoogleEmbeddingsEndpoint.EMBED_CONTENT: config.VertexEmbeddingsEndpoint.EMBED_CONTENT,
+            config.GoogleEmbeddingsEndpoint.BATCH_EMBED_CONTENTS: config.VertexEmbeddingsEndpoint.BATCH_EMBED_CONTENTS,
+        }
+        vertex_endpoint = mapping.get(gemini_endpoint)
+        if vertex_endpoint is None:
+            raise ValueError(f"No Vertex AI endpoint mapping for: {gemini_endpoint}")
+        return vertex_endpoint
+
+    def _build_url(self, endpoint: str) -> str:
+        """Build full URL based on auth type."""
+        if isinstance(self.auth, GoogleADC):
+            project_id = self.auth.resolved_project_id
+            if project_id is None:
+                raise ValueError(
+                    "Vertex AI requires a project_id. "
+                    "Pass project_id to GoogleADC() or ensure credentials have a project."
+                )
+
+            vertex_endpoint = self._get_vertex_endpoint(endpoint)
+            base_url = self.auth.get_vertex_base_url()
+            return f"{base_url}{vertex_endpoint.format(project_id=project_id, location=self.auth.location, model_id=self.model.id)}"
+
+        return f"{config.BASE_URL}{endpoint.format(model_id=self.model.id)}"
 
     async def _make_request(
         self,
@@ -58,7 +90,6 @@ class GoogleEmbeddingsClient(APIMixin):
         )
         if endpoint is None:
             endpoint = endpoint_template
-        endpoint = endpoint.format(model_id=self.model.id)
 
         headers = {
             **self.auth.get_headers(),
@@ -66,7 +97,7 @@ class GoogleEmbeddingsClient(APIMixin):
         }
 
         response = await self.http_client.post(
-            f"{config.BASE_URL}{endpoint}",
+            self._build_url(endpoint),
             headers=headers,
             json_body=request_body,
         )

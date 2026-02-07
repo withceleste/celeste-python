@@ -10,6 +10,13 @@ class GoogleVeoEndpoint(StrEnum):
     GET_OPERATION = "/v1beta/{operation_name}"
 
 
+class VertexVeoEndpoint(StrEnum):
+    """Endpoints for Veo on Vertex AI."""
+
+    CREATE_VIDEO = "/v1/projects/{project_id}/locations/{location}/publishers/google/models/{model_id}:predictLongRunning"
+    FETCH_OPERATION = "/v1/projects/{project_id}/locations/{location}/publishers/google/models/{model_id}:fetchPredictOperation"
+
+
 BASE_URL = "https://generativelanguage.googleapis.com"
 
 # Polling Configuration
