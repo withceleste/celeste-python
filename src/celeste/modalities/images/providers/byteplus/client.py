@@ -1,6 +1,5 @@
 """BytePlus images client."""
 
-import base64
 from typing import Any, Unpack
 
 from celeste.artifacts import ImageArtifact
@@ -80,8 +79,7 @@ class BytePlusImagesStream(_BytePlusImagesStream, ImagesStream):
         if content_type == "url":
             artifact = ImageArtifact(url=content, mime_type=ImageMimeType.PNG)
         else:  # b64_json
-            image_data = base64.b64decode(content)
-            artifact = ImageArtifact(data=image_data)
+            artifact = ImageArtifact(data=content)
 
         return ImageChunk(
             content=artifact,
@@ -162,9 +160,8 @@ class BytePlusImagesClient(BytePlusImagesMixin, ImagesClient):
                 mime_type=ImageMimeType.PNG,
             )
         if image_data.get("b64_json"):
-            image_bytes = base64.b64decode(image_data["b64_json"])
             return ImageArtifact(
-                data=image_bytes,
+                data=image_data["b64_json"],
                 mime_type=ImageMimeType.PNG,
             )
 

@@ -1,6 +1,5 @@
 """Ollama images client."""
 
-import base64
 from typing import Any, Unpack
 
 from celeste.artifacts import ImageArtifact
@@ -53,9 +52,8 @@ class OllamaImagesStream(_OllamaGenerateStream, ImagesStream):
                 metadata=self._parse_chunk_metadata(event_data),
             )
 
-        image_bytes = base64.b64decode(b64_image)
         return ImageChunk(
-            content=ImageArtifact(data=image_bytes),
+            content=ImageArtifact(data=b64_image),
             finish_reason=self._parse_chunk_finish_reason(event_data),
             usage=self._parse_chunk_usage(event_data),
             metadata=self._parse_chunk_metadata(event_data),
@@ -115,8 +113,7 @@ class OllamaImagesClient(OllamaGenerateClient, ImagesClient):
         Ollama returns base64-encoded image in the 'image' field.
         """
         image_b64 = super()._parse_content(response_data)
-        image_bytes = base64.b64decode(image_b64)
-        return ImageArtifact(data=image_bytes)
+        return ImageArtifact(data=image_b64)
 
     def _parse_finish_reason(self, response_data: dict[str, Any]) -> ImageFinishReason:
         """Parse finish reason from response."""
