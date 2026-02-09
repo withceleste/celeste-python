@@ -38,6 +38,7 @@ class SyncStreamTextNamespace:
         model: str,
         provider: Provider | None = None,
         api_key: str | SecretStr | None = None,
+        auth: Authentication | None = None,
         base_url: str | None = None,
         extra_body: dict[str, Any] | None = None,
         **params: Unpack[TextParameters],
@@ -49,6 +50,7 @@ class SyncStreamTextNamespace:
             model=model,
             provider=provider,
             api_key=api_key,
+            auth=auth,
         )
         return client.sync.stream.generate(
             prompt,
@@ -70,6 +72,7 @@ class StreamTextNamespace:
         model: str,
         provider: Provider | None = None,
         api_key: str | SecretStr | None = None,
+        auth: Authentication | None = None,
         base_url: str | None = None,
         extra_body: dict[str, Any] | None = None,
         **params: Unpack[TextParameters],
@@ -81,6 +84,7 @@ class StreamTextNamespace:
             model=model,
             provider=provider,
             api_key=api_key,
+            auth=auth,
         )
         return client.stream.generate(
             prompt,
@@ -102,6 +106,7 @@ class SyncTextNamespace:
         model: str,
         provider: Provider | None = None,
         api_key: str | SecretStr | None = None,
+        auth: Authentication | None = None,
         base_url: str | None = None,
         extra_body: dict[str, Any] | None = None,
         **params: Unpack[TextParameters],
@@ -113,6 +118,7 @@ class SyncTextNamespace:
             model=model,
             provider=provider,
             api_key=api_key,
+            auth=auth,
         )
         return client.sync.generate(
             prompt,
@@ -129,6 +135,7 @@ class SyncTextNamespace:
         model: str,
         provider: Provider | None = None,
         api_key: str | SecretStr | None = None,
+        auth: Authentication | None = None,
         **params: Unpack[EmbeddingsParameters],
     ) -> EmbeddingsOutput:
         """Blocking embeddings generation."""
@@ -138,6 +145,7 @@ class SyncTextNamespace:
             model=model,
             provider=provider,
             api_key=api_key,
+            auth=auth,
         )
         return client.sync.embed(text, **params)
 
@@ -202,6 +210,7 @@ class TextNamespace:
         model: str,
         provider: Provider | None = None,
         api_key: str | SecretStr | None = None,
+        auth: Authentication | None = None,
         **parameters: Unpack[EmbeddingsParameters],
     ) -> EmbeddingsOutput:
         """Generate embeddings from text.
@@ -211,6 +220,7 @@ class TextNamespace:
             model: Model ID to use (required).
             provider: Optional provider override.
             api_key: Optional API key override.
+            auth: Optional Authentication object (e.g., GoogleADC for Vertex AI).
             **parameters: Additional model parameters.
 
         Returns:
@@ -222,6 +232,7 @@ class TextNamespace:
             model=model,
             provider=provider,
             api_key=api_key,
+            auth=auth,
         )
         return await client.embed(text, **parameters)
 
@@ -246,6 +257,7 @@ class SyncStreamImagesNamespace:
         model: str,
         provider: Provider | None = None,
         api_key: str | SecretStr | None = None,
+        auth: Authentication | None = None,
         **params: Unpack[ImageParameters],
     ) -> ImagesStream:
         """Sync streaming image generation."""
@@ -255,6 +267,7 @@ class SyncStreamImagesNamespace:
             model=model,
             provider=provider,
             api_key=api_key,
+            auth=auth,
         )
         return client.sync.stream.generate(prompt, **params)
 
@@ -266,6 +279,7 @@ class SyncStreamImagesNamespace:
         model: str,
         provider: Provider | None = None,
         api_key: str | SecretStr | None = None,
+        auth: Authentication | None = None,
         **params: Unpack[ImageParameters],
     ) -> ImagesStream:
         """Sync streaming image editing."""
@@ -275,6 +289,7 @@ class SyncStreamImagesNamespace:
             model=model,
             provider=provider,
             api_key=api_key,
+            auth=auth,
         )
         return client.sync.stream.edit(image, prompt, **params)
 
@@ -287,6 +302,7 @@ class SyncStreamImagesNamespace:
         model: str,
         provider: Provider | None = None,
         api_key: str | SecretStr | None = None,
+        auth: Authentication | None = None,
         **params: Unpack[TextParameters],
     ) -> TextStream:
         """Sync streaming image analysis."""
@@ -296,6 +312,7 @@ class SyncStreamImagesNamespace:
             model=model,
             provider=provider,
             api_key=api_key,
+            auth=auth,
         )
         return client.sync.stream.analyze(
             prompt, messages=messages, image=image, **params
@@ -312,6 +329,7 @@ class StreamImagesNamespace:
         model: str,
         provider: Provider | None = None,
         api_key: str | SecretStr | None = None,
+        auth: Authentication | None = None,
         **params: Unpack[ImageParameters],
     ) -> ImagesStream:
         """Async streaming image generation."""
@@ -321,6 +339,7 @@ class StreamImagesNamespace:
             model=model,
             provider=provider,
             api_key=api_key,
+            auth=auth,
         )
         return client.stream.generate(prompt, **params)
 
@@ -332,6 +351,7 @@ class StreamImagesNamespace:
         model: str,
         provider: Provider | None = None,
         api_key: str | SecretStr | None = None,
+        auth: Authentication | None = None,
         **params: Unpack[ImageParameters],
     ) -> ImagesStream:
         """Async streaming image editing."""
@@ -341,6 +361,7 @@ class StreamImagesNamespace:
             model=model,
             provider=provider,
             api_key=api_key,
+            auth=auth,
         )
         return client.stream.edit(image, prompt, **params)
 
@@ -353,6 +374,7 @@ class StreamImagesNamespace:
         model: str,
         provider: Provider | None = None,
         api_key: str | SecretStr | None = None,
+        auth: Authentication | None = None,
         **params: Unpack[TextParameters],
     ) -> TextStream:
         """Async streaming image analysis."""
@@ -362,6 +384,7 @@ class StreamImagesNamespace:
             model=model,
             provider=provider,
             api_key=api_key,
+            auth=auth,
         )
         return client.stream.analyze(prompt, messages=messages, image=image, **params)
 
@@ -376,6 +399,7 @@ class SyncImagesNamespace:
         model: str,
         provider: Provider | None = None,
         api_key: str | SecretStr | None = None,
+        auth: Authentication | None = None,
         **params: Unpack[ImageParameters],
     ) -> ImageOutput:
         """Blocking image generation."""
@@ -385,6 +409,7 @@ class SyncImagesNamespace:
             model=model,
             provider=provider,
             api_key=api_key,
+            auth=auth,
         )
         return client.sync.generate(prompt, **params)
 
@@ -396,6 +421,7 @@ class SyncImagesNamespace:
         model: str,
         provider: Provider | None = None,
         api_key: str | SecretStr | None = None,
+        auth: Authentication | None = None,
         **params: Unpack[ImageParameters],
     ) -> ImageOutput:
         """Blocking image editing."""
@@ -405,6 +431,7 @@ class SyncImagesNamespace:
             model=model,
             provider=provider,
             api_key=api_key,
+            auth=auth,
         )
         return client.sync.edit(image, prompt, **params)
 
@@ -417,6 +444,7 @@ class SyncImagesNamespace:
         model: str,
         provider: Provider | None = None,
         api_key: str | SecretStr | None = None,
+        auth: Authentication | None = None,
         **params: Unpack[TextParameters],
     ) -> TextOutput:
         """Blocking image analysis."""
@@ -426,6 +454,7 @@ class SyncImagesNamespace:
             model=model,
             provider=provider,
             api_key=api_key,
+            auth=auth,
         )
         return client.sync.analyze(prompt, messages=messages, image=image, **params)
 
@@ -448,6 +477,7 @@ class ImagesNamespace:
         model: str,
         provider: Provider | None = None,
         api_key: str | SecretStr | None = None,
+        auth: Authentication | None = None,
         **parameters: Unpack[ImageParameters],
     ) -> ImageOutput:
         """Generate images from a prompt.
@@ -457,6 +487,7 @@ class ImagesNamespace:
             model: Model ID to use (required).
             provider: Optional provider override.
             api_key: Optional API key override.
+            auth: Optional Authentication object (e.g., GoogleADC for Vertex AI).
             **parameters: Additional model parameters.
 
         Returns:
@@ -468,6 +499,7 @@ class ImagesNamespace:
             model=model,
             provider=provider,
             api_key=api_key,
+            auth=auth,
         )
         return await client.generate(prompt, **parameters)
 
@@ -479,6 +511,7 @@ class ImagesNamespace:
         model: str,
         provider: Provider | None = None,
         api_key: str | SecretStr | None = None,
+        auth: Authentication | None = None,
         **parameters: Unpack[ImageParameters],
     ) -> ImageOutput:
         """Edit an image with a prompt.
@@ -489,6 +522,7 @@ class ImagesNamespace:
             model: Model ID to use (required).
             provider: Optional provider override.
             api_key: Optional API key override.
+            auth: Optional Authentication object (e.g., GoogleADC for Vertex AI).
             **parameters: Additional model parameters.
 
         Returns:
@@ -500,6 +534,7 @@ class ImagesNamespace:
             model=model,
             provider=provider,
             api_key=api_key,
+            auth=auth,
         )
         return await client.edit(image, prompt, **parameters)
 
@@ -512,6 +547,7 @@ class ImagesNamespace:
         model: str,
         provider: Provider | None = None,
         api_key: str | SecretStr | None = None,
+        auth: Authentication | None = None,
         **parameters: Unpack[TextParameters],
     ) -> TextOutput:
         """Analyze images and return text description.
@@ -523,6 +559,7 @@ class ImagesNamespace:
             model: Model ID to use (required).
             provider: Optional provider override.
             api_key: Optional API key override.
+            auth: Optional Authentication object (e.g., GoogleADC for Vertex AI).
             **parameters: Additional model parameters.
 
         Returns:
@@ -534,6 +571,7 @@ class ImagesNamespace:
             model=model,
             provider=provider,
             api_key=api_key,
+            auth=auth,
         )
         return await client.analyze(
             prompt, messages=messages, image=image, **parameters
@@ -560,6 +598,7 @@ class SyncStreamAudioNamespace:
         model: str,
         provider: Provider | None = None,
         api_key: str | SecretStr | None = None,
+        auth: Authentication | None = None,
         **params: Unpack[AudioParameters],
     ) -> AudioStream:
         """Sync streaming text-to-speech."""
@@ -569,6 +608,7 @@ class SyncStreamAudioNamespace:
             model=model,
             provider=provider,
             api_key=api_key,
+            auth=auth,
         )
         return client.sync.stream.speak(text, **params)
 
@@ -581,6 +621,7 @@ class SyncStreamAudioNamespace:
         model: str,
         provider: Provider | None = None,
         api_key: str | SecretStr | None = None,
+        auth: Authentication | None = None,
         **params: Unpack[TextParameters],
     ) -> TextStream:
         """Sync streaming audio analysis."""
@@ -590,6 +631,7 @@ class SyncStreamAudioNamespace:
             model=model,
             provider=provider,
             api_key=api_key,
+            auth=auth,
         )
         return client.sync.stream.analyze(
             prompt, messages=messages, audio=audio, **params
@@ -606,6 +648,7 @@ class StreamAudioNamespace:
         model: str,
         provider: Provider | None = None,
         api_key: str | SecretStr | None = None,
+        auth: Authentication | None = None,
         **params: Unpack[AudioParameters],
     ) -> AudioStream:
         """Async streaming text-to-speech."""
@@ -615,6 +658,7 @@ class StreamAudioNamespace:
             model=model,
             provider=provider,
             api_key=api_key,
+            auth=auth,
         )
         return client.stream.speak(text, **params)
 
@@ -627,6 +671,7 @@ class StreamAudioNamespace:
         model: str,
         provider: Provider | None = None,
         api_key: str | SecretStr | None = None,
+        auth: Authentication | None = None,
         **params: Unpack[TextParameters],
     ) -> TextStream:
         """Async streaming audio analysis."""
@@ -636,6 +681,7 @@ class StreamAudioNamespace:
             model=model,
             provider=provider,
             api_key=api_key,
+            auth=auth,
         )
         return client.stream.analyze(prompt, messages=messages, audio=audio, **params)
 
@@ -650,6 +696,7 @@ class SyncAudioNamespace:
         model: str,
         provider: Provider | None = None,
         api_key: str | SecretStr | None = None,
+        auth: Authentication | None = None,
         **params: Unpack[AudioParameters],
     ) -> AudioOutput:
         """Blocking text-to-speech."""
@@ -659,6 +706,7 @@ class SyncAudioNamespace:
             model=model,
             provider=provider,
             api_key=api_key,
+            auth=auth,
         )
         return client.sync.speak(text, **params)
 
@@ -671,6 +719,7 @@ class SyncAudioNamespace:
         model: str,
         provider: Provider | None = None,
         api_key: str | SecretStr | None = None,
+        auth: Authentication | None = None,
         **params: Unpack[TextParameters],
     ) -> TextOutput:
         """Blocking audio analysis."""
@@ -680,6 +729,7 @@ class SyncAudioNamespace:
             model=model,
             provider=provider,
             api_key=api_key,
+            auth=auth,
         )
         return client.sync.analyze(prompt, messages=messages, audio=audio, **params)
 
@@ -702,6 +752,7 @@ class AudioNamespace:
         model: str,
         provider: Provider | None = None,
         api_key: str | SecretStr | None = None,
+        auth: Authentication | None = None,
         **parameters: Unpack[AudioParameters],
     ) -> AudioOutput:
         """Convert text to speech.
@@ -711,6 +762,7 @@ class AudioNamespace:
             model: Model ID to use (required).
             provider: Optional provider override.
             api_key: Optional API key override.
+            auth: Optional Authentication object (e.g., GoogleADC for Vertex AI).
             **parameters: Additional model parameters (e.g., voice).
 
         Returns:
@@ -722,6 +774,7 @@ class AudioNamespace:
             model=model,
             provider=provider,
             api_key=api_key,
+            auth=auth,
         )
         return await client.speak(text, **parameters)
 
@@ -734,6 +787,7 @@ class AudioNamespace:
         model: str,
         provider: Provider | None = None,
         api_key: str | SecretStr | None = None,
+        auth: Authentication | None = None,
         **parameters: Unpack[TextParameters],
     ) -> TextOutput:
         """Analyze audio and return text transcription/description.
@@ -745,6 +799,7 @@ class AudioNamespace:
             model: Model ID to use (required).
             provider: Optional provider override.
             api_key: Optional API key override.
+            auth: Optional Authentication object (e.g., GoogleADC for Vertex AI).
             **parameters: Additional model parameters.
 
         Returns:
@@ -756,6 +811,7 @@ class AudioNamespace:
             model=model,
             provider=provider,
             api_key=api_key,
+            auth=auth,
         )
         return await client.analyze(
             prompt, messages=messages, audio=audio, **parameters
@@ -784,6 +840,7 @@ class SyncStreamVideosNamespace:
         model: str,
         provider: Provider | None = None,
         api_key: str | SecretStr | None = None,
+        auth: Authentication | None = None,
         **params: Unpack[TextParameters],
     ) -> TextStream:
         """Sync streaming video analysis."""
@@ -793,6 +850,7 @@ class SyncStreamVideosNamespace:
             model=model,
             provider=provider,
             api_key=api_key,
+            auth=auth,
         )
         return client.sync.stream.analyze(
             prompt, messages=messages, video=video, **params
@@ -811,6 +869,7 @@ class StreamVideosNamespace:
         model: str,
         provider: Provider | None = None,
         api_key: str | SecretStr | None = None,
+        auth: Authentication | None = None,
         **params: Unpack[TextParameters],
     ) -> TextStream:
         """Async streaming video analysis."""
@@ -820,6 +879,7 @@ class StreamVideosNamespace:
             model=model,
             provider=provider,
             api_key=api_key,
+            auth=auth,
         )
         return client.stream.analyze(prompt, messages=messages, video=video, **params)
 
@@ -834,6 +894,7 @@ class SyncVideosNamespace:
         model: str,
         provider: Provider | None = None,
         api_key: str | SecretStr | None = None,
+        auth: Authentication | None = None,
         **params: Unpack[VideoParameters],
     ) -> VideoOutput:
         """Blocking video generation."""
@@ -843,6 +904,7 @@ class SyncVideosNamespace:
             model=model,
             provider=provider,
             api_key=api_key,
+            auth=auth,
         )
         return client.sync.generate(prompt, **params)
 
@@ -855,6 +917,7 @@ class SyncVideosNamespace:
         model: str,
         provider: Provider | None = None,
         api_key: str | SecretStr | None = None,
+        auth: Authentication | None = None,
         **params: Unpack[TextParameters],
     ) -> TextOutput:
         """Blocking video analysis."""
@@ -864,6 +927,7 @@ class SyncVideosNamespace:
             model=model,
             provider=provider,
             api_key=api_key,
+            auth=auth,
         )
         return client.sync.analyze(prompt, messages=messages, video=video, **params)
 
@@ -886,6 +950,7 @@ class VideosNamespace:
         model: str,
         provider: Provider | None = None,
         api_key: str | SecretStr | None = None,
+        auth: Authentication | None = None,
         **parameters: Unpack[VideoParameters],
     ) -> VideoOutput:
         """Generate video from a prompt.
@@ -895,6 +960,7 @@ class VideosNamespace:
             model: Model ID to use (required).
             provider: Optional provider override.
             api_key: Optional API key override.
+            auth: Optional Authentication object (e.g., GoogleADC for Vertex AI).
             **parameters: Additional model parameters.
 
         Returns:
@@ -906,6 +972,7 @@ class VideosNamespace:
             model=model,
             provider=provider,
             api_key=api_key,
+            auth=auth,
         )
         return await client.generate(prompt, **parameters)
 
@@ -918,6 +985,7 @@ class VideosNamespace:
         model: str,
         provider: Provider | None = None,
         api_key: str | SecretStr | None = None,
+        auth: Authentication | None = None,
         **parameters: Unpack[TextParameters],
     ) -> TextOutput:
         """Analyze video and return text description.
@@ -929,6 +997,7 @@ class VideosNamespace:
             model: Model ID to use (required).
             provider: Optional provider override.
             api_key: Optional API key override.
+            auth: Optional Authentication object (e.g., GoogleADC for Vertex AI).
             **parameters: Additional model parameters.
 
         Returns:
@@ -940,6 +1009,7 @@ class VideosNamespace:
             model=model,
             provider=provider,
             api_key=api_key,
+            auth=auth,
         )
         return await client.analyze(
             prompt, messages=messages, video=video, **parameters
