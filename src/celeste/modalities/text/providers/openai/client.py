@@ -120,7 +120,6 @@ class OpenAITextClient(OpenAIResponsesMixin, TextClient):
 
     def _init_request(self, inputs: TextInput) -> dict[str, Any]:
         """Initialize request with input content."""
-        # If messages provided, use them directly (messages take precedence)
         if inputs.messages is not None:
             return {"input": [message.model_dump() for message in inputs.messages]}
 
