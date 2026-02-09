@@ -4,7 +4,7 @@ import inspect
 import types
 from typing import Any, get_args, get_origin
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from celeste.artifacts import AudioArtifact, ImageArtifact, VideoArtifact
 from celeste.constraints import Constraint
@@ -32,6 +32,8 @@ class Usage(BaseModel):
 class Output[Content](BaseModel):
     """Base output class with generic content type."""
 
+    model_config = ConfigDict(ser_json_bytes="base64")
+
     content: Content
     usage: Usage = Field(default_factory=Usage)
     finish_reason: FinishReason | None = None
@@ -40,6 +42,8 @@ class Output[Content](BaseModel):
 
 class Chunk[Content](BaseModel):
     """Incremental chunk from streaming response with generic content type."""
+
+    model_config = ConfigDict(ser_json_bytes="base64")
 
     content: Content
     finish_reason: FinishReason | None = None
