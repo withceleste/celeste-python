@@ -119,33 +119,7 @@ class XAITextClient(XAIResponsesClient, TextClient):
     def _init_request(self, inputs: TextInput) -> dict[str, Any]:
         """Initialize request from XAI Responses API format."""
         if inputs.messages is not None:
-            instructions_parts: list[str] = []
-            input_messages: list[dict[str, Any]] = []
-
-            for message in inputs.messages:
-                if message.role in ("system", "developer"):
-                    msg_content = message.content
-                    if isinstance(msg_content, str):
-                        instructions_parts.append(msg_content)
-                    elif isinstance(msg_content, list):
-                        for block in msg_content:
-                            if isinstance(block, dict):
-                                instructions_parts.append(block.get("text", str(block)))
-                            else:
-                                instructions_parts.append(str(block))
-                    elif isinstance(msg_content, dict):
-                        instructions_parts.append(
-                            msg_content.get("text", str(msg_content))
-                        )
-                    elif msg_content is not None:
-                        instructions_parts.append(str(msg_content))
-                else:
-                    input_messages.append(message.model_dump())
-
-            request: dict[str, Any] = {"input": input_messages}
-            if instructions_parts:
-                request["instructions"] = "\n\n".join(instructions_parts)
-            return request
+            return {"input": [message.model_dump() for message in inputs.messages]}
 
         if inputs.image is None:
             return {"input": inputs.prompt or ""}
