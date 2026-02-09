@@ -16,6 +16,9 @@ from celeste.providers.anthropic.messages.parameters import (
 from celeste.providers.anthropic.messages.parameters import (
     ThinkingMapper as _ThinkingMapper,
 )
+from celeste.providers.anthropic.messages.parameters import (
+    WebSearchMapper as _WebSearchMapper,
+)
 
 from ...parameters import TextParameter
 
@@ -63,11 +66,18 @@ class OutputSchemaMapper(_OutputFormatMapper):
     name = TextParameter.OUTPUT_SCHEMA
 
 
+class WebSearchMapper(_WebSearchMapper):
+    """Map web_search to Anthropic's tools parameter."""
+
+    name = TextParameter.WEB_SEARCH
+
+
 ANTHROPIC_PARAMETER_MAPPERS: list[ParameterMapper] = [
     TemperatureMapper(),
     MaxTokensMapper(),
     ThinkingBudgetMapper(),
     OutputSchemaMapper(),
+    WebSearchMapper(),
 ]
 
 __all__ = ["ANTHROPIC_PARAMETER_MAPPERS"]

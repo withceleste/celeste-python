@@ -1,6 +1,6 @@
 """Anthropic models for text modality."""
 
-from celeste.constraints import ImagesConstraint, Range, Schema
+from celeste.constraints import Bool, ImagesConstraint, Range, Schema
 from celeste.core import Modality, Operation, Parameter, Provider
 from celeste.models import Model
 
@@ -17,6 +17,7 @@ MODELS: list[Model] = [
             Parameter.MAX_TOKENS: Range(min=1, max=64000),
             TextParameter.THINKING_BUDGET: Range(min=-1, max=64000),
             TextParameter.OUTPUT_SCHEMA: Schema(),
+            TextParameter.WEB_SEARCH: Bool(),
             TextParameter.IMAGE: ImagesConstraint(),
         },
     ),
@@ -30,6 +31,7 @@ MODELS: list[Model] = [
             Parameter.MAX_TOKENS: Range(min=1, max=64000),
             TextParameter.THINKING_BUDGET: Range(min=-1, max=32000),
             TextParameter.OUTPUT_SCHEMA: Schema(),
+            TextParameter.WEB_SEARCH: Bool(),
             TextParameter.IMAGE: ImagesConstraint(),
         },
     ),
@@ -43,6 +45,7 @@ MODELS: list[Model] = [
             Parameter.MAX_TOKENS: Range(min=1, max=32000),
             TextParameter.THINKING_BUDGET: Range(min=-1, max=32000),
             TextParameter.OUTPUT_SCHEMA: Schema(),
+            TextParameter.WEB_SEARCH: Bool(),
             TextParameter.IMAGE: ImagesConstraint(),
         },
     ),
@@ -56,6 +59,7 @@ MODELS: list[Model] = [
             Parameter.MAX_TOKENS: Range(min=1, max=64000),
             TextParameter.THINKING_BUDGET: Range(min=-1, max=32000),
             TextParameter.OUTPUT_SCHEMA: Schema(),
+            TextParameter.WEB_SEARCH: Bool(),
             TextParameter.IMAGE: ImagesConstraint(),
         },
     ),
@@ -69,6 +73,7 @@ MODELS: list[Model] = [
             Parameter.MAX_TOKENS: Range(min=1, max=64000),
             TextParameter.THINKING_BUDGET: Range(min=-1, max=32000),
             TextParameter.OUTPUT_SCHEMA: Schema(),
+            TextParameter.WEB_SEARCH: Bool(),
             TextParameter.IMAGE: ImagesConstraint(),
         },
     ),
@@ -81,6 +86,7 @@ MODELS: list[Model] = [
         parameter_constraints={
             Parameter.MAX_TOKENS: Range(min=1, max=64000),
             TextParameter.THINKING_BUDGET: Range(min=-1, max=64000),
+            TextParameter.WEB_SEARCH: Bool(),
             TextParameter.IMAGE: ImagesConstraint(),
         },
     ),
@@ -93,6 +99,7 @@ MODELS: list[Model] = [
         parameter_constraints={
             Parameter.MAX_TOKENS: Range(min=1, max=32000),
             TextParameter.THINKING_BUDGET: Range(min=-1, max=32000),
+            TextParameter.WEB_SEARCH: Bool(),
             TextParameter.IMAGE: ImagesConstraint(),
         },
     ),
