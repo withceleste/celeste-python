@@ -13,6 +13,22 @@ from . import config
 
 
 class GoogleEmbeddingsClient(APIMixin):
+    """Mixin for Embeddings API capabilities.
+
+    Provides shared implementation for embeddings using the Embeddings API:
+    - _make_request() - HTTP POST to embedContent or batchEmbedContents endpoint
+    - _parse_content() - Extract embedding vectors (generic)
+
+    Auth-based endpoint selection:
+    - GoogleADC auth -> Vertex AI endpoints
+    - API key auth -> Gemini API endpoints
+
+    Capability clients extend via super():
+        class GoogleEmbeddingsClient(GoogleEmbeddingsClient, EmbeddingsClient):
+            def _parse_content(self, response_data, **params):
+                return super()._parse_content(response_data)  # No transformation needed
+    """
+
     def _make_stream_request(
         self,
         request_body: dict[str, Any],
@@ -30,22 +46,6 @@ class GoogleEmbeddingsClient(APIMixin):
         Embeddings API doesn't provide usage metadata.
         """
         return {}
-
-    """Mixin for Embeddings API capabilities.
-
-    Provides shared implementation for embeddings using the Embeddings API:
-    - _make_request() - HTTP POST to embedContent or batchEmbedContents endpoint
-    - _parse_content() - Extract embedding vectors (generic)
-
-    Auth-based endpoint selection:
-    - GoogleADC auth -> Vertex AI endpoints
-    - API key auth -> Gemini API endpoints
-
-    Capability clients extend via super():
-        class GoogleEmbeddingsClient(GoogleEmbeddingsClient, EmbeddingsClient):
-            def _parse_content(self, response_data, **params):
-                return super()._parse_content(response_data)  # No transformation needed
-    """
 
     def _get_vertex_endpoint(self, gemini_endpoint: str) -> str:
         """Map Gemini Embeddings endpoint to Vertex AI endpoint."""
@@ -82,6 +82,17 @@ class GoogleEmbeddingsClient(APIMixin):
         **parameters: Any,
     ) -> dict[str, Any]:
         """Make HTTP request to embeddings endpoint."""
+        # Vertex :predict expects {"instances": [{"content": "..."}]} format
+        if isinstance(self.auth, GoogleADC):
+            if "requests" in request_body:
+                texts = [
+                    req["content"]["parts"][0]["text"]
+                    for req in request_body["requests"]
+                ]
+            else:
+                texts = [request_body["content"]["parts"][0]["text"]]
+            request_body = {"instances": [{"content": text} for text in texts]}
+
         is_batch = "requests" in request_body
         endpoint_template = (
             config.GoogleEmbeddingsEndpoint.BATCH_EMBED_CONTENTS

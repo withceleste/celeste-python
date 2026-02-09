@@ -40,9 +40,9 @@ class GoogleGenerateContentClient(APIMixin):
     def _get_vertex_endpoint(self, gemini_endpoint: str) -> str:
         """Map Gemini endpoint to Vertex AI endpoint."""
         mapping: dict[str, str] = {
-            config.GoogleGenerateContentEndpoint.GENERATE_CONTENT: config.VertexEndpoint.GENERATE_CONTENT,
-            config.GoogleGenerateContentEndpoint.STREAM_GENERATE_CONTENT: config.VertexEndpoint.STREAM_GENERATE_CONTENT,
-            config.GoogleGenerateContentEndpoint.COUNT_TOKENS: config.VertexEndpoint.COUNT_TOKENS,
+            config.GoogleGenerateContentEndpoint.GENERATE_CONTENT: config.VertexGenerateContentEndpoint.GENERATE_CONTENT,
+            config.GoogleGenerateContentEndpoint.STREAM_GENERATE_CONTENT: config.VertexGenerateContentEndpoint.STREAM_GENERATE_CONTENT,
+            config.GoogleGenerateContentEndpoint.COUNT_TOKENS: config.VertexGenerateContentEndpoint.COUNT_TOKENS,
         }
         vertex_endpoint = mapping.get(gemini_endpoint)
         if vertex_endpoint is None:

@@ -13,6 +13,9 @@ from celeste.mime_types import ApplicationMimeType
 
 from . import config
 
+# Optional: Import for Vertex AI support (when using GoogleADC auth).
+# from ..auth import GoogleADC
+
 
 class {Provider}{Api}Client(APIMixin):
     """Mixin for {Provider} {Api} API.
@@ -26,9 +29,41 @@ class {Provider}{Api}Client(APIMixin):
     - _parse_finish_reason() - Extract finish reason (if provided)
     - _build_metadata() - Filter content fields
 
+    Auth-based endpoint selection (optional, for Google providers):
+    - GoogleADC auth -> Vertex AI endpoints (via _build_url + _get_vertex_endpoint)
+    - API key auth -> native API endpoints
+
     Modality clients pass endpoint parameter to route operations:
         await self._predict(inputs, endpoint=config.{Provider}{Api}Endpoint.CREATE_..., **parameters)
     """
+
+    # Optional: Vertex AI endpoint routing. Add these two methods when the provider
+    # supports Vertex AI. They replace the inline f"{config.BASE_URL}{endpoint}" URL
+    # construction in _make_request() / _make_stream_request() with self._build_url(endpoint).
+    #
+    # def _get_vertex_endpoint(self, native_endpoint: str) -> str:
+    #     """Map native endpoint to Vertex AI endpoint."""
+    #     mapping: dict[str, str] = {
+    #         config.{Provider}{Api}Endpoint.CREATE_...: config.Vertex{Api}Endpoint.CREATE_...,
+    #     }
+    #     vertex_endpoint = mapping.get(native_endpoint)
+    #     if vertex_endpoint is None:
+    #         raise ValueError(f"No Vertex AI endpoint mapping for: {native_endpoint}")
+    #     return vertex_endpoint
+    #
+    # def _build_url(self, endpoint: str) -> str:
+    #     """Build full URL based on auth type."""
+    #     if isinstance(self.auth, GoogleADC):
+    #         project_id = self.auth.resolved_project_id
+    #         if project_id is None:
+    #             raise ValueError(
+    #                 "Vertex AI requires a project_id. "
+    #                 "Pass project_id to GoogleADC() or ensure credentials have a project."
+    #             )
+    #         vertex_endpoint = self._get_vertex_endpoint(endpoint)
+    #         base_url = self.auth.get_vertex_base_url()
+    #         return f"{base_url}{vertex_endpoint.format(project_id=project_id, location=self.auth.location, model_id=self.model.id)}"
+    #     return f"{config.BASE_URL}{endpoint.format(model_id=self.model.id)}"
 
     def _build_request(
         self,

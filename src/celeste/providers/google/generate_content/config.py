@@ -20,7 +20,7 @@ class GoogleGenerateContentEndpoint(StrEnum):
     BATCH_GENERATE_CONTENT = "/v1beta/models/{model_id}:batchGenerateContent"
 
 
-class VertexEndpoint(StrEnum):
+class VertexGenerateContentEndpoint(StrEnum):
     """Endpoints for Vertex AI (when using GoogleADC auth)."""
 
     GENERATE_CONTENT = "/v1/projects/{project_id}/locations/{location}/publishers/google/models/{model_id}:generateContent"
