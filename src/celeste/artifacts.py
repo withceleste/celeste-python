@@ -3,7 +3,7 @@
 import base64
 from typing import Any
 
-from pydantic import BaseModel, Field, field_serializer
+from pydantic import BaseModel, Field, field_serializer, field_validator
 
 from celeste.mime_types import (
     AudioMimeType,
@@ -29,6 +29,14 @@ class Artifact(BaseModel):
     path: str | None = None
     mime_type: MimeType | None = None
     metadata: dict[str, Any] = Field(default_factory=dict)
+
+    @field_validator("data", mode="before")
+    @classmethod
+    def decode_base64_data(cls, v: bytes | str | None) -> bytes | None:
+        """Decode base64 string to bytes when constructing from JSON."""
+        if isinstance(v, str):
+            return base64.b64decode(v)
+        return v
 
     @field_serializer("data", when_used="json")
     def serialize_data(self, value: bytes | None) -> str | None:
