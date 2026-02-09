@@ -8,7 +8,7 @@ from typing import Any, Unpack
 
 from pydantic import SecretStr
 
-from celeste import create_client
+from celeste import Authentication, create_client
 from celeste.artifacts import ImageArtifact
 from celeste.core import Modality, Operation, Provider
 from celeste.modalities.audio.io import AudioOutput
@@ -161,6 +161,7 @@ class TextNamespace:
         model: str,
         provider: Provider | None = None,
         api_key: str | SecretStr | None = None,
+        auth: Authentication | None = None,
         base_url: str | None = None,
         extra_body: dict[str, Any] | None = None,
         **parameters: Unpack[TextParameters],
@@ -173,6 +174,7 @@ class TextNamespace:
             model: Model ID to use (required).
             provider: Optional provider override.
             api_key: Optional API key override.
+            auth: Optional Authentication object (e.g., GoogleADC for Vertex AI).
             base_url: Optional base URL for OpenResponses providers.
             extra_body: Optional provider-specific request body fields.
             **parameters: Additional model parameters.
@@ -186,6 +188,7 @@ class TextNamespace:
             model=model,
             provider=provider,
             api_key=api_key,
+            auth=auth,
         )
         inputs = TextInput(prompt=prompt, messages=messages)
         return await client._predict(
