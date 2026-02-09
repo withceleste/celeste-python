@@ -3,6 +3,7 @@
 from typing import Any, Unpack
 
 from celeste.parameters import ParameterMapper
+from celeste.providers.google.auth import GoogleADC
 from celeste.providers.google.embeddings.client import (
     GoogleEmbeddingsClient as GoogleEmbeddingsMixin,
 )
@@ -29,6 +30,10 @@ class GoogleEmbeddingsClient(GoogleEmbeddingsMixin, EmbeddingsClient):
     def _init_request(self, inputs: EmbeddingsInput) -> dict[str, Any]:
         """Build Google embeddings request from inputs."""
         texts = inputs.text if isinstance(inputs.text, list) else [inputs.text]
+
+        # Vertex :predict endpoint uses instances format
+        if isinstance(self.auth, GoogleADC):
+            return {"instances": [{"content": text} for text in texts]}
 
         if len(texts) == 1:
             return {"content": {"parts": [{"text": texts[0]}]}}

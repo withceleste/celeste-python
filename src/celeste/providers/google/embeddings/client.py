@@ -109,16 +109,23 @@ class GoogleEmbeddingsClient(APIMixin):
         """Extract embedding vectors from response.
 
         Returns list of embedding vectors (already generic - no artifacts needed).
+        Handles both Gemini API and Vertex AI :predict response formats.
         """
-        # Single embedding response
+        # Vertex :predict response
+        if "predictions" in response_data:
+            return [
+                pred["embeddings"]["values"] for pred in response_data["predictions"]
+            ]
+
+        # Gemini single embedding response
         if "embedding" in response_data:
             return [response_data["embedding"]["values"]]
 
-        # Batch embedding response
+        # Gemini batch embedding response
         if "embeddings" in response_data:
             return [emb["values"] for emb in response_data["embeddings"]]
 
-        msg = "Unexpected response format: missing 'embedding' or 'embeddings' field"
+        msg = "Unexpected response format: missing 'embedding', 'embeddings', or 'predictions' field"
         raise ValueError(msg)
 
     def _parse_usage(
