@@ -20,4 +20,12 @@ class GoogleGenerateContentEndpoint(StrEnum):
     BATCH_GENERATE_CONTENT = "/v1beta/models/{model_id}:batchGenerateContent"
 
 
+class VertexGenerateContentEndpoint(StrEnum):
+    """Endpoints for Vertex AI (when using GoogleADC auth)."""
+
+    GENERATE_CONTENT = "/v1/projects/{project_id}/locations/{location}/publishers/google/models/{model_id}:generateContent"
+    STREAM_GENERATE_CONTENT = "/v1/projects/{project_id}/locations/{location}/publishers/google/models/{model_id}:streamGenerateContent?alt=sse"
+    COUNT_TOKENS = "/v1/projects/{project_id}/locations/{location}/publishers/google/models/{model_id}:countTokens"
+
+
 BASE_URL = "https://generativelanguage.googleapis.com"

@@ -7,6 +7,7 @@ from celeste.client import APIMixin
 from celeste.core import UsageField
 from celeste.io import FinishReason
 from celeste.mime_types import ApplicationMimeType
+from celeste.providers.google.auth import GoogleADC
 
 from . import config
 
@@ -30,6 +31,23 @@ class MistralChatClient(APIMixin):
                 content = message.get("content") or ""
                 return self._transform_output(content, **parameters)
     """
+
+    def _get_vertex_endpoint(
+        self, mistral_endpoint: str, streaming: bool = False
+    ) -> str:
+        """Map Mistral endpoint to Vertex AI endpoint."""
+        if streaming:
+            return config.VertexMistralEndpoint.STREAM_CHAT
+        return config.VertexMistralEndpoint.CREATE_CHAT
+
+    def _build_url(self, endpoint: str, streaming: bool = False) -> str:
+        """Build full URL based on auth type."""
+        if isinstance(self.auth, GoogleADC):
+            return self.auth.build_url(
+                self._get_vertex_endpoint(endpoint, streaming=streaming),
+                model_id=self.model.id,
+            )
+        return f"{config.BASE_URL}{endpoint}"
 
     def _build_request(
         self,
@@ -64,7 +82,7 @@ class MistralChatClient(APIMixin):
         }
 
         response = await self.http_client.post(
-            f"{config.BASE_URL}{endpoint}",
+            self._build_url(endpoint),
             headers=headers,
             json_body=request_body,
         )
@@ -89,7 +107,7 @@ class MistralChatClient(APIMixin):
         }
 
         return self.http_client.stream_post(
-            f"{config.BASE_URL}{endpoint}",
+            self._build_url(endpoint, streaming=True),
             headers=headers,
             json_body=request_body,
         )

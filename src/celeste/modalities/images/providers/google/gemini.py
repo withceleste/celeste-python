@@ -82,7 +82,7 @@ class GeminiImagesClient(GoogleGenerateContentClient, ImagesClient):
         parts.append({"text": inputs.prompt})
 
         return {
-            "contents": [{"parts": parts}],
+            "contents": [{"role": "user", "parts": parts}],
             "generationConfig": {
                 "responseModalities": ["TEXT", "IMAGE"],
                 "imageConfig": {},
@@ -113,8 +113,7 @@ class GeminiImagesClient(GoogleGenerateContentClient, ImagesClient):
                 if not base64_data:
                     continue
                 mime_type = ImageMimeType(inline_data.get("mimeType", "image/png"))
-                image_bytes = base64.b64decode(base64_data)
-                artifacts.append(ImageArtifact(data=image_bytes, mime_type=mime_type))
+                artifacts.append(ImageArtifact(data=base64_data, mime_type=mime_type))
 
         if not artifacts:
             return ImageArtifact()

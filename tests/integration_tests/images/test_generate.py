@@ -14,6 +14,7 @@ import pytest  # noqa: E402
 from celeste import Modality, Provider, create_client  # noqa: E402
 from celeste.artifacts import ImageArtifact  # noqa: E402
 from celeste.modalities.images import ImageOutput, ImageUsage  # noqa: E402
+from celeste.providers.google.auth import GoogleADC  # noqa: E402
 
 
 @pytest.mark.parametrize(
@@ -79,3 +80,31 @@ def test_sync_generate() -> None:
     )
     assert isinstance(content, ImageArtifact)
     assert content.has_content
+
+
+@pytest.mark.parametrize(
+    ("model", "parameters"),
+    [
+        ("imagen-4.0-fast-generate-001", {"num_images": 1}),
+        ("gemini-2.5-flash-image", {}),
+    ],
+)
+@pytest.mark.integration
+@pytest.mark.asyncio
+async def test_vertex_generate(model: str, parameters: dict) -> None:
+    """Test image generation via Vertex AI."""
+    client = create_client(
+        modality=Modality.IMAGES,
+        provider=Provider.GOOGLE,
+        model=model,
+        auth=GoogleADC(),
+    )
+
+    response = await client.generate(
+        prompt="A red apple on a white background",
+        **parameters,
+    )
+
+    assert isinstance(response, ImageOutput)
+    assert isinstance(response.content, ImageArtifact)
+    assert response.content.has_content

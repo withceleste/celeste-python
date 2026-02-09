@@ -36,6 +36,13 @@ class MistralChatEndpoint(StrEnum):
     CREATE_CHAT_MODERATION = "/v1/chat/moderations"
 
 
+class VertexMistralEndpoint(StrEnum):
+    """Endpoints for Mistral on Vertex AI."""
+
+    CREATE_CHAT = "/v1/projects/{project_id}/locations/{location}/publishers/mistralai/models/{model_id}:rawPredict"
+    STREAM_CHAT = "/v1/projects/{project_id}/locations/{location}/publishers/mistralai/models/{model_id}:streamRawPredict"
+
+
 BASE_URL = "https://api.mistral.ai"
 
 # Alternative

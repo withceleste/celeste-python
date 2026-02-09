@@ -85,6 +85,7 @@ jobs:
       - uses: ./.github/actions/setup-python-uv
         with:
           python-version: ${{ matrix.python-version }}
+      - run: uv sync --extra gcp
       - run: uv run pytest tests/unit_tests -v --cov=celeste --cov-report=term-missing --cov-report=xml --cov-report=html --cov-fail-under=80
       - uses: codecov/codecov-action@v4
         if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.12'

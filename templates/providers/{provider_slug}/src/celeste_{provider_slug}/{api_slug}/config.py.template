@@ -17,4 +17,13 @@ class {Provider}{Api}Endpoint(StrEnum):
     pass
 
 
+# Optional: Vertex AI endpoints (when using GoogleADC auth).
+# Mirror the same endpoint names as the native class above.
+#
+# class Vertex{Api}Endpoint(StrEnum):
+#     """Endpoints for {Api} on Vertex AI."""
+#
+#     CREATE_... = "/v1/projects/{project_id}/locations/{location}/publishers/google/models/{model_id}:predict"
+
+
 BASE_URL = "https://api.{provider}.com"

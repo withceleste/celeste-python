@@ -8,10 +8,27 @@ from celeste.exceptions import StreamingNotSupportedError
 from celeste.io import FinishReason
 from celeste.mime_types import ApplicationMimeType
 
+from ..auth import GoogleADC
 from . import config
 
 
 class GoogleEmbeddingsClient(APIMixin):
+    """Mixin for Embeddings API capabilities.
+
+    Provides shared implementation for embeddings using the Embeddings API:
+    - _make_request() - HTTP POST to embedContent or batchEmbedContents endpoint
+    - _parse_content() - Extract embedding vectors (generic)
+
+    Auth-based endpoint selection:
+    - GoogleADC auth -> Vertex AI endpoints
+    - API key auth -> Gemini API endpoints
+
+    Capability clients extend via super():
+        class GoogleEmbeddingsClient(GoogleEmbeddingsClient, EmbeddingsClient):
+            def _parse_content(self, response_data, **params):
+                return super()._parse_content(response_data)  # No transformation needed
+    """
+
     def _make_stream_request(
         self,
         request_body: dict[str, Any],
@@ -30,17 +47,24 @@ class GoogleEmbeddingsClient(APIMixin):
         """
         return {}
 
-    """Mixin for Embeddings API capabilities.
+    def _get_vertex_endpoint(self, gemini_endpoint: str) -> str:
+        """Map Gemini Embeddings endpoint to Vertex AI endpoint."""
+        mapping: dict[str, str] = {
+            config.GoogleEmbeddingsEndpoint.EMBED_CONTENT: config.VertexEmbeddingsEndpoint.EMBED_CONTENT,
+            config.GoogleEmbeddingsEndpoint.BATCH_EMBED_CONTENTS: config.VertexEmbeddingsEndpoint.BATCH_EMBED_CONTENTS,
+        }
+        vertex_endpoint = mapping.get(gemini_endpoint)
+        if vertex_endpoint is None:
+            raise ValueError(f"No Vertex AI endpoint mapping for: {gemini_endpoint}")
+        return vertex_endpoint
 
-    Provides shared implementation for embeddings using the Embeddings API:
-    - _make_request() - HTTP POST to embedContent or batchEmbedContents endpoint
-    - _parse_content() - Extract embedding vectors (generic)
-
-    Capability clients extend via super():
-        class GoogleEmbeddingsClient(GoogleEmbeddingsClient, EmbeddingsClient):
-            def _parse_content(self, response_data, **params):
-                return super()._parse_content(response_data)  # No transformation needed
-    """
+    def _build_url(self, endpoint: str) -> str:
+        """Build full URL based on auth type."""
+        if isinstance(self.auth, GoogleADC):
+            return self.auth.build_url(
+                self._get_vertex_endpoint(endpoint), model_id=self.model.id
+            )
+        return f"{config.BASE_URL}{endpoint.format(model_id=self.model.id)}"
 
     async def _make_request(
         self,
@@ -50,6 +74,17 @@ class GoogleEmbeddingsClient(APIMixin):
         **parameters: Any,
     ) -> dict[str, Any]:
         """Make HTTP request to embeddings endpoint."""
+        # Vertex :predict expects {"instances": [{"content": "..."}]} format
+        if isinstance(self.auth, GoogleADC):
+            if "requests" in request_body:
+                texts = [
+                    req["content"]["parts"][0]["text"]
+                    for req in request_body["requests"]
+                ]
+            else:
+                texts = [request_body["content"]["parts"][0]["text"]]
+            request_body = {"instances": [{"content": text} for text in texts]}
+
         is_batch = "requests" in request_body
         endpoint_template = (
             config.GoogleEmbeddingsEndpoint.BATCH_EMBED_CONTENTS
@@ -58,7 +93,6 @@ class GoogleEmbeddingsClient(APIMixin):
         )
         if endpoint is None:
             endpoint = endpoint_template
-        endpoint = endpoint.format(model_id=self.model.id)
 
         headers = {
             **self.auth.get_headers(),
@@ -66,7 +100,7 @@ class GoogleEmbeddingsClient(APIMixin):
         }
 
         response = await self.http_client.post(
-            f"{config.BASE_URL}{endpoint}",
+            self._build_url(endpoint),
             headers=headers,
             json_body=request_body,
         )
@@ -78,16 +112,23 @@ class GoogleEmbeddingsClient(APIMixin):
         """Extract embedding vectors from response.
 
         Returns list of embedding vectors (already generic - no artifacts needed).
+        Handles both Gemini API and Vertex AI :predict response formats.
         """
-        # Single embedding response
+        # Vertex :predict response
+        if "predictions" in response_data:
+            return [
+                pred["embeddings"]["values"] for pred in response_data["predictions"]
+            ]
+
+        # Gemini single embedding response
         if "embedding" in response_data:
             return [response_data["embedding"]["values"]]
 
-        # Batch embedding response
+        # Gemini batch embedding response
         if "embeddings" in response_data:
             return [emb["values"] for emb in response_data["embeddings"]]
 
-        msg = "Unexpected response format: missing 'embedding' or 'embeddings' field"
+        msg = "Unexpected response format: missing 'embedding', 'embeddings', or 'predictions' field"
         raise ValueError(msg)
 
     def _parse_usage(

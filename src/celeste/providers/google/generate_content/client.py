@@ -8,6 +8,7 @@ from celeste.core import UsageField
 from celeste.io import FinishReason
 from celeste.mime_types import ApplicationMimeType
 
+from ..auth import GoogleADC
 from . import config
 
 
@@ -22,6 +23,10 @@ class GoogleGenerateContentClient(APIMixin):
     - _parse_finish_reason() - Extract finish reason string from candidates
     - _build_metadata() - Filter content fields
 
+    Auth-based endpoint selection:
+    - GoogleADC auth -> Vertex AI endpoints
+    - API key auth -> Gemini API endpoints
+
     Capability clients extend parsing methods via super() to wrap/transform results.
 
     Usage:
@@ -31,6 +36,26 @@ class GoogleGenerateContentClient(APIMixin):
                 text = parts[0].get("text") or ""
                 return self._transform_output(text, **parameters)
     """
+
+    def _get_vertex_endpoint(self, gemini_endpoint: str) -> str:
+        """Map Gemini endpoint to Vertex AI endpoint."""
+        mapping: dict[str, str] = {
+            config.GoogleGenerateContentEndpoint.GENERATE_CONTENT: config.VertexGenerateContentEndpoint.GENERATE_CONTENT,
+            config.GoogleGenerateContentEndpoint.STREAM_GENERATE_CONTENT: config.VertexGenerateContentEndpoint.STREAM_GENERATE_CONTENT,
+            config.GoogleGenerateContentEndpoint.COUNT_TOKENS: config.VertexGenerateContentEndpoint.COUNT_TOKENS,
+        }
+        vertex_endpoint = mapping.get(gemini_endpoint)
+        if vertex_endpoint is None:
+            raise ValueError(f"No Vertex AI endpoint mapping for: {gemini_endpoint}")
+        return vertex_endpoint
+
+    def _build_url(self, endpoint: str) -> str:
+        """Build full URL based on auth type."""
+        if isinstance(self.auth, GoogleADC):
+            return self.auth.build_url(
+                self._get_vertex_endpoint(endpoint), model_id=self.model.id
+            )
+        return f"{config.BASE_URL}{endpoint.format(model_id=self.model.id)}"
 
     async def _make_request(
         self,
@@ -42,14 +67,13 @@ class GoogleGenerateContentClient(APIMixin):
         """Make HTTP request to generateContent endpoint."""
         if endpoint is None:
             endpoint = config.GoogleGenerateContentEndpoint.GENERATE_CONTENT
-        endpoint = endpoint.format(model_id=self.model.id)
 
         headers = {
             **self.auth.get_headers(),
             "Content-Type": ApplicationMimeType.JSON,
         }
         response = await self.http_client.post(
-            f"{config.BASE_URL}{endpoint}",
+            url=self._build_url(endpoint),
             headers=headers,
             json_body=request_body,
         )
@@ -67,14 +91,13 @@ class GoogleGenerateContentClient(APIMixin):
         """Make streaming request to streamGenerateContent endpoint."""
         if endpoint is None:
             endpoint = config.GoogleGenerateContentEndpoint.STREAM_GENERATE_CONTENT
-        endpoint = endpoint.format(model_id=self.model.id)
 
         headers = {
             **self.auth.get_headers(),
             "Content-Type": ApplicationMimeType.JSON,
         }
         return self.http_client.stream_post(
-            f"{config.BASE_URL}{endpoint}",
+            url=self._build_url(endpoint),
             headers=headers,
             json_body=request_body,
         )

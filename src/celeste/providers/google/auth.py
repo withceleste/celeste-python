@@ -68,5 +68,30 @@ class GoogleADC(Authentication):
             return VERTEX_GLOBAL_BASE_URL
         return VERTEX_BASE_URL.format(location=self.location)
 
+    def build_url(self, vertex_endpoint: str, model_id: str | None = None) -> str:
+        """Build a complete Vertex AI URL from an endpoint template.
+
+        Args:
+            vertex_endpoint: Endpoint template with {project_id}, {location}, and
+                optionally {model_id} placeholders.
+            model_id: Model identifier for endpoints that include it in the path.
+        """
+        project_id = self.resolved_project_id
+        if project_id is None:
+            raise ValueError(
+                "Vertex AI requires a project_id. "
+                "Pass project_id to GoogleADC() or ensure credentials have a project."
+            )
+        base_url = self.get_vertex_base_url()
+        if model_id is not None:
+            endpoint = vertex_endpoint.format(
+                project_id=project_id, location=self.location, model_id=model_id
+            )
+        else:
+            endpoint = vertex_endpoint.format(
+                project_id=project_id, location=self.location
+            )
+        return f"{base_url}{endpoint}"
+
 
 __all__ = ["GoogleADC"]

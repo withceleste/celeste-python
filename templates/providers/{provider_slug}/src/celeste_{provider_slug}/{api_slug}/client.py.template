@@ -13,6 +13,9 @@ from celeste.mime_types import ApplicationMimeType
 
 from . import config
 
+# Optional: Import for Vertex AI support (when using GoogleADC auth).
+# from ..auth import GoogleADC
+
 
 class {Provider}{Api}Client(APIMixin):
     """Mixin for {Provider} {Api} API.
@@ -20,14 +23,41 @@ class {Provider}{Api}Client(APIMixin):
     Provides shared HTTP implementation:
     - _make_request(endpoint=...) - HTTP POST to specified endpoint
     - _make_stream_request() - HTTP streaming (if supported, otherwise raises StreamingNotSupportedError)
+    - _make_poll_request() - Poll long-running operations (if supported, otherwise remove)
     - _parse_usage() - Extract usage dict from response
     - _parse_content() - Extract content from response
     - _parse_finish_reason() - Extract finish reason (if provided)
     - _build_metadata() - Filter content fields
 
+    Auth-based endpoint selection (optional, for Google providers):
+    - GoogleADC auth -> Vertex AI endpoints (via _build_url + _get_vertex_endpoint)
+    - API key auth -> native API endpoints
+
     Modality clients pass endpoint parameter to route operations:
         await self._predict(inputs, endpoint=config.{Provider}{Api}Endpoint.CREATE_..., **parameters)
     """
+
+    # Optional: Vertex AI endpoint routing. Add these two methods when the provider
+    # supports Vertex AI. They replace the inline f"{config.BASE_URL}{endpoint}" URL
+    # construction in _make_request() / _make_stream_request() with self._build_url(endpoint).
+    #
+    # def _get_vertex_endpoint(self, native_endpoint: str) -> str:
+    #     """Map native endpoint to Vertex AI endpoint."""
+    #     mapping: dict[str, str] = {
+    #         config.{Provider}{Api}Endpoint.CREATE_...: config.Vertex{Api}Endpoint.CREATE_...,
+    #     }
+    #     vertex_endpoint = mapping.get(native_endpoint)
+    #     if vertex_endpoint is None:
+    #         raise ValueError(f"No Vertex AI endpoint mapping for: {native_endpoint}")
+    #     return vertex_endpoint
+    #
+    # def _build_url(self, endpoint: str) -> str:
+    #     """Build full URL based on auth type."""
+    #     if isinstance(self.auth, GoogleADC):
+    #         return self.auth.build_url(
+    #             self._get_vertex_endpoint(endpoint), model_id=self.model.id
+    #         )
+    #     return f"{config.BASE_URL}{endpoint.format(model_id=self.model.id)}"
 
     def _build_request(
         self,
@@ -100,6 +130,26 @@ class {Provider}{Api}Client(APIMixin):
             headers=headers,
             json_body=request_body,
         )
+
+    async def _make_poll_request(
+        self,
+        operation_name: str,
+    ) -> dict[str, Any]:
+        """Poll a long-running operation.
+
+        If this API does not use long-running operations, remove this method.
+        Override for Vertex AI support (POST to fetchPredictOperation).
+        """
+        headers = self.auth.get_headers()
+        poll_url = f"{config.BASE_URL}{config.{Provider}{Api}Endpoint.GET_OPERATION.format(operation_name=operation_name)}"
+
+        response = await self.http_client.get(
+            poll_url,
+            headers=headers,
+        )
+        self._handle_error_response(response)
+        data: dict[str, Any] = response.json()
+        return data
 
     @staticmethod
     def map_usage_fields(usage_data: dict[str, Any]) -> dict[str, int | float | None]:

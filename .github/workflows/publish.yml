@@ -58,6 +58,7 @@ jobs:
           workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
       - uses: ./.github/actions/setup-python-uv
+      - run: uv sync --extra gcp
       - name: Run ${{ matrix.package }} integration tests
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}

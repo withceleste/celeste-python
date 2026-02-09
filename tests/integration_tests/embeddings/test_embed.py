@@ -22,6 +22,7 @@ from celeste.modalities.embeddings import (  # noqa: E402
     EmbeddingsOutput,
     EmbeddingsUsage,
 )
+from celeste.providers.google.auth import GoogleADC  # noqa: E402
 
 
 @pytest.mark.parametrize(
@@ -105,3 +106,23 @@ def test_sync_embed() -> None:
 
     assert isinstance(response, EmbeddingsOutput)
     assert response.content is not None
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
+async def test_vertex_embed() -> None:
+    """Test embeddings via Vertex AI."""
+    client = create_client(
+        modality=Modality.EMBEDDINGS,
+        provider="google",
+        model="gemini-embedding-001",
+        auth=GoogleADC(),
+    )
+
+    response = await client.embed("Hello world")
+
+    assert isinstance(response, EmbeddingsOutput)
+    assert response.content is not None
+    assert isinstance(response.content, list)
+    assert len(response.content) > 0
+    assert isinstance(response.content[0], float)

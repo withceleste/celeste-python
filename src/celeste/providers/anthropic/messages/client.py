@@ -7,6 +7,7 @@ from celeste.client import APIMixin
 from celeste.core import UsageField
 from celeste.io import FinishReason
 from celeste.mime_types import ApplicationMimeType
+from celeste.providers.google.auth import GoogleADC
 
 from . import config
 
@@ -22,6 +23,10 @@ class AnthropicMessagesClient(APIMixin):
     - _parse_finish_reason() - Extract finish reason from response
     - _build_metadata() - Filter content fields
 
+    Auth-based endpoint selection:
+    - GoogleADC auth -> Vertex AI endpoints (Claude on Google Cloud)
+    - API key auth -> Anthropic API endpoints
+
     Usage:
         class AnthropicTextGenerationClient(AnthropicMessagesClient, TextGenerationClient):
             def _parse_content(self, response_data, **parameters):
@@ -31,6 +36,23 @@ class AnthropicMessagesClient(APIMixin):
                         return self._transform_output(block.get("text") or "", **parameters)
                 return ""
     """
+
+    def _get_vertex_endpoint(
+        self, anthropic_endpoint: str, streaming: bool = False
+    ) -> str:
+        """Map Anthropic endpoint to Vertex AI endpoint."""
+        if streaming:
+            return config.VertexAnthropicEndpoint.STREAM_MESSAGE
+        return config.VertexAnthropicEndpoint.CREATE_MESSAGE
+
+    def _build_url(self, endpoint: str, streaming: bool = False) -> str:
+        """Build full URL based on auth type."""
+        if isinstance(self.auth, GoogleADC):
+            return self.auth.build_url(
+                self._get_vertex_endpoint(endpoint, streaming=streaming),
+                model_id=self.model.id,
+            )
+        return f"{config.BASE_URL}{endpoint}"
 
     def _build_headers(self, request_body: dict[str, Any]) -> dict[str, str]:
         """Build headers with beta features extracted from request."""
@@ -85,7 +107,7 @@ class AnthropicMessagesClient(APIMixin):
             endpoint = config.AnthropicMessagesEndpoint.CREATE_MESSAGE
 
         response = await self.http_client.post(
-            f"{config.BASE_URL}{endpoint}",
+            url=self._build_url(endpoint, streaming=False),
             headers=headers,
             json_body=request_body,
         )
@@ -111,7 +133,7 @@ class AnthropicMessagesClient(APIMixin):
             endpoint = config.AnthropicMessagesEndpoint.CREATE_MESSAGE
 
         return self.http_client.stream_post(
-            f"{config.BASE_URL}{endpoint}",
+            url=self._build_url(endpoint, streaming=True),
             headers=headers,
             json_body=request_body,
         )

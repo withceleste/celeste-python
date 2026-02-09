@@ -1,6 +1,5 @@
 """Imagen client for Google images modality."""
 
-import base64
 from typing import Any, Unpack
 
 from celeste.artifacts import ImageArtifact
@@ -61,8 +60,7 @@ class ImagenImagesClient(GoogleImagenClient, ImagesClient):
             if not base64_data:
                 continue
             mime_type = ImageMimeType(prediction.get("mimeType", "image/png"))
-            image_bytes = base64.b64decode(base64_data)
-            images.append(ImageArtifact(data=image_bytes, mime_type=mime_type))
+            images.append(ImageArtifact(data=base64_data, mime_type=mime_type))
 
         num_images_requested = parameters.get("num_images")
         if num_images_requested == 1:
