@@ -1,8 +1,10 @@
 """Google videos client."""
 
+import base64
 from typing import Any, Unpack
 
 from celeste.artifacts import VideoArtifact
+from celeste.mime_types import VideoMimeType
 from celeste.parameters import ParameterMapper
 from celeste.providers.google.veo import config
 from celeste.providers.google.veo.client import GoogleVeoClient as GoogleVeoMixin
@@ -51,9 +53,12 @@ class GoogleVideosClient(GoogleVeoMixin, VideosClient):
     ) -> VideoArtifact:
         """Parse content from response."""
         video_data = super()._parse_content(response_data)
-        return VideoArtifact(
-            url=video_data.get("uri") or video_data.get("gcsUri"),
-        )
+        # Handle inline base64 response (Vertex can return bytesBase64Encoded)
+        if "bytesBase64Encoded" in video_data:
+            video_bytes = base64.b64decode(video_data["bytesBase64Encoded"])
+            mime_type = video_data.get("mimeType", VideoMimeType.MP4)
+            return VideoArtifact(data=video_bytes, mime_type=mime_type)
+        return VideoArtifact(url=video_data.get("uri"))
 
     def _parse_finish_reason(self, response_data: dict[str, Any]) -> VideoFinishReason:
         """Parse finish reason from response."""
@@ -64,13 +69,16 @@ class GoogleVideosClient(GoogleVeoMixin, VideosClient):
         """Download video content from GCS URL.
 
         Args:
-            artifact: VideoArtifact with URL to download.
+            artifact: VideoArtifact with URL or inline data to download.
 
         Returns:
             VideoArtifact with downloaded bytes data.
         """
+        if artifact.data is not None:
+            return artifact
+
         if artifact.url is None:
-            msg = "Artifact has no URL to download"
+            msg = "Artifact has no URL or data to download"
             raise ValueError(msg)
 
         video_bytes = await super().download_content(artifact.url)

@@ -180,7 +180,11 @@ class GoogleVeoClient(APIMixin):
             if not videos:
                 msg = "No videos in response"
                 raise ValueError(msg)
-            return videos[0]
+            video = videos[0]
+            # Normalize Vertex key "videoGcsUri" to "uri" for consistency
+            if "videoGcsUri" in video:
+                video["uri"] = video.pop("videoGcsUri")
+            return video
 
         generated_samples = response.get("generateVideoResponse", {}).get(
             "generatedSamples", []
