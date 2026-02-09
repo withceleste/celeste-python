@@ -1,6 +1,5 @@
 """OpenAI images client."""
 
-import base64
 from typing import Any, Unpack
 
 from celeste.artifacts import ImageArtifact
@@ -61,8 +60,7 @@ class OpenAIImagesStream(_OpenAIImagesStream, ImagesStream):
                 metadata={"event_data": event_data},
             )
 
-        image_data = base64.b64decode(b64_json)
-        artifact = ImageArtifact(data=image_data)
+        artifact = ImageArtifact(data=b64_json)
 
         return ImageChunk(
             content=artifact,
@@ -143,8 +141,7 @@ class OpenAIImagesClient(OpenAIImagesMixin, ImagesClient):
 
         b64_json = image_data.get("b64_json")
         if b64_json:
-            image_bytes = base64.b64decode(b64_json)
-            return ImageArtifact(data=image_bytes)
+            return ImageArtifact(data=b64_json)
 
         url = image_data.get("url")
         if url:

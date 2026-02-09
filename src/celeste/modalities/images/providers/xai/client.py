@@ -82,10 +82,7 @@ class XAIImagesClient(XAIImagesMixin, ImagesClient):
         # xAI returns either b64_json or url
         b64_json = image_data.get("b64_json")
         if b64_json:
-            import base64
-
-            image_bytes = base64.b64decode(b64_json)
-            return ImageArtifact(data=image_bytes)
+            return ImageArtifact(data=b64_json)
 
         url = image_data.get("url")
         if url:

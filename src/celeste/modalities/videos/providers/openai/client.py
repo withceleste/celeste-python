@@ -1,6 +1,5 @@
 """OpenAI videos client."""
 
-import base64
 from typing import Any, Unpack
 
 from celeste.artifacts import VideoArtifact
@@ -55,9 +54,8 @@ class OpenAIVideosClient(OpenAIVideosMixin, VideosClient):
     ) -> VideoArtifact:
         """Parse content from response."""
         video_data_b64 = super()._parse_content(response_data)
-        video_data = base64.b64decode(video_data_b64)
         return VideoArtifact(
-            data=video_data,
+            data=video_data_b64,
             mime_type=VideoMimeType.MP4,
         )
 

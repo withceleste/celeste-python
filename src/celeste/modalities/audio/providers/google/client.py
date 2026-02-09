@@ -1,6 +1,5 @@
 """Google audio client."""
 
-import base64
 from typing import Any, Unpack
 
 from celeste.artifacts import AudioArtifact
@@ -62,12 +61,11 @@ class GoogleAudioClient(GoogleCloudTTSMixin, AudioClient):
     ) -> AudioArtifact:
         """Extract audio bytes from response."""
         audio_b64 = super()._parse_content(response_data)
-        audio_bytes = base64.b64decode(audio_b64)
 
         output_format = parameters.get(AudioParameter.OUTPUT_FORMAT)
         mime_type = AudioMimeType(output_format) if output_format else AudioMimeType.MP3
 
-        return AudioArtifact(data=audio_bytes, mime_type=mime_type)
+        return AudioArtifact(data=audio_b64, mime_type=mime_type)
 
     def _parse_finish_reason(self, response_data: dict[str, Any]) -> AudioFinishReason:
         """Parse finish reason from response."""
