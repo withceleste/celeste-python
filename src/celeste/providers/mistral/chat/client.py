@@ -41,23 +41,12 @@ class MistralChatClient(APIMixin):
         return config.VertexMistralEndpoint.CREATE_CHAT
 
     def _build_url(self, endpoint: str, streaming: bool = False) -> str:
-        """Build full URL based on auth type.
-
-        - GoogleADC auth -> Vertex AI endpoints
-        - API key auth -> Mistral API endpoints
-        """
+        """Build full URL based on auth type."""
         if isinstance(self.auth, GoogleADC):
-            project_id = self.auth.resolved_project_id
-            if project_id is None:
-                raise ValueError(
-                    "Vertex AI requires a project_id. "
-                    "Pass project_id to GoogleADC() or ensure credentials have a project."
-                )
-
-            vertex_endpoint = self._get_vertex_endpoint(endpoint, streaming=streaming)
-            base_url = self.auth.get_vertex_base_url()
-            return f"{base_url}{vertex_endpoint.format(project_id=project_id, location=self.auth.location, model_id=self.model.id)}"
-
+            return self.auth.build_url(
+                self._get_vertex_endpoint(endpoint, streaming=streaming),
+                model_id=self.model.id,
+            )
         return f"{config.BASE_URL}{endpoint}"
 
     def _build_request(

@@ -43,23 +43,9 @@ class DeepSeekChatClient(APIMixin):
         return vertex_endpoint
 
     def _build_url(self, endpoint: str) -> str:
-        """Build full URL based on auth type.
-
-        - GoogleADC auth -> Vertex AI endpoints (OpenAI-compatible)
-        - API key auth -> DeepSeek API endpoints
-        """
+        """Build full URL based on auth type."""
         if isinstance(self.auth, GoogleADC):
-            project_id = self.auth.resolved_project_id
-            if project_id is None:
-                raise ValueError(
-                    "Vertex AI requires a project_id. "
-                    "Pass project_id to GoogleADC() or ensure credentials have a project."
-                )
-
-            vertex_endpoint = self._get_vertex_endpoint(endpoint)
-            base_url = self.auth.get_vertex_base_url()
-            return f"{base_url}{vertex_endpoint.format(project_id=project_id, location=self.auth.location)}"
-
+            return self.auth.build_url(self._get_vertex_endpoint(endpoint))
         return f"{config.BASE_URL}{endpoint}"
 
     def _build_request(

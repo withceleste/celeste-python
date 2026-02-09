@@ -1,6 +1,5 @@
 """Google videos client."""
 
-import base64
 from typing import Any, Unpack
 
 from celeste.artifacts import VideoArtifact
@@ -55,9 +54,10 @@ class GoogleVideosClient(GoogleVeoMixin, VideosClient):
         video_data = super()._parse_content(response_data)
         # Handle inline base64 response (Vertex can return bytesBase64Encoded)
         if "bytesBase64Encoded" in video_data:
-            video_bytes = base64.b64decode(video_data["bytesBase64Encoded"])
             mime_type = video_data.get("mimeType", VideoMimeType.MP4)
-            return VideoArtifact(data=video_bytes, mime_type=mime_type)
+            return VideoArtifact(
+                data=video_data["bytesBase64Encoded"], mime_type=mime_type
+            )
         return VideoArtifact(url=video_data.get("uri"))
 
     def _parse_finish_reason(self, response_data: dict[str, Any]) -> VideoFinishReason:
