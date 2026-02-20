@@ -2,9 +2,10 @@
 
 from typing import Any
 
-from celeste.protocols.chatcompletions import ChatCompletionsStream
-
-from .client import MoonshotChatClient
+from celeste.protocols.chatcompletions import (
+    ChatCompletionsClient,
+    ChatCompletionsStream,
+)
 
 
 class MoonshotChatStream(ChatCompletionsStream):
@@ -26,7 +27,7 @@ class MoonshotChatStream(ChatCompletionsStream):
                 usage_data = choices[0].get("usage")
 
         if isinstance(usage_data, dict):
-            return MoonshotChatClient.map_usage_fields(usage_data)
+            return ChatCompletionsClient.map_usage_fields(usage_data)
 
         return None
 

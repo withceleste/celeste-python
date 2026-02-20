@@ -131,7 +131,7 @@ class ChatCompletionsClient(APIMixin):
     ) -> dict[str, int | float | None]:
         """Extract usage data from Chat Completions API response."""
         usage_data = response_data.get("usage", {})
-        return ChatCompletionsClient.map_usage_fields(usage_data)
+        return self.map_usage_fields(usage_data)
 
     def _parse_content(self, response_data: dict[str, Any]) -> Any:
         """Parse choices array from Chat Completions API response."""

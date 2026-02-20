@@ -53,12 +53,5 @@ class DeepSeekChatClient(ChatCompletionsClient):
             ),
         }
 
-    def _parse_usage(
-        self, response_data: dict[str, Any]
-    ) -> dict[str, int | float | None]:
-        """Extract usage data from Chat API response."""
-        usage_data = response_data.get("usage", {})
-        return DeepSeekChatClient.map_usage_fields(usage_data)
-
 
 __all__ = ["DeepSeekChatClient"]

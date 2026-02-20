@@ -44,4 +44,32 @@ from celeste.parameters import ParameterMapper
 #         return request
 
 
+# PATTERN 3: Response format with parse_output
+# class ResponseFormatMapper(ParameterMapper):
+#     """Map output_schema to {Protocol} response_format field."""
+#
+#     def map(
+#         self,
+#         request: dict[str, Any],
+#         value: object,
+#         model: Model,
+#     ) -> dict[str, Any]:
+#         """Transform output_schema into provider request."""
+#         validated_value = self._validate_value(value, model)
+#         if validated_value is None:
+#             return request
+#
+#         request["response_format"] = {"type": "json_object"}
+#         return request
+#
+#     def parse_output(self, content: TextContent, value: object | None) -> TextContent:
+#         """Parse JSON string to typed output via Pydantic TypeAdapter."""
+#         if value is None:
+#             return content
+#         if isinstance(content, BaseModel):
+#             return content
+#         parsed = json.loads(content, strict=False) if isinstance(content, str) else content
+#         return TypeAdapter(value).validate_python(parsed)
+
+
 __all__: list[str] = []
