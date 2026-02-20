@@ -11,42 +11,6 @@ from celeste.structured_outputs import StrictJsonSchemaGenerator
 from celeste.types import TextContent
 
 
-class TemperatureMapper(ParameterMapper):
-    """Map temperature to Groq temperature field."""
-
-    def map(
-        self,
-        request: dict[str, Any],
-        value: object,
-        model: Model,
-    ) -> dict[str, Any]:
-        """Transform temperature into provider request."""
-        validated_value = self._validate_value(value, model)
-        if validated_value is None:
-            return request
-
-        request["temperature"] = validated_value
-        return request
-
-
-class MaxTokensMapper(ParameterMapper):
-    """Map max_tokens to Groq max_tokens field."""
-
-    def map(
-        self,
-        request: dict[str, Any],
-        value: object,
-        model: Model,
-    ) -> dict[str, Any]:
-        """Transform max_tokens into provider request."""
-        validated_value = self._validate_value(value, model)
-        if validated_value is None:
-            return request
-
-        request["max_tokens"] = validated_value
-        return request
-
-
 class ResponseFormatMapper(ParameterMapper):
     """Map output_schema to Groq response_format field (json_schema mode).
 
@@ -120,8 +84,4 @@ class ResponseFormatMapper(ParameterMapper):
         return TypeAdapter(value).validate_python(parsed_json)
 
 
-__all__ = [
-    "MaxTokensMapper",
-    "ResponseFormatMapper",
-    "TemperatureMapper",
-]
+__all__ = ["ResponseFormatMapper"]

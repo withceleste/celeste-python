@@ -12,13 +12,11 @@ class GroqChatClient(ChatCompletionsClient):
 
     Inherits shared Chat Completions implementation. Only overrides:
     - _default_base_url - Groq API base URL
-    - _default_chat_endpoint - Groq uses /openai/v1/chat/completions
+    - _default_endpoint - Groq uses /openai/v1/chat/completions
     """
 
     _default_base_url: ClassVar[str] = config.BASE_URL
-    _default_chat_endpoint: ClassVar[str] = (
-        config.GroqChatEndpoint.CREATE_CHAT_COMPLETION
-    )
+    _default_endpoint: ClassVar[str] = config.GroqChatEndpoint.CREATE_CHAT_COMPLETION
 
 
 __all__ = ["GroqChatClient"]

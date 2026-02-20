@@ -26,15 +26,19 @@ class ChatCompletionsClient(APIMixin):
     - _build_metadata() - Filter content fields
 
     Providers override ClassVars and hook methods:
-    - _default_base_url - Provider's API base URL
-    - _default_chat_endpoint - Default endpoint path (override for non-standard paths)
+    - _default_base_url: ClassVar[str] - Provider's API base URL
+    - _default_endpoint: ClassVar[str] - Default endpoint path (override for non-standard paths)
     - _build_url() - Override for Vertex AI URL routing
     - map_usage_fields() - Override to add provider-specific usage fields
     - _build_request() - Override to add provider-specific request fields
+
+    Usage:
+        class DeepSeekChatClient(ChatCompletionsClient):
+            _default_base_url: ClassVar[str] = config.BASE_URL
     """
 
     _default_base_url: ClassVar[str] = config.DEFAULT_BASE_URL
-    _default_chat_endpoint: ClassVar[str] = config.ChatCompletionsEndpoint.CREATE_CHAT
+    _default_endpoint: ClassVar[str] = config.ChatCompletionsEndpoint.CREATE_CHAT
 
     def _build_url(self, endpoint: str, streaming: bool = False) -> str:
         """Build full URL for request.
@@ -68,7 +72,7 @@ class ChatCompletionsClient(APIMixin):
     ) -> dict[str, Any]:
         """Make HTTP request to Chat Completions API endpoint."""
         if endpoint is None:
-            endpoint = self._default_chat_endpoint
+            endpoint = self._default_endpoint
 
         headers = {
             **self.auth.get_headers(),
@@ -93,7 +97,7 @@ class ChatCompletionsClient(APIMixin):
     ) -> AsyncIterator[dict[str, Any]]:
         """Make streaming request to Chat Completions API endpoint."""
         if endpoint is None:
-            endpoint = self._default_chat_endpoint
+            endpoint = self._default_endpoint
 
         headers = {
             **self.auth.get_headers(),

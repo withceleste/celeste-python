@@ -10,10 +10,14 @@ from .client import OpenResponsesClient
 class OpenResponsesStream:
     """OpenResponses protocol SSE parsing mixin.
 
-    Provides shared implementation for streaming parsing (provider API level):
+    Provides shared implementation for streaming parsing (protocol level):
     - _parse_chunk_content(event_data) - Extract content from SSE event
     - _parse_chunk_usage(event_data) - Extract and normalize usage from SSE event
     - _parse_chunk_finish_reason(event_data) - Extract finish reason from SSE event
+    - _build_stream_metadata(raw_events) - Filter content-only events
+
+    Provider streams inherit this and override methods for provider-specific behavior
+    (e.g., thinking model content parsing, non-standard usage locations).
 
     Modality streams call super() methods which resolve to this via MRO.
     """

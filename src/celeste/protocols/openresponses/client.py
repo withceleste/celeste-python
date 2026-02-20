@@ -15,17 +15,41 @@ class OpenResponsesClient(APIMixin):
     """OpenResponses protocol client.
 
     Provides shared implementation for all providers using the Responses API:
+    - _build_url() - Build URL with provider base URL (override for Vertex AI)
+    - _build_request() - Add model ID and streaming flag
     - _make_request() - HTTP POST to /v1/responses
     - _make_stream_request() - HTTP streaming to /v1/responses
+    - map_usage_fields() - Map usage fields to unified names
     - _parse_usage() - Extract usage dict from response
     - _parse_content() - Extract output array from response
     - _parse_finish_reason() - Extract finish reason from response
     - _build_metadata() - Filter content fields
 
-    Providers override _default_base_url to set their API base URL.
+    Providers override ClassVars and hook methods:
+    - _default_base_url: ClassVar[str] - Provider's API base URL
+    - _default_endpoint: ClassVar[str] - Default endpoint path (override for non-standard paths)
+    - _build_url() - Override for Vertex AI URL routing
+    - map_usage_fields() - Override to add provider-specific usage fields
+    - _build_request() - Override to add provider-specific request fields
+
+    Usage:
+        class OpenAIResponsesClient(OpenResponsesClient):
+            _default_base_url: ClassVar[str] = config.BASE_URL
     """
 
     _default_base_url: ClassVar[str] = config.DEFAULT_BASE_URL
+    _default_endpoint: ClassVar[str] = config.OpenResponsesEndpoint.CREATE_RESPONSE
+
+    def _build_url(self, endpoint: str, streaming: bool = False) -> str:
+        """Build full URL for request.
+
+        Override for Vertex AI support:
+            def _build_url(self, endpoint: str, streaming: bool = False) -> str:
+                if isinstance(self.auth, GoogleADC):
+                    return self.auth.build_url(self._get_vertex_endpoint(endpoint, streaming))
+                return super()._build_url(endpoint, streaming)
+        """
+        return f"{self._default_base_url}{endpoint}"
 
     def _build_request(
         self,
@@ -48,14 +72,11 @@ class OpenResponsesClient(APIMixin):
         request_body: dict[str, Any],
         *,
         endpoint: str | None = None,
-        base_url: str | None = None,
         **parameters: Any,
     ) -> dict[str, Any]:
         """Make HTTP request to Responses API endpoint."""
         if endpoint is None:
-            endpoint = config.OpenResponsesEndpoint.CREATE_RESPONSE
-        if base_url is None:
-            base_url = self._default_base_url
+            endpoint = self._default_endpoint
 
         headers = {
             **self.auth.get_headers(),
@@ -63,7 +84,7 @@ class OpenResponsesClient(APIMixin):
         }
 
         response = await self.http_client.post(
-            f"{base_url}{endpoint}",
+            self._build_url(endpoint),
             headers=headers,
             json_body=request_body,
         )
@@ -76,14 +97,11 @@ class OpenResponsesClient(APIMixin):
         request_body: dict[str, Any],
         *,
         endpoint: str | None = None,
-        base_url: str | None = None,
         **parameters: Any,
     ) -> AsyncIterator[dict[str, Any]]:
         """Make streaming request to Responses API endpoint."""
         if endpoint is None:
-            endpoint = config.OpenResponsesEndpoint.CREATE_RESPONSE
-        if base_url is None:
-            base_url = self._default_base_url
+            endpoint = self._default_endpoint
 
         headers = {
             **self.auth.get_headers(),
@@ -91,7 +109,7 @@ class OpenResponsesClient(APIMixin):
         }
 
         return self.http_client.stream_post(
-            f"{base_url}{endpoint}",
+            self._build_url(endpoint, streaming=True),
             headers=headers,
             json_body=request_body,
         )

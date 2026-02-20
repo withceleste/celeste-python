@@ -16,6 +16,9 @@ class ChatCompletionsStream:
     - _parse_chunk_finish_reason(event_data) - Extract finish reason from SSE event
     - _build_stream_metadata(raw_events) - Filter content-only events
 
+    Provider streams inherit this and override methods for provider-specific behavior
+    (e.g., thinking model content parsing, non-standard usage locations).
+
     Modality streams call super() methods which resolve to this via MRO.
     """
 

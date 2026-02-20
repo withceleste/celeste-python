@@ -1,0 +1,53 @@
+"""{Protocol} protocol parameter mappers.
+
+Naming convention:
+- Mapper class name MUST match the protocol's API parameter name
+- Example: API param "temperature" -> class TemperatureMapper
+- These are base classes WITHOUT ``name`` -- modality mappers inherit and add ``name``
+"""
+
+from typing import Any
+
+from celeste.models import Model
+from celeste.parameters import ParameterMapper
+
+
+# PATTERN 1: Simple flat mapping
+# class TemperatureMapper(ParameterMapper):
+#     """Map temperature to {Protocol} temperature field."""
+#
+#     def map(
+#         self,
+#         request: dict[str, Any],
+#         value: object,
+#         model: Model,
+#     ) -> dict[str, Any]:
+#         """Transform temperature into provider request."""
+#         validated_value = self._validate_value(value, model)
+#         if validated_value is None:
+#             return request
+#
+#         request["temperature"] = validated_value
+#         return request
+
+
+# PATTERN 2: Nested mapping
+# class ReasoningEffortMapper(ParameterMapper):
+#     """Map reasoning_effort to {Protocol} reasoning.effort field."""
+#
+#     def map(
+#         self,
+#         request: dict[str, Any],
+#         value: object,
+#         model: Model,
+#     ) -> dict[str, Any]:
+#         """Transform reasoning_effort into provider request."""
+#         validated_value = self._validate_value(value, model)
+#         if validated_value is None:
+#             return request
+#
+#         request.setdefault("reasoning", {})["effort"] = validated_value
+#         return request
+
+
+__all__: list[str] = []
