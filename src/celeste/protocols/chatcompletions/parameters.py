@@ -1,4 +1,4 @@
-"""DeepSeek Chat API parameter mappers."""
+"""Chat Completions protocol parameter mappers."""
 
 import json
 from typing import Any, get_origin
@@ -11,7 +11,7 @@ from celeste.types import TextContent
 
 
 class TemperatureMapper(ParameterMapper):
-    """Map temperature to DeepSeek temperature field."""
+    """Map temperature to Chat Completions temperature field."""
 
     def map(
         self,
@@ -29,7 +29,7 @@ class TemperatureMapper(ParameterMapper):
 
 
 class MaxTokensMapper(ParameterMapper):
-    """Map max_tokens to DeepSeek max_tokens field."""
+    """Map max_tokens to Chat Completions max_tokens field."""
 
     def map(
         self,
@@ -47,10 +47,10 @@ class MaxTokensMapper(ParameterMapper):
 
 
 class ResponseFormatMapper(ParameterMapper):
-    """Map output_schema to DeepSeek response_format field.
+    """Map output_schema to Chat Completions response_format field.
 
-    DeepSeek supports basic JSON mode only (no schema validation server-side).
-    Schema validation happens client-side via parse_output method.
+    Default uses json_object mode (no schema validation server-side).
+    Providers with json_schema support override map() only.
     """
 
     def map(
@@ -68,11 +68,10 @@ class ResponseFormatMapper(ParameterMapper):
         return request
 
     def parse_output(self, content: TextContent, value: object | None) -> TextContent:
-        """Parse JSON to BaseModel using Pydantic's TypeAdapter."""
+        """Parse JSON string to typed output via Pydantic TypeAdapter."""
         if value is None:
             return content
 
-        # If content is already a BaseModel, return it unchanged
         if isinstance(content, BaseModel):
             return content
         if isinstance(content, list) and content and isinstance(content[0], BaseModel):
@@ -83,7 +82,6 @@ class ResponseFormatMapper(ParameterMapper):
         else:
             parsed = content
 
-        # For list[T], handle various formats DeepSeek might return
         origin = get_origin(value)
         if origin is list and isinstance(parsed, dict):
             if "items" in parsed:

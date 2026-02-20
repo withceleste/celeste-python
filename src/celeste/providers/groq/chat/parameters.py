@@ -1,53 +1,17 @@
 """Groq Chat API parameter mappers."""
 
-import json
 from typing import Any, get_args, get_origin
 
-from pydantic import BaseModel, TypeAdapter
+from pydantic import TypeAdapter
 
 from celeste.models import Model
-from celeste.parameters import ParameterMapper
+from celeste.protocols.chatcompletions.parameters import (
+    ResponseFormatMapper as _ResponseFormatMapper,
+)
 from celeste.structured_outputs import StrictJsonSchemaGenerator
-from celeste.types import TextContent
 
 
-class TemperatureMapper(ParameterMapper):
-    """Map temperature to Groq temperature field."""
-
-    def map(
-        self,
-        request: dict[str, Any],
-        value: object,
-        model: Model,
-    ) -> dict[str, Any]:
-        """Transform temperature into provider request."""
-        validated_value = self._validate_value(value, model)
-        if validated_value is None:
-            return request
-
-        request["temperature"] = validated_value
-        return request
-
-
-class MaxTokensMapper(ParameterMapper):
-    """Map max_tokens to Groq max_tokens field."""
-
-    def map(
-        self,
-        request: dict[str, Any],
-        value: object,
-        model: Model,
-    ) -> dict[str, Any]:
-        """Transform max_tokens into provider request."""
-        validated_value = self._validate_value(value, model)
-        if validated_value is None:
-            return request
-
-        request["max_tokens"] = validated_value
-        return request
-
-
-class ResponseFormatMapper(ParameterMapper):
+class ResponseFormatMapper(_ResponseFormatMapper):
     """Map output_schema to Groq response_format field (json_schema mode).
 
     Handles both single BaseModel and list[BaseModel] types.
@@ -97,31 +61,5 @@ class ResponseFormatMapper(ParameterMapper):
         }
         return request
 
-    def parse_output(self, content: TextContent, value: object | None) -> TextContent:
-        """Parse JSON to BaseModel using Pydantic's TypeAdapter."""
-        if value is None:
-            return content
 
-        # If content is already a BaseModel, return it unchanged
-        if isinstance(content, BaseModel):
-            return content
-        if isinstance(content, list) and content and isinstance(content[0], BaseModel):
-            return content
-
-        parsed_json = (
-            json.loads(content, strict=False) if isinstance(content, str) else content
-        )
-
-        # Unwrap list from items wrapper
-        origin = get_origin(value)
-        if origin is list and isinstance(parsed_json, dict) and "items" in parsed_json:
-            parsed_json = parsed_json["items"]
-
-        return TypeAdapter(value).validate_python(parsed_json)
-
-
-__all__ = [
-    "MaxTokensMapper",
-    "ResponseFormatMapper",
-    "TemperatureMapper",
-]
+__all__ = ["ResponseFormatMapper"]

@@ -1,4 +1,4 @@
-"""OpenResponses protocol client."""
+"""Chat Completions protocol client."""
 
 from collections.abc import AsyncIterator
 from typing import Any, ClassVar
@@ -11,17 +11,17 @@ from celeste.mime_types import ApplicationMimeType
 from . import config
 
 
-class OpenResponsesClient(APIMixin):
-    """OpenResponses protocol client.
+class ChatCompletionsClient(APIMixin):
+    """Chat Completions protocol client.
 
-    Provides shared implementation for all providers using the Responses API:
+    Provides shared implementation for all providers using the Chat Completions API:
     - _build_url() - Build URL with provider base URL (override for Vertex AI)
     - _build_request() - Add model ID and streaming flag
-    - _make_request() - HTTP POST to /v1/responses
-    - _make_stream_request() - HTTP streaming to /v1/responses
+    - _make_request() - HTTP POST to /v1/chat/completions
+    - _make_stream_request() - HTTP streaming to /v1/chat/completions
     - map_usage_fields() - Map usage fields to unified names
     - _parse_usage() - Extract usage dict from response
-    - _parse_content() - Extract output array from response
+    - _parse_content() - Extract choices array from response
     - _parse_finish_reason() - Extract finish reason from response
     - _build_metadata() - Filter content fields
 
@@ -33,12 +33,12 @@ class OpenResponsesClient(APIMixin):
     - _build_request() - Override to add provider-specific request fields
 
     Usage:
-        class OpenAIResponsesClient(OpenResponsesClient):
+        class DeepSeekChatClient(ChatCompletionsClient):
             _default_base_url: ClassVar[str] = config.BASE_URL
     """
 
     _default_base_url: ClassVar[str] = config.DEFAULT_BASE_URL
-    _default_endpoint: ClassVar[str] = config.OpenResponsesEndpoint.CREATE_RESPONSE
+    _default_endpoint: ClassVar[str] = config.ChatCompletionsEndpoint.CREATE_CHAT
 
     def _build_url(self, endpoint: str, streaming: bool = False) -> str:
         """Build full URL for request.
@@ -74,7 +74,7 @@ class OpenResponsesClient(APIMixin):
         endpoint: str | None = None,
         **parameters: Any,
     ) -> dict[str, Any]:
-        """Make HTTP request to Responses API endpoint."""
+        """Make HTTP request to Chat Completions API endpoint."""
         if endpoint is None:
             endpoint = self._default_endpoint
 
@@ -99,7 +99,7 @@ class OpenResponsesClient(APIMixin):
         endpoint: str | None = None,
         **parameters: Any,
     ) -> AsyncIterator[dict[str, Any]]:
-        """Make streaming request to Responses API endpoint."""
+        """Make streaming request to Chat Completions API endpoint."""
         if endpoint is None:
             endpoint = self._default_endpoint
 
@@ -116,49 +116,47 @@ class OpenResponsesClient(APIMixin):
 
     @staticmethod
     def map_usage_fields(usage_data: dict[str, Any]) -> dict[str, int | float | None]:
-        """Map Responses usage fields to unified names."""
-        input_details = usage_data.get("input_tokens_details", {})
-        output_details = usage_data.get("output_tokens_details", {})
+        """Map Chat Completions usage fields to unified names.
+
+        Shared by client and streaming across all capabilities.
+        """
         return {
-            UsageField.INPUT_TOKENS: usage_data.get("input_tokens"),
-            UsageField.OUTPUT_TOKENS: usage_data.get("output_tokens"),
+            UsageField.INPUT_TOKENS: usage_data.get("prompt_tokens"),
+            UsageField.OUTPUT_TOKENS: usage_data.get("completion_tokens"),
             UsageField.TOTAL_TOKENS: usage_data.get("total_tokens"),
-            UsageField.CACHED_TOKENS: input_details.get("cached_tokens"),
-            UsageField.REASONING_TOKENS: output_details.get("reasoning_tokens"),
         }
 
     def _parse_usage(
         self, response_data: dict[str, Any]
     ) -> dict[str, int | float | None]:
-        """Extract usage data from Responses API response."""
+        """Extract usage data from Chat Completions API response."""
         usage_data = response_data.get("usage", {})
         return self.map_usage_fields(usage_data)
 
     def _parse_content(self, response_data: dict[str, Any]) -> Any:
-        """Parse output array from Responses API."""
-        output = response_data.get("output", [])
-        if not output:
-            msg = "No output in response"
+        """Parse choices array from Chat Completions API response."""
+        choices = response_data.get("choices", [])
+        if not choices:
+            msg = "No choices in response"
             raise ValueError(msg)
-        return output
+        return choices
 
     def _parse_finish_reason(self, response_data: dict[str, Any]) -> FinishReason:
-        """Extract finish reason from Responses API response."""
-        status = response_data.get("status")
-        if status == "completed":
-            output_items = response_data.get("output", [])
-            for item in output_items:
-                if item.get("type") == "message" and item.get("status") == "completed":
-                    return FinishReason(reason="completed")
-        return FinishReason(reason=None)
+        """Extract finish reason from Chat Completions API response."""
+        choices = response_data.get("choices", [])
+        if not choices:
+            reason = None
+        else:
+            reason = choices[0].get("finish_reason")
+        return FinishReason(reason=reason)
 
     def _build_metadata(self, response_data: dict[str, Any]) -> dict[str, Any]:
         """Build metadata dictionary, filtering out content fields."""
-        content_fields = {"output"}
+        content_fields = {"choices"}
         filtered_data = {
             k: v for k, v in response_data.items() if k not in content_fields
         }
         return super()._build_metadata(filtered_data)
 
 
-__all__ = ["OpenResponsesClient"]
+__all__ = ["ChatCompletionsClient"]

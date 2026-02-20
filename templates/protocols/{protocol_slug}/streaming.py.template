@@ -1,0 +1,72 @@
+"""{Protocol} protocol SSE parsing for streaming."""
+
+from typing import Any
+
+from celeste.io import FinishReason
+
+from .client import {Protocol}Client
+
+
+class {Protocol}Stream:
+    """{Protocol} protocol SSE parsing mixin.
+
+    Provides shared implementation for streaming parsing (protocol level):
+    - _parse_chunk_content(event_data) - Extract content from SSE event
+    - _parse_chunk_usage(event_data) - Extract and normalize usage from SSE event
+    - _parse_chunk_finish_reason(event_data) - Extract finish reason from SSE event
+    - _build_stream_metadata(raw_events) - Filter content-only events
+
+    Provider streams inherit this and override methods for provider-specific behavior
+    (e.g., thinking model content parsing, non-standard usage locations).
+
+    Modality streams call super() methods which resolve to this via MRO.
+    """
+
+    def _parse_chunk_content(self, event_data: dict[str, Any]) -> str | None:
+        """Extract content from SSE event.
+
+        Returns content string if present, None otherwise.
+        Override for provider-specific content formats (e.g., list-based thinking model content).
+        """
+        # TODO: Implement protocol-specific content extraction
+        return None
+
+    def _parse_chunk_usage(
+        self, event_data: dict[str, Any]
+    ) -> dict[str, int | float | None] | None:
+        """Extract and normalize usage from SSE event.
+
+        If usage data is present, map it with:
+            {Protocol}Client.map_usage_fields(usage_data)
+
+        Override for non-standard usage locations (e.g., usage in choices[0]).
+        Returns normalized usage dict if present, None otherwise.
+        """
+        usage_data = event_data.get("usage")
+        if isinstance(usage_data, dict):
+            return {Protocol}Client.map_usage_fields(usage_data)
+
+        return None
+
+    def _parse_chunk_finish_reason(
+        self, event_data: dict[str, Any]
+    ) -> FinishReason | None:
+        """Extract finish reason from SSE event.
+
+        Override for provider-specific finish reason extraction.
+        Returns FinishReason if present, None otherwise.
+        """
+        return None
+
+    def _build_stream_metadata(
+        self, raw_events: list[dict[str, Any]]
+    ) -> dict[str, Any]:
+        """Filter content-only events for size efficiency.
+
+        Override to customize which events are kept in metadata.
+        """
+        filtered = [event for event in raw_events if event.get("usage")]
+        return super()._build_stream_metadata(filtered)  # type: ignore[misc, no-any-return]
+
+
+__all__ = ["{Protocol}Stream"]

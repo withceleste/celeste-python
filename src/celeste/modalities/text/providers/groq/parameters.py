@@ -1,14 +1,14 @@
 """Groq parameter mappers for text."""
 
 from celeste.parameters import ParameterMapper
-from celeste.providers.groq.chat.parameters import (
+from celeste.protocols.chatcompletions.parameters import (
     MaxTokensMapper as _MaxTokensMapper,
+)
+from celeste.protocols.chatcompletions.parameters import (
+    TemperatureMapper as _TemperatureMapper,
 )
 from celeste.providers.groq.chat.parameters import (
     ResponseFormatMapper as _ResponseFormatMapper,
-)
-from celeste.providers.groq.chat.parameters import (
-    TemperatureMapper as _TemperatureMapper,
 )
 
 from ...parameters import TextParameter

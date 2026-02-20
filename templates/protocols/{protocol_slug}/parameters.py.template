@@ -1,0 +1,75 @@
+"""{Protocol} protocol parameter mappers."""
+
+from typing import Any
+
+from celeste.models import Model
+from celeste.parameters import ParameterMapper
+
+
+# PATTERN 1: Simple flat mapping
+# class TemperatureMapper(ParameterMapper):
+#     """Map temperature to {Protocol} temperature field."""
+#
+#     def map(
+#         self,
+#         request: dict[str, Any],
+#         value: object,
+#         model: Model,
+#     ) -> dict[str, Any]:
+#         """Transform temperature into provider request."""
+#         validated_value = self._validate_value(value, model)
+#         if validated_value is None:
+#             return request
+#
+#         request["temperature"] = validated_value
+#         return request
+
+
+# PATTERN 2: Nested mapping
+# class ReasoningEffortMapper(ParameterMapper):
+#     """Map reasoning_effort to {Protocol} reasoning.effort field."""
+#
+#     def map(
+#         self,
+#         request: dict[str, Any],
+#         value: object,
+#         model: Model,
+#     ) -> dict[str, Any]:
+#         """Transform reasoning_effort into provider request."""
+#         validated_value = self._validate_value(value, model)
+#         if validated_value is None:
+#             return request
+#
+#         request.setdefault("reasoning", {})["effort"] = validated_value
+#         return request
+
+
+# PATTERN 3: Response format with parse_output
+# class ResponseFormatMapper(ParameterMapper):
+#     """Map output_schema to {Protocol} response_format field."""
+#
+#     def map(
+#         self,
+#         request: dict[str, Any],
+#         value: object,
+#         model: Model,
+#     ) -> dict[str, Any]:
+#         """Transform output_schema into provider request."""
+#         validated_value = self._validate_value(value, model)
+#         if validated_value is None:
+#             return request
+#
+#         request["response_format"] = {"type": "json_object"}
+#         return request
+#
+#     def parse_output(self, content: TextContent, value: object | None) -> TextContent:
+#         """Parse JSON string to typed output via Pydantic TypeAdapter."""
+#         if value is None:
+#             return content
+#         if isinstance(content, BaseModel):
+#             return content
+#         parsed = json.loads(content, strict=False) if isinstance(content, str) else content
+#         return TypeAdapter(value).validate_python(parsed)
+
+
+__all__: list[str] = []
