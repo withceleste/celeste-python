@@ -15,6 +15,9 @@ from .parameters import TextParameters
 class TextStream(Stream[TextOutput, TextParameters, TextChunk]):
     """Streaming for text modality."""
 
+    _usage_class = TextUsage
+    _finish_reason_class = TextFinishReason
+
     def __init__(
         self,
         sse_iterator: AsyncIterator[dict[str, Any]],

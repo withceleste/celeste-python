@@ -8,7 +8,12 @@ from celeste.client import ModalityClient
 from celeste.core import Modality
 from celeste.types import EmbeddingsContent
 
-from .io import EmbeddingsInput, EmbeddingsOutput
+from .io import (
+    EmbeddingsFinishReason,
+    EmbeddingsInput,
+    EmbeddingsOutput,
+    EmbeddingsUsage,
+)
 from .parameters import EmbeddingsParameters
 
 
@@ -20,6 +25,8 @@ class EmbeddingsClient(
     """Base embeddings client. Providers implement operation methods."""
 
     modality: Modality = Modality.EMBEDDINGS
+    _usage_class = EmbeddingsUsage
+    _finish_reason_class = EmbeddingsFinishReason
 
     @classmethod
     def _output_class(cls) -> type[EmbeddingsOutput]:

@@ -8,7 +8,7 @@ from celeste.client import ModalityClient
 from celeste.core import Modality
 from celeste.types import AudioContent
 
-from .io import AudioInput, AudioOutput
+from .io import AudioFinishReason, AudioInput, AudioOutput, AudioUsage
 from .parameters import AudioParameters
 from .streaming import AudioStream
 
@@ -19,6 +19,8 @@ class AudioClient(
     """Base audio client. Providers implement speak() method."""
 
     modality: Modality = Modality.AUDIO
+    _usage_class = AudioUsage
+    _finish_reason_class = AudioFinishReason
 
     @classmethod
     def _output_class(cls) -> type[AudioOutput]:

@@ -8,7 +8,7 @@ from celeste.client import ModalityClient
 from celeste.core import InputType, Modality
 from celeste.types import AudioContent, ImageContent, Message, TextContent, VideoContent
 
-from .io import TextInput, TextOutput
+from .io import TextFinishReason, TextInput, TextOutput, TextUsage
 from .parameters import TextParameters
 from .streaming import TextStream
 
@@ -20,6 +20,8 @@ class TextClient(ModalityClient[TextInput, TextOutput, TextParameters, TextConte
     """
 
     modality: Modality = Modality.TEXT
+    _usage_class = TextUsage
+    _finish_reason_class = TextFinishReason
 
     @classmethod
     def _output_class(cls) -> type[TextOutput]:

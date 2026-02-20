@@ -8,7 +8,7 @@ from celeste.providers.openai.audio import config
 from celeste.providers.openai.audio.client import OpenAIAudioClient as OpenAIAudioMixin
 
 from ...client import AudioClient
-from ...io import AudioFinishReason, AudioInput, AudioOutput, AudioUsage
+from ...io import AudioFinishReason, AudioInput, AudioOutput
 from ...parameters import AudioParameters
 from .parameters import OPENAI_PARAMETER_MAPPERS
 
@@ -36,11 +36,6 @@ class OpenAIAudioClient(OpenAIAudioMixin, AudioClient):
     def _init_request(self, inputs: AudioInput) -> dict[str, Any]:
         """Initialize request with text input."""
         return {"input": inputs.text}
-
-    def _parse_usage(self, response_data: dict[str, Any]) -> AudioUsage:
-        """Parse usage from response."""
-        usage = super()._parse_usage(response_data)
-        return AudioUsage(**usage)
 
     def _parse_content(
         self,

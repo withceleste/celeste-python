@@ -15,10 +15,8 @@ from celeste.providers.gradium.text_to_speech.streaming import (
 from ...client import AudioClient
 from ...io import (
     AudioChunk,
-    AudioFinishReason,
     AudioInput,
     AudioOutput,
-    AudioUsage,
 )
 from ...parameters import AudioParameters
 from ...streaming import AudioStream
@@ -28,28 +26,12 @@ from .parameters import GRADIUM_PARAMETER_MAPPERS
 class GradiumAudioStream(_GradiumTextToSpeechStream, AudioStream):
     """Gradium streaming for audio modality."""
 
-    def _parse_chunk_usage(self, event_data: dict[str, Any]) -> AudioUsage | None:
-        """Parse and wrap usage from event."""
-        usage = super()._parse_chunk_usage(event_data)
-        if usage:
-            return AudioUsage(**usage)
-        return None
-
-    def _parse_chunk_finish_reason(
-        self, event_data: dict[str, Any]
-    ) -> AudioFinishReason | None:
-        """Parse and wrap finish reason from event."""
-        finish_reason = super()._parse_chunk_finish_reason(event_data)
-        if finish_reason:
-            return AudioFinishReason(reason=finish_reason.reason)
-        return None
-
     def _parse_chunk(self, event_data: dict[str, Any]) -> AudioChunk | None:
         """Parse binary audio chunk from stream event."""
         chunk_data = self._parse_chunk_content(event_data)
         if not chunk_data:
-            usage = self._parse_chunk_usage(event_data)
-            finish_reason = self._parse_chunk_finish_reason(event_data)
+            usage = self._get_chunk_usage(event_data)
+            finish_reason = self._get_chunk_finish_reason(event_data)
             if usage is None and finish_reason is None:
                 return None
             # Chunk with usage/finish_reason only (no audio)
@@ -62,8 +44,8 @@ class GradiumAudioStream(_GradiumTextToSpeechStream, AudioStream):
 
         return AudioChunk(
             content=chunk_data,
-            finish_reason=self._parse_chunk_finish_reason(event_data),
-            usage=self._parse_chunk_usage(event_data),
+            finish_reason=self._get_chunk_finish_reason(event_data),
+            usage=self._get_chunk_usage(event_data),
             metadata={"event_data": event_data},
         )
 
@@ -110,11 +92,6 @@ class GradiumAudioClient(GradiumTextToSpeechMixin, AudioClient):
         """Initialize request with text input."""
         return {"text": inputs.text}
 
-    def _parse_usage(self, response_data: dict[str, Any]) -> AudioUsage:
-        """Parse usage from response."""
-        usage = super()._parse_usage(response_data)
-        return AudioUsage(**usage)
-
     def _parse_content(
         self,
         response_data: dict[str, Any],
@@ -130,11 +107,6 @@ class GradiumAudioClient(GradiumTextToSpeechMixin, AudioClient):
         mime_type = self._map_output_format_to_mime_type(output_format)
 
         return AudioArtifact(data=audio_bytes, mime_type=mime_type)
-
-    def _parse_finish_reason(self, response_data: dict[str, Any]) -> AudioFinishReason:
-        """Parse finish reason from response."""
-        finish_reason = super()._parse_finish_reason(response_data)
-        return AudioFinishReason(reason=finish_reason.reason)
 
     def _stream_class(self) -> type[AudioStream]:
         """Return the Stream class for this provider."""

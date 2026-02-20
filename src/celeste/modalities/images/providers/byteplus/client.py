@@ -17,7 +17,6 @@ from celeste.providers.byteplus.images.streaming import (
 from ...client import ImagesClient
 from ...io import (
     ImageChunk,
-    ImageFinishReason,
     ImageInput,
     ImageOutput,
     ImageUsage,
@@ -35,22 +34,6 @@ class BytePlusImagesStream(_BytePlusImagesStream, ImagesStream):
         self._completed_usage: ImageUsage | None = None
         self._completed_event_data: dict[str, Any] | None = None
 
-    def _parse_chunk_usage(self, event_data: dict[str, Any]) -> ImageUsage | None:
-        """Parse and wrap usage from SSE event."""
-        usage = super()._parse_chunk_usage(event_data)
-        if usage:
-            return ImageUsage(**usage)
-        return None
-
-    def _parse_chunk_finish_reason(
-        self, event_data: dict[str, Any]
-    ) -> ImageFinishReason | None:
-        """Parse and wrap finish reason from SSE event."""
-        finish_reason = super()._parse_chunk_finish_reason(event_data)
-        if finish_reason:
-            return ImageFinishReason(reason=finish_reason.reason)
-        return None
-
     def _parse_chunk(self, event_data: dict[str, Any]) -> ImageChunk | None:
         """Parse one SSE event into a typed chunk."""
         # Handle error events (partial_failed)
@@ -64,7 +47,7 @@ class BytePlusImagesStream(_BytePlusImagesStream, ImagesStream):
             )
 
         # Handle completed event (usage only)
-        usage = self._parse_chunk_usage(event_data)
+        usage = self._get_chunk_usage(event_data)
         if usage is not None:
             self._completed_usage = usage
             self._completed_event_data = event_data
@@ -83,7 +66,7 @@ class BytePlusImagesStream(_BytePlusImagesStream, ImagesStream):
 
         return ImageChunk(
             content=artifact,
-            finish_reason=self._parse_chunk_finish_reason(event_data),
+            finish_reason=self._get_chunk_finish_reason(event_data),
             usage=None,
             metadata={"event_data": event_data},
         )
@@ -137,11 +120,6 @@ class BytePlusImagesClient(BytePlusImagesMixin, ImagesClient):
             "response_format": "url",
         }
 
-    def _parse_usage(self, response_data: dict[str, Any]) -> ImageUsage:
-        """Parse usage from response."""
-        usage = super()._parse_usage(response_data)
-        return ImageUsage(**usage)
-
     def _parse_content(
         self,
         response_data: dict[str, Any],
@@ -167,11 +145,6 @@ class BytePlusImagesClient(BytePlusImagesMixin, ImagesClient):
 
         msg = "No image URL or base64 data in BytePlus response"
         raise ValidationError(msg)
-
-    def _parse_finish_reason(self, response_data: dict[str, Any]) -> ImageFinishReason:
-        """Parse finish reason from response."""
-        finish_reason = super()._parse_finish_reason(response_data)
-        return ImageFinishReason(reason=finish_reason.reason)
 
     async def _make_request(
         self,

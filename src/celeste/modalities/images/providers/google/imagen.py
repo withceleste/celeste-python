@@ -10,7 +10,7 @@ from celeste.providers.google.imagen.client import GoogleImagenClient
 from celeste.types import ImageContent
 
 from ...client import ImagesClient
-from ...io import ImageFinishReason, ImageInput, ImageOutput, ImageUsage
+from ...io import ImageInput, ImageOutput
 from ...parameters import ImageParameters
 from .parameters import IMAGEN_PARAMETER_MAPPERS
 
@@ -41,11 +41,6 @@ class ImagenImagesClient(GoogleImagenClient, ImagesClient):
             "parameters": {},
         }
 
-    def _parse_usage(self, response_data: dict[str, Any]) -> ImageUsage:
-        """Parse usage from response."""
-        usage = super()._parse_usage(response_data)
-        return ImageUsage(**usage)
-
     def _parse_content(
         self,
         response_data: dict[str, Any],
@@ -70,11 +65,6 @@ class ImagenImagesClient(GoogleImagenClient, ImagesClient):
         if len(images) == 1:
             return images[0]
         return images if images else ImageArtifact()
-
-    def _parse_finish_reason(self, response_data: dict[str, Any]) -> ImageFinishReason:
-        """Imagen API doesn't provide finish reasons."""
-        finish_reason = super()._parse_finish_reason(response_data)
-        return ImageFinishReason(reason=finish_reason.reason)
 
 
 __all__ = ["ImagenImagesClient"]

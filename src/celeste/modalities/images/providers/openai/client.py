@@ -15,10 +15,8 @@ from celeste.providers.openai.images.streaming import (
 from ...client import ImagesClient
 from ...io import (
     ImageChunk,
-    ImageFinishReason,
     ImageInput,
     ImageOutput,
-    ImageUsage,
 )
 from ...parameters import ImageParameters
 from ...streaming import ImagesStream
@@ -28,28 +26,12 @@ from .parameters import OPENAI_PARAMETER_MAPPERS
 class OpenAIImagesStream(_OpenAIImagesStream, ImagesStream):
     """OpenAI streaming for images modality."""
 
-    def _parse_chunk_usage(self, event_data: dict[str, Any]) -> ImageUsage | None:
-        """Parse and wrap usage from SSE event."""
-        usage = super()._parse_chunk_usage(event_data)
-        if usage:
-            return ImageUsage(**usage)
-        return None
-
-    def _parse_chunk_finish_reason(
-        self, event_data: dict[str, Any]
-    ) -> ImageFinishReason | None:
-        """Parse and wrap finish reason from SSE event."""
-        finish_reason = super()._parse_chunk_finish_reason(event_data)
-        if finish_reason:
-            return ImageFinishReason(reason=finish_reason.reason)
-        return None
-
     def _parse_chunk(self, event_data: dict[str, Any]) -> ImageChunk | None:
         """Parse one SSE event into a typed chunk."""
         b64_json = self._parse_chunk_content(event_data)
         if not b64_json:
-            usage = self._parse_chunk_usage(event_data)
-            finish_reason = self._parse_chunk_finish_reason(event_data)
+            usage = self._get_chunk_usage(event_data)
+            finish_reason = self._get_chunk_finish_reason(event_data)
             if usage is None and finish_reason is None:
                 return None
             # Chunk with usage/finish_reason only (no image)
@@ -64,8 +46,8 @@ class OpenAIImagesStream(_OpenAIImagesStream, ImagesStream):
 
         return ImageChunk(
             content=artifact,
-            finish_reason=self._parse_chunk_finish_reason(event_data),
-            usage=self._parse_chunk_usage(event_data),
+            finish_reason=self._get_chunk_finish_reason(event_data),
+            usage=self._get_chunk_usage(event_data),
             metadata={"event_data": event_data},
         )
 
@@ -125,11 +107,6 @@ class OpenAIImagesClient(OpenAIImagesMixin, ImagesClient):
             **parameters,
         )
 
-    def _parse_usage(self, response_data: dict[str, Any]) -> ImageUsage:
-        """Parse usage from response."""
-        usage = super()._parse_usage(response_data)
-        return ImageUsage(**usage)
-
     def _parse_content(
         self,
         response_data: dict[str, Any],
@@ -149,11 +126,6 @@ class OpenAIImagesClient(OpenAIImagesMixin, ImagesClient):
 
         msg = "No image URL or base64 data in response"
         raise ValueError(msg)
-
-    def _parse_finish_reason(self, response_data: dict[str, Any]) -> ImageFinishReason:
-        """Parse finish reason from response."""
-        finish_reason = super()._parse_finish_reason(response_data)
-        return ImageFinishReason(reason=finish_reason.reason)
 
     def _stream_class(self) -> type[ImagesStream]:
         """Return the Stream class for this provider."""

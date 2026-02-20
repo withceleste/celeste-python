@@ -8,7 +8,7 @@ from celeste.client import ModalityClient
 from celeste.core import Modality
 from celeste.types import VideoContent
 
-from .io import VideoInput, VideoOutput
+from .io import VideoFinishReason, VideoInput, VideoOutput, VideoUsage
 from .parameters import VideoParameters
 
 
@@ -18,6 +18,8 @@ class VideosClient(
     """Base videos client. Providers implement generate method."""
 
     modality: Modality = Modality.VIDEOS
+    _usage_class = VideoUsage
+    _finish_reason_class = VideoFinishReason
 
     @classmethod
     def _output_class(cls) -> type[VideoOutput]:

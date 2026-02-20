@@ -4,14 +4,15 @@ from abc import ABC, abstractmethod
 from collections.abc import AsyncIterator
 from contextlib import AbstractContextManager, suppress
 from types import TracebackType
-from typing import Any, Self, Unpack
+from typing import Any, ClassVar, Self, Unpack
 
 from anyio.from_thread import BlockingPortal, start_blocking_portal
 
 from celeste.exceptions import StreamNotExhaustedError
 from celeste.io import Chunk as ChunkBase
-from celeste.io import Output
+from celeste.io import FinishReason, Output, Usage
 from celeste.parameters import Parameters
+from celeste.types import RawUsage
 
 
 class Stream[Out: Output, Params: Parameters, Chunk: ChunkBase](ABC):
@@ -24,6 +25,9 @@ class Stream[Out: Output, Params: Parameters, Chunk: ChunkBase](ABC):
     Note: For high-volume scenarios, async iteration is recommended. Sync iteration
     creates a background thread per stream.
     """
+
+    _usage_class: ClassVar[type[Usage]] = Usage
+    _finish_reason_class: ClassVar[type[FinishReason]] = FinishReason
 
     def __init__(
         self,
@@ -49,6 +53,34 @@ class Stream[Out: Output, Params: Parameters, Chunk: ChunkBase](ABC):
     def _parse_output(self, chunks: list[Chunk], **parameters: Unpack[Params]) -> Out:  # type: ignore[misc]
         """Parse final Output from accumulated chunks."""
         ...
+
+    def _parse_chunk_usage(self, event_data: dict[str, Any]) -> RawUsage | None:
+        """Parse usage from chunk event. Override in provider mixin."""
+        return None
+
+    def _parse_chunk_finish_reason(
+        self, event_data: dict[str, Any]
+    ) -> FinishReason | None:
+        """Parse finish reason from chunk event. Override in provider mixin."""
+        return None
+
+    def _get_chunk_usage(self, event_data: dict[str, Any]) -> Usage | None:
+        """Get modality-typed usage from chunk event."""
+        raw = self._parse_chunk_usage(event_data)
+        if raw is None:
+            return None
+        return self._usage_class(**raw)
+
+    def _get_chunk_finish_reason(
+        self, event_data: dict[str, Any]
+    ) -> FinishReason | None:
+        """Get modality-typed finish reason from chunk event."""
+        raw = self._parse_chunk_finish_reason(event_data)
+        if raw is None:
+            return None
+        if isinstance(raw, self._finish_reason_class):
+            return raw
+        return self._finish_reason_class(reason=raw.reason)
 
     def _build_stream_metadata(
         self, raw_events: list[dict[str, Any]]

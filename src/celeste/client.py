@@ -3,7 +3,7 @@
 from abc import ABC, abstractmethod
 from collections.abc import AsyncIterator
 from json import JSONDecodeError
-from typing import Any, Unpack
+from typing import Any, ClassVar, Unpack
 
 import httpx
 from pydantic import BaseModel, ConfigDict, Field
@@ -16,7 +16,7 @@ from celeste.io import Chunk, FinishReason, Input, Output, Usage
 from celeste.models import Model
 from celeste.parameters import ParameterMapper, Parameters
 from celeste.streaming import Stream
-from celeste.types import TextContent
+from celeste.types import RawUsage, TextContent
 
 
 class APIMixin(ABC):
@@ -124,6 +124,9 @@ class ModalityClient[In: Input, Out: Output, Params: Parameters, Content](
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
+    _usage_class: ClassVar[type[Usage]] = Usage
+    _finish_reason_class: ClassVar[type[FinishReason]] = FinishReason
+
     modality: Modality
     model: Model
     provider: Provider
@@ -171,8 +174,8 @@ class ModalityClient[In: Input, Out: Output, Params: Parameters, Content](
         )
         return self._output_class()(
             content=self._parse_content(response_data, **parameters),
-            usage=self._parse_usage(response_data),
-            finish_reason=self._parse_finish_reason(response_data),
+            usage=self._get_usage(response_data),
+            finish_reason=self._get_finish_reason(response_data),
             metadata=self._build_metadata(response_data),
         )
 
@@ -227,7 +230,7 @@ class ModalityClient[In: Input, Out: Output, Params: Parameters, Content](
         ...
 
     @abstractmethod
-    def _parse_usage(self, response_data: dict[str, Any]) -> Usage:
+    def _parse_usage(self, response_data: dict[str, Any]) -> RawUsage:
         """Parse usage information from provider response."""
         ...
 
@@ -245,6 +248,20 @@ class ModalityClient[In: Input, Out: Output, Params: Parameters, Content](
     ) -> FinishReason | None:
         """Parse finish reason from provider response."""
         return None
+
+    def _get_usage(self, response_data: dict[str, Any]) -> Usage:
+        """Get modality-typed usage from response."""
+        raw = self._parse_usage(response_data)
+        return self._usage_class(**raw)
+
+    def _get_finish_reason(self, response_data: dict[str, Any]) -> FinishReason | None:
+        """Get modality-typed finish reason from response."""
+        raw = self._parse_finish_reason(response_data)
+        if raw is None:
+            return None
+        if isinstance(raw, self._finish_reason_class):
+            return raw
+        return self._finish_reason_class(reason=raw.reason)
 
     @classmethod
     @abstractmethod

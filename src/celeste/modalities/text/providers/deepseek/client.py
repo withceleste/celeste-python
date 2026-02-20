@@ -12,10 +12,8 @@ from celeste.types import Message, TextContent
 from ...client import TextClient
 from ...io import (
     TextChunk,
-    TextFinishReason,
     TextInput,
     TextOutput,
-    TextUsage,
 )
 from ...parameters import TextParameters
 from ...streaming import TextStream
@@ -25,36 +23,20 @@ from .parameters import DEEPSEEK_PARAMETER_MAPPERS
 class DeepSeekTextStream(_DeepSeekChatStream, TextStream):
     """DeepSeek streaming for text modality."""
 
-    def _parse_chunk_usage(self, event_data: dict[str, Any]) -> TextUsage | None:
-        """Parse and wrap usage from SSE event."""
-        usage = super()._parse_chunk_usage(event_data)
-        if usage:
-            return TextUsage(**usage)
-        return None
-
-    def _parse_chunk_finish_reason(
-        self, event_data: dict[str, Any]
-    ) -> TextFinishReason | None:
-        """Parse and wrap finish reason from SSE event."""
-        finish_reason = super()._parse_chunk_finish_reason(event_data)
-        if finish_reason:
-            return TextFinishReason(reason=finish_reason.reason)
-        return None
-
     def _parse_chunk(self, event_data: dict[str, Any]) -> TextChunk | None:
         """Parse one SSE event into a typed chunk."""
         content = self._parse_chunk_content(event_data)
         if content is None:
-            usage = self._parse_chunk_usage(event_data)
-            finish_reason = self._parse_chunk_finish_reason(event_data)
+            usage = self._get_chunk_usage(event_data)
+            finish_reason = self._get_chunk_finish_reason(event_data)
             if usage is None and finish_reason is None:
                 return None
             content = ""
 
         return TextChunk(
             content=content,
-            finish_reason=self._parse_chunk_finish_reason(event_data),
-            usage=self._parse_chunk_usage(event_data),
+            finish_reason=self._get_chunk_finish_reason(event_data),
+            usage=self._get_chunk_usage(event_data),
             metadata={"event_data": event_data},
         )
 
@@ -106,11 +88,6 @@ class DeepSeekTextClient(DeepSeekChatClient, TextClient):
 
         return {"messages": messages}
 
-    def _parse_usage(self, response_data: dict[str, Any]) -> TextUsage:
-        """Parse usage from response."""
-        usage = super()._parse_usage(response_data)
-        return TextUsage(**usage)
-
     def _parse_content(
         self,
         response_data: dict[str, Any],
@@ -121,11 +98,6 @@ class DeepSeekTextClient(DeepSeekChatClient, TextClient):
         message = choices[0].get("message", {})
         content = message.get("content") or ""
         return self._transform_output(content, **parameters)
-
-    def _parse_finish_reason(self, response_data: dict[str, Any]) -> TextFinishReason:
-        """Parse finish reason from response."""
-        finish_reason = super()._parse_finish_reason(response_data)
-        return TextFinishReason(reason=finish_reason.reason)
 
     def _stream_class(self) -> type[TextStream]:
         """Return the Stream class for this provider."""
