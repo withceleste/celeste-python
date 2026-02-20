@@ -108,7 +108,9 @@ class ResponseFormatMapper(ParameterMapper):
         if isinstance(content, list) and content and isinstance(content[0], BaseModel):
             return content
 
-        parsed_json = json.loads(content) if isinstance(content, str) else content
+        parsed_json = (
+            json.loads(content, strict=False) if isinstance(content, str) else content
+        )
 
         # Unwrap list from items wrapper
         origin = get_origin(value)

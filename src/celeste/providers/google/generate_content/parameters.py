@@ -232,7 +232,9 @@ class ResponseJsonSchemaMapper(ParameterMapper):
         if isinstance(content, list) and content and isinstance(content[0], BaseModel):
             return content
 
-        parsed = json.loads(content) if isinstance(content, str) else content
+        parsed = (
+            json.loads(content, strict=False) if isinstance(content, str) else content
+        )
 
         # For list[T], handle various formats Google might return
         origin = get_origin(value)

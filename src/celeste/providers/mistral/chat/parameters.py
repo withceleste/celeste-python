@@ -121,7 +121,7 @@ class ResponseFormatMapper(ParameterMapper):
             return content
 
         if isinstance(content, str):
-            parsed = json.loads(content)
+            parsed = json.loads(content, strict=False)
         else:
             parsed = content
         return TypeAdapter(value).validate_python(parsed)

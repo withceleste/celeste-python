@@ -208,7 +208,7 @@ class OutputFormatMapper(ParameterMapper):
         if isinstance(content, dict):
             parsed = content
         elif isinstance(content, str):
-            parsed = json.loads(content)
+            parsed = json.loads(content, strict=False)
         else:
             parsed = content
 
