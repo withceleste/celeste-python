@@ -1,10 +1,4 @@
-"""{Protocol} protocol parameter mappers.
-
-Naming convention:
-- Mapper class name MUST match the protocol's API parameter name
-- Example: API param "temperature" -> class TemperatureMapper
-- These are base classes WITHOUT ``name`` -- modality mappers inherit and add ``name``
-"""
+"""{Protocol} protocol parameter mappers."""
 
 from typing import Any
 

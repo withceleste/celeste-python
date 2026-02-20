@@ -43,7 +43,11 @@ class ChatCompletionsClient(APIMixin):
     def _build_url(self, endpoint: str, streaming: bool = False) -> str:
         """Build full URL for request.
 
-        Override for Vertex AI support.
+        Override for Vertex AI support:
+            def _build_url(self, endpoint: str, streaming: bool = False) -> str:
+                if isinstance(self.auth, GoogleADC):
+                    return self.auth.build_url(self._get_vertex_endpoint(endpoint, streaming))
+                return super()._build_url(endpoint, streaming)
         """
         return f"{self._default_base_url}{endpoint}"
 
@@ -130,10 +134,7 @@ class ChatCompletionsClient(APIMixin):
         return ChatCompletionsClient.map_usage_fields(usage_data)
 
     def _parse_content(self, response_data: dict[str, Any]) -> Any:
-        """Parse choices array from Chat Completions API response.
-
-        Returns raw choices array that modality clients extract from.
-        """
+        """Parse choices array from Chat Completions API response."""
         choices = response_data.get("choices", [])
         if not choices:
             msg = "No choices in response"

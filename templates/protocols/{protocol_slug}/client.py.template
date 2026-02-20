@@ -134,10 +134,7 @@ class {Protocol}Client(APIMixin):
         return {Protocol}Client.map_usage_fields(usage_data)
 
     def _parse_content(self, response_data: dict[str, Any]) -> Any:
-        """Parse content from {Protocol} API response.
-
-        Returns raw content structure that modality clients extract from.
-        """
+        """Parse content from {Protocol} API response."""
         content = response_data.get("...", [])
         if not content:
             msg = "No content in response"
