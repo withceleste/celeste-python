@@ -9,10 +9,8 @@ from celeste.providers.xai.images.client import XAIImagesClient as XAIImagesMixi
 
 from ...client import ImagesClient
 from ...io import (
-    ImageFinishReason,
     ImageInput,
     ImageOutput,
-    ImageUsage,
 )
 from ...parameters import ImageParameters
 from .parameters import XAI_PARAMETER_MAPPERS
@@ -65,11 +63,6 @@ class XAIImagesClient(XAIImagesMixin, ImagesClient):
             **parameters,
         )
 
-    def _parse_usage(self, response_data: dict[str, Any]) -> ImageUsage:
-        """Parse usage from response."""
-        usage = super()._parse_usage(response_data)
-        return ImageUsage(**usage)
-
     def _parse_content(
         self,
         response_data: dict[str, Any],
@@ -90,11 +83,6 @@ class XAIImagesClient(XAIImagesMixin, ImagesClient):
 
         msg = "No image URL or base64 data in response"
         raise ValueError(msg)
-
-    def _parse_finish_reason(self, response_data: dict[str, Any]) -> ImageFinishReason:
-        """Parse finish reason from response."""
-        finish_reason = super()._parse_finish_reason(response_data)
-        return ImageFinishReason(reason=finish_reason.reason)
 
 
 __all__ = ["XAIImagesClient"]

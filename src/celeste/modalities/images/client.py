@@ -9,7 +9,7 @@ from celeste.client import ModalityClient
 from celeste.core import Modality
 from celeste.types import ImageContent
 
-from .io import ImageInput, ImageOutput
+from .io import ImageFinishReason, ImageInput, ImageOutput, ImageUsage
 from .parameters import ImageParameters
 from .streaming import ImagesStream
 
@@ -20,6 +20,8 @@ class ImagesClient(
     """Base images client. Providers implement generate/edit methods."""
 
     modality: Modality = Modality.IMAGES
+    _usage_class = ImageUsage
+    _finish_reason_class = ImageFinishReason
 
     @classmethod
     def _output_class(cls) -> type[ImageOutput]:

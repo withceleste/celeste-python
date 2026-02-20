@@ -12,10 +12,8 @@ from celeste.providers.google.cloud_tts.client import (
 
 from ...client import AudioClient
 from ...io import (
-    AudioFinishReason,
     AudioInput,
     AudioOutput,
-    AudioUsage,
 )
 from ...parameters import AudioParameter, AudioParameters
 from .parameters import GOOGLE_PARAMETER_MAPPERS
@@ -49,11 +47,6 @@ class GoogleAudioClient(GoogleCloudTTSMixin, AudioClient):
             "audioConfig": {},
         }
 
-    def _parse_usage(self, response_data: dict[str, Any]) -> AudioUsage:
-        """Parse usage from response."""
-        usage = super()._parse_usage(response_data)
-        return AudioUsage(**usage)
-
     def _parse_content(
         self,
         response_data: dict[str, Any],
@@ -66,11 +59,6 @@ class GoogleAudioClient(GoogleCloudTTSMixin, AudioClient):
         mime_type = AudioMimeType(output_format) if output_format else AudioMimeType.MP3
 
         return AudioArtifact(data=audio_b64, mime_type=mime_type)
-
-    def _parse_finish_reason(self, response_data: dict[str, Any]) -> AudioFinishReason:
-        """Parse finish reason from response."""
-        finish_reason = super()._parse_finish_reason(response_data)
-        return AudioFinishReason(reason=finish_reason.reason)
 
 
 __all__ = ["GoogleAudioClient"]

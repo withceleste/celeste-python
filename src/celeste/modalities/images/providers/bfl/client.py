@@ -9,7 +9,7 @@ from celeste.providers.bfl.images.client import BFLImagesClient as _BFLImagesCli
 from celeste.providers.bfl.images.utils import encode_image
 
 from ...client import ImagesClient
-from ...io import ImageFinishReason, ImageInput, ImageOutput, ImageUsage
+from ...io import ImageFinishReason, ImageInput, ImageOutput
 from ...parameters import ImageParameters
 from .parameters import BFL_PARAMETER_MAPPERS
 
@@ -54,11 +54,6 @@ class BFLImagesClient(_BFLImagesClient, ImagesClient):
         if inputs.image is not None:
             request["input_image"] = encode_image(inputs.image)
         return request
-
-    def _parse_usage(self, response_data: dict[str, Any]) -> ImageUsage:
-        """Parse usage from response."""
-        usage = super()._parse_usage(response_data)
-        return ImageUsage(**usage)
 
     def _parse_content(
         self,

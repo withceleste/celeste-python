@@ -9,7 +9,7 @@ from celeste.providers.google.veo import config
 from celeste.providers.google.veo.client import GoogleVeoClient as GoogleVeoMixin
 
 from ...client import VideosClient
-from ...io import VideoFinishReason, VideoInput, VideoOutput, VideoUsage
+from ...io import VideoInput, VideoOutput
 from ...parameters import VideoParameters
 from .parameters import GOOGLE_PARAMETER_MAPPERS
 
@@ -40,11 +40,6 @@ class GoogleVideosClient(GoogleVeoMixin, VideosClient):
             **parameters,
         )
 
-    def _parse_usage(self, response_data: dict[str, Any]) -> VideoUsage:
-        """Parse usage from response."""
-        usage = super()._parse_usage(response_data)
-        return VideoUsage(**usage)
-
     def _parse_content(
         self,
         response_data: dict[str, Any],
@@ -59,11 +54,6 @@ class GoogleVideosClient(GoogleVeoMixin, VideosClient):
                 data=video_data["bytesBase64Encoded"], mime_type=mime_type
             )
         return VideoArtifact(url=video_data.get("uri"))
-
-    def _parse_finish_reason(self, response_data: dict[str, Any]) -> VideoFinishReason:
-        """Parse finish reason from response."""
-        finish_reason = super()._parse_finish_reason(response_data)
-        return VideoFinishReason(reason=finish_reason.reason)
 
     async def download_content(self, artifact: VideoArtifact) -> VideoArtifact:
         """Download video content from GCS URL.

@@ -19,6 +19,8 @@ type EmbeddingsContent = list[float] | list[list[float]]
 
 type Content = str | JsonValue | dict[str, Any] | list[JsonValue | dict[str, Any]]
 
+type RawUsage = dict[str, int | float | None]
+
 
 class Role(StrEnum):
     """Message role in a conversation."""
@@ -45,6 +47,7 @@ __all__ = [
     "ImageContent",
     "JsonValue",
     "Message",
+    "RawUsage",
     "Role",
     "TextContent",
     "VideoContent",

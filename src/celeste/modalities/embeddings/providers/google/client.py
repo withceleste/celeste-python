@@ -9,11 +9,7 @@ from celeste.providers.google.embeddings.client import (
 from celeste.types import EmbeddingsContent
 
 from ...client import EmbeddingsClient
-from ...io import (
-    EmbeddingsFinishReason,
-    EmbeddingsInput,
-    EmbeddingsUsage,
-)
+from ...io import EmbeddingsInput
 from ...parameters import EmbeddingsParameters
 from .parameters import GOOGLE_PARAMETER_MAPPERS
 
@@ -43,11 +39,6 @@ class GoogleEmbeddingsClient(GoogleEmbeddingsMixin, EmbeddingsClient):
                 ]
             }
 
-    def _parse_usage(self, response_data: dict[str, Any]) -> EmbeddingsUsage:
-        """Parse usage from response (embeddings API doesn't provide usage)."""
-        usage = super()._parse_usage(response_data)
-        return EmbeddingsUsage(**usage)
-
     def _parse_content(
         self,
         response_data: dict[str, Any],
@@ -55,13 +46,6 @@ class GoogleEmbeddingsClient(GoogleEmbeddingsMixin, EmbeddingsClient):
     ) -> EmbeddingsContent:
         """Parse embedding vectors from response."""
         return super()._parse_content(response_data)
-
-    def _parse_finish_reason(
-        self, response_data: dict[str, Any]
-    ) -> EmbeddingsFinishReason:
-        """Parse finish reason (embeddings API doesn't provide finish reasons)."""
-        finish_reason = super()._parse_finish_reason(response_data)
-        return EmbeddingsFinishReason(reason=finish_reason.reason)
 
 
 __all__ = ["GoogleEmbeddingsClient"]

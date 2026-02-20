@@ -11,7 +11,7 @@ from celeste.providers.openai.videos.client import (
 )
 
 from ...client import VideosClient
-from ...io import VideoFinishReason, VideoInput, VideoOutput, VideoUsage
+from ...io import VideoInput, VideoOutput
 from ...parameters import VideoParameters
 from .parameters import OPENAI_PARAMETER_MAPPERS
 
@@ -42,11 +42,6 @@ class OpenAIVideosClient(OpenAIVideosMixin, VideosClient):
             **parameters,
         )
 
-    def _parse_usage(self, response_data: dict[str, Any]) -> VideoUsage:
-        """Parse usage from response."""
-        usage = super()._parse_usage(response_data)
-        return VideoUsage(**usage)
-
     def _parse_content(
         self,
         response_data: dict[str, Any],
@@ -58,11 +53,6 @@ class OpenAIVideosClient(OpenAIVideosMixin, VideosClient):
             data=video_data_b64,
             mime_type=VideoMimeType.MP4,
         )
-
-    def _parse_finish_reason(self, response_data: dict[str, Any]) -> VideoFinishReason:
-        """Parse finish reason from response."""
-        finish_reason = super()._parse_finish_reason(response_data)
-        return VideoFinishReason(reason=finish_reason.reason)
 
 
 __all__ = ["OpenAIVideosClient"]

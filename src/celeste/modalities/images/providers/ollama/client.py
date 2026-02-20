@@ -13,7 +13,6 @@ from celeste.providers.ollama.generate.streaming import (
 from ...client import ImagesClient
 from ...io import (
     ImageChunk,
-    ImageFinishReason,
     ImageInput,
     ImageOutput,
     ImageUsage,
@@ -25,22 +24,6 @@ from .parameters import OLLAMA_PARAMETER_MAPPERS
 
 class OllamaImagesStream(_OllamaGenerateStream, ImagesStream):
     """Ollama NDJSON streaming for images."""
-
-    def _parse_chunk_usage(self, event_data: dict[str, Any]) -> ImageUsage | None:
-        """Parse and wrap usage from NDJSON event."""
-        usage = super()._parse_chunk_usage(event_data)
-        if usage:
-            return ImageUsage(**usage)
-        return None
-
-    def _parse_chunk_finish_reason(
-        self, event_data: dict[str, Any]
-    ) -> ImageFinishReason | None:
-        """Parse and wrap finish reason from NDJSON event."""
-        finish_reason = super()._parse_chunk_finish_reason(event_data)
-        if finish_reason:
-            return ImageFinishReason(reason=finish_reason.reason)
-        return None
 
     def _parse_chunk(self, event_data: dict[str, Any]) -> ImageChunk | None:
         """Parse NDJSON event into ImageChunk."""
@@ -54,8 +37,8 @@ class OllamaImagesStream(_OllamaGenerateStream, ImagesStream):
 
         return ImageChunk(
             content=ImageArtifact(data=b64_image),
-            finish_reason=self._parse_chunk_finish_reason(event_data),
-            usage=self._parse_chunk_usage(event_data),
+            finish_reason=self._get_chunk_finish_reason(event_data),
+            usage=self._get_chunk_usage(event_data),
             metadata=self._parse_chunk_metadata(event_data),
         )
 
@@ -114,11 +97,6 @@ class OllamaImagesClient(OllamaGenerateClient, ImagesClient):
         """
         image_b64 = super()._parse_content(response_data)
         return ImageArtifact(data=image_b64)
-
-    def _parse_finish_reason(self, response_data: dict[str, Any]) -> ImageFinishReason:
-        """Parse finish reason from response."""
-        finish_reason = super()._parse_finish_reason(response_data)
-        return ImageFinishReason(reason=finish_reason.reason)
 
     def _stream_class(self) -> type[ImagesStream]:
         """Return the Stream class for Ollama images."""

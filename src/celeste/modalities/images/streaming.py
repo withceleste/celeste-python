@@ -16,6 +16,9 @@ from .parameters import ImageParameters
 class ImagesStream(Stream[ImageOutput, ImageParameters, ImageChunk]):
     """Streaming for images modality."""
 
+    _usage_class = ImageUsage
+    _finish_reason_class = ImageFinishReason
+
     def __init__(
         self,
         sse_iterator: AsyncIterator[dict[str, Any]],

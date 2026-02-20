@@ -10,7 +10,7 @@ from celeste.providers.byteplus.videos.client import (
 )
 
 from ...client import VideosClient
-from ...io import VideoFinishReason, VideoInput, VideoOutput, VideoUsage
+from ...io import VideoInput, VideoOutput
 from ...parameters import VideoParameters
 from .parameters import BYTEPLUS_PARAMETER_MAPPERS
 
@@ -41,11 +41,6 @@ class BytePlusVideosClient(BytePlusVideosMixin, VideosClient):
             **parameters,
         )
 
-    def _parse_usage(self, response_data: dict[str, Any]) -> VideoUsage:
-        """Parse usage from response."""
-        usage = super()._parse_usage(response_data)
-        return VideoUsage(**usage)
-
     def _parse_content(
         self,
         response_data: dict[str, Any],
@@ -58,11 +53,6 @@ class BytePlusVideosClient(BytePlusVideosMixin, VideosClient):
             msg = "No video_url in response content"
             raise ValueError(msg)
         return VideoArtifact(url=video_url)
-
-    def _parse_finish_reason(self, response_data: dict[str, Any]) -> VideoFinishReason:
-        """Parse finish reason from response."""
-        finish_reason = super()._parse_finish_reason(response_data)
-        return VideoFinishReason(reason=finish_reason.reason)
 
 
 __all__ = ["BytePlusVideosClient"]

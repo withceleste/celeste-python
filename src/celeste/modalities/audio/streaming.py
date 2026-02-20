@@ -20,6 +20,9 @@ from .parameters import AudioParameters
 class AudioStream(Stream[AudioOutput, AudioParameters, AudioChunk]):
     """Streaming for audio modality."""
 
+    _usage_class = AudioUsage
+    _finish_reason_class = AudioFinishReason
+
     def __init__(
         self,
         sse_iterator: AsyncIterator[dict[str, Any]],

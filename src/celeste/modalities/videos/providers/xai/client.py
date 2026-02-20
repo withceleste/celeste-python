@@ -8,7 +8,7 @@ from celeste.providers.xai.videos import config
 from celeste.providers.xai.videos.client import XAIVideosClient as XAIVideosMixin
 
 from ...client import VideosClient
-from ...io import VideoFinishReason, VideoInput, VideoOutput, VideoUsage
+from ...io import VideoInput, VideoOutput
 from ...parameters import VideoParameters
 from .parameters import XAI_PARAMETER_MAPPERS
 
@@ -54,11 +54,6 @@ class XAIVideosClient(XAIVideosMixin, VideosClient):
             **parameters,
         )
 
-    def _parse_usage(self, response_data: dict[str, Any]) -> VideoUsage:
-        """Parse usage from response."""
-        usage = super()._parse_usage(response_data)
-        return VideoUsage(**usage)
-
     def _parse_content(
         self,
         response_data: dict[str, Any],
@@ -68,11 +63,6 @@ class XAIVideosClient(XAIVideosMixin, VideosClient):
         # xAI returns video URL directly
         url = super()._parse_content(response_data)
         return VideoArtifact(url=url)
-
-    def _parse_finish_reason(self, response_data: dict[str, Any]) -> VideoFinishReason:
-        """Parse finish reason from response."""
-        finish_reason = super()._parse_finish_reason(response_data)
-        return VideoFinishReason(reason=finish_reason.reason)
 
 
 __all__ = ["XAIVideosClient"]
