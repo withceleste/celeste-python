@@ -1,4 +1,4 @@
-"""OpenResponses API provider package."""
+"""OpenResponses protocol implementation."""
 
 from .client import OpenResponsesClient
 from .streaming import OpenResponsesStream

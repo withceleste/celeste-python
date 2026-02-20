@@ -1,7 +1,7 @@
-"""OpenResponses API client mixin."""
+"""OpenResponses protocol client."""
 
 from collections.abc import AsyncIterator
-from typing import Any
+from typing import Any, ClassVar
 
 from celeste.client import APIMixin
 from celeste.core import UsageField
@@ -12,16 +12,20 @@ from . import config
 
 
 class OpenResponsesClient(APIMixin):
-    """Mixin for OpenResponses API.
+    """OpenResponses protocol client.
 
-    Provides shared implementation for all capabilities using the Responses API:
+    Provides shared implementation for all providers using the Responses API:
     - _make_request() - HTTP POST to /v1/responses
     - _make_stream_request() - HTTP streaming to /v1/responses
     - _parse_usage() - Extract usage dict from response
     - _parse_content() - Extract output array from response
     - _parse_finish_reason() - Extract finish reason from response
     - _build_metadata() - Filter content fields
+
+    Providers override _default_base_url to set their API base URL.
     """
+
+    _default_base_url: ClassVar[str] = config.DEFAULT_BASE_URL
 
     def _build_request(
         self,
@@ -47,11 +51,11 @@ class OpenResponsesClient(APIMixin):
         base_url: str | None = None,
         **parameters: Any,
     ) -> dict[str, Any]:
-        """Make HTTP request to OpenResponses API endpoint."""
+        """Make HTTP request to Responses API endpoint."""
         if endpoint is None:
             endpoint = config.OpenResponsesEndpoint.CREATE_RESPONSE
         if base_url is None:
-            base_url = config.DEFAULT_BASE_URL
+            base_url = self._default_base_url
 
         headers = {
             **self.auth.get_headers(),
@@ -75,11 +79,11 @@ class OpenResponsesClient(APIMixin):
         base_url: str | None = None,
         **parameters: Any,
     ) -> AsyncIterator[dict[str, Any]]:
-        """Make streaming request to OpenResponses API endpoint."""
+        """Make streaming request to Responses API endpoint."""
         if endpoint is None:
             endpoint = config.OpenResponsesEndpoint.CREATE_RESPONSE
         if base_url is None:
-            base_url = config.DEFAULT_BASE_URL
+            base_url = self._default_base_url
 
         headers = {
             **self.auth.get_headers(),

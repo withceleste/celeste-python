@@ -73,8 +73,9 @@ markers = [
 branch = true
 # dynamic_context handled by pytest-cov's --cov-context option
 omit = [
-    # Provider implementations (tested via integration tests, not unit tests)
+    # Provider/protocol implementations (tested via integration tests, not unit tests)
     "src/celeste/providers/*",
+    "src/celeste/protocols/*",
     "src/celeste/modalities/*",
     "src/celeste/namespaces/*"
 ]

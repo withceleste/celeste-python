@@ -113,6 +113,18 @@ def _provider_api_client_files() -> list[Path]:
     return out
 
 
+def _inherits_from_protocol(tree: ast.Module) -> bool:
+    """Check if the first class inherits from a known protocol client."""
+    protocol_bases = {"OpenResponsesClient"}
+    for node in tree.body:
+        if isinstance(node, ast.ClassDef):
+            for base in node.bases:
+                name = ast.unparse(base).split(".")[-1]
+                if name in protocol_bases:
+                    return True
+    return False
+
+
 def _first_class(tree: ast.Module) -> ast.ClassDef:
     for node in tree.body:
         if isinstance(node, ast.ClassDef):
@@ -159,6 +171,11 @@ def test_all_provider_api_mixins_match_template_contract() -> None:
 
     for client_path in _provider_api_client_files():
         tree = ast.parse(client_path.read_text(encoding="utf-8"))
+
+        # Protocol-inheriting clients delegate everything to the protocol base
+        if _inherits_from_protocol(tree):
+            continue
+
         cls = _first_class(tree)
         methods = _class_methods(cls)
 

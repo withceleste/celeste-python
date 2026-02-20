@@ -14,7 +14,6 @@ from celeste.providers import (
     moonshot,
     ollama,
     openai,
-    openresponses,
     xai,
 )
 
@@ -32,6 +31,5 @@ __all__ = [
     "moonshot",
     "ollama",
     "openai",
-    "openresponses",
     "xai",
 ]

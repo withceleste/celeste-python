@@ -1,4 +1,4 @@
-"""OpenResponses API parameter mappers."""
+"""Responses API protocol parameter mappers."""
 
 import json
 from typing import Any, get_args, get_origin
@@ -105,7 +105,7 @@ class TextFormatMapper(ParameterMapper):
             return content
 
         if isinstance(content, str):
-            parsed = json.loads(content)
+            parsed = json.loads(content, strict=False)
         else:
             parsed = content
 
@@ -116,8 +116,103 @@ class TextFormatMapper(ParameterMapper):
         return TypeAdapter(value).validate_python(parsed)
 
 
+class ReasoningEffortMapper(ParameterMapper):
+    """Map reasoning_effort to Responses reasoning.effort field."""
+
+    def map(
+        self,
+        request: dict[str, Any],
+        value: object,
+        model: Model,
+    ) -> dict[str, Any]:
+        """Transform reasoning_effort into provider request."""
+        validated_value = self._validate_value(value, model)
+        if validated_value is None:
+            return request
+
+        request.setdefault("reasoning", {})["effort"] = validated_value
+        return request
+
+
+class VerbosityMapper(ParameterMapper):
+    """Map verbosity to Responses text.verbosity field."""
+
+    def map(
+        self,
+        request: dict[str, Any],
+        value: object,
+        model: Model,
+    ) -> dict[str, Any]:
+        """Transform verbosity into provider request."""
+        validated_value = self._validate_value(value, model)
+        if validated_value is None:
+            return request
+
+        request.setdefault("text", {})["verbosity"] = validated_value
+        return request
+
+
+class WebSearchMapper(ParameterMapper):
+    """Map web_search to Responses tools array."""
+
+    def map(
+        self,
+        request: dict[str, Any],
+        value: object,
+        model: Model,
+    ) -> dict[str, Any]:
+        """Transform web_search into provider request."""
+        validated_value = self._validate_value(value, model)
+        if not validated_value:
+            return request
+
+        request.setdefault("tools", []).append({"type": "web_search"})
+        return request
+
+
+class XSearchMapper(ParameterMapper):
+    """Map x_search to Responses tools array (search X/Twitter)."""
+
+    def map(
+        self,
+        request: dict[str, Any],
+        value: object,
+        model: Model,
+    ) -> dict[str, Any]:
+        """Transform x_search into provider request."""
+        validated_value = self._validate_value(value, model)
+        if not validated_value:
+            return request
+
+        request.setdefault("tools", []).append({"type": "x_search"})
+        return request
+
+
+class CodeExecutionMapper(ParameterMapper):
+    """Map code_execution to Responses tools array."""
+
+    def map(
+        self,
+        request: dict[str, Any],
+        value: object,
+        model: Model,
+    ) -> dict[str, Any]:
+        """Transform code_execution into provider request."""
+        validated_value = self._validate_value(value, model)
+        if not validated_value:
+            return request
+
+        request.setdefault("tools", []).append({"type": "code_execution"})
+        return request
+
+
 __all__ = [
+    "CodeExecutionMapper",
     "MaxOutputTokensMapper",
+    "ReasoningEffortMapper",
     "TemperatureMapper",
     "TextFormatMapper",
+    "VerbosityMapper",
+    "WebSearchMapper",
+    "XSearchMapper",
 ]

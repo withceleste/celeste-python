@@ -1,13 +1,13 @@
 """OpenResponses parameter mappers for text."""
 
 from celeste.parameters import ParameterMapper
-from celeste.providers.openresponses.responses.parameters import (
+from celeste.protocols.openresponses.parameters import (
     MaxOutputTokensMapper as _MaxOutputTokensMapper,
 )
-from celeste.providers.openresponses.responses.parameters import (
+from celeste.protocols.openresponses.parameters import (
     TemperatureMapper as _TemperatureMapper,
 )
-from celeste.providers.openresponses.responses.parameters import (
+from celeste.protocols.openresponses.parameters import (
     TextFormatMapper as _TextFormatMapper,
 )
 

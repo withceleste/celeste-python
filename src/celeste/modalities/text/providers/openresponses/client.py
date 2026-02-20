@@ -3,10 +3,10 @@
 from typing import Any, Unpack
 
 from celeste.parameters import ParameterMapper
-from celeste.providers.openresponses.responses.client import (
+from celeste.protocols.openresponses.client import (
     OpenResponsesClient as OpenResponsesMixin,
 )
-from celeste.providers.openresponses.responses.streaming import (
+from celeste.protocols.openresponses.streaming import (
     OpenResponsesStream as _OpenResponsesStream,
 )
 from celeste.types import ImageContent, Message, TextContent, VideoContent
@@ -15,10 +15,8 @@ from celeste.utils import build_image_data_url
 from ...client import TextClient
 from ...io import (
     TextChunk,
-    TextFinishReason,
     TextInput,
     TextOutput,
-    TextUsage,
 )
 from ...parameters import TextParameters
 from ...streaming import TextStream
@@ -32,22 +30,6 @@ class OpenResponsesTextStream(_OpenResponsesStream, TextStream):
         super().__init__(*args, **kwargs)
         self._response_data: dict[str, Any] | None = None
 
-    def _parse_chunk_usage(self, event_data: dict[str, Any]) -> TextUsage | None:
-        """Parse and wrap usage from SSE event."""
-        usage = super()._parse_chunk_usage(event_data)
-        if usage:
-            return TextUsage(**usage)
-        return None
-
-    def _parse_chunk_finish_reason(
-        self, event_data: dict[str, Any]
-    ) -> TextFinishReason | None:
-        """Parse and wrap finish reason from SSE event."""
-        finish_reason = super()._parse_chunk_finish_reason(event_data)
-        if finish_reason:
-            return TextFinishReason(reason=finish_reason.reason)
-        return None
-
     def _parse_chunk(self, event_data: dict[str, Any]) -> TextChunk | None:
         """Parse one SSE event into a typed chunk."""
         event_type = event_data.get("type")
@@ -58,16 +40,16 @@ class OpenResponsesTextStream(_OpenResponsesStream, TextStream):
 
         content = self._parse_chunk_content(event_data)
         if content is None:
-            usage = self._parse_chunk_usage(event_data)
-            finish_reason = self._parse_chunk_finish_reason(event_data)
+            usage = self._get_chunk_usage(event_data)
+            finish_reason = self._get_chunk_finish_reason(event_data)
             if usage is None and finish_reason is None:
                 return None
             content = ""
 
         return TextChunk(
             content=content,
-            finish_reason=self._parse_chunk_finish_reason(event_data),
-            usage=self._parse_chunk_usage(event_data),
+            finish_reason=self._get_chunk_finish_reason(event_data),
+            usage=self._get_chunk_usage(event_data),
             metadata={"event_data": event_data},
         )
 
@@ -142,11 +124,6 @@ class OpenResponsesTextClient(OpenResponsesMixin, TextClient):
         content.append({"type": "input_text", "text": inputs.prompt or ""})
         return {"input": [{"role": "user", "content": content}]}
 
-    def _parse_usage(self, response_data: dict[str, Any]) -> TextUsage:
-        """Parse usage from response."""
-        usage = super()._parse_usage(response_data)
-        return TextUsage(**usage)
-
     def _parse_content(
         self,
         response_data: dict[str, Any],
@@ -162,11 +139,6 @@ class OpenResponsesTextClient(OpenResponsesMixin, TextClient):
                         return self._transform_output(text, **parameters)
 
         return self._transform_output("", **parameters)
-
-    def _parse_finish_reason(self, response_data: dict[str, Any]) -> TextFinishReason:
-        """Parse finish reason from response."""
-        finish_reason = super()._parse_finish_reason(response_data)
-        return TextFinishReason(reason=finish_reason.reason)
 
     def _stream_class(self) -> type[TextStream]:
         """Return the Stream class for this provider."""
