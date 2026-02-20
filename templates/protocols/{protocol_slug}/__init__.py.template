@@ -1,0 +1,6 @@
+"""{Protocol} protocol implementation."""
+
+from .client import {Protocol}Client
+from .streaming import {Protocol}Stream
+
+__all__ = ["{Protocol}Client", "{Protocol}Stream"]

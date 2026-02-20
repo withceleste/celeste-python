@@ -1,0 +1,17 @@
+"""{Protocol} protocol endpoint configuration."""
+
+from enum import StrEnum
+
+
+class {Protocol}Endpoint(StrEnum):
+    """Endpoints for the {Protocol} protocol."""
+
+    # Endpoint names use action verbs: CREATE, GET, LIST, DELETE, STREAM
+    # Examples:
+    #   CREATE_CHAT = "/v1/chat/completions"
+    #   CREATE_RESPONSE = "/v1/responses"
+    #   LIST_MODELS = "/v1/models"
+    pass
+
+
+DEFAULT_BASE_URL = "http://localhost:8000"

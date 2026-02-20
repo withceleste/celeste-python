@@ -35,8 +35,6 @@ def _template_client_path() -> Path:
         / "templates"
         / "providers"
         / "{provider_slug}"
-        / "src"
-        / "celeste_{provider_slug}"
         / "{api_slug}"
         / "client.py.template"
     )
@@ -115,7 +113,7 @@ def _provider_api_client_files() -> list[Path]:
 
 def _inherits_from_protocol(tree: ast.Module) -> bool:
     """Check if the first class inherits from a known protocol client."""
-    protocol_bases = {"OpenResponsesClient"}
+    protocol_bases = {"OpenResponsesClient", "ChatCompletionsClient"}
     for node in tree.body:
         if isinstance(node, ast.ClassDef):
             for base in node.bases:
