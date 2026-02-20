@@ -1,22 +1,22 @@
 """OpenAI parameter mappers for text."""
 
 from celeste.parameters import ParameterMapper
-from celeste.providers.openai.responses.parameters import (
+from celeste.protocols.openresponses.parameters import (
     MaxOutputTokensMapper as _MaxOutputTokensMapper,
 )
-from celeste.providers.openai.responses.parameters import (
+from celeste.protocols.openresponses.parameters import (
     ReasoningEffortMapper as _ReasoningEffortMapper,
 )
-from celeste.providers.openai.responses.parameters import (
+from celeste.protocols.openresponses.parameters import (
     TemperatureMapper as _TemperatureMapper,
 )
-from celeste.providers.openai.responses.parameters import (
+from celeste.protocols.openresponses.parameters import (
     TextFormatMapper as _TextFormatMapper,
 )
-from celeste.providers.openai.responses.parameters import (
+from celeste.protocols.openresponses.parameters import (
     VerbosityMapper as _VerbosityMapper,
 )
-from celeste.providers.openai.responses.parameters import (
+from celeste.protocols.openresponses.parameters import (
     WebSearchMapper as _WebSearchMapper,
 )
 

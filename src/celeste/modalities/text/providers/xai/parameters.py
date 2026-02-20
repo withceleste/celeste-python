@@ -1,25 +1,25 @@
 """xAI parameter mappers for text."""
 
 from celeste.parameters import ParameterMapper
-from celeste.providers.xai.responses.parameters import (
+from celeste.protocols.openresponses.parameters import (
     CodeExecutionMapper as _CodeExecutionMapper,
 )
-from celeste.providers.xai.responses.parameters import (
+from celeste.protocols.openresponses.parameters import (
     MaxOutputTokensMapper as _MaxOutputTokensMapper,
 )
-from celeste.providers.xai.responses.parameters import (
+from celeste.protocols.openresponses.parameters import (
     ReasoningEffortMapper as _ReasoningEffortMapper,
 )
-from celeste.providers.xai.responses.parameters import (
+from celeste.protocols.openresponses.parameters import (
     TemperatureMapper as _TemperatureMapper,
 )
-from celeste.providers.xai.responses.parameters import (
+from celeste.protocols.openresponses.parameters import (
     TextFormatMapper as _TextFormatMapper,
 )
-from celeste.providers.xai.responses.parameters import (
+from celeste.protocols.openresponses.parameters import (
     WebSearchMapper as _WebSearchMapper,
 )
-from celeste.providers.xai.responses.parameters import (
+from celeste.protocols.openresponses.parameters import (
     XSearchMapper as _XSearchMapper,
 )
 

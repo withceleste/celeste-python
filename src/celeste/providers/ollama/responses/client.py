@@ -1,7 +1,7 @@
-"""Ollama API client (OpenResponses protocol)."""
+"""Ollama API client (Responses API protocol)."""
 
-from celeste.providers.openresponses.responses.client import OpenResponsesClient
-from celeste.providers.openresponses.responses.streaming import OpenResponsesStream
+from celeste.protocols.openresponses.client import OpenResponsesClient
+from celeste.protocols.openresponses.streaming import OpenResponsesStream
 
 from .config import DEFAULT_BASE_URL
 

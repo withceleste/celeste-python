@@ -1,4 +1,4 @@
-"""OpenResponses SSE parsing for streaming."""
+"""OpenResponses protocol SSE parsing for streaming."""
 
 from typing import Any
 
@@ -8,7 +8,7 @@ from .client import OpenResponsesClient
 
 
 class OpenResponsesStream:
-    """Mixin for OpenResponses SSE parsing.
+    """OpenResponses protocol SSE parsing mixin.
 
     Provides shared implementation for streaming parsing (provider API level):
     - _parse_chunk_content(event_data) - Extract content from SSE event
@@ -59,7 +59,7 @@ class OpenResponsesStream:
             if "delta" not in e.get("type", "")
             and e.get("type") != "response.completed"
         ]
-        return super()._build_stream_metadata(filtered)  # type: ignore[misc]
+        return super()._build_stream_metadata(filtered)  # type: ignore[misc, no-any-return]
 
 
 __all__ = ["OpenResponsesStream"]
