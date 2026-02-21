@@ -4,7 +4,7 @@ from typing import Any
 
 from celeste.constraints import Int
 from celeste.models import Model
-from celeste.parameters import ParameterMapper
+from celeste.parameters import FieldMapper, ParameterMapper
 
 
 class WidthMapper(ParameterMapper):
@@ -41,112 +41,40 @@ class HeightMapper(ParameterMapper):
         return request
 
 
-class PromptUpsamplingMapper(ParameterMapper):
+class PromptUpsamplingMapper(FieldMapper):
     """Map prompt_upsampling to BFL prompt_upsampling field."""
 
-    def map(
-        self,
-        request: dict[str, Any],
-        value: object,
-        model: Model,
-    ) -> dict[str, Any]:
-        """Transform prompt_upsampling into provider request."""
-        validated_value = self._validate_value(value, model)
-        if validated_value is None:
-            return request
-
-        request["prompt_upsampling"] = validated_value
-        return request
+    field = "prompt_upsampling"
 
 
-class SeedMapper(ParameterMapper):
+class SeedMapper(FieldMapper):
     """Map seed to BFL seed field."""
 
-    def map(
-        self,
-        request: dict[str, Any],
-        value: object,
-        model: Model,
-    ) -> dict[str, Any]:
-        """Transform seed into provider request."""
-        validated_value = self._validate_value(value, model)
-        if validated_value is None:
-            return request
-
-        request["seed"] = validated_value
-        return request
+    field = "seed"
 
 
-class SafetyToleranceMapper(ParameterMapper):
+class SafetyToleranceMapper(FieldMapper):
     """Map safety_tolerance to BFL safety_tolerance field."""
 
-    def map(
-        self,
-        request: dict[str, Any],
-        value: object,
-        model: Model,
-    ) -> dict[str, Any]:
-        """Transform safety_tolerance into provider request."""
-        validated_value = self._validate_value(value, model)
-        if validated_value is None:
-            return request
-
-        request["safety_tolerance"] = validated_value
-        return request
+    field = "safety_tolerance"
 
 
-class OutputFormatMapper(ParameterMapper):
+class OutputFormatMapper(FieldMapper):
     """Map output_format to BFL output_format field."""
 
-    def map(
-        self,
-        request: dict[str, Any],
-        value: object,
-        model: Model,
-    ) -> dict[str, Any]:
-        """Transform output_format into provider request."""
-        validated_value = self._validate_value(value, model)
-        if validated_value is None:
-            return request
-
-        request["output_format"] = validated_value
-        return request
+    field = "output_format"
 
 
-class StepsMapper(ParameterMapper):
+class StepsMapper(FieldMapper):
     """Map steps to BFL steps field."""
 
-    def map(
-        self,
-        request: dict[str, Any],
-        value: object,
-        model: Model,
-    ) -> dict[str, Any]:
-        """Transform steps into provider request."""
-        validated_value = self._validate_value(value, model)
-        if validated_value is None:
-            return request
-
-        request["steps"] = validated_value
-        return request
+    field = "steps"
 
 
-class GuidanceMapper(ParameterMapper):
+class GuidanceMapper(FieldMapper):
     """Map guidance to BFL guidance field."""
 
-    def map(
-        self,
-        request: dict[str, Any],
-        value: object,
-        model: Model,
-    ) -> dict[str, Any]:
-        """Transform guidance into provider request."""
-        validated_value = self._validate_value(value, model)
-        if validated_value is None:
-            return request
-
-        request["guidance"] = validated_value
-        return request
+    field = "guidance"
 
 
 __all__ = [

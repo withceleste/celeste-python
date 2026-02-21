@@ -3,7 +3,7 @@
 from typing import Any
 
 from celeste.models import Model
-from celeste.parameters import ParameterMapper
+from celeste.parameters import FieldMapper, ParameterMapper
 
 
 class SecondsMapper(ParameterMapper):
@@ -44,22 +44,10 @@ class SizeMapper(ParameterMapper):
         return request
 
 
-class InputReferenceMapper(ParameterMapper):
+class InputReferenceMapper(FieldMapper):
     """Map input_reference to OpenAI input_reference field."""
 
-    def map(
-        self,
-        request: dict[str, Any],
-        value: object,
-        model: Model,
-    ) -> dict[str, Any]:
-        """Transform input_reference into provider request."""
-        validated_value = self._validate_value(value, model)
-        if validated_value is None:
-            return request
-
-        request["input_reference"] = validated_value
-        return request
+    field = "input_reference"
 
 
 __all__ = [

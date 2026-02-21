@@ -6,64 +6,25 @@ Naming convention:
 - The request key should match the provider's expected field name exactly
 """
 
-from typing import Any
-
-from celeste.models import Model
-from celeste.parameters import ParameterMapper
+from celeste.parameters import FieldMapper
 
 
-class AspectRatioMapper(ParameterMapper):
+class AspectRatioMapper(FieldMapper):
     """Map aspect_ratio to xAI aspect_ratio field."""
 
-    def map(
-        self,
-        request: dict[str, Any],
-        value: object,
-        model: Model,
-    ) -> dict[str, Any]:
-        """Transform aspect_ratio into provider request."""
-        validated_value = self._validate_value(value, model)
-        if validated_value is None:
-            return request
-
-        request["aspect_ratio"] = validated_value
-        return request
+    field = "aspect_ratio"
 
 
-class NumImagesMapper(ParameterMapper):
+class NumImagesMapper(FieldMapper):
     """Map num_images to xAI n field."""
 
-    def map(
-        self,
-        request: dict[str, Any],
-        value: object,
-        model: Model,
-    ) -> dict[str, Any]:
-        """Transform num_images into provider request."""
-        validated_value = self._validate_value(value, model)
-        if validated_value is None:
-            return request
-
-        request["n"] = validated_value
-        return request
+    field = "n"
 
 
-class ResponseFormatMapper(ParameterMapper):
+class ResponseFormatMapper(FieldMapper):
     """Map response_format to xAI response_format field."""
 
-    def map(
-        self,
-        request: dict[str, Any],
-        value: object,
-        model: Model,
-    ) -> dict[str, Any]:
-        """Transform response_format into provider request."""
-        validated_value = self._validate_value(value, model)
-        if validated_value is None:
-            return request
-
-        request["response_format"] = validated_value
-        return request
+    field = "response_format"
 
 
 __all__ = [

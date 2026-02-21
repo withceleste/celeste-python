@@ -8,7 +8,7 @@ from pydantic import BaseModel, TypeAdapter
 
 from celeste.artifacts import ImageArtifact
 from celeste.models import Model
-from celeste.parameters import ParameterMapper
+from celeste.parameters import FieldMapper, ParameterMapper
 from celeste.types import TextContent
 
 
@@ -88,22 +88,10 @@ class ThinkingLevelMapper(ParameterMapper):
         return request
 
 
-class PreviousInteractionIdMapper(ParameterMapper):
+class PreviousInteractionIdMapper(FieldMapper):
     """Map previous_interaction_id for stateful conversations."""
 
-    def map(
-        self,
-        request: dict[str, Any],
-        value: object,
-        model: Model,
-    ) -> dict[str, Any]:
-        """Add previous_interaction_id to request for conversation continuity."""
-        validated_value = self._validate_value(value, model)
-        if validated_value is None:
-            return request
-
-        request["previous_interaction_id"] = validated_value
-        return request
+    field = "previous_interaction_id"
 
 
 class BackgroundMapper(ParameterMapper):
@@ -329,40 +317,16 @@ class MediaContentMapper(ParameterMapper):
         return request
 
 
-class ResponseModalitiesMapper(ParameterMapper):
+class ResponseModalitiesMapper(FieldMapper):
     """Map response_modalities for multimodal output generation."""
 
-    def map(
-        self,
-        request: dict[str, Any],
-        value: object,
-        model: Model,
-    ) -> dict[str, Any]:
-        """Set response modalities for output (e.g., IMAGE, TEXT)."""
-        validated_value = self._validate_value(value, model)
-        if validated_value is None:
-            return request
-
-        request["response_modalities"] = validated_value
-        return request
+    field = "response_modalities"
 
 
-class SystemInstructionMapper(ParameterMapper):
+class SystemInstructionMapper(FieldMapper):
     """Map system_instruction for system prompts."""
 
-    def map(
-        self,
-        request: dict[str, Any],
-        value: object,
-        model: Model,
-    ) -> dict[str, Any]:
-        """Add system instruction to request."""
-        validated_value = self._validate_value(value, model)
-        if validated_value is None:
-            return request
-
-        request["system_instruction"] = validated_value
-        return request
+    field = "system_instruction"
 
 
 __all__ = [

@@ -10,7 +10,7 @@ from typing import Any
 
 from celeste.constraints import Int
 from celeste.models import Model
-from celeste.parameters import ParameterMapper
+from celeste.parameters import FieldMapper, ParameterMapper
 
 
 class WidthMapper(ParameterMapper):
@@ -47,22 +47,10 @@ class HeightMapper(ParameterMapper):
         return request
 
 
-class StepsMapper(ParameterMapper):
+class StepsMapper(FieldMapper):
     """Map steps to Ollama steps field."""
 
-    def map(
-        self,
-        request: dict[str, Any],
-        value: object,
-        model: Model,
-    ) -> dict[str, Any]:
-        """Transform steps into provider request."""
-        validated_value = self._validate_value(value, model)
-        if validated_value is None:
-            return request
-
-        request["steps"] = validated_value
-        return request
+    field = "steps"
 
 
 class SeedMapper(ParameterMapper):
@@ -83,22 +71,10 @@ class SeedMapper(ParameterMapper):
         return request
 
 
-class NegativePromptMapper(ParameterMapper):
+class NegativePromptMapper(FieldMapper):
     """Map negative_prompt to Ollama negative_prompt field."""
 
-    def map(
-        self,
-        request: dict[str, Any],
-        value: object,
-        model: Model,
-    ) -> dict[str, Any]:
-        """Transform negative_prompt into provider request."""
-        validated_value = self._validate_value(value, model)
-        if validated_value is None:
-            return request
-
-        request["negative_prompt"] = validated_value
-        return request
+    field = "negative_prompt"
 
 
 __all__ = [

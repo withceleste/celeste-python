@@ -4,43 +4,19 @@ from typing import Any
 
 from celeste.mime_types import AudioMimeType
 from celeste.models import Model
-from celeste.parameters import ParameterMapper
+from celeste.parameters import FieldMapper, ParameterMapper
 
 
-class VoiceMapper(ParameterMapper):
+class VoiceMapper(FieldMapper):
     """Map voice to OpenAI voice field."""
 
-    def map(
-        self,
-        request: dict[str, Any],
-        value: object,
-        model: Model,
-    ) -> dict[str, Any]:
-        """Transform voice into provider request."""
-        validated_value = self._validate_value(value, model)
-        if validated_value is None:
-            return request
-
-        request["voice"] = validated_value
-        return request
+    field = "voice"
 
 
-class SpeedMapper(ParameterMapper):
+class SpeedMapper(FieldMapper):
     """Map speed to OpenAI speed field."""
 
-    def map(
-        self,
-        request: dict[str, Any],
-        value: object,
-        model: Model,
-    ) -> dict[str, Any]:
-        """Transform speed into provider request."""
-        validated_value = self._validate_value(value, model)
-        if validated_value is None:
-            return request
-
-        request["speed"] = validated_value
-        return request
+    field = "speed"
 
 
 class ResponseFormatMapper(ParameterMapper):
@@ -80,22 +56,10 @@ class ResponseFormatMapper(ParameterMapper):
         return request
 
 
-class InstructionsMapper(ParameterMapper):
+class InstructionsMapper(FieldMapper):
     """Map instructions to OpenAI instructions field."""
 
-    def map(
-        self,
-        request: dict[str, Any],
-        value: object,
-        model: Model,
-    ) -> dict[str, Any]:
-        """Transform instructions into provider request."""
-        validated_value = self._validate_value(value, model)
-        if validated_value is None:
-            return request
-
-        request["instructions"] = validated_value
-        return request
+    field = "instructions"
 
 
 __all__ = [

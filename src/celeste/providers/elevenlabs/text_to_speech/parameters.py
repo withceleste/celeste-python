@@ -3,10 +3,10 @@
 from typing import Any
 
 from celeste.models import Model
-from celeste.parameters import ParameterMapper
+from celeste.parameters import FieldMapper, ParameterMapper
 
 
-class VoiceMapper(ParameterMapper):
+class VoiceMapper(FieldMapper):
     """Map voice parameter to ElevenLabs URL path.
 
     Note: Voice ID goes in URL path, not request body.
@@ -14,17 +14,7 @@ class VoiceMapper(ParameterMapper):
     happens in _make_request().
     """
 
-    def map(
-        self,
-        request: dict[str, Any],
-        value: object,
-        model: Model,
-    ) -> dict[str, Any]:
-        """Transform voice into provider request."""
-        validated_value = self._validate_value(value, model)
-        if validated_value is not None:
-            request["_voice_id"] = validated_value
-        return request
+    field = "_voice_id"
 
 
 class OutputFormatMapper(ParameterMapper):
