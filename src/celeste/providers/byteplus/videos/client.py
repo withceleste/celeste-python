@@ -10,7 +10,6 @@ from celeste.client import APIMixin
 from celeste.core import UsageField
 from celeste.exceptions import StreamingNotSupportedError
 from celeste.io import FinishReason
-from celeste.mime_types import ApplicationMimeType
 
 from . import config
 
@@ -67,11 +66,7 @@ class BytePlusVideosClient(APIMixin):
         2. Poll CONTENT_STATUS endpoint until succeeded/failed/canceled
         3. Return response with final status data
         """
-        auth_headers = self.auth.get_headers()
-        headers = {
-            **auth_headers,
-            "Content-Type": ApplicationMimeType.JSON,
-        }
+        headers = self._json_headers()
 
         if endpoint is None:
             endpoint = config.BytePlusVideosEndpoint.CREATE_VIDEO

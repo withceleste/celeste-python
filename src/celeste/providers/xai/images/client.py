@@ -7,7 +7,6 @@ from celeste.client import APIMixin
 from celeste.core import UsageField
 from celeste.exceptions import StreamingNotSupportedError
 from celeste.io import FinishReason
-from celeste.mime_types import ApplicationMimeType
 
 from . import config
 
@@ -54,10 +53,7 @@ class XAIImagesClient(APIMixin):
         if endpoint is None:
             endpoint = config.XAIImagesEndpoint.CREATE_IMAGE
 
-        headers = {
-            **self.auth.get_headers(),
-            "Content-Type": ApplicationMimeType.JSON,
-        }
+        headers = self._json_headers()
 
         response = await self.http_client.post(
             f"{config.BASE_URL}{endpoint}",

@@ -6,7 +6,6 @@ from typing import Any, ClassVar
 from celeste.client import APIMixin
 from celeste.core import UsageField
 from celeste.io import FinishReason
-from celeste.mime_types import ApplicationMimeType
 
 from . import config
 
@@ -79,10 +78,7 @@ class OpenResponsesClient(APIMixin):
         if endpoint is None:
             endpoint = self._default_endpoint
 
-        headers = {
-            **self.auth.get_headers(),
-            "Content-Type": ApplicationMimeType.JSON,
-        }
+        headers = self._json_headers()
 
         response = await self.http_client.post(
             self._build_url(endpoint),
@@ -104,10 +100,7 @@ class OpenResponsesClient(APIMixin):
         if endpoint is None:
             endpoint = self._default_endpoint
 
-        headers = {
-            **self.auth.get_headers(),
-            "Content-Type": ApplicationMimeType.JSON,
-        }
+        headers = self._json_headers()
 
         return self.http_client.stream_post(
             self._build_url(endpoint, streaming=True),

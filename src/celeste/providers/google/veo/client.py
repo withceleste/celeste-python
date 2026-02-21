@@ -8,7 +8,6 @@ from typing import Any, ClassVar
 from celeste.client import APIMixin
 from celeste.exceptions import StreamingNotSupportedError
 from celeste.io import FinishReason
-from celeste.mime_types import ApplicationMimeType
 
 from ..auth import GoogleADC
 from . import config
@@ -72,10 +71,7 @@ class GoogleVeoClient(APIMixin):
         Vertex AI uses POST to fetchPredictOperation with operationName in body.
         AI Studio uses GET to /v1beta/{operation_name}.
         """
-        headers = {
-            **self.auth.get_headers(),
-            "Content-Type": ApplicationMimeType.JSON,
-        }
+        headers = self._json_headers()
         poll_url = self._build_poll_url(operation_name)
 
         if isinstance(self.auth, GoogleADC):
@@ -117,11 +113,7 @@ class GoogleVeoClient(APIMixin):
         if endpoint is None:
             endpoint = config.GoogleVeoEndpoint.CREATE_VIDEO
 
-        auth_headers = self.auth.get_headers()
-        headers = {
-            **auth_headers,
-            "Content-Type": ApplicationMimeType.JSON,
-        }
+        headers = self._json_headers()
 
         logger.info(f"Initiating video generation with model {self.model.id}")
         response = await self.http_client.post(

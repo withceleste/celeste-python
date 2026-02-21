@@ -6,7 +6,7 @@ from typing import Any
 from celeste.client import APIMixin
 from celeste.exceptions import StreamingNotSupportedError
 from celeste.io import FinishReason
-from celeste.mime_types import ApplicationMimeType, AudioMimeType
+from celeste.mime_types import AudioMimeType
 
 from . import config
 
@@ -68,10 +68,7 @@ class OpenAIAudioClient(APIMixin):
         if endpoint is None:
             endpoint = config.OpenAIAudioEndpoint.CREATE_SPEECH
 
-        headers = {
-            **self.auth.get_headers(),
-            "Content-Type": ApplicationMimeType.JSON,
-        }
+        headers = self._json_headers()
 
         response = await self.http_client.post(
             f"{config.BASE_URL}{endpoint}",

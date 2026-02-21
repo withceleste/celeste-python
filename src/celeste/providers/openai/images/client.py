@@ -11,7 +11,6 @@ from typing import Any, ClassVar
 from celeste.client import APIMixin
 from celeste.core import UsageField
 from celeste.io import FinishReason
-from celeste.mime_types import ApplicationMimeType
 from celeste.utils import detect_mime_type
 
 from . import config
@@ -75,10 +74,7 @@ class OpenAIImagesClient(APIMixin):
         if self.model.id in ("dall-e-2", "dall-e-3"):
             request_body.setdefault("response_format", "b64_json")
 
-        headers = {
-            **self.auth.get_headers(),
-            "Content-Type": ApplicationMimeType.JSON,
-        }
+        headers = self._json_headers()
 
         response = await self.http_client.post(
             f"{config.BASE_URL}{endpoint}",
@@ -141,10 +137,7 @@ class OpenAIImagesClient(APIMixin):
         if "partial_images" not in request_body:
             request_body["partial_images"] = 1
 
-        headers = {
-            **self.auth.get_headers(),
-            "Content-Type": ApplicationMimeType.JSON,
-        }
+        headers = self._json_headers()
 
         return self.http_client.stream_post(
             f"{config.BASE_URL}{endpoint}",

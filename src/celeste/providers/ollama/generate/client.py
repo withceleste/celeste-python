@@ -7,7 +7,6 @@ from typing import Any, ClassVar
 from celeste.client import APIMixin
 from celeste.core import UsageField
 from celeste.io import FinishReason
-from celeste.mime_types import ApplicationMimeType
 
 from . import config
 
@@ -56,10 +55,7 @@ class OllamaGenerateClient(APIMixin):
         if base_url is None:
             base_url = config.DEFAULT_BASE_URL
 
-        headers = {
-            **self.auth.get_headers(),
-            "Content-Type": ApplicationMimeType.JSON,
-        }
+        headers = self._json_headers()
 
         response = await self.http_client.post(
             f"{base_url}{endpoint}",
@@ -84,10 +80,7 @@ class OllamaGenerateClient(APIMixin):
         if base_url is None:
             base_url = config.DEFAULT_BASE_URL
 
-        headers = {
-            **self.auth.get_headers(),
-            "Content-Type": ApplicationMimeType.JSON,
-        }
+        headers = self._json_headers()
 
         return self.http_client.stream_post_ndjson(
             f"{base_url}{endpoint}",

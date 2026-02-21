@@ -8,7 +8,6 @@ from celeste.client import APIMixin
 from celeste.core import UsageField
 from celeste.exceptions import StreamingNotSupportedError
 from celeste.io import FinishReason
-from celeste.mime_types import ApplicationMimeType
 
 from . import config
 
@@ -66,10 +65,7 @@ class XAIVideosClient(APIMixin):
         if endpoint is None:
             endpoint = config.XAIVideosEndpoint.CREATE_VIDEO
 
-        headers = {
-            **self.auth.get_headers(),
-            "Content-Type": ApplicationMimeType.JSON,
-        }
+        headers = self._json_headers()
 
         # Submit video generation request
         response = await self.http_client.post(

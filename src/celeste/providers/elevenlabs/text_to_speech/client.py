@@ -7,7 +7,7 @@ import httpx
 
 from celeste.client import APIMixin
 from celeste.io import FinishReason
-from celeste.mime_types import ApplicationMimeType, AudioMimeType
+from celeste.mime_types import AudioMimeType
 
 from . import config
 
@@ -55,10 +55,7 @@ class ElevenLabsTextToSpeechClient(APIMixin):
             endpoint = config.ElevenLabsTextToSpeechEndpoint.CREATE_SPEECH
         endpoint = endpoint.format(voice_id=voice_id)
 
-        headers = {
-            **self.auth.get_headers(),
-            "Content-Type": ApplicationMimeType.JSON,
-        }
+        headers = self._json_headers()
 
         response = await self.http_client.post(
             f"{config.BASE_URL}{endpoint}",
@@ -96,10 +93,7 @@ class ElevenLabsTextToSpeechClient(APIMixin):
             endpoint = config.ElevenLabsTextToSpeechEndpoint.STREAM_SPEECH
         endpoint = endpoint.format(voice_id=voice_id)
 
-        headers = {
-            **self.auth.get_headers(),
-            "Content-Type": ApplicationMimeType.JSON,
-        }
+        headers = self._json_headers()
 
         return self._stream_binary_audio(
             f"{config.BASE_URL}{endpoint}",
