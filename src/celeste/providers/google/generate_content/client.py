@@ -1,7 +1,7 @@
 """Google GenerateContent API client mixin."""
 
 from collections.abc import AsyncIterator
-from typing import Any
+from typing import Any, ClassVar
 
 from celeste.client import APIMixin
 from celeste.core import UsageField
@@ -21,7 +21,7 @@ class GoogleGenerateContentClient(APIMixin):
     - _parse_usage() - Extract usage dict from usageMetadata
     - _parse_content() - Extract parts array from first candidate
     - _parse_finish_reason() - Extract finish reason string from candidates
-    - _build_metadata() - Filter content fields
+    - _content_fields: ClassVar - Content field names to exclude from metadata
 
     Auth-based endpoint selection:
     - GoogleADC auth -> Vertex AI endpoints
@@ -36,6 +36,8 @@ class GoogleGenerateContentClient(APIMixin):
                 text = parts[0].get("text") or ""
                 return self._transform_output(text, **parameters)
     """
+
+    _content_fields: ClassVar[set[str]] = {"candidates"}
 
     def _get_vertex_endpoint(self, gemini_endpoint: str) -> str:
         """Map Gemini endpoint to Vertex AI endpoint."""
@@ -144,14 +146,6 @@ class GoogleGenerateContentClient(APIMixin):
         else:
             reason = candidates[0].get("finishReason")
         return FinishReason(reason=reason)
-
-    def _build_metadata(self, response_data: dict[str, Any]) -> dict[str, Any]:
-        """Build metadata dictionary, filtering out content fields."""
-        content_fields = {"candidates"}
-        filtered_data = {
-            k: v for k, v in response_data.items() if k not in content_fields
-        }
-        return super()._build_metadata(filtered_data)
 
 
 __all__ = ["GoogleGenerateContentClient"]

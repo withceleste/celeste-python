@@ -3,7 +3,7 @@
 import asyncio
 import time
 from collections.abc import AsyncIterator
-from typing import Any
+from typing import Any, ClassVar
 
 from celeste.client import APIMixin
 from celeste.core import UsageField
@@ -32,6 +32,8 @@ class BFLImagesClient(APIMixin):
                 result = response_data.get("result", {})
                 # Extract image from result["sample"]...
     """
+
+    _content_fields: ClassVar[set[str]] = {"result"}
 
     async def _make_request(
         self,
@@ -151,14 +153,6 @@ class BFLImagesClient(APIMixin):
             msg = "No result in response"
             raise ValueError(msg)
         return result
-
-    def _build_metadata(self, response_data: dict[str, Any]) -> dict[str, Any]:
-        """Build metadata dictionary, filtering out content fields."""
-        content_fields = {"result"}
-        filtered_data = {
-            k: v for k, v in response_data.items() if k not in content_fields
-        }
-        return super()._build_metadata(filtered_data)
 
 
 __all__ = ["BFLImagesClient"]

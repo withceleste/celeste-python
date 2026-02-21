@@ -1,7 +1,7 @@
 """{Provider} {Api} API client mixin."""
 
 from collections.abc import AsyncIterator
-from typing import Any
+from typing import Any, ClassVar
 
 import httpx
 
@@ -27,7 +27,7 @@ class {Provider}{Api}Client(APIMixin):
     - _parse_usage() - Extract usage dict from response
     - _parse_content() - Extract content from response
     - _parse_finish_reason() - Extract finish reason (if provided)
-    - _build_metadata() - Filter content fields
+    - _content_fields: ClassVar - Content field names to exclude from metadata
 
     Auth-based endpoint selection (optional, for Google providers):
     - GoogleADC auth -> Vertex AI endpoints (via _build_url + _get_vertex_endpoint)
@@ -36,6 +36,8 @@ class {Provider}{Api}Client(APIMixin):
     Modality clients pass endpoint parameter to route operations:
         await self._predict(inputs, endpoint=config.{Provider}{Api}Endpoint.CREATE_..., **parameters)
     """
+
+    _content_fields: ClassVar[set[str]] = {"..."}
 
     # Optional: Vertex AI endpoint routing. Add these two methods when the provider
     # supports Vertex AI. They replace the inline f"{config.BASE_URL}{endpoint}" URL
@@ -176,14 +178,6 @@ class {Provider}{Api}Client(APIMixin):
     def _parse_finish_reason(self, response_data: dict[str, Any]) -> FinishReason:
         """Extract finish reason from {Provider} {Api} API response."""
         return FinishReason(reason=None)
-
-    def _build_metadata(self, response_data: dict[str, Any]) -> dict[str, Any]:
-        """Build metadata dictionary, filtering out content fields."""
-        content_fields = {"..."}
-        filtered_data = {
-            k: v for k, v in response_data.items() if k not in content_fields
-        }
-        return super()._build_metadata(filtered_data)
 
 
 __all__ = ["{Provider}{Api}Client"]

@@ -1,7 +1,7 @@
 """Cohere Chat API client mixin."""
 
 from collections.abc import AsyncIterator
-from typing import Any
+from typing import Any, ClassVar
 
 from celeste.client import APIMixin
 from celeste.core import UsageField
@@ -20,7 +20,7 @@ class CohereChatClient(APIMixin):
     - _parse_usage() - Extract usage dict from response
     - _parse_content() - Extract content array from response message
     - _parse_finish_reason() - Extract finish reason from response
-    - _build_metadata() - Filter content fields
+    - _content_fields: ClassVar - Content field names to exclude from metadata
 
     Usage:
         class CohereTextGenerationClient(CohereChatClient, TextGenerationClient):
@@ -29,6 +29,8 @@ class CohereChatClient(APIMixin):
                 text = content_array[0].get("text") or ""
                 return self._transform_output(text, **parameters)
     """
+
+    _content_fields: ClassVar[set[str]] = {"message"}
 
     def _build_request(
         self,
@@ -131,14 +133,6 @@ class CohereChatClient(APIMixin):
         """Extract finish reason from Chat API response."""
         reason = response_data.get("finish_reason")
         return FinishReason(reason=reason)
-
-    def _build_metadata(self, response_data: dict[str, Any]) -> dict[str, Any]:
-        """Build metadata dictionary, filtering out content fields."""
-        content_fields = {"message"}
-        filtered_data = {
-            k: v for k, v in response_data.items() if k not in content_fields
-        }
-        return super()._build_metadata(filtered_data)
 
 
 __all__ = ["CohereChatClient"]

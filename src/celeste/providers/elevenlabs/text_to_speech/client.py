@@ -165,10 +165,6 @@ class ElevenLabsTextToSpeechClient(APIMixin):
         """ElevenLabs TTS doesn't provide finish reasons."""
         return FinishReason(reason=None)
 
-    def _build_metadata(self, response_data: dict[str, Any]) -> dict[str, Any]:
-        """Build metadata dictionary, filtering out content fields."""
-        return super()._build_metadata(response_data)
-
     def _map_output_format_to_mime_type(
         self, output_format: str | None
     ) -> AudioMimeType:

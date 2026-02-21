@@ -1,7 +1,7 @@
 """BytePlus Images API client mixin."""
 
 from collections.abc import AsyncIterator
-from typing import Any
+from typing import Any, ClassVar
 
 from celeste.client import APIMixin
 from celeste.core import UsageField
@@ -20,7 +20,7 @@ class BytePlusImagesClient(APIMixin):
     - _parse_usage() - Extract usage dict from response
     - _parse_content() - Extract images/data array from response
     - _parse_finish_reason() - Extract finish reason from response
-    - _build_metadata() - Filter content fields and extract seed
+    - _content_fields: ClassVar - Content field names to exclude from metadata
 
     Usage:
         class BytePlusImageGenerationClient(BytePlusImagesClient, ImageGenerationClient):
@@ -28,6 +28,8 @@ class BytePlusImagesClient(APIMixin):
                 images = response_data.get("images", [])
                 # Extract image from images[0] or data[0]...
     """
+
+    _content_fields: ClassVar[set[str]] = {"images", "data"}
 
     def _build_request(
         self,
@@ -135,18 +137,10 @@ class BytePlusImagesClient(APIMixin):
 
     def _build_metadata(self, response_data: dict[str, Any]) -> Any:
         """Build metadata dictionary, extracting seed if present."""
-        # Filter content fields before calling super
-        content_fields = {"images", "data"}
-        filtered_data = {
-            k: v for k, v in response_data.items() if k not in content_fields
-        }
-        metadata = super()._build_metadata(filtered_data)
-
-        # Add provider-specific parsed fields
+        metadata = super()._build_metadata(response_data)
         seed = response_data.get("seed")
         if seed is not None:
             metadata["seed"] = seed
-
         return metadata
 
 

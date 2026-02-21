@@ -8,7 +8,7 @@ import asyncio
 import base64
 import logging
 from collections.abc import AsyncIterator
-from typing import Any
+from typing import Any, ClassVar
 
 from celeste.client import APIMixin
 from celeste.core import UsageField
@@ -28,7 +28,7 @@ class OpenAIVideosClient(APIMixin):
     - _make_request() - HTTP POST with async polling pattern
     - _parse_usage() - Returns billing units from response
     - _parse_finish_reason() - Returns None (Videos API doesn't provide finish reasons)
-    - _build_metadata() - Filter content fields, include video metadata
+    - _content_fields: ClassVar - Content field names to exclude from metadata
 
     The Videos API uses async polling:
     1. POST to create video job at /v1/videos
@@ -40,6 +40,8 @@ class OpenAIVideosClient(APIMixin):
             async def _prepare_multipart_request(self, request_body):
                 # Handle input_reference image uploads...
     """
+
+    _content_fields: ClassVar[set[str]] = {"video_data"}
 
     def _build_request(
         self,
@@ -203,17 +205,6 @@ class OpenAIVideosClient(APIMixin):
     def _parse_finish_reason(self, response_data: dict[str, Any]) -> FinishReason:
         """Videos API doesn't provide finish reasons."""
         return FinishReason(reason=None)
-
-    def _build_metadata(self, response_data: dict[str, Any]) -> Any:
-        """Build metadata dictionary, including video-specific fields."""
-        content_fields = {"video_data"}
-        filtered_data = {
-            k: v for k, v in response_data.items() if k not in content_fields
-        }
-
-        metadata = super()._build_metadata(filtered_data)
-
-        return metadata
 
 
 __all__ = ["OpenAIVideosClient"]

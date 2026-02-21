@@ -1,7 +1,7 @@
 """Google Imagen API client mixin."""
 
 from collections.abc import AsyncIterator
-from typing import Any
+from typing import Any, ClassVar
 
 from celeste.client import APIMixin
 from celeste.core import UsageField
@@ -21,7 +21,7 @@ class GoogleImagenClient(APIMixin):
     - _parse_usage() - Returns empty dict (Imagen doesn't provide usage)
     - _parse_content() - Extract predictions[] array
     - _parse_finish_reason() - Returns None (Imagen doesn't provide finish reasons)
-    - _build_metadata() - Filter out predictions content
+    - _content_fields: ClassVar - Content field names to exclude from metadata
 
     Auth-based endpoint selection:
     - GoogleADC auth -> Vertex AI endpoints
@@ -35,6 +35,8 @@ class GoogleImagenClient(APIMixin):
                 predictions = super()._parse_content(response_data)
                 # Extract image from predictions[0]...
     """
+
+    _content_fields: ClassVar[set[str]] = {"predictions"}
 
     def _get_vertex_endpoint(self, gemini_endpoint: str) -> str:
         """Map Gemini Imagen endpoint to Vertex AI endpoint."""
@@ -121,17 +123,6 @@ class GoogleImagenClient(APIMixin):
     def _parse_finish_reason(self, response_data: dict[str, Any]) -> FinishReason:
         """Imagen API doesn't provide finish reasons."""
         return FinishReason(reason=None)
-
-    def _build_metadata(self, response_data: dict[str, Any]) -> dict[str, Any]:
-        """Build metadata, filtering out predictions content.
-
-        Keeps metadata like raiFilteredReason, safety attributes.
-        """
-        content_fields = {"predictions"}
-        filtered_data = {
-            k: v for k, v in response_data.items() if k not in content_fields
-        }
-        return super()._build_metadata(filtered_data)
 
 
 __all__ = ["GoogleImagenClient"]

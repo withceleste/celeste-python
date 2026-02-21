@@ -1,7 +1,7 @@
 """Anthropic Messages API client mixin."""
 
 from collections.abc import AsyncIterator
-from typing import Any
+from typing import Any, ClassVar
 
 from celeste.client import APIMixin
 from celeste.core import UsageField
@@ -21,7 +21,7 @@ class AnthropicMessagesClient(APIMixin):
     - _parse_usage() - Extract usage dict from response
     - _parse_content() - Extract content array from response
     - _parse_finish_reason() - Extract finish reason from response
-    - _build_metadata() - Filter content fields
+    - _content_fields: ClassVar - Content field names to exclude from metadata
 
     Auth-based endpoint selection:
     - GoogleADC auth -> Vertex AI endpoints (Claude on Google Cloud)
@@ -36,6 +36,8 @@ class AnthropicMessagesClient(APIMixin):
                         return self._transform_output(block.get("text") or "", **parameters)
                 return ""
     """
+
+    _content_fields: ClassVar[set[str]] = {"content"}
 
     def _get_vertex_endpoint(
         self, anthropic_endpoint: str, streaming: bool = False
@@ -184,14 +186,6 @@ class AnthropicMessagesClient(APIMixin):
         """
         stop_reason = response_data.get("stop_reason")
         return FinishReason(reason=stop_reason)
-
-    def _build_metadata(self, response_data: dict[str, Any]) -> dict[str, Any]:
-        """Build metadata dictionary, filtering out content fields."""
-        content_fields = {"content"}
-        filtered_data = {
-            k: v for k, v in response_data.items() if k not in content_fields
-        }
-        return super()._build_metadata(filtered_data)
 
 
 __all__ = ["AnthropicMessagesClient"]

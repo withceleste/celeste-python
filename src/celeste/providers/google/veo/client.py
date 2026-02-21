@@ -3,7 +3,7 @@
 import asyncio
 import logging
 from collections.abc import AsyncIterator
-from typing import Any
+from typing import Any, ClassVar
 
 from celeste.client import APIMixin
 from celeste.exceptions import StreamingNotSupportedError
@@ -34,6 +34,8 @@ class GoogleVeoClient(APIMixin):
                 video_bytes = await super().download_content(artifact.url)  # Get raw bytes
                 return VideoArtifact(data=video_bytes, mime_type=VideoMimeType.MP4, ...)
     """
+
+    _content_fields: ClassVar[set[str]] = {"response"}
 
     def _get_vertex_endpoint(self, gemini_endpoint: str) -> str:
         """Map Gemini Veo endpoint to Vertex AI endpoint."""
@@ -198,14 +200,6 @@ class GoogleVeoClient(APIMixin):
     def _parse_finish_reason(self, response_data: dict[str, Any]) -> FinishReason:
         """Veo API doesn't provide finish reasons."""
         return FinishReason(reason=None)
-
-    def _build_metadata(self, response_data: dict[str, Any]) -> dict[str, Any]:
-        """Build metadata dictionary, filtering out content fields."""
-        content_fields = {"response"}
-        filtered_data = {
-            k: v for k, v in response_data.items() if k not in content_fields
-        }
-        return super()._build_metadata(filtered_data)
 
     async def download_content(self, url: str) -> bytes:
         """Download video content from GCS URL.

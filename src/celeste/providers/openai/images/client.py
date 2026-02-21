@@ -6,7 +6,7 @@ Provides shared implementation for capabilities using the OpenAI Images API:
 """
 
 from collections.abc import AsyncIterator
-from typing import Any
+from typing import Any, ClassVar
 
 from celeste.client import APIMixin
 from celeste.core import UsageField
@@ -26,8 +26,10 @@ class OpenAIImagesClient(APIMixin):
     - _parse_usage() - Extract usage dict from response
     - _parse_content() - Extract data array from response
     - _parse_finish_reason() - Returns None (Images API doesn't provide finish reasons)
-    - _build_metadata() - Filter content fields and include revised_prompt
+    - _content_fields: ClassVar - Content field names to exclude from metadata
     """
+
+    _content_fields: ClassVar[set[str]] = {"data"}
 
     def _build_request(
         self,
@@ -187,17 +189,6 @@ class OpenAIImagesClient(APIMixin):
     def _parse_finish_reason(self, response_data: dict[str, Any]) -> FinishReason:
         """Images API doesn't provide finish reasons."""
         return FinishReason(reason=None)
-
-    def _build_metadata(self, response_data: dict[str, Any]) -> Any:
-        """Build metadata dictionary, including revised_prompt if present."""
-        content_fields = {"data"}
-        filtered_data = {
-            k: v for k, v in response_data.items() if k not in content_fields
-        }
-
-        metadata = super()._build_metadata(filtered_data)
-
-        return metadata
 
 
 __all__ = ["OpenAIImagesClient"]
