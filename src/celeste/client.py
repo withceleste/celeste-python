@@ -13,6 +13,7 @@ from celeste.core import Modality, Provider
 from celeste.exceptions import StreamingNotSupportedError
 from celeste.http import HTTPClient, get_http_client
 from celeste.io import Chunk, FinishReason, Input, Output, Usage
+from celeste.mime_types import ApplicationMimeType
 from celeste.models import Model
 from celeste.parameters import ParameterMapper, Parameters
 from celeste.streaming import Stream
@@ -51,6 +52,10 @@ class APIMixin(ABC):
     def http_client(self) -> HTTPClient:
         """HTTP client with connection pooling for this provider."""
         ...
+
+    def _json_headers(self) -> dict[str, str]:
+        """Build standard JSON request headers with auth."""
+        return {**self.auth.get_headers(), "Content-Type": ApplicationMimeType.JSON}
 
     @staticmethod
     def _deep_merge(

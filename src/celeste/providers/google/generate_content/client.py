@@ -6,7 +6,6 @@ from typing import Any, ClassVar
 from celeste.client import APIMixin
 from celeste.core import UsageField
 from celeste.io import FinishReason
-from celeste.mime_types import ApplicationMimeType
 
 from ..auth import GoogleADC
 from . import config
@@ -70,10 +69,7 @@ class GoogleGenerateContentClient(APIMixin):
         if endpoint is None:
             endpoint = config.GoogleGenerateContentEndpoint.GENERATE_CONTENT
 
-        headers = {
-            **self.auth.get_headers(),
-            "Content-Type": ApplicationMimeType.JSON,
-        }
+        headers = self._json_headers()
         response = await self.http_client.post(
             url=self._build_url(endpoint),
             headers=headers,
@@ -94,10 +90,7 @@ class GoogleGenerateContentClient(APIMixin):
         if endpoint is None:
             endpoint = config.GoogleGenerateContentEndpoint.STREAM_GENERATE_CONTENT
 
-        headers = {
-            **self.auth.get_headers(),
-            "Content-Type": ApplicationMimeType.JSON,
-        }
+        headers = self._json_headers()
         return self.http_client.stream_post(
             url=self._build_url(endpoint),
             headers=headers,

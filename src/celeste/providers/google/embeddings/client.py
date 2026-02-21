@@ -6,7 +6,6 @@ from typing import Any, ClassVar
 from celeste.client import APIMixin
 from celeste.exceptions import StreamingNotSupportedError
 from celeste.io import FinishReason
-from celeste.mime_types import ApplicationMimeType
 
 from ..auth import GoogleADC
 from . import config
@@ -96,10 +95,7 @@ class GoogleEmbeddingsClient(APIMixin):
         if endpoint is None:
             endpoint = endpoint_template
 
-        headers = {
-            **self.auth.get_headers(),
-            "Content-Type": ApplicationMimeType.JSON,
-        }
+        headers = self._json_headers()
 
         response = await self.http_client.post(
             self._build_url(endpoint),

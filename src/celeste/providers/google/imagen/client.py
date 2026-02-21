@@ -7,7 +7,6 @@ from celeste.client import APIMixin
 from celeste.core import UsageField
 from celeste.exceptions import StreamingNotSupportedError
 from celeste.io import FinishReason
-from celeste.mime_types import ApplicationMimeType
 
 from ..auth import GoogleADC
 from . import config
@@ -67,10 +66,7 @@ class GoogleImagenClient(APIMixin):
         if endpoint is None:
             endpoint = config.GoogleImagenEndpoint.CREATE_IMAGE
 
-        headers = {
-            **self.auth.get_headers(),
-            "Content-Type": ApplicationMimeType.JSON,
-        }
+        headers = self._json_headers()
         response = await self.http_client.post(
             self._build_url(endpoint),
             headers=headers,

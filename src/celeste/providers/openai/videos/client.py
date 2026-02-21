@@ -14,7 +14,6 @@ from celeste.client import APIMixin
 from celeste.core import UsageField
 from celeste.exceptions import StreamingNotSupportedError
 from celeste.io import FinishReason
-from celeste.mime_types import ApplicationMimeType
 
 from . import config
 
@@ -86,10 +85,7 @@ class OpenAIVideosClient(APIMixin):
         if endpoint is None:
             endpoint = config.OpenAIVideosEndpoint.CREATE_VIDEO
 
-        headers = {
-            **self.auth.get_headers(),
-            "Content-Type": ApplicationMimeType.JSON,
-        }
+        headers = self._json_headers()
 
         files, data = await self._prepare_multipart_request(request_body.copy())
 

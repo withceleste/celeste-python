@@ -49,12 +49,7 @@ class BFLImagesClient(APIMixin):
         2. Poll polling_url until Ready/Failed
         3. Return response with _submit_metadata for usage parsing
         """
-        auth_headers = self.auth.get_headers()
-        headers = {
-            **auth_headers,
-            "Content-Type": ApplicationMimeType.JSON,
-            "Accept": ApplicationMimeType.JSON,
-        }
+        headers = {**self._json_headers(), "Accept": ApplicationMimeType.JSON}
 
         if endpoint is None:
             endpoint = config.BFLImagesEndpoint.CREATE_IMAGE
@@ -77,10 +72,7 @@ class BFLImagesClient(APIMixin):
 
         # Phase 2: Poll for completion
         start_time = time.monotonic()
-        poll_headers = {
-            **auth_headers,
-            "Accept": ApplicationMimeType.JSON,
-        }
+        poll_headers = {**self.auth.get_headers(), "Accept": ApplicationMimeType.JSON}
 
         while True:
             elapsed = time.monotonic() - start_time
