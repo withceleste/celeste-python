@@ -19,7 +19,6 @@ TEMPLATE_REQUIRED_METHODS: set[str] = {
     "_parse_usage",
     "_parse_content",
     "_parse_finish_reason",
-    "_build_metadata",
 }
 
 

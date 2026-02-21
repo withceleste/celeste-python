@@ -1,7 +1,7 @@
 """Google Interactions API client mixin."""
 
 from collections.abc import AsyncIterator
-from typing import Any
+from typing import Any, ClassVar
 
 import httpx
 
@@ -23,7 +23,7 @@ class GoogleInteractionsClient(APIMixin):
     - _parse_usage() - Extract usage dict from usage metadata
     - _parse_content() - Extract outputs array from response
     - _parse_finish_reason() - Extract finish reason string from response
-    - _build_metadata() - Filter content fields
+    - _content_fields: ClassVar - Content field names to exclude from metadata
 
     Capability clients extend parsing methods via super() to wrap/transform results.
 
@@ -36,6 +36,8 @@ class GoogleInteractionsClient(APIMixin):
                 text = "".join(o.get("text", "") for o in outputs if o.get("type") == "text")
                 return self._transform_output(text, **parameters)
     """
+
+    _content_fields: ClassVar[set[str]] = {"outputs"}
 
     def _build_request(
         self,
@@ -159,14 +161,6 @@ class GoogleInteractionsClient(APIMixin):
             if outputs:
                 reason = outputs[-1].get("finish_reason")
         return FinishReason(reason=reason)
-
-    def _build_metadata(self, response_data: dict[str, Any]) -> dict[str, Any]:
-        """Build metadata dictionary, filtering out content fields."""
-        content_fields = {"outputs"}
-        filtered_data = {
-            k: v for k, v in response_data.items() if k not in content_fields
-        }
-        return super()._build_metadata(filtered_data)
 
 
 __all__ = ["GoogleInteractionsClient"]

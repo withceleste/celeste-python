@@ -23,7 +23,7 @@ class OpenResponsesClient(APIMixin):
     - _parse_usage() - Extract usage dict from response
     - _parse_content() - Extract output array from response
     - _parse_finish_reason() - Extract finish reason from response
-    - _build_metadata() - Filter content fields
+    - _content_fields: ClassVar - Content field names to exclude from metadata
 
     Providers override ClassVars and hook methods:
     - _default_base_url: ClassVar[str] - Provider's API base URL
@@ -39,6 +39,7 @@ class OpenResponsesClient(APIMixin):
 
     _default_base_url: ClassVar[str] = config.DEFAULT_BASE_URL
     _default_endpoint: ClassVar[str] = config.OpenResponsesEndpoint.CREATE_RESPONSE
+    _content_fields: ClassVar[set[str]] = {"output"}
 
     def _build_url(self, endpoint: str, streaming: bool = False) -> str:
         """Build full URL for request.
@@ -151,14 +152,6 @@ class OpenResponsesClient(APIMixin):
                 if item.get("type") == "message" and item.get("status") == "completed":
                     return FinishReason(reason="completed")
         return FinishReason(reason=None)
-
-    def _build_metadata(self, response_data: dict[str, Any]) -> dict[str, Any]:
-        """Build metadata dictionary, filtering out content fields."""
-        content_fields = {"output"}
-        filtered_data = {
-            k: v for k, v in response_data.items() if k not in content_fields
-        }
-        return super()._build_metadata(filtered_data)
 
 
 __all__ = ["OpenResponsesClient"]

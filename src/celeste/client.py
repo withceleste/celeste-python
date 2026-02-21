@@ -44,6 +44,7 @@ class APIMixin(ABC):
     model: Model
     auth: Authentication
     provider: Provider
+    _content_fields: ClassVar[set[str]] = set()
 
     @property
     @abstractmethod
@@ -302,6 +303,10 @@ class ModalityClient[In: Input, Out: Output, Params: Parameters, Content](
 
     def _build_metadata(self, response_data: dict[str, Any]) -> dict[str, Any]:
         """Build metadata dictionary from response data."""
+        if self._content_fields:
+            response_data = {
+                k: v for k, v in response_data.items() if k not in self._content_fields
+            }
         return {
             "model": self.model.id,
             "provider": self.provider,

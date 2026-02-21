@@ -4,7 +4,7 @@ import asyncio
 import logging
 import time
 from collections.abc import AsyncIterator
-from typing import Any
+from typing import Any, ClassVar
 
 from celeste.client import APIMixin
 from celeste.core import UsageField
@@ -34,6 +34,8 @@ class BytePlusVideosClient(APIMixin):
                 content = response_data.get("content", {})
                 # Extract video from content["video_url"]...
     """
+
+    _content_fields: ClassVar[set[str]] = {"content"}
 
     def _build_request(
         self,
@@ -166,14 +168,6 @@ class BytePlusVideosClient(APIMixin):
     def _parse_finish_reason(self, response_data: dict[str, Any]) -> FinishReason:
         """BytePlus provides status but not structured finish reasons."""
         return FinishReason(reason=None)
-
-    def _build_metadata(self, response_data: dict[str, Any]) -> dict[str, Any]:
-        """Build metadata dictionary, filtering out content fields."""
-        content_fields = {"content"}
-        filtered_data = {
-            k: v for k, v in response_data.items() if k not in content_fields
-        }
-        return super()._build_metadata(filtered_data)
 
 
 __all__ = ["BytePlusVideosClient"]

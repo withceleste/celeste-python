@@ -2,7 +2,7 @@
 
 import asyncio
 from collections.abc import AsyncIterator
-from typing import Any
+from typing import Any, ClassVar
 
 from celeste.client import APIMixin
 from celeste.core import UsageField
@@ -21,13 +21,15 @@ class XAIVideosClient(APIMixin):
     - _parse_usage() - Extract usage dict from response
     - _parse_content() - Extract video URL from response
     - _parse_finish_reason() - Returns None (Videos API doesn't provide finish reasons)
-    - _build_metadata() - Filter content fields
+    - _content_fields: ClassVar - Content field names to exclude from metadata
 
     The Videos API uses async polling:
     1. POST to /v1/videos/generations returns request_id
     2. Poll GET /v1/videos/{request_id} until completed/failed
     3. Response contains video URL directly
     """
+
+    _content_fields: ClassVar[set[str]] = {"video"}
 
     def _build_request(
         self,
@@ -146,14 +148,6 @@ class XAIVideosClient(APIMixin):
     def _parse_finish_reason(self, response_data: dict[str, Any]) -> FinishReason:
         """Videos API doesn't provide finish reasons."""
         return FinishReason(reason=None)
-
-    def _build_metadata(self, response_data: dict[str, Any]) -> dict[str, Any]:
-        """Build metadata dictionary, filtering out content fields."""
-        content_fields = {"video"}
-        filtered_data = {
-            k: v for k, v in response_data.items() if k not in content_fields
-        }
-        return super()._build_metadata(filtered_data)
 
 
 __all__ = ["XAIVideosClient"]

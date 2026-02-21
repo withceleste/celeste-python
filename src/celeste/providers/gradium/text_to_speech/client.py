@@ -163,10 +163,6 @@ class GradiumTextToSpeechClient(APIMixin):
             "output_format": output_format,
         }
 
-    def _build_metadata(self, response_data: dict[str, Any]) -> dict[str, Any]:
-        """Build metadata dictionary from response data."""
-        return super()._build_metadata(response_data)
-
     def _map_output_format_to_mime_type(
         self,
         output_format: str | None,

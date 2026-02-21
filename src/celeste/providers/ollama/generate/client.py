@@ -2,7 +2,7 @@
 
 import json
 from collections.abc import AsyncIterator
-from typing import Any
+from typing import Any, ClassVar
 
 from celeste.client import APIMixin
 from celeste.core import UsageField
@@ -21,8 +21,10 @@ class OllamaGenerateClient(APIMixin):
     - _parse_usage() - Extract usage dict from response
     - _parse_content() - Extract image from response
     - _parse_finish_reason() - Check done field
-    - _build_metadata() - Filter content fields
+    - _content_fields: ClassVar - Content field names to exclude from metadata
     """
+
+    _content_fields: ClassVar[set[str]] = {"image", "response"}
 
     def _build_request(
         self,
@@ -133,14 +135,6 @@ class OllamaGenerateClient(APIMixin):
         """Extract finish reason from Ollama Generate API response."""
         done = response_data.get("done", False)
         return FinishReason(reason="completed" if done else None)
-
-    def _build_metadata(self, response_data: dict[str, Any]) -> dict[str, Any]:
-        """Build metadata dictionary, filtering out content fields."""
-        content_fields = {"image", "response"}
-        filtered_data = {
-            k: v for k, v in response_data.items() if k not in content_fields
-        }
-        return super()._build_metadata(filtered_data)
 
 
 __all__ = ["OllamaGenerateClient"]

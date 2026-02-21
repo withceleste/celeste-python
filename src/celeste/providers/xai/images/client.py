@@ -1,7 +1,7 @@
 """xAI Images API client mixin."""
 
 from collections.abc import AsyncIterator
-from typing import Any
+from typing import Any, ClassVar
 
 from celeste.client import APIMixin
 from celeste.core import UsageField
@@ -21,11 +21,13 @@ class XAIImagesClient(APIMixin):
     - _parse_usage() - Extract usage dict from response
     - _parse_content() - Extract data array from response
     - _parse_finish_reason() - Returns None (no finish reasons for images)
-    - _build_metadata() - Filter content fields
+    - _content_fields: ClassVar - Content field names to exclude from metadata
 
     Modality clients pass endpoint parameter to route operations:
         await self._predict(inputs, endpoint=config.XAIImagesEndpoint.CREATE_IMAGE, **parameters)
     """
+
+    _content_fields: ClassVar[set[str]] = {"data"}
 
     def _build_request(
         self,
@@ -103,14 +105,6 @@ class XAIImagesClient(APIMixin):
     def _parse_finish_reason(self, response_data: dict[str, Any]) -> FinishReason:
         """xAI Images API doesn't provide finish reasons."""
         return FinishReason(reason=None)
-
-    def _build_metadata(self, response_data: dict[str, Any]) -> dict[str, Any]:
-        """Build metadata dictionary, filtering out content fields."""
-        content_fields = {"data"}
-        filtered_data = {
-            k: v for k, v in response_data.items() if k not in content_fields
-        }
-        return super()._build_metadata(filtered_data)
 
 
 __all__ = ["XAIImagesClient"]

@@ -1,7 +1,7 @@
 """Google Cloud TTS API client mixin."""
 
 from collections.abc import AsyncIterator
-from typing import Any
+from typing import Any, ClassVar
 
 from celeste.client import APIMixin
 from celeste.exceptions import StreamingNotSupportedError
@@ -29,6 +29,8 @@ class GoogleCloudTTSClient(APIMixin):
                 audio_bytes = base64.b64decode(audio_b64)
                 return AudioArtifact(data=audio_bytes, mime_type=..., ...)
     """
+
+    _content_fields: ClassVar[set[str]] = {"audioContent"}
 
     def _make_stream_request(
         self,
@@ -99,14 +101,6 @@ class GoogleCloudTTSClient(APIMixin):
     def _parse_finish_reason(self, response_data: dict[str, Any]) -> FinishReason:
         """Cloud TTS API doesn't provide finish reasons."""
         return FinishReason(reason=None)
-
-    def _build_metadata(self, response_data: dict[str, Any]) -> dict[str, Any]:
-        """Build metadata dictionary, filtering out content fields."""
-        content_fields = {"audioContent"}
-        filtered_data = {
-            k: v for k, v in response_data.items() if k not in content_fields
-        }
-        return super()._build_metadata(filtered_data)
 
 
 __all__ = ["GoogleCloudTTSClient"]

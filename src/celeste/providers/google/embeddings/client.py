@@ -1,7 +1,7 @@
 """Google Embeddings API client mixin."""
 
 from collections.abc import AsyncIterator
-from typing import Any
+from typing import Any, ClassVar
 
 from celeste.client import APIMixin
 from celeste.exceptions import StreamingNotSupportedError
@@ -28,6 +28,8 @@ class GoogleEmbeddingsClient(APIMixin):
             def _parse_content(self, response_data, **params):
                 return super()._parse_content(response_data)  # No transformation needed
     """
+
+    _content_fields: ClassVar[set[str]] = {"embedding", "embeddings"}
 
     def _make_stream_request(
         self,
@@ -140,14 +142,6 @@ class GoogleEmbeddingsClient(APIMixin):
     def _parse_finish_reason(self, response_data: dict[str, Any]) -> FinishReason:
         """Embeddings API doesn't provide finish reasons."""
         return FinishReason(reason=None)
-
-    def _build_metadata(self, response_data: dict[str, Any]) -> dict[str, Any]:
-        """Build metadata, filtering out embedding content."""
-        content_fields = {"embedding", "embeddings"}
-        filtered_data = {
-            k: v for k, v in response_data.items() if k not in content_fields
-        }
-        return super()._build_metadata(filtered_data)
 
 
 __all__ = ["GoogleEmbeddingsClient"]
