@@ -6,44 +6,20 @@ from typing import Any, get_origin
 from pydantic import BaseModel, TypeAdapter
 
 from celeste.models import Model
-from celeste.parameters import ParameterMapper
+from celeste.parameters import FieldMapper, ParameterMapper
 from celeste.types import TextContent
 
 
-class TemperatureMapper(ParameterMapper):
+class TemperatureMapper(FieldMapper):
     """Map temperature to Chat Completions temperature field."""
 
-    def map(
-        self,
-        request: dict[str, Any],
-        value: object,
-        model: Model,
-    ) -> dict[str, Any]:
-        """Transform temperature into provider request."""
-        validated_value = self._validate_value(value, model)
-        if validated_value is None:
-            return request
-
-        request["temperature"] = validated_value
-        return request
+    field = "temperature"
 
 
-class MaxTokensMapper(ParameterMapper):
+class MaxTokensMapper(FieldMapper):
     """Map max_tokens to Chat Completions max_tokens field."""
 
-    def map(
-        self,
-        request: dict[str, Any],
-        value: object,
-        model: Model,
-    ) -> dict[str, Any]:
-        """Transform max_tokens into provider request."""
-        validated_value = self._validate_value(value, model)
-        if validated_value is None:
-            return request
-
-        request["max_tokens"] = validated_value
-        return request
+    field = "max_tokens"
 
 
 class ResponseFormatMapper(ParameterMapper):

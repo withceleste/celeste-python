@@ -6,99 +6,39 @@ from typing import Any, get_args, get_origin
 from pydantic import BaseModel, TypeAdapter
 
 from celeste.models import Model
-from celeste.parameters import ParameterMapper
+from celeste.parameters import FieldMapper, ParameterMapper
 from celeste.structured_outputs import StrictJsonSchemaGenerator
 from celeste.types import TextContent
 
 
-class TemperatureMapper(ParameterMapper):
+class TemperatureMapper(FieldMapper):
     """Map temperature to Anthropic temperature field."""
 
-    def map(
-        self,
-        request: dict[str, Any],
-        value: object,
-        model: Model,
-    ) -> dict[str, Any]:
-        """Transform temperature into provider request."""
-        validated_value = self._validate_value(value, model)
-        if validated_value is None:
-            return request
-
-        request["temperature"] = validated_value
-        return request
+    field = "temperature"
 
 
-class TopPMapper(ParameterMapper):
+class TopPMapper(FieldMapper):
     """Map top_p to Anthropic top_p field."""
 
-    def map(
-        self,
-        request: dict[str, Any],
-        value: object,
-        model: Model,
-    ) -> dict[str, Any]:
-        """Transform top_p into provider request."""
-        validated_value = self._validate_value(value, model)
-        if validated_value is None:
-            return request
-
-        request["top_p"] = validated_value
-        return request
+    field = "top_p"
 
 
-class TopKMapper(ParameterMapper):
+class TopKMapper(FieldMapper):
     """Map top_k to Anthropic top_k field."""
 
-    def map(
-        self,
-        request: dict[str, Any],
-        value: object,
-        model: Model,
-    ) -> dict[str, Any]:
-        """Transform top_k into provider request."""
-        validated_value = self._validate_value(value, model)
-        if validated_value is None:
-            return request
-
-        request["top_k"] = validated_value
-        return request
+    field = "top_k"
 
 
-class MaxTokensMapper(ParameterMapper):
+class MaxTokensMapper(FieldMapper):
     """Map max_tokens to Anthropic max_tokens field."""
 
-    def map(
-        self,
-        request: dict[str, Any],
-        value: object,
-        model: Model,
-    ) -> dict[str, Any]:
-        """Transform max_tokens into provider request."""
-        validated_value = self._validate_value(value, model)
-        if validated_value is None:
-            return request
-
-        request["max_tokens"] = validated_value
-        return request
+    field = "max_tokens"
 
 
-class StopSequencesMapper(ParameterMapper):
+class StopSequencesMapper(FieldMapper):
     """Map stop_sequences to Anthropic stop_sequences field."""
 
-    def map(
-        self,
-        request: dict[str, Any],
-        value: object,
-        model: Model,
-    ) -> dict[str, Any]:
-        """Transform stop_sequences into provider request."""
-        validated_value = self._validate_value(value, model)
-        if validated_value is None:
-            return request
-
-        request["stop_sequences"] = validated_value
-        return request
+    field = "stop_sequences"
 
 
 class ThinkingMapper(ParameterMapper):

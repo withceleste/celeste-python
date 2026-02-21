@@ -42,7 +42,7 @@ def _create_test_mapper(
     class TestMapperClass(ParameterMapper):
         """Test mapper implementation."""
 
-        name: StrEnum = param_name
+        name = param_name
 
         def map(
             self,
@@ -72,7 +72,7 @@ def _create_transform_mapper(
     class TransformMapperClass(ParameterMapper):
         """Test mapper with output transformation."""
 
-        name: StrEnum = param_name
+        name = param_name
 
         def map(
             self,

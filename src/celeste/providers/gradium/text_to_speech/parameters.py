@@ -3,25 +3,13 @@
 from typing import Any
 
 from celeste.models import Model
-from celeste.parameters import ParameterMapper
+from celeste.parameters import FieldMapper, ParameterMapper
 
 
-class VoiceMapper(ParameterMapper):
+class VoiceMapper(FieldMapper):
     """Map voice to Gradium voice_id field."""
 
-    def map(
-        self,
-        request: dict[str, Any],
-        value: object,
-        model: Model,
-    ) -> dict[str, Any]:
-        """Transform voice into provider request."""
-        validated_value = self._validate_value(value, model)
-        if validated_value is None:
-            return request
-
-        request["voice_id"] = validated_value
-        return request
+    field = "voice_id"
 
 
 class PaddingBonusMapper(ParameterMapper):
@@ -42,22 +30,10 @@ class PaddingBonusMapper(ParameterMapper):
         return request
 
 
-class OutputFormatMapper(ParameterMapper):
+class OutputFormatMapper(FieldMapper):
     """Map output_format to Gradium output_format field."""
 
-    def map(
-        self,
-        request: dict[str, Any],
-        value: object,
-        model: Model,
-    ) -> dict[str, Any]:
-        """Transform output_format into provider request."""
-        validated_value = self._validate_value(value, model)
-        if validated_value is None:
-            return request
-
-        request["output_format"] = validated_value
-        return request
+    field = "output_format"
 
 
 __all__ = [

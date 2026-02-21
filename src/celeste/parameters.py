@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 from enum import StrEnum
-from typing import Any, TypedDict
+from typing import Any, ClassVar, TypedDict
 
 from celeste.models import Model
 from celeste.types import TextContent
@@ -15,7 +15,7 @@ class Parameters(TypedDict, total=False):
 class ParameterMapper(ABC):
     """Base class for provider-specific parameter transformation."""
 
-    name: StrEnum
+    name: ClassVar[StrEnum]
     """Parameter name matching capability TypedDict key. Must be StrEnum for type safety."""
 
     @abstractmethod
@@ -48,4 +48,18 @@ class ParameterMapper(ABC):
         return constraint(value)
 
 
-__all__ = ["ParameterMapper", "Parameters"]
+class FieldMapper(ParameterMapper):
+    """Maps a parameter directly to a flat request field after validation."""
+
+    field: ClassVar[str]
+
+    def map(self, request: dict[str, Any], value: Any, model: Model) -> dict[str, Any]:  # noqa: ANN401
+        """Transform parameter value into provider's request structure."""
+        validated_value = self._validate_value(value, model)
+        if validated_value is None:
+            return request
+        request[self.field] = validated_value
+        return request
+
+
+__all__ = ["FieldMapper", "ParameterMapper", "Parameters"]

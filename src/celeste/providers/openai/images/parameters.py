@@ -1,153 +1,54 @@
 """OpenAI Images API parameter mappers."""
 
-from typing import Any
-
-from celeste.models import Model
-from celeste.parameters import ParameterMapper
+from celeste.parameters import FieldMapper
 
 
-class SizeMapper(ParameterMapper):
+class SizeMapper(FieldMapper):
     """Map size to OpenAI size field."""
 
-    def map(
-        self,
-        request: dict[str, Any],
-        value: object,
-        model: Model,
-    ) -> dict[str, Any]:
-        """Transform size into provider request."""
-        validated_value = self._validate_value(value, model)
-        if validated_value is None:
-            return request
-
-        request["size"] = validated_value
-        return request
+    field = "size"
 
 
-class PartialImagesMapper(ParameterMapper):
+class PartialImagesMapper(FieldMapper):
     """Map partial_images to OpenAI partial_images field."""
 
-    def map(
-        self,
-        request: dict[str, Any],
-        value: object,
-        model: Model,
-    ) -> dict[str, Any]:
-        """Transform partial_images into provider request."""
-        validated_value = self._validate_value(value, model)
-        if validated_value is None:
-            return request
-
-        request["partial_images"] = validated_value
-        return request
+    field = "partial_images"
 
 
-class QualityMapper(ParameterMapper):
+class QualityMapper(FieldMapper):
     """Map quality to OpenAI quality field."""
 
-    def map(
-        self,
-        request: dict[str, Any],
-        value: object,
-        model: Model,
-    ) -> dict[str, Any]:
-        """Transform quality into provider request."""
-        validated_value = self._validate_value(value, model)
-        if validated_value is None:
-            return request
-
-        request["quality"] = validated_value
-        return request
+    field = "quality"
 
 
-class BackgroundMapper(ParameterMapper):
+class BackgroundMapper(FieldMapper):
     """Map background to OpenAI background field."""
 
-    def map(
-        self,
-        request: dict[str, Any],
-        value: object,
-        model: Model,
-    ) -> dict[str, Any]:
-        """Transform background into provider request."""
-        validated_value = self._validate_value(value, model)
-        if validated_value is None:
-            return request
-
-        request["background"] = validated_value
-        return request
+    field = "background"
 
 
-class OutputFormatMapper(ParameterMapper):
+class OutputFormatMapper(FieldMapper):
     """Map output_format to OpenAI output_format field."""
 
-    def map(
-        self,
-        request: dict[str, Any],
-        value: object,
-        model: Model,
-    ) -> dict[str, Any]:
-        """Transform output_format into provider request."""
-        validated_value = self._validate_value(value, model)
-        if validated_value is None:
-            return request
-
-        request["output_format"] = validated_value
-        return request
+    field = "output_format"
 
 
-class StyleMapper(ParameterMapper):
+class StyleMapper(FieldMapper):
     """Map style to OpenAI style field."""
 
-    def map(
-        self,
-        request: dict[str, Any],
-        value: object,
-        model: Model,
-    ) -> dict[str, Any]:
-        """Transform style into provider request."""
-        validated_value = self._validate_value(value, model)
-        if validated_value is None:
-            return request
-
-        request["style"] = validated_value
-        return request
+    field = "style"
 
 
-class ModerationMapper(ParameterMapper):
+class ModerationMapper(FieldMapper):
     """Map moderation to OpenAI moderation field."""
 
-    def map(
-        self,
-        request: dict[str, Any],
-        value: object,
-        model: Model,
-    ) -> dict[str, Any]:
-        """Transform moderation into provider request."""
-        validated_value = self._validate_value(value, model)
-        if validated_value is None:
-            return request
-
-        request["moderation"] = validated_value
-        return request
+    field = "moderation"
 
 
-class OutputCompressionMapper(ParameterMapper):
+class OutputCompressionMapper(FieldMapper):
     """Map output_compression to OpenAI output_compression field."""
 
-    def map(
-        self,
-        request: dict[str, Any],
-        value: object,
-        model: Model,
-    ) -> dict[str, Any]:
-        """Transform output_compression into provider request."""
-        validated_value = self._validate_value(value, model)
-        if validated_value is None:
-            return request
-
-        request["output_compression"] = validated_value
-        return request
+    field = "output_compression"
 
 
 __all__ = [
