@@ -35,7 +35,7 @@ class GoogleInteractionsStream:
             delta_type = delta.get("type")
 
             if delta_type == "text":
-                return delta.get("text", "")
+                return delta.get("text") or None
             # Note: thought deltas are not returned as content (modality-specific handling)
 
         # Handle interaction complete events

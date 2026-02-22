@@ -40,7 +40,7 @@ class ChatCompletionsStream:
         if not isinstance(delta, dict):
             return None
 
-        return delta.get("content")
+        return delta.get("content") or None
 
     def _parse_chunk_usage(
         self, event_data: dict[str, Any]

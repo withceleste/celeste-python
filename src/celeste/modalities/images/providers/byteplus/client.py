@@ -82,14 +82,11 @@ class BytePlusImagesStream(_BytePlusImagesStream, ImagesStream):
         return super()._aggregate_usage(chunks)
 
     def _aggregate_event_data(self, chunks: list[ImageChunk]) -> list[dict[str, Any]]:
-        """Collect metadata events (skip content-only events)."""
+        """Prepend completed_event_data, then delegate to base."""
         events: list[dict[str, Any]] = []
         if self._completed_event_data is not None:
             events.append(self._completed_event_data)
-        for chunk in chunks:
-            event_data = chunk.metadata.get("event_data")
-            if isinstance(event_data, dict):
-                events.append(event_data)
+        events.extend(super()._aggregate_event_data(chunks))
         return events
 
 

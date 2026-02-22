@@ -32,14 +32,14 @@ class OllamaImagesStream(_OllamaGenerateStream, ImagesStream):
         if not b64_image:
             return ImageChunk(
                 content=ImageArtifact(data=b""),
-                metadata=self._parse_chunk_metadata(event_data),
+                metadata={"event_data": event_data},
             )
 
         return ImageChunk(
             content=ImageArtifact(data=b64_image),
             finish_reason=self._get_chunk_finish_reason(event_data),
             usage=self._get_chunk_usage(event_data),
-            metadata=self._parse_chunk_metadata(event_data),
+            metadata={"event_data": event_data},
         )
 
     def _aggregate_content(self, chunks: list[ImageChunk]) -> ImageArtifact:
@@ -49,10 +49,6 @@ class OllamaImagesStream(_OllamaGenerateStream, ImagesStream):
                 return chunk.content
         msg = "No image in stream"
         raise ValueError(msg)
-
-    def _aggregate_event_data(self, chunks: list[ImageChunk]) -> list[dict[str, Any]]:
-        """Collect metadata from chunks."""
-        return [chunk.metadata for chunk in chunks if chunk.metadata]
 
 
 class OllamaImagesClient(OllamaGenerateClient, ImagesClient):

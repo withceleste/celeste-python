@@ -14,12 +14,11 @@ class OllamaGenerateStream:
     - _parse_chunk_content(event_data) - Extract image from NDJSON event
     - _parse_chunk_usage(event_data) - Extract usage from NDJSON event
     - _parse_chunk_finish_reason(event_data) - Extract finish reason from NDJSON event
-    - _parse_chunk_metadata(event_data) - Extract progress metadata from NDJSON event
     """
 
     def _parse_chunk_content(self, event_data: dict[str, Any]) -> str | None:
         """Extract base64 image from NDJSON event."""
-        return event_data.get("image")
+        return event_data.get("image") or None
 
     def _parse_chunk_usage(
         self, event_data: dict[str, Any]
@@ -36,13 +35,6 @@ class OllamaGenerateStream:
         if event_data.get("done"):
             return FinishReason(reason="completed")
         return None
-
-    def _parse_chunk_metadata(self, event_data: dict[str, Any]) -> dict[str, Any]:
-        """Extract progress metadata from NDJSON event."""
-        return {
-            "completed": event_data.get("completed"),
-            "total": event_data.get("total"),
-        }
 
 
 __all__ = ["OllamaGenerateStream"]

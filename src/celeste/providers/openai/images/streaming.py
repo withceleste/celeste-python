@@ -38,7 +38,7 @@ class OpenAIImagesStream:
             "image_generation.completed",
             "image_edit.completed",
         ):
-            return event_data.get("b64_json")
+            return event_data.get("b64_json") or None
 
         return None
 

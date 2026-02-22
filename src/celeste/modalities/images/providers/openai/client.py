@@ -26,43 +26,9 @@ from .parameters import OPENAI_PARAMETER_MAPPERS
 class OpenAIImagesStream(_OpenAIImagesStream, ImagesStream):
     """OpenAI streaming for images modality."""
 
-    def _parse_chunk(self, event_data: dict[str, Any]) -> ImageChunk | None:
-        """Parse one SSE event into a typed chunk."""
-        b64_json = self._parse_chunk_content(event_data)
-        if not b64_json:
-            usage = self._get_chunk_usage(event_data)
-            finish_reason = self._get_chunk_finish_reason(event_data)
-            if usage is None and finish_reason is None:
-                return None
-            # Chunk with usage/finish_reason only (no image)
-            return ImageChunk(
-                content=ImageArtifact(data=b""),
-                finish_reason=finish_reason,
-                usage=usage,
-                metadata={"event_data": event_data},
-            )
-
-        artifact = ImageArtifact(data=b64_json)
-
-        return ImageChunk(
-            content=artifact,
-            finish_reason=self._get_chunk_finish_reason(event_data),
-            usage=self._get_chunk_usage(event_data),
-            metadata={"event_data": event_data},
-        )
-
     def _aggregate_content(self, chunks: list[ImageChunk]) -> ImageArtifact:
         """Aggregate image content from chunks."""
         return chunks[-1].content
-
-    def _aggregate_event_data(self, chunks: list[ImageChunk]) -> list[dict[str, Any]]:
-        """Collect metadata events (skip content-only events)."""
-        events: list[dict[str, Any]] = []
-        for chunk in chunks:
-            event_data = chunk.metadata.get("event_data")
-            if isinstance(event_data, dict):
-                events.append(event_data)
-        return events
 
 
 class OpenAIImagesClient(OpenAIImagesMixin, ImagesClient):

@@ -12,7 +12,6 @@ from celeste.utils import build_image_data_url
 
 from ...client import TextClient
 from ...io import (
-    TextChunk,
     TextInput,
     TextOutput,
 )
@@ -23,36 +22,6 @@ from .parameters import MISTRAL_PARAMETER_MAPPERS
 
 class MistralTextStream(_MistralChatStream, TextStream):
     """Mistral streaming for text modality."""
-
-    def _parse_chunk(self, event_data: dict[str, Any]) -> TextChunk | None:
-        """Parse one SSE event into a typed chunk."""
-        content = self._parse_chunk_content(event_data)
-        if content is None:
-            usage = self._get_chunk_usage(event_data)
-            finish_reason = self._get_chunk_finish_reason(event_data)
-            if usage is None and finish_reason is None:
-                return None
-            content = ""
-
-        return TextChunk(
-            content=content,
-            finish_reason=self._get_chunk_finish_reason(event_data),
-            usage=self._get_chunk_usage(event_data),
-            metadata={"event_data": event_data},
-        )
-
-    def _aggregate_content(self, chunks: list[TextChunk]) -> str:
-        """Aggregate streamed text content."""
-        return "".join(chunk.content for chunk in chunks)
-
-    def _aggregate_event_data(self, chunks: list[TextChunk]) -> list[dict[str, Any]]:
-        """Collect metadata events."""
-        events: list[dict[str, Any]] = []
-        for chunk in chunks:
-            event_data = chunk.metadata.get("event_data")
-            if isinstance(event_data, dict):
-                events.append(event_data)
-        return events
 
 
 class MistralTextClient(MistralChatClient, TextClient):

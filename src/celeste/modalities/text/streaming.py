@@ -1,6 +1,5 @@
 """Text streaming primitives."""
 
-from abc import abstractmethod
 from collections.abc import AsyncIterator, Callable
 from typing import Any, Unpack
 
@@ -17,6 +16,8 @@ class TextStream(Stream[TextOutput, TextParameters, TextChunk]):
 
     _usage_class = TextUsage
     _finish_reason_class = TextFinishReason
+    _chunk_class = TextChunk
+    _empty_content = ""
 
     def __init__(
         self,
@@ -30,32 +31,9 @@ class TextStream(Stream[TextOutput, TextParameters, TextChunk]):
         self._transform_output = transform_output
         self._client = client
 
-    @abstractmethod
     def _aggregate_content(self, chunks: list[TextChunk]) -> str:
         """Aggregate content from chunks into raw text."""
-        ...
-
-    def _aggregate_usage(self, chunks: list[TextChunk]) -> TextUsage:
-        """Aggregate usage across chunks (universal)."""
-        for chunk in reversed(chunks):
-            if chunk.usage:
-                return chunk.usage
-        return TextUsage()
-
-    def _aggregate_finish_reason(
-        self,
-        chunks: list[TextChunk],
-    ) -> TextFinishReason | None:
-        """Aggregate finish reason across chunks (universal)."""
-        for chunk in reversed(chunks):
-            if chunk.finish_reason:
-                return chunk.finish_reason
-        return None
-
-    @abstractmethod
-    def _aggregate_event_data(self, chunks: list[TextChunk]) -> list[dict[str, Any]]:
-        """Collect raw events (filtering happens in _build_stream_metadata)."""
-        ...
+        return "".join(chunk.content for chunk in chunks)
 
     def _build_stream_metadata(
         self, raw_events: list[dict[str, Any]]
