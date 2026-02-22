@@ -22,6 +22,8 @@ class AudioStream(Stream[AudioOutput, AudioParameters, AudioChunk]):
 
     _usage_class = AudioUsage
     _finish_reason_class = AudioFinishReason
+    _chunk_class = AudioChunk
+    _empty_content = b""
 
     def __init__(
         self,
@@ -37,28 +39,6 @@ class AudioStream(Stream[AudioOutput, AudioParameters, AudioChunk]):
     @abstractmethod
     def _aggregate_content(self, chunks: list[AudioChunk]) -> AudioArtifact:
         """Aggregate content from chunks into AudioArtifact."""
-        ...
-
-    def _aggregate_usage(self, chunks: list[AudioChunk]) -> AudioUsage:
-        """Aggregate usage across chunks."""
-        for chunk in reversed(chunks):
-            if chunk.usage:
-                return chunk.usage
-        return AudioUsage()
-
-    def _aggregate_finish_reason(
-        self,
-        chunks: list[AudioChunk],
-    ) -> AudioFinishReason | None:
-        """Aggregate finish reason across chunks."""
-        for chunk in reversed(chunks):
-            if chunk.finish_reason:
-                return chunk.finish_reason
-        return None
-
-    @abstractmethod
-    def _aggregate_event_data(self, chunks: list[AudioChunk]) -> list[dict[str, Any]]:
-        """Collect raw events."""
         ...
 
     def _build_stream_metadata(

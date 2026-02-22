@@ -361,26 +361,7 @@ class TestStreamAbstractBehavior:
         # Verify error mentions missing abstract methods
         error_msg = str(exc_info.value)
         assert "Stream" in error_msg
-        assert any(method in error_msg for method in ["_parse_chunk", "_parse_output"])
-
-    async def test_subclass_without_parse_chunk_fails(
-        self, mock_sse_iterator: AsyncMock
-    ) -> None:
-        """Subclass without _parse_chunk implementation must fail instantiation."""
-
-        # Arrange
-        class IncompleteStream(Stream[ConcreteOutput, Parameters, Chunk]):
-            """Missing _parse_chunk implementation."""
-
-            def _parse_output(  # type: ignore[override]
-                self, chunks: list[Chunk], **parameters: Unpack[Parameters]
-            ) -> ConcreteOutput:
-                """Implement _parse_output but not _parse_chunk."""
-                return ConcreteOutput(content="test")
-
-        # Act & Assert
-        with pytest.raises(TypeError, match=r".*_parse_chunk.*"):
-            IncompleteStream(mock_sse_iterator)  # type: ignore[abstract]
+        assert "_parse_output" in error_msg
 
     async def test_subclass_without_parse_output_fails(
         self, mock_sse_iterator: AsyncMock

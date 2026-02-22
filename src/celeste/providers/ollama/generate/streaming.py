@@ -19,7 +19,7 @@ class OllamaGenerateStream:
 
     def _parse_chunk_content(self, event_data: dict[str, Any]) -> str | None:
         """Extract base64 image from NDJSON event."""
-        return event_data.get("image")
+        return event_data.get("image") or None
 
     def _parse_chunk_usage(
         self, event_data: dict[str, Any]

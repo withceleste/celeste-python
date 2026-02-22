@@ -26,7 +26,7 @@ class CohereChatStream:
             delta = event_data.get("delta", {})
             message = delta.get("message", {})
             content = message.get("content", {})
-            return content.get("text")
+            return content.get("text") or None
 
         return None
 

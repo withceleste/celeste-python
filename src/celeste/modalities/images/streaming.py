@@ -18,6 +18,8 @@ class ImagesStream(Stream[ImageOutput, ImageParameters, ImageChunk]):
 
     _usage_class = ImageUsage
     _finish_reason_class = ImageFinishReason
+    _chunk_class = ImageChunk
+    _empty_content = ImageArtifact(data=b"")
 
     def __init__(
         self,
@@ -31,31 +33,13 @@ class ImagesStream(Stream[ImageOutput, ImageParameters, ImageChunk]):
         self._transform_output = transform_output
         self._client = client
 
+    def _wrap_chunk_content(self, raw_content: Any) -> ImageArtifact:  # noqa: ANN401
+        """Wrap raw content (base64 string) into ImageArtifact."""
+        return ImageArtifact(data=raw_content)
+
     @abstractmethod
     def _aggregate_content(self, chunks: list[ImageChunk]) -> ImageArtifact:
         """Aggregate content from chunks into raw content (modality-specific)."""
-        ...
-
-    def _aggregate_usage(self, chunks: list[ImageChunk]) -> ImageUsage:
-        """Aggregate usage across chunks (universal)."""
-        for chunk in reversed(chunks):
-            if chunk.usage:
-                return chunk.usage
-        return ImageUsage()
-
-    def _aggregate_finish_reason(
-        self,
-        chunks: list[ImageChunk],
-    ) -> ImageFinishReason | None:
-        """Aggregate finish reason across chunks (universal)."""
-        for chunk in reversed(chunks):
-            if chunk.finish_reason:
-                return chunk.finish_reason
-        return None
-
-    @abstractmethod
-    def _aggregate_event_data(self, chunks: list[ImageChunk]) -> list[dict[str, Any]]:
-        """Collect raw events (filtering happens in _build_stream_metadata)."""
         ...
 
     def _build_stream_metadata(

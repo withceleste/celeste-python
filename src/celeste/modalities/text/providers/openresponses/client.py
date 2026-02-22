@@ -31,41 +31,20 @@ class OpenResponsesTextStream(_OpenResponsesStream, TextStream):
         self._response_data: dict[str, Any] | None = None
 
     def _parse_chunk(self, event_data: dict[str, Any]) -> TextChunk | None:
-        """Parse one SSE event into a typed chunk."""
+        """Parse one SSE event into a typed chunk (captures response.completed)."""
         event_type = event_data.get("type")
         if event_type == "response.completed":
             response = event_data.get("response")
             if isinstance(response, dict):
                 self._response_data = response
-
-        content = self._parse_chunk_content(event_data)
-        if content is None:
-            usage = self._get_chunk_usage(event_data)
-            finish_reason = self._get_chunk_finish_reason(event_data)
-            if usage is None and finish_reason is None:
-                return None
-            content = ""
-
-        return TextChunk(
-            content=content,
-            finish_reason=self._get_chunk_finish_reason(event_data),
-            usage=self._get_chunk_usage(event_data),
-            metadata={"event_data": event_data},
-        )
-
-    def _aggregate_content(self, chunks: list[TextChunk]) -> str:
-        """Aggregate streamed text content."""
-        return "".join(chunk.content for chunk in chunks)
+        return super()._parse_chunk(event_data)
 
     def _aggregate_event_data(self, chunks: list[TextChunk]) -> list[dict[str, Any]]:
-        """Collect raw events (filtering happens in _build_stream_metadata)."""
+        """Prepend response_data, then delegate to base."""
         events: list[dict[str, Any]] = []
         if self._response_data is not None:
             events.append(self._response_data)
-        for chunk in chunks:
-            event_data = chunk.metadata.get("event_data")
-            if isinstance(event_data, dict):
-                events.append(event_data)
+        events.extend(super()._aggregate_event_data(chunks))
         return events
 
 

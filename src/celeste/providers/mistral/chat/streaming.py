@@ -38,7 +38,7 @@ class MistralChatStream(ChatCompletionsStream):
                     text_parts.append(block.get("text", ""))
             return "".join(text_parts) if text_parts else None
 
-        return content_delta
+        return content_delta or None
 
     def _parse_chunk_finish_reason(
         self, event_data: dict[str, Any]

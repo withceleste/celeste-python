@@ -28,7 +28,7 @@ class AnthropicMessagesStream:
         if event_type == "content_block_delta":
             delta = event_data.get("delta", {})
             if delta.get("type") == "text_delta":
-                return delta.get("text")
+                return delta.get("text") or None
 
         return None
 

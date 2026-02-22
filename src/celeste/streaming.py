@@ -28,6 +28,8 @@ class Stream[Out: Output, Params: Parameters, Chunk: ChunkBase](ABC):
 
     _usage_class: ClassVar[type[Usage]] = Usage
     _finish_reason_class: ClassVar[type[FinishReason]] = FinishReason
+    _chunk_class: ClassVar[type[ChunkBase]]
+    _empty_content: ClassVar[Any]
 
     def __init__(
         self,
@@ -44,10 +46,31 @@ class Stream[Out: Output, Params: Parameters, Chunk: ChunkBase](ABC):
         self._portal: BlockingPortal | None = None
         self._portal_cm: AbstractContextManager[BlockingPortal] | None = None
 
-    @abstractmethod
+    def _parse_chunk_content(self, event_data: dict[str, Any]) -> Any | None:  # noqa: ANN401
+        """Parse content from chunk event. Override in provider mixin."""
+        return None
+
+    def _wrap_chunk_content(self, raw_content: Any) -> Any:  # noqa: ANN401
+        """Wrap raw content into chunk content type. Override for type transformation."""
+        return raw_content
+
     def _parse_chunk(self, event: dict[str, Any]) -> Chunk | None:
         """Parse SSE event into Chunk (returns None to filter lifecycle events)."""
-        ...
+        content = self._parse_chunk_content(event)
+        if content is None:
+            usage = self._get_chunk_usage(event)
+            finish_reason = self._get_chunk_finish_reason(event)
+            if usage is None and finish_reason is None:
+                return None
+            content = self._empty_content
+        else:
+            content = self._wrap_chunk_content(content)
+        return self._chunk_class(  # type: ignore[return-value]
+            content=content,
+            finish_reason=self._get_chunk_finish_reason(event),
+            usage=self._get_chunk_usage(event),
+            metadata={"event_data": event},
+        )
 
     @abstractmethod
     def _parse_output(self, chunks: list[Chunk], **parameters: Unpack[Params]) -> Out:  # type: ignore[misc]
@@ -87,6 +110,29 @@ class Stream[Out: Output, Params: Parameters, Chunk: ChunkBase](ABC):
     ) -> dict[str, Any]:
         """Build metadata for streaming. Providers override to filter content."""
         return {"raw_events": raw_events}
+
+    def _aggregate_usage(self, chunks: list[Chunk]) -> Usage:
+        """Aggregate usage across chunks (last chunk with usage wins)."""
+        for chunk in reversed(chunks):
+            if chunk.usage:
+                return chunk.usage
+        return self._usage_class()
+
+    def _aggregate_finish_reason(self, chunks: list[Chunk]) -> FinishReason | None:
+        """Aggregate finish reason across chunks (last chunk with finish_reason wins)."""
+        for chunk in reversed(chunks):
+            if chunk.finish_reason:
+                return chunk.finish_reason
+        return None
+
+    def _aggregate_event_data(self, chunks: list[Chunk]) -> list[dict[str, Any]]:
+        """Collect raw event_data from chunk metadata."""
+        events: list[dict[str, Any]] = []
+        for chunk in chunks:
+            event_data = chunk.metadata.get("event_data")
+            if isinstance(event_data, dict):
+                events.append(event_data)
+        return events
 
     def __repr__(self) -> str:
         """Developer-friendly representation showing stream state."""

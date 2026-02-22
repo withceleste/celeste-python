@@ -29,7 +29,7 @@ class GoogleGenerateContentStream:
         parts = content.get("parts", [])
 
         if parts:
-            return parts[0].get("text")
+            return parts[0].get("text") or None
 
         return None
 

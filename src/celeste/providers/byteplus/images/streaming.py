@@ -36,7 +36,7 @@ class BytePlusImagesStream:
             url: str | None = event_data.get("url")
             if url:
                 return url
-            return event_data.get("b64_json")
+            return event_data.get("b64_json") or None
 
         return None
 

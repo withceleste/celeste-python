@@ -26,7 +26,7 @@ class OpenResponsesStream:
         """Extract content from SSE event."""
         event_type = event_data.get("type")
         if event_type == "response.output_text.delta":
-            return event_data.get("delta")
+            return event_data.get("delta") or None
         return None
 
     def _parse_chunk_usage(

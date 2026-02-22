@@ -23,7 +23,7 @@ class GradiumTextToSpeechStream:
 
         Returns audio bytes if present, None otherwise.
         """
-        return event_data.get("data")
+        return event_data.get("data") or None
 
     def _parse_chunk_usage(
         self, event_data: dict[str, Any]
