@@ -6,7 +6,6 @@ from typing import Any, ClassVar
 from celeste.client import APIMixin
 from celeste.core import UsageField
 from celeste.io import FinishReason
-from celeste.mime_types import ApplicationMimeType
 from celeste.providers.google.auth import GoogleADC
 
 from . import config
@@ -56,23 +55,18 @@ class AnthropicMessagesClient(APIMixin):
             )
         return f"{config.BASE_URL}{endpoint}"
 
-    def _build_headers(self, request_body: dict[str, Any]) -> dict[str, str]:
-        """Build headers with beta features extracted from request."""
-        beta_features: list[str] = request_body.pop("_beta_features", [])
-
+    def _build_headers(self, beta_features: list[str] | None = None) -> dict[str, str]:
+        """Build Anthropic request headers."""
         headers: dict[str, str] = {
-            **self.auth.get_headers(),
+            **self._json_headers(),
             config.HEADER_ANTHROPIC_VERSION: config.ANTHROPIC_VERSION,
-            "Content-Type": ApplicationMimeType.JSON,
         }
-
         if beta_features:
             beta_values = [
                 getattr(config, f"BETA_{f.upper().replace('-', '_')}")
                 for f in beta_features
             ]
             headers[config.HEADER_ANTHROPIC_BETA] = ",".join(beta_values)
-
         return headers
 
     def _build_request(
@@ -103,7 +97,8 @@ class AnthropicMessagesClient(APIMixin):
         if "max_tokens" not in request_body:
             request_body["max_tokens"] = config.DEFAULT_MAX_TOKENS
 
-        headers = self._build_headers(request_body)
+        beta_features: list[str] = request_body.pop("_beta_features", [])
+        headers = self._build_headers(beta_features=beta_features)
 
         if endpoint is None:
             endpoint = config.AnthropicMessagesEndpoint.CREATE_MESSAGE
@@ -129,7 +124,8 @@ class AnthropicMessagesClient(APIMixin):
         if "max_tokens" not in request_body:
             request_body["max_tokens"] = config.DEFAULT_MAX_TOKENS
 
-        headers = self._build_headers(request_body)
+        beta_features: list[str] = request_body.pop("_beta_features", [])
+        headers = self._build_headers(beta_features=beta_features)
 
         if endpoint is None:
             endpoint = config.AnthropicMessagesEndpoint.CREATE_MESSAGE
