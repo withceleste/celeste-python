@@ -57,9 +57,9 @@ class Stream[Out: Output, Params: Parameters, Chunk: ChunkBase](ABC):
     def _parse_chunk(self, event: dict[str, Any]) -> Chunk | None:
         """Parse SSE event into Chunk (returns None to filter lifecycle events)."""
         content = self._parse_chunk_content(event)
+        usage = self._get_chunk_usage(event)
+        finish_reason = self._get_chunk_finish_reason(event)
         if content is None:
-            usage = self._get_chunk_usage(event)
-            finish_reason = self._get_chunk_finish_reason(event)
             if usage is None and finish_reason is None:
                 return None
             content = self._empty_content
@@ -67,8 +67,8 @@ class Stream[Out: Output, Params: Parameters, Chunk: ChunkBase](ABC):
             content = self._wrap_chunk_content(content)
         return self._chunk_class(  # type: ignore[return-value]
             content=content,
-            finish_reason=self._get_chunk_finish_reason(event),
-            usage=self._get_chunk_usage(event),
+            finish_reason=finish_reason,
+            usage=usage,
             metadata={"event_data": event},
         )
 
