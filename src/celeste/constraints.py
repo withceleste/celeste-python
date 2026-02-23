@@ -3,14 +3,13 @@
 import math
 import re
 from abc import ABC, abstractmethod
-from typing import Any, get_args, get_origin
+from typing import Any, ClassVar, get_args, get_origin
 
 from pydantic import BaseModel, Field, computed_field
 
 from celeste.artifacts import AudioArtifact, ImageArtifact, VideoArtifact
 from celeste.exceptions import ConstraintViolationError
-from celeste.mime_types import AudioMimeType, ImageMimeType, VideoMimeType
-from celeste.types import AudioContent, ImageContent, VideoContent
+from celeste.mime_types import AudioMimeType, ImageMimeType, MimeType, VideoMimeType
 
 
 class Constraint(BaseModel, ABC):
@@ -267,193 +266,105 @@ class Schema(Constraint):
         return value
 
 
-class ImageConstraint(Constraint):
+class _MediaConstraint[M: MimeType](Constraint):
+    """Base for single-media-artifact constraints."""
+
+    _artifact_type: ClassVar[type]
+    _media_label: ClassVar[str]
+
+    supported_mime_types: list[M] | None = None
+
+    def __call__(self, value: Any) -> Any:  # noqa: ANN401
+        """Validate single media artifact against constraint."""
+        if isinstance(value, list):
+            msg = f"{self.__class__.__name__} requires a single {self._artifact_type.__name__}, not a list"
+            raise ConstraintViolationError(msg)
+        if not isinstance(value, self._artifact_type):
+            msg = f"Must be {self._artifact_type.__name__}, got {type(value).__name__}"
+            raise ConstraintViolationError(msg)
+        if (
+            self.supported_mime_types is not None
+            and value.mime_type not in self.supported_mime_types  # type: ignore[attr-defined]
+        ):
+            supported_values = [mt.value for mt in self.supported_mime_types]
+            got_value = value.mime_type.value if value.mime_type else None  # type: ignore[attr-defined]
+            msg = f"mime_type must be one of {supported_values}, got {got_value!r}"
+            raise ConstraintViolationError(msg)
+        return value
+
+
+class _MediaListConstraint[M: MimeType](Constraint):
+    """Base for plural-media-artifact constraints."""
+
+    _artifact_type: ClassVar[type]
+    _media_label: ClassVar[str]
+
+    supported_mime_types: list[M] | None = None
+    max_count: int | None = None
+
+    def __call__(self, value: Any) -> Any:  # noqa: ANN401
+        """Validate media artifact(s) against constraint and normalize to list."""
+        items = value if isinstance(value, list) else [value]
+        if self.max_count is not None and len(items) > self.max_count:
+            msg = f"Must have at most {self.max_count} {self._media_label}(s), got {len(items)}"
+            raise ConstraintViolationError(msg)
+        if self.supported_mime_types is not None:
+            label = self._media_label.capitalize()
+            for i, item in enumerate(items):
+                if not isinstance(item, self._artifact_type):
+                    msg = f"{label} {i + 1}: Must be {self._artifact_type.__name__}, got {type(item).__name__}"
+                    raise ConstraintViolationError(msg)
+                if item.mime_type not in self.supported_mime_types:  # type: ignore[attr-defined]
+                    supported_values = [mt.value for mt in self.supported_mime_types]
+                    got_value = item.mime_type.value if item.mime_type else None  # type: ignore[attr-defined]
+                    msg = (
+                        f"{label} {i + 1}: mime_type must be one of {supported_values}, "
+                        f"got {got_value!r}"
+                    )
+                    raise ConstraintViolationError(msg)
+        return items
+
+
+class ImageConstraint(_MediaConstraint[ImageMimeType]):
     """Constraint for validating a single image artifact - validates mime_type."""
 
-    supported_mime_types: list[ImageMimeType] | None = None
-    """Supported MIME types for the image."""
-
-    def __call__(self, value: ImageArtifact) -> ImageArtifact:
-        """Validate single image artifact against constraint."""
-        if isinstance(value, list):
-            msg = "ImageConstraint requires a single ImageArtifact, not a list"
-            raise ConstraintViolationError(msg)
-
-        if not isinstance(value, ImageArtifact):
-            msg = f"Must be ImageArtifact, got {type(value).__name__}"
-            raise ConstraintViolationError(msg)
-
-        if (
-            self.supported_mime_types is not None
-            and value.mime_type not in self.supported_mime_types
-        ):
-            supported_values = [mt.value for mt in self.supported_mime_types]
-            got_value = value.mime_type.value if value.mime_type else None
-            msg = f"mime_type must be one of {supported_values}, got {got_value!r}"
-            raise ConstraintViolationError(msg)
-
-        return value
+    _artifact_type = ImageArtifact
+    _media_label = "image"
 
 
-class ImagesConstraint(Constraint):
+class ImagesConstraint(_MediaListConstraint[ImageMimeType]):
     """Constraint for validating image artifacts list - validates mime_type and count limits."""
 
-    supported_mime_types: list[ImageMimeType] | None = None
-    """Supported MIME types."""
-
-    max_count: int | None = None
-    """Maximum number of images."""
-
-    def __call__(self, value: ImageContent) -> list[ImageArtifact]:
-        """Validate image artifact(s) against constraint and normalize to list."""
-        # Normalize: if single ImageArtifact is passed, wrap it in a list
-        images = value if isinstance(value, list) else [value]
-
-        if self.max_count is not None and len(images) > self.max_count:
-            msg = f"Must have at most {self.max_count} image(s), got {len(images)}"
-            raise ConstraintViolationError(msg)
-
-        if self.supported_mime_types is not None:
-            for i, img in enumerate(images):
-                if not isinstance(img, ImageArtifact):
-                    msg = f"Image {i + 1}: Must be ImageArtifact, got {type(img).__name__}"
-                    raise ConstraintViolationError(msg)
-                if img.mime_type not in self.supported_mime_types:
-                    supported_values = [mt.value for mt in self.supported_mime_types]
-                    got_value = img.mime_type.value if img.mime_type else None
-                    msg = (
-                        f"Image {i + 1}: mime_type must be one of {supported_values}, "
-                        f"got {got_value!r}"
-                    )
-                    raise ConstraintViolationError(msg)
-
-        return images
+    _artifact_type = ImageArtifact
+    _media_label = "image"
 
 
-class VideoConstraint(Constraint):
+class VideoConstraint(_MediaConstraint[VideoMimeType]):
     """Constraint for validating a single video artifact - validates mime_type."""
 
-    supported_mime_types: list[VideoMimeType] | None = None
-    """Supported MIME types for the video."""
-
-    def __call__(self, value: VideoArtifact) -> VideoArtifact:
-        """Validate single video artifact against constraint."""
-        if isinstance(value, list):
-            msg = "VideoConstraint requires a single VideoArtifact, not a list"
-            raise ConstraintViolationError(msg)
-
-        if not isinstance(value, VideoArtifact):
-            msg = f"Must be VideoArtifact, got {type(value).__name__}"
-            raise ConstraintViolationError(msg)
-
-        if (
-            self.supported_mime_types is not None
-            and value.mime_type not in self.supported_mime_types
-        ):
-            supported_values = [mt.value for mt in self.supported_mime_types]
-            got_value = value.mime_type.value if value.mime_type else None
-            msg = f"mime_type must be one of {supported_values}, got {got_value!r}"
-            raise ConstraintViolationError(msg)
-
-        return value
+    _artifact_type = VideoArtifact
+    _media_label = "video"
 
 
-class VideosConstraint(Constraint):
+class VideosConstraint(_MediaListConstraint[VideoMimeType]):
     """Constraint for validating video artifacts list - validates mime_type and count limits."""
 
-    supported_mime_types: list[VideoMimeType] | None = None
-    """Supported MIME types."""
-
-    max_count: int | None = None
-    """Maximum number of videos."""
-
-    def __call__(self, value: VideoContent) -> list[VideoArtifact]:
-        """Validate video artifact(s) against constraint and normalize to list."""
-        # Normalize: if single VideoArtifact is passed, wrap it in a list
-        videos = value if isinstance(value, list) else [value]
-
-        if self.max_count is not None and len(videos) > self.max_count:
-            msg = f"Must have at most {self.max_count} video(s), got {len(videos)}"
-            raise ConstraintViolationError(msg)
-
-        if self.supported_mime_types is not None:
-            for i, vid in enumerate(videos):
-                if not isinstance(vid, VideoArtifact):
-                    msg = f"Video {i + 1}: Must be VideoArtifact, got {type(vid).__name__}"
-                    raise ConstraintViolationError(msg)
-                if vid.mime_type not in self.supported_mime_types:
-                    supported_values = [mt.value for mt in self.supported_mime_types]
-                    got_value = vid.mime_type.value if vid.mime_type else None
-                    msg = (
-                        f"Video {i + 1}: mime_type must be one of {supported_values}, "
-                        f"got {got_value!r}"
-                    )
-                    raise ConstraintViolationError(msg)
-
-        return videos
+    _artifact_type = VideoArtifact
+    _media_label = "video"
 
 
-class AudioConstraint(Constraint):
+class AudioConstraint(_MediaConstraint[AudioMimeType]):
     """Constraint for validating a single audio artifact - validates mime_type."""
 
-    supported_mime_types: list[AudioMimeType] | None = None
-    """Supported MIME types for the audio."""
-
-    def __call__(self, value: AudioArtifact) -> AudioArtifact:
-        """Validate single audio artifact against constraint."""
-        if isinstance(value, list):
-            msg = "AudioConstraint requires a single AudioArtifact, not a list"
-            raise ConstraintViolationError(msg)
-
-        if not isinstance(value, AudioArtifact):
-            msg = f"Must be AudioArtifact, got {type(value).__name__}"
-            raise ConstraintViolationError(msg)
-
-        if (
-            self.supported_mime_types is not None
-            and value.mime_type not in self.supported_mime_types
-        ):
-            supported_values = [mt.value for mt in self.supported_mime_types]
-            got_value = value.mime_type.value if value.mime_type else None
-            msg = f"mime_type must be one of {supported_values}, got {got_value!r}"
-            raise ConstraintViolationError(msg)
-
-        return value
+    _artifact_type = AudioArtifact
+    _media_label = "audio"
 
 
-class AudiosConstraint(Constraint):
+class AudiosConstraint(_MediaListConstraint[AudioMimeType]):
     """Constraint for validating audio artifacts list - validates mime_type and count limits."""
 
-    supported_mime_types: list[AudioMimeType] | None = None
-    """Supported MIME types."""
-
-    max_count: int | None = None
-    """Maximum number of audios."""
-
-    def __call__(self, value: AudioContent) -> list[AudioArtifact]:
-        """Validate audio artifact(s) against constraint and normalize to list."""
-        # Normalize: if single AudioArtifact is passed, wrap it in a list
-        audios = value if isinstance(value, list) else [value]
-
-        if self.max_count is not None and len(audios) > self.max_count:
-            msg = f"Must have at most {self.max_count} audio(s), got {len(audios)}"
-            raise ConstraintViolationError(msg)
-
-        if self.supported_mime_types is not None:
-            for i, aud in enumerate(audios):
-                if not isinstance(aud, AudioArtifact):
-                    msg = f"Audio {i + 1}: Must be AudioArtifact, got {type(aud).__name__}"
-                    raise ConstraintViolationError(msg)
-                if aud.mime_type not in self.supported_mime_types:
-                    supported_values = [mt.value for mt in self.supported_mime_types]
-                    got_value = aud.mime_type.value if aud.mime_type else None
-                    msg = (
-                        f"Audio {i + 1}: mime_type must be one of {supported_values}, "
-                        f"got {got_value!r}"
-                    )
-                    raise ConstraintViolationError(msg)
-
-        return audios
+    _artifact_type = AudioArtifact
+    _media_label = "audio"
 
 
 __all__ = [

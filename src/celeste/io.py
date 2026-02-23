@@ -85,10 +85,7 @@ def _extract_input_type(param_type: type) -> InputType | None:
 
 
 def get_constraint_input_type(constraint: Constraint) -> InputType | None:
-    """Get InputType from constraint's __call__ signature.
-
-    Introspects the constraint's __call__ method to find what artifact type
-    it accepts, then maps to InputType using INPUT_TYPE_MAPPING.
+    """Get InputType from constraint's _artifact_type ClassVar or __call__ signature.
 
     Args:
         constraint: The constraint to inspect.
@@ -96,6 +93,12 @@ def get_constraint_input_type(constraint: Constraint) -> InputType | None:
     Returns:
         InputType if the constraint accepts a mapped artifact type, None otherwise.
     """
+    # Fast path: check _artifact_type ClassVar (media constraints)
+    artifact_type = getattr(constraint, "_artifact_type", None)
+    if artifact_type is not None and artifact_type in INPUT_TYPE_MAPPING:
+        return INPUT_TYPE_MAPPING[artifact_type]
+
+    # Fallback: introspect __call__ signature (Str, other constraints)
     annotations = inspect.get_annotations(constraint.__call__, eval_str=True)
     for param_type in annotations.values():
         result = _extract_input_type(param_type)
