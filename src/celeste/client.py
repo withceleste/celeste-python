@@ -324,7 +324,13 @@ class ModalityClient[In: Input, Out: Output, Params: Parameters, Content](
         if not response.is_success:
             try:
                 error_msg = response.json()["error"]["message"]
-            except (JSONDecodeError, KeyError, TypeError, IndexError):
+            except (
+                JSONDecodeError,
+                KeyError,
+                TypeError,
+                IndexError,
+                UnicodeDecodeError,
+            ):
                 error_msg = response.text or f"HTTP {response.status_code}"
 
             raise httpx.HTTPStatusError(
