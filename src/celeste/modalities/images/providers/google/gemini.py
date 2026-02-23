@@ -4,6 +4,7 @@ import base64
 from typing import Any, Unpack
 
 from celeste.artifacts import ImageArtifact
+from celeste.core import UsageField
 from celeste.mime_types import ImageMimeType
 from celeste.parameters import ParameterMapper
 from celeste.providers.google.generate_content import config as google_config
@@ -95,7 +96,7 @@ class GeminiImagesClient(GoogleGenerateContentClient, ImagesClient):
         """Parse usage from response."""
         usage = super()._parse_usage(response_data)
         candidates = response_data.get("candidates", [])
-        return {**usage, "num_images": len(candidates)}
+        return {**usage, UsageField.NUM_IMAGES: len(candidates)}
 
     def _parse_content(
         self,
