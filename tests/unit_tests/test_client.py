@@ -4,6 +4,7 @@ from collections.abc import AsyncIterator
 from enum import StrEnum
 from typing import Any, Unpack
 
+import httpx
 import pytest
 from pydantic import SecretStr
 
@@ -259,6 +260,36 @@ class TestModalityClientRequestBuilding:
 
         # Assert
         assert transformed == expected_output
+
+
+class TestHandleErrorResponse:
+    """Test ModalityClient._handle_error_response edge cases."""
+
+    @pytest.mark.parametrize(
+        "content",
+        [
+            b"\xff random binary",
+            b"\xff\xfe\x00\x00 utf-32-le bom",
+            b"\x80\x81\x82\x83",
+        ],
+        ids=["0xff-byte", "utf-32-le-bom", "high-bytes"],
+    )
+    def test_binary_error_body_raises_http_status_error(
+        self, text_model: Model, api_key: str, content: bytes
+    ) -> None:
+        """Binary error bodies produce HTTPStatusError, not UnicodeDecodeError (GH-170)."""
+        client = ConcreteModalityClient(
+            modality=Modality.TEXT,
+            model=text_model,
+            provider=text_model.provider,
+            auth=APIKey(secret=SecretStr(api_key)),
+        )
+        response = httpx.Response(
+            500, content=content, request=httpx.Request("POST", "https://api.test.com")
+        )
+
+        with pytest.raises(httpx.HTTPStatusError):
+            client._handle_error_response(response)
 
 
 class TestModalityClientStreaming:
