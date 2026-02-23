@@ -159,8 +159,9 @@ class ElevenLabsTextToSpeechClient(APIMixin):
         """ElevenLabs TTS doesn't provide finish reasons."""
         return FinishReason(reason=None)
 
+    @staticmethod
     def _map_output_format_to_mime_type(
-        self, output_format: str | None
+        output_format: str | None,
     ) -> AudioMimeType:
         """Map ElevenLabs output_format to AudioMimeType.
 

@@ -1,10 +1,8 @@
 """{Modality} streaming primitives."""
 
 from abc import abstractmethod
-from collections.abc import AsyncIterator, Callable
-from typing import Any, Unpack
+from typing import Any
 
-from celeste.client import ModalityClient
 from celeste.streaming import Stream
 
 from .io import (
@@ -19,51 +17,16 @@ from .parameters import {Modality}Parameters
 class {Modality}Stream(Stream[{Modality}Output, {Modality}Parameters, {Modality}Chunk]):
     """Streaming for {modality} modality."""
 
+    _usage_class = {Modality}Usage
+    _finish_reason_class = {Modality}FinishReason
     _chunk_class = {Modality}Chunk
+    _output_class = {Modality}Output
     _empty_content = ""  # TODO: Set appropriate empty content for modality
-
-    def __init__(
-        self,
-        sse_iterator: AsyncIterator[dict[str, Any]],
-        transform_output: Callable[..., {Content}],
-        client: ModalityClient,
-        **parameters: Unpack[{Modality}Parameters],
-    ) -> None:
-        super().__init__(sse_iterator, **parameters)
-        self._transform_output = transform_output
-        self._client = client
 
     @abstractmethod
     def _aggregate_content(self, chunks: list[{Modality}Chunk]) -> Any:
         """Aggregate content from chunks into raw content (modality-specific)."""
         ...
-
-    def _build_stream_metadata(
-        self, raw_events: list[dict[str, Any]]
-    ) -> dict[str, Any]:
-        """Build streaming metadata. Provider API Stream overrides to filter content."""
-        return {
-            "model": self._client.model.id,
-            "provider": self._client.provider,
-            "modality": self._client.modality,
-            "raw_events": raw_events,
-        }
-
-    def _parse_output(  # type: ignore[override]
-        self,
-        chunks: list[{Modality}Chunk],
-        **parameters: Unpack[{Modality}Parameters],
-    ) -> {Modality}Output:
-        """Assemble chunks into final output."""
-        raw_content = self._aggregate_content(chunks)
-        content: {Content} = self._transform_output(raw_content, **parameters)
-        raw_events = self._aggregate_event_data(chunks)
-        return {Modality}Output(
-            content=content,
-            usage=self._aggregate_usage(chunks),
-            finish_reason=self._aggregate_finish_reason(chunks),
-            metadata=self._build_stream_metadata(raw_events),
-        )
 
 
 __all__ = ["{Modality}Stream"]
