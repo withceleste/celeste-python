@@ -122,8 +122,10 @@ class ConcreteModalityClient(ModalityClient[_TestInput, Output, Parameters, str]
     def _init_request(self, inputs: _TestInput) -> dict[str, Any]:
         return {"prompt": inputs.prompt, "model": self.model.id}
 
-    def _parse_usage(self, response_data: dict[str, Any]) -> Usage:
-        return Usage()
+    def _parse_usage(
+        self, response_data: dict[str, Any]
+    ) -> dict[str, int | float | None]:
+        return {}
 
     def _parse_content(  # type: ignore[override]
         self, response_data: dict[str, Any], **parameters: Unpack[Parameters]
@@ -326,3 +328,41 @@ class TestModalityClientStreaming:
         error_msg = str(exc_info.value)
         assert "Streaming not supported" in error_msg
         assert "non-streaming-model" in error_msg
+
+
+class TestGetUsageContract:
+    """Test that _get_usage correctly wraps _parse_usage dict into typed Usage."""
+
+    async def test_parse_usage_returns_dict_not_typed_object(
+        self, text_model: Model, api_key: str
+    ) -> None:
+        """Regression: _parse_usage must return a dict, not a typed Usage object.
+
+        If _parse_usage returns a Usage object, _get_usage will crash with:
+        'Usage() argument after ** must be a mapping, not Usage'
+        """
+        client = ConcreteModalityClient(
+            modality=Modality.TEXT,
+            model=text_model,
+            provider=text_model.provider,
+            auth=APIKey(secret=SecretStr(api_key)),
+        )
+
+        raw = client._parse_usage({"some": "data"})
+        assert isinstance(raw, dict), (
+            f"_parse_usage must return a dict, got {type(raw).__name__}"
+        )
+
+    async def test_get_usage_wraps_dict_into_typed_usage(
+        self, text_model: Model, api_key: str
+    ) -> None:
+        """_get_usage must convert the raw dict from _parse_usage into typed Usage."""
+        client = ConcreteModalityClient(
+            modality=Modality.TEXT,
+            model=text_model,
+            provider=text_model.provider,
+            auth=APIKey(secret=SecretStr(api_key)),
+        )
+
+        usage = client._get_usage({"some": "data"})
+        assert isinstance(usage, Usage)

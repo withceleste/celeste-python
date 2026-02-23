@@ -15,7 +15,6 @@ from ...io import (
     {Modality}FinishReason,
     {Modality}Input,
     {Modality}Output,
-    {Modality}Usage,
 )
 from ...parameters import {Modality}Parameters
 from ...streaming import {Modality}Stream
@@ -60,11 +59,6 @@ class {Provider}{Modality}Client({Provider}{Api}Mixin, {Modality}Client):
             endpoint=config.{Provider}{Api}Endpoint.{ENDPOINT},
             **parameters,
         )
-
-    def _parse_usage(self, response_data: dict[str, Any]) -> {Modality}Usage:
-        """Parse usage from response."""
-        usage = super()._parse_usage(response_data)
-        return {Modality}Usage(**usage)
 
     def _parse_content(
         self,
