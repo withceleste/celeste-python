@@ -163,8 +163,8 @@ class GradiumTextToSpeechClient(APIMixin):
             "output_format": output_format,
         }
 
+    @staticmethod
     def _map_output_format_to_mime_type(
-        self,
         output_format: str | None,
     ) -> AudioMimeType:
         """Map Gradium output_format to AudioMimeType.

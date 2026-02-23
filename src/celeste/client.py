@@ -225,7 +225,11 @@ class ModalityClient[In: Input, Out: Output, Params: Parameters, Content](
         return stream_class(
             sse_iterator,
             transform_output=self._transform_output,
-            client=self,
+            stream_metadata={
+                "model": self.model.id,
+                "provider": self.provider,
+                "modality": self.modality,
+            },
             **parameters,
         )
 

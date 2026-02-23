@@ -30,8 +30,9 @@ class GradiumAudioStream(_GradiumTextToSpeechStream, AudioStream):
         """Aggregate audio content from chunks into AudioArtifact."""
         audio_bytes = b"".join(chunk.content for chunk in chunks if chunk.content)
         output_format = self._parameters.get("output_format")
-        client: GradiumAudioClient = self._client
-        mime_type = client._map_output_format_to_mime_type(output_format)
+        mime_type = GradiumTextToSpeechMixin._map_output_format_to_mime_type(
+            output_format
+        )
         return AudioArtifact(data=audio_bytes, mime_type=mime_type)
 
 

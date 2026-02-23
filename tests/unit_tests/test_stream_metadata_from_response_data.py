@@ -52,7 +52,11 @@ async def test_openai_stream_builds_metadata_from_inner_response_data() -> None:
     stream = OpenAITextStream(
         _async_iter(events),
         transform_output=lambda x, **_: x,
-        client=client,
+        stream_metadata={
+            "model": client.model.id,
+            "provider": client.provider,
+            "modality": client.modality,
+        },
         **{},
     )
 
@@ -95,7 +99,11 @@ async def test_google_stream_builds_metadata_from_event_response_data() -> None:
     stream = GoogleTextStream(
         _async_iter([event]),
         transform_output=lambda x, **_: x,
-        client=client,
+        stream_metadata={
+            "model": client.model.id,
+            "provider": client.provider,
+            "modality": client.modality,
+        },
         **{},
     )
 
@@ -138,7 +146,11 @@ async def test_openai_stream_filters_content_only_events() -> None:
     stream = OpenAITextStream(
         _async_iter(events),
         transform_output=lambda x, **_: x,
-        client=client,
+        stream_metadata={
+            "model": client.model.id,
+            "provider": client.provider,
+            "modality": client.modality,
+        },
         **{},
     )
 
@@ -180,7 +192,11 @@ async def test_openai_stream_aggregates_usage_from_last_event() -> None:
     stream = OpenAITextStream(
         _async_iter(events),
         transform_output=lambda x, **_: x,
-        client=client,
+        stream_metadata={
+            "model": client.model.id,
+            "provider": client.provider,
+            "modality": client.modality,
+        },
         **{},
     )
 

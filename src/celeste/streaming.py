@@ -1,7 +1,7 @@
 """Streaming support for Celeste."""
 
 from abc import ABC, abstractmethod
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Callable
 from contextlib import AbstractContextManager, suppress
 from types import TracebackType
 from typing import Any, ClassVar, Self, Unpack
@@ -29,11 +29,14 @@ class Stream[Out: Output, Params: Parameters, Chunk: ChunkBase](ABC):
     _usage_class: ClassVar[type[Usage]] = Usage
     _finish_reason_class: ClassVar[type[FinishReason]] = FinishReason
     _chunk_class: ClassVar[type[ChunkBase]]
+    _output_class: ClassVar[type[Output]]
     _empty_content: ClassVar[Any]
 
     def __init__(
         self,
         sse_iterator: AsyncIterator[dict[str, Any]],
+        transform_output: Callable[..., Any] | None = None,
+        stream_metadata: dict[str, Any] | None = None,
         **parameters: Unpack[Params],  # type: ignore[misc]
     ) -> None:
         """Initialize stream with SSE iterator."""
@@ -42,6 +45,8 @@ class Stream[Out: Output, Params: Parameters, Chunk: ChunkBase](ABC):
         self._closed = False
         self._output: Out | None = None
         self._parameters = parameters
+        self._transform_output = transform_output
+        self._stream_metadata = stream_metadata or {}
         # Sync iteration state
         self._portal: BlockingPortal | None = None
         self._portal_cm: AbstractContextManager[BlockingPortal] | None = None
@@ -73,9 +78,25 @@ class Stream[Out: Output, Params: Parameters, Chunk: ChunkBase](ABC):
         )
 
     @abstractmethod
+    def _aggregate_content(self, chunks: list[Chunk]) -> Any:  # noqa: ANN401
+        """Aggregate content from chunks into raw content (modality-specific)."""
+        ...
+
     def _parse_output(self, chunks: list[Chunk], **parameters: Unpack[Params]) -> Out:  # type: ignore[misc]
         """Parse final Output from accumulated chunks."""
-        ...
+        raw_content = self._aggregate_content(chunks)
+        content = (
+            self._transform_output(raw_content, **parameters)
+            if self._transform_output
+            else raw_content
+        )
+        raw_events = self._aggregate_event_data(chunks)
+        return self._output_class(  # type: ignore[return-value]
+            content=content,
+            usage=self._aggregate_usage(chunks),
+            finish_reason=self._aggregate_finish_reason(chunks),
+            metadata=self._build_stream_metadata(raw_events),
+        )
 
     def _parse_chunk_usage(self, event_data: dict[str, Any]) -> RawUsage | None:
         """Parse usage from chunk event. Override in provider mixin."""
@@ -109,7 +130,7 @@ class Stream[Out: Output, Params: Parameters, Chunk: ChunkBase](ABC):
         self, raw_events: list[dict[str, Any]]
     ) -> dict[str, Any]:
         """Build metadata for streaming. Providers override to filter content."""
-        return {"raw_events": raw_events}
+        return {**self._stream_metadata, "raw_events": raw_events}
 
     def _aggregate_usage(self, chunks: list[Chunk]) -> Usage:
         """Aggregate usage across chunks (last chunk with usage wins)."""

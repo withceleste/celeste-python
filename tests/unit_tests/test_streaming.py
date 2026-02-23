@@ -40,6 +40,10 @@ class ConcreteStream(Stream[ConcreteOutput, Parameters, Chunk]):
         self._chunk_events = chunk_events or []
         self._filter_none = filter_none
 
+    def _aggregate_content(self, chunks: list[Chunk]) -> str:
+        """Aggregate content from chunks."""
+        return "".join(chunk.content for chunk in chunks)
+
     def _parse_chunk(self, event: dict[str, Any]) -> Chunk | None:
         """Parse event to Chunk or None (for lifecycle events)."""
         # If filter_none enabled, only return chunks for events in chunk_events
@@ -361,23 +365,21 @@ class TestStreamAbstractBehavior:
         # Verify error mentions missing abstract methods
         error_msg = str(exc_info.value)
         assert "Stream" in error_msg
-        assert "_parse_output" in error_msg
+        assert "_aggregate_content" in error_msg
 
-    async def test_subclass_without_parse_output_fails(
+    async def test_subclass_without_aggregate_content_fails(
         self, mock_sse_iterator: AsyncMock
     ) -> None:
-        """Subclass without _parse_output implementation must fail instantiation."""
+        """Subclass without _aggregate_content implementation must fail instantiation."""
 
         # Arrange
         class IncompleteStream(Stream[ConcreteOutput, Parameters, Chunk]):
-            """Missing _parse_output implementation."""
+            """Missing _aggregate_content implementation."""
 
-            def _parse_chunk(self, event: dict[str, Any]) -> Chunk | None:
-                """Implement _parse_chunk but not _parse_output."""
-                return Chunk(content="test")
+            pass
 
         # Act & Assert
-        with pytest.raises(TypeError, match=r".*_parse_output.*"):
+        with pytest.raises(TypeError, match=r".*_aggregate_content.*"):
             IncompleteStream(mock_sse_iterator)  # type: ignore[abstract]
 
 
@@ -625,6 +627,10 @@ class TestStreamWithTypedUsageAndFinishReason:
 
         class TypedStream(Stream[TypedOutput, Parameters, TypedChunk]):
             """Stream using typed classes."""
+
+            def _aggregate_content(self, chunks: list[TypedChunk]) -> str:  # type: ignore[override]
+                """Aggregate content from chunks."""
+                return "".join(chunk.content for chunk in chunks)
 
             def _parse_chunk(self, event: dict[str, Any]) -> TypedChunk | None:
                 """Parse event to typed chunk."""
