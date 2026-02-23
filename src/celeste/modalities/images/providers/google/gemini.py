@@ -11,7 +11,7 @@ from celeste.providers.google.generate_content.client import GoogleGenerateConte
 from celeste.types import ImageContent
 
 from ...client import ImagesClient
-from ...io import ImageFinishReason, ImageInput, ImageOutput, ImageUsage
+from ...io import ImageFinishReason, ImageInput, ImageOutput
 from ...parameters import ImageParameters
 from .parameters import GEMINI_PARAMETER_MAPPERS
 
@@ -89,11 +89,13 @@ class GeminiImagesClient(GoogleGenerateContentClient, ImagesClient):
             },
         }
 
-    def _parse_usage(self, response_data: dict[str, Any]) -> ImageUsage:
+    def _parse_usage(
+        self, response_data: dict[str, Any]
+    ) -> dict[str, int | float | None]:
         """Parse usage from response."""
         usage = super()._parse_usage(response_data)
         candidates = response_data.get("candidates", [])
-        return ImageUsage(**usage, num_images=len(candidates))
+        return {**usage, "num_images": len(candidates)}
 
     def _parse_content(
         self,

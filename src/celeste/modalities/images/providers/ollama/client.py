@@ -15,7 +15,6 @@ from ...io import (
     ImageChunk,
     ImageInput,
     ImageOutput,
-    ImageUsage,
 )
 from ...parameters import ImageParameters
 from ...streaming import ImagesStream
@@ -75,12 +74,14 @@ class OllamaImagesClient(OllamaGenerateClient, ImagesClient):
         """Build request with prompt."""
         return {"prompt": inputs.prompt}
 
-    def _parse_usage(self, response_data: dict[str, Any]) -> ImageUsage:
+    def _parse_usage(
+        self, response_data: dict[str, Any]
+    ) -> dict[str, int | float | None]:
         """Parse usage from response.
 
         Ollama image generation doesn't return usage metrics.
         """
-        return ImageUsage()
+        return {}
 
     def _parse_content(
         self,

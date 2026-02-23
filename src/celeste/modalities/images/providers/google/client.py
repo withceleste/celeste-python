@@ -7,7 +7,7 @@ from celeste.parameters import ParameterMapper
 from celeste.types import ImageContent
 
 from ...client import ImagesClient
-from ...io import ImageFinishReason, ImageInput, ImageOutput, ImageUsage
+from ...io import ImageFinishReason, ImageInput, ImageOutput
 from ...parameters import ImageParameters
 from .gemini import GeminiImagesClient
 from .imagen import ImagenImagesClient
@@ -81,7 +81,9 @@ class GoogleImagesClient(ImagesClient):
     ) -> dict[str, Any]:
         return self._strategy._build_request(inputs, **parameters)  # type: ignore[union-attr]
 
-    def _parse_usage(self, response_data: dict[str, Any]) -> ImageUsage:
+    def _parse_usage(
+        self, response_data: dict[str, Any]
+    ) -> dict[str, int | float | None]:
         return self._strategy._parse_usage(response_data)  # type: ignore[union-attr]
 
     def _parse_content(
