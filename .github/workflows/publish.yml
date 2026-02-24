@@ -104,6 +104,7 @@ jobs:
       always() &&
       needs.validate-release.result == 'success' &&
       needs.run-ci.result == 'success' &&
+      needs.collect-integration-tests.result == 'success' &&
       (needs.integration-tests.result == 'success' || needs.integration-tests.result == 'skipped')
     runs-on: ubuntu-latest
     steps:
