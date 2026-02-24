@@ -78,6 +78,20 @@ MODELS: list[Model] = [
         },
     ),
     Model(
+        id="claude-sonnet-4-6",
+        provider=Provider.ANTHROPIC,
+        display_name="Claude Sonnet 4.6",
+        operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
+        streaming=True,
+        parameter_constraints={
+            Parameter.MAX_TOKENS: Range(min=1, max=64000),
+            TextParameter.THINKING_BUDGET: Range(min=-1, max=64000),
+            TextParameter.OUTPUT_SCHEMA: Schema(),
+            TextParameter.WEB_SEARCH: Bool(),
+            TextParameter.IMAGE: ImagesConstraint(),
+        },
+    ),
+    Model(
         id="claude-sonnet-4-20250514",
         provider=Provider.ANTHROPIC,
         display_name="Claude Sonnet 4",
