@@ -11,7 +11,7 @@ from typing import Any, ClassVar
 from celeste.client import APIMixin
 from celeste.core import UsageField
 from celeste.io import FinishReason
-from celeste.utils import detect_mime_type
+from celeste.utils import build_image_data_url, detect_mime_type
 
 from . import config
 
@@ -127,7 +127,7 @@ class OpenAIImagesClient(APIMixin):
         endpoint: str | None = None,
         **parameters: Any,
     ) -> AsyncIterator[dict[str, Any]]:
-        """Make streaming request to OpenAI Images API generations endpoint.
+        """Make streaming request to OpenAI Images API.
 
         Streaming is only supported for gpt-image-1.
         """
@@ -136,6 +136,13 @@ class OpenAIImagesClient(APIMixin):
 
         if "partial_images" not in request_body:
             request_body["partial_images"] = 1
+
+        # Serialize ImageArtifact for JSON streaming edit
+        # Non-streaming uses multipart; streaming uses JSON with images array
+        if "image" in request_body and hasattr(request_body["image"], "get_base64"):
+            artifact = request_body.pop("image")
+            request_body["images"] = [{"image_url": build_image_data_url(artifact)}]
+            endpoint = config.OpenAIImagesEndpoint.CREATE_EDIT
 
         headers = self._json_headers()
 
