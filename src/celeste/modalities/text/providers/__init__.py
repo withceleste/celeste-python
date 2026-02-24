@@ -8,6 +8,7 @@ from .cohere import CohereTextClient
 from .deepseek import DeepSeekTextClient
 from .google import GoogleTextClient
 from .groq import GroqTextClient
+from .huggingface import HuggingFaceTextClient
 from .mistral import MistralTextClient
 from .moonshot import MoonshotTextClient
 from .ollama import OllamaTextClient
@@ -21,6 +22,7 @@ PROVIDERS: dict[Provider, type[TextClient]] = {
     Provider.DEEPSEEK: DeepSeekTextClient,
     Provider.GOOGLE: GoogleTextClient,
     Provider.GROQ: GroqTextClient,
+    Provider.HUGGINGFACE: HuggingFaceTextClient,
     Provider.OLLAMA: OllamaTextClient,
     Provider.OPENRESPONSES: OpenResponsesTextClient,
     Provider.MISTRAL: MistralTextClient,
