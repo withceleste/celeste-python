@@ -76,6 +76,7 @@ jobs:
       - run: uv sync --extra gcp
       - name: Run ${{ matrix.test }}
         env:
+          TEST_FILE: ${{ matrix.test }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           BFL_API_KEY: ${{ secrets.BFL_API_KEY }}
@@ -90,7 +91,7 @@ jobs:
           MOONSHOT_API_KEY: ${{ secrets.MOONSHOT_API_KEY }}
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
         run: |
-          uv run pytest ${{ matrix.test }} \
+          uv run pytest "$TEST_FILE" \
             -m integration -v \
             --reruns 2 --reruns-delay 10 \
             "--deselect=tests/integration_tests/text/test_generate.py::test_vertex_generate[anthropic-claude-haiku-4-5-us-east5]" \
