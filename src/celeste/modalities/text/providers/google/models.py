@@ -112,4 +112,22 @@ MODELS: list[Model] = [
             TextParameter.AUDIO: AudioConstraint(),
         },
     ),
+    Model(
+        id="gemini-3.1-pro-preview",
+        provider=Provider.GOOGLE,
+        display_name="Gemini 3.1 Pro",
+        operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
+        streaming=True,
+        parameter_constraints={
+            Parameter.TEMPERATURE: Range(min=0.0, max=2.0),
+            Parameter.MAX_TOKENS: Range(min=1, max=65536),
+            TextParameter.THINKING_LEVEL: Choice(options=["low", "medium", "high"]),
+            TextParameter.OUTPUT_SCHEMA: Schema(),
+            TextParameter.WEB_SEARCH: Bool(),
+            # Media input support
+            TextParameter.IMAGE: ImagesConstraint(),
+            TextParameter.VIDEO: VideosConstraint(),
+            TextParameter.AUDIO: AudioConstraint(),
+        },
+    ),
 ]
