@@ -48,6 +48,7 @@ dev = [
     "mypy>=1.13.0",
     "bandit[toml]>=1.7.5",
     "pre-commit>=3.5.0",
+    "pytest-rerunfailures>=16.1",
 ]
 
 [build-system]

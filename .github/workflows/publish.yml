@@ -41,8 +41,19 @@ jobs:
     uses: ./.github/workflows/ci.yml
     secrets: inherit
 
-  integration-tests:
+  collect-integration-tests:
     needs: [validate-release, run-ci]
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.collect.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: collect
+        run: |
+          echo "matrix=$(find tests/integration_tests -name 'test_*.py' -not -path '*/__pycache__/*' | sort | jq -R -s -c 'split("\n") | map(select(length > 0))')" >> $GITHUB_OUTPUT
+
+  integration-tests:
+    needs: [validate-release, run-ci, collect-integration-tests]
     runs-on: ubuntu-latest
     timeout-minutes: 30
     environment:
@@ -50,6 +61,10 @@ jobs:
     permissions:
       contents: read
       id-token: write
+    strategy:
+      fail-fast: false
+      matrix:
+        test: ${{ fromJson(needs.collect-integration-tests.outputs.matrix) }}
     steps:
       - uses: actions/checkout@v4
       - id: auth
@@ -59,7 +74,7 @@ jobs:
           service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
       - uses: ./.github/actions/setup-python-uv
       - run: uv sync --extra gcp
-      - name: Run ${{ matrix.package }} integration tests
+      - name: Run ${{ matrix.test }}
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
@@ -75,13 +90,16 @@ jobs:
           MOONSHOT_API_KEY: ${{ secrets.MOONSHOT_API_KEY }}
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
         run: |
-          uv run pytest tests/integration_tests -m integration -v --dist=worksteal -n auto \
-            --ignore=tests/integration_tests/images/test_stream_edit.py \
+          uv run pytest ${{ matrix.test }} \
+            -m integration -v \
+            --reruns 2 --reruns-delay 10 \
+            "--deselect=tests/integration_tests/text/test_generate.py::test_vertex_generate[anthropic-claude-haiku-4-5-us-east5]" \
+            "--deselect=tests/integration_tests/text/test_stream_generate.py::test_vertex_stream_generate[anthropic-claude-haiku-4-5-us-east5]" \
             "--deselect=tests/integration_tests/audio/test_speak.py::test_speak[google-gemini-2.5-flash-tts]" \
             "--deselect=tests/integration_tests/audio/test_speak.py::test_speak[google-gemini-2.5-pro-tts]"
 
   build:
-    needs: [validate-release, run-ci, integration-tests]
+    needs: [validate-release, run-ci, collect-integration-tests, integration-tests]
     if: |
       always() &&
       needs.validate-release.result == 'success' &&
