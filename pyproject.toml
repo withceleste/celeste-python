@@ -1,6 +1,6 @@
 [project]
 name = "celeste-ai"
-version = "0.9.7"
+version = "0.10.0"
 description = "Open source, type-safe primitives for multi-modal AI. All capabilities, all providers, one interface"
 authors = [{name = "Kamilbenkirane", email = "kamil@withceleste.ai"}]
 readme = "README.md"
@@ -48,6 +48,7 @@ dev = [
     "mypy>=1.13.0",
     "bandit[toml]>=1.7.5",
     "pre-commit>=3.5.0",
+    "pytest-rerunfailures>=16.1",
 ]
 
 [build-system]

@@ -1,4 +1,4 @@
-.PHONY: help sync lint lint-fix format typecheck test integration-test security ci clean
+.PHONY: help sync lint lint-fix format typecheck test integration-test integration-retest security ci clean
 
 # Default target
 help:
@@ -8,8 +8,8 @@ help:
 	@echo "  make format     - Apply Ruff formatting"
 	@echo "  make typecheck  - Run mypy type checking"
 	@echo "  make test       - Run all tests (core + packages) with coverage"
-	@echo "  make integration-test [capability]  - Run integration tests (all or specific)"
-	@echo "                                        (e.g., make integration-test image-intelligence)"
+	@echo "  make integration-test    - Run all integration tests"
+	@echo "  make integration-retest  - Rerun only last-failed integration tests"
 	@echo "  make security   - Run Bandit security scan"
 	@echo "  make ci       - Run full CI/CD pipeline"
 	@echo "  make clean      - Clean cache directories"
@@ -40,10 +40,14 @@ typecheck:
 test:
 	uv run pytest tests/unit_tests --cov=celeste --cov-report=term-missing --cov-fail-under=80 -v
 
-# Integration testing (requires API keys)
+# Integration testing (requires API keys and/or ADC credentials)
 # Runs tests from tests/integration_tests/
 integration-test:
 	uv run pytest tests/integration_tests/ -m integration -v --dist=worksteal -n auto
+
+# Rerun only last-failed integration tests (without xdist — --lf is incompatible with -n)
+integration-retest:
+	uv run pytest tests/integration_tests/ -m integration -v --lf
 
 # Catch capability names as no-op targets
 %:
