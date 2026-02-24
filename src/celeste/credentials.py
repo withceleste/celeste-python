@@ -61,7 +61,7 @@ class Credentials(BaseSettings):
     google_api_key: SecretStr | None = Field(None, alias="GOOGLE_API_KEY")
     mistral_api_key: SecretStr | None = Field(None, alias="MISTRAL_API_KEY")
     moonshot_api_key: SecretStr | None = Field(None, alias="MOONSHOT_API_KEY")
-    huggingface_token: SecretStr | None = Field(None, alias="HUGGINGFACE_TOKEN")
+    hf_token: SecretStr | None = Field(None, alias="HF_TOKEN")
     stabilityai_api_key: SecretStr | None = Field(None, alias="STABILITYAI_API_KEY")
     replicate_api_token: SecretStr | None = Field(None, alias="REPLICATE_API_TOKEN")
     cohere_api_key: SecretStr | None = Field(None, alias="COHERE_API_KEY")
