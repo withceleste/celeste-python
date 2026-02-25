@@ -17,7 +17,7 @@ from celeste.mime_types import ApplicationMimeType
 from celeste.models import Model
 from celeste.parameters import ParameterMapper, Parameters
 from celeste.streaming import Stream
-from celeste.types import RawUsage, TextContent
+from celeste.types import RawUsage
 
 
 class APIMixin(ABC):
@@ -178,8 +178,10 @@ class ModalityClient[In: Input, Out: Output, Params: Parameters, Content](
         response_data = await self._make_request(
             request_body, endpoint=endpoint, **parameters
         )
+        content = self._parse_content(response_data, **parameters)
+        content = self._transform_output(content, **parameters)
         return self._output_class()(
-            content=self._parse_content(response_data, **parameters),
+            content=content,
             usage=self._get_usage(response_data),
             finish_reason=self._get_finish_reason(response_data),
             metadata=self._build_metadata(response_data),
@@ -345,9 +347,9 @@ class ModalityClient[In: Input, Out: Output, Params: Parameters, Content](
 
     def _transform_output(
         self,
-        content: TextContent,
+        content: Content,
         **parameters: Unpack[Params],  # type: ignore[misc]
-    ) -> TextContent:
+    ) -> Content:
         """Transform content using parameter mapper output transformations."""
         for mapper in self.parameter_mappers():
             value = parameters.get(mapper.name)

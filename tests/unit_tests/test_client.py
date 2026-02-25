@@ -264,6 +264,56 @@ class TestModalityClientRequestBuilding:
         assert transformed == expected_output
 
 
+class TestPredictTransformOutput:
+    """Test that _predict applies _transform_output after _parse_content."""
+
+    @pytest.mark.asyncio
+    async def test_predict_applies_transform_output(
+        self, text_model: Model, api_key: str
+    ) -> None:
+        """_predict applies _transform_output to content from _parse_content."""
+
+        class ClientWithTransformMapper(ConcreteModalityClient):
+            @classmethod
+            def parameter_mappers(cls) -> list[ParameterMapper]:
+                return [_create_transform_mapper(ParamEnum.TEST_PARAM)]
+
+        client = ClientWithTransformMapper(
+            modality=Modality.TEXT,
+            model=text_model,
+            provider=text_model.provider,
+            auth=APIKey(secret=SecretStr(api_key)),
+        )
+
+        output = await client._predict(
+            _TestInput(prompt="test"), test_param="test_value"
+        )
+
+        assert output.content == "test content_transformed_with_test_value"
+
+    @pytest.mark.asyncio
+    async def test_predict_no_transform_without_param(
+        self, text_model: Model, api_key: str
+    ) -> None:
+        """_predict returns raw content when no transform param is provided."""
+
+        class ClientWithTransformMapper(ConcreteModalityClient):
+            @classmethod
+            def parameter_mappers(cls) -> list[ParameterMapper]:
+                return [_create_transform_mapper(ParamEnum.TEST_PARAM)]
+
+        client = ClientWithTransformMapper(
+            modality=Modality.TEXT,
+            model=text_model,
+            provider=text_model.provider,
+            auth=APIKey(secret=SecretStr(api_key)),
+        )
+
+        output = await client._predict(_TestInput(prompt="test"))
+
+        assert output.content == "test content"
+
+
 class TestHandleErrorResponse:
     """Test ModalityClient._handle_error_response edge cases."""
 

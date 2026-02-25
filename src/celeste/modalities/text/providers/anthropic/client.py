@@ -164,7 +164,7 @@ class AnthropicTextClient(AnthropicMessagesClient, TextClient):
                 text_content = content_block.get("text") or ""
                 break
 
-        return self._transform_output(text_content, **parameters)
+        return text_content
 
     def _stream_class(self) -> type[TextStream]:
         """Return the Stream class for this provider."""

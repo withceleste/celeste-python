@@ -86,7 +86,7 @@ class CohereTextClient(CohereChatClient, TextClient):
         content_array = super()._parse_content(response_data)
         first_content = content_array[0]
         text = first_content.get("text") or ""
-        return self._transform_output(text, **parameters)
+        return text
 
     def _stream_class(self) -> type[TextStream]:
         """Return the Stream class for this provider."""

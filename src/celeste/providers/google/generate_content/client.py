@@ -33,7 +33,7 @@ class GoogleGenerateContentClient(APIMixin):
             def _parse_content(self, response_data, **parameters):
                 parts = super()._parse_content(response_data)
                 text = parts[0].get("text") or ""
-                return self._transform_output(text, **parameters)
+                return text
     """
 
     _content_fields: ClassVar[set[str]] = {"candidates"}

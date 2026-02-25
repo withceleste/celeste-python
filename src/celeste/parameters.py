@@ -5,7 +5,6 @@ from enum import StrEnum
 from typing import Any, ClassVar, TypedDict
 
 from celeste.models import Model
-from celeste.types import TextContent
 
 
 class Parameters(TypedDict, total=False):
@@ -32,7 +31,7 @@ class ParameterMapper(ABC):
         """
         ...
 
-    def parse_output(self, content: TextContent, value: object | None) -> TextContent:
+    def parse_output(self, content: Any, value: object | None) -> Any:  # noqa: ANN401
         """Optionally transform parsed content based on parameter value (default: return unchanged)."""
         return content
 
