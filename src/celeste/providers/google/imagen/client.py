@@ -60,13 +60,14 @@ class GoogleImagenClient(APIMixin):
         request_body: dict[str, Any],
         *,
         endpoint: str | None = None,
+        extra_headers: dict[str, str] | None = None,
         **parameters: Any,
     ) -> dict[str, Any]:
         """Make HTTP request to Imagen :predict endpoint."""
         if endpoint is None:
             endpoint = config.GoogleImagenEndpoint.CREATE_IMAGE
 
-        headers = self._json_headers()
+        headers = self._json_headers(extra_headers)
         response = await self.http_client.post(
             self._build_url(endpoint),
             headers=headers,
@@ -81,6 +82,7 @@ class GoogleImagenClient(APIMixin):
         request_body: dict[str, Any],
         *,
         endpoint: str | None = None,
+        extra_headers: dict[str, str] | None = None,
         **parameters: Any,
     ) -> AsyncIterator[dict[str, Any]]:
         """Imagen API does not support SSE streaming in this client."""

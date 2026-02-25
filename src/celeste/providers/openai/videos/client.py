@@ -63,6 +63,7 @@ class OpenAIVideosClient(APIMixin):
         request_body: dict[str, Any],
         *,
         endpoint: str | None = None,
+        extra_headers: dict[str, str] | None = None,
         **parameters: Any,
     ) -> AsyncIterator[dict[str, Any]]:
         """OpenAI Videos API does not support SSE streaming in this client."""
@@ -73,6 +74,7 @@ class OpenAIVideosClient(APIMixin):
         request_body: dict[str, Any],
         *,
         endpoint: str | None = None,
+        extra_headers: dict[str, str] | None = None,
         **parameters: Any,
     ) -> dict[str, Any]:
         """Make HTTP request with async polling for OpenAI video generation.
@@ -85,15 +87,13 @@ class OpenAIVideosClient(APIMixin):
         if endpoint is None:
             endpoint = config.OpenAIVideosEndpoint.CREATE_VIDEO
 
-        headers = self._json_headers()
-
         files, data = await self._prepare_multipart_request(request_body.copy())
 
         if files:
             logger.info("Sending multipart request to OpenAI with input_reference")
             response = await self.http_client.post_multipart(
                 f"{config.BASE_URL}{endpoint}",
-                headers=headers,
+                headers=self._merge_headers(self.auth.get_headers(), extra_headers),
                 files=files,
                 data=data,
             )
@@ -101,7 +101,7 @@ class OpenAIVideosClient(APIMixin):
             logger.info(f"Sending request to OpenAI: {request_body}")
             response = await self.http_client.post(
                 f"{config.BASE_URL}{endpoint}",
-                headers=headers,
+                headers=self._json_headers(extra_headers),
                 json_body=request_body,
             )
 
@@ -112,10 +112,11 @@ class OpenAIVideosClient(APIMixin):
         logger.info(f"Created video job: {video_id}")
 
         # Poll for completion
+        poll_headers = self._json_headers(extra_headers)
         for _ in range(config.MAX_POLLS):
             status_response = await self.http_client.get(
                 f"{config.BASE_URL}{endpoint}/{video_id}",
-                headers=headers,
+                headers=poll_headers,
             )
             self._handle_error_response(status_response)
             video_obj = status_response.json()
@@ -142,7 +143,7 @@ class OpenAIVideosClient(APIMixin):
         # Fetch video content
         content_response = await self.http_client.get(
             f"{config.BASE_URL}{endpoint}/{video_id}{config.CONTENT_ENDPOINT_SUFFIX}",
-            headers=headers,
+            headers=poll_headers,
         )
         self._handle_error_response(content_response)
         video_data = content_response.content

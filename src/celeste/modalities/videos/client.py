@@ -46,6 +46,7 @@ class VideosSyncNamespace:
         prompt: str,
         *,
         extra_body: dict[str, Any] | None = None,
+        extra_headers: dict[str, str] | None = None,
         **parameters: Unpack[VideoParameters],
     ) -> VideoOutput:
         """Blocking video generation.
@@ -56,7 +57,7 @@ class VideosSyncNamespace:
         """
         inputs = VideoInput(prompt=prompt)
         return async_to_sync(self._client._predict)(
-            inputs, extra_body=extra_body, **parameters
+            inputs, extra_body=extra_body, extra_headers=extra_headers, **parameters
         )
 
 

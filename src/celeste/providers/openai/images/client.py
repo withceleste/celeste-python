@@ -51,6 +51,7 @@ class OpenAIImagesClient(APIMixin):
         request_body: dict[str, Any],
         *,
         endpoint: str | None = None,
+        extra_headers: dict[str, str] | None = None,
         **parameters: Any,
     ) -> dict[str, Any]:
         """Make HTTP request to OpenAI Images API."""
@@ -59,22 +60,28 @@ class OpenAIImagesClient(APIMixin):
 
         # Edit endpoint requires multipart/form-data
         if endpoint == config.OpenAIImagesEndpoint.CREATE_EDIT:
-            return await self._make_multipart_request(request_body, endpoint)
+            return await self._make_multipart_request(
+                request_body, endpoint, extra_headers=extra_headers
+            )
 
         # Generate uses JSON
-        return await self._make_json_request(request_body, endpoint)
+        return await self._make_json_request(
+            request_body, endpoint, extra_headers=extra_headers
+        )
 
     async def _make_json_request(
         self,
         request_body: dict[str, Any],
         endpoint: str,
+        *,
+        extra_headers: dict[str, str] | None = None,
     ) -> dict[str, Any]:
         """Make JSON request for generate operations."""
         # DALL-E 2/3 need b64_json response format
         if self.model.id in ("dall-e-2", "dall-e-3"):
             request_body.setdefault("response_format", "b64_json")
 
-        headers = self._json_headers()
+        headers = self._json_headers(extra_headers)
 
         response = await self.http_client.post(
             f"{config.BASE_URL}{endpoint}",
@@ -89,6 +96,8 @@ class OpenAIImagesClient(APIMixin):
         self,
         request_body: dict[str, Any],
         endpoint: str,
+        *,
+        extra_headers: dict[str, str] | None = None,
     ) -> dict[str, Any]:
         """Make multipart request for edit operations."""
         image_artifact = request_body.pop("image")
@@ -112,7 +121,7 @@ class OpenAIImagesClient(APIMixin):
 
         response = await self.http_client.post_multipart(
             f"{config.BASE_URL}{endpoint}",
-            headers=self.auth.get_headers(),
+            headers=self._merge_headers(self.auth.get_headers(), extra_headers),
             files=files,
             data=data,
         )
@@ -125,6 +134,7 @@ class OpenAIImagesClient(APIMixin):
         request_body: dict[str, Any],
         *,
         endpoint: str | None = None,
+        extra_headers: dict[str, str] | None = None,
         **parameters: Any,
     ) -> AsyncIterator[dict[str, Any]]:
         """Make streaming request to OpenAI Images API.
@@ -144,7 +154,7 @@ class OpenAIImagesClient(APIMixin):
             request_body["images"] = [{"image_url": build_image_data_url(artifact)}]
             endpoint = config.OpenAIImagesEndpoint.CREATE_EDIT
 
-        headers = self._json_headers()
+        headers = self._json_headers(extra_headers)
 
         return self.http_client.stream_post(
             f"{config.BASE_URL}{endpoint}",
