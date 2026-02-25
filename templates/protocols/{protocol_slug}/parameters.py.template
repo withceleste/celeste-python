@@ -7,7 +7,7 @@ from celeste.parameters import ParameterMapper
 
 
 # PATTERN 1: Simple flat mapping
-# class TemperatureMapper(ParameterMapper):
+# class TemperatureMapper(ParameterMapper[TextContent]):
 #     """Map temperature to {Protocol} temperature field."""
 #
 #     def map(
@@ -26,7 +26,7 @@ from celeste.parameters import ParameterMapper
 
 
 # PATTERN 2: Nested mapping
-# class ReasoningEffortMapper(ParameterMapper):
+# class ReasoningEffortMapper(ParameterMapper[TextContent]):
 #     """Map reasoning_effort to {Protocol} reasoning.effort field."""
 #
 #     def map(
@@ -45,7 +45,7 @@ from celeste.parameters import ParameterMapper
 
 
 # PATTERN 3: Response format with parse_output
-# class ResponseFormatMapper(ParameterMapper):
+# class ResponseFormatMapper(ParameterMapper[TextContent]):
 #     """Map output_schema to {Protocol} response_format field."""
 #
 #     def map(

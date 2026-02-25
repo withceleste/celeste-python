@@ -1,6 +1,7 @@
 """{Provider} parameter mappers for {modality}."""
 
 from celeste.parameters import ParameterMapper
+from celeste.types import {Content}
 from celeste.providers.{provider}.{api}.parameters import (
     ExampleMapper as _ExampleMapper,
 )
@@ -14,7 +15,7 @@ class AspectRatioMapper(_ExampleMapper):
     name = {Modality}Parameter.ASPECT_RATIO
 
 
-{PROVIDER}_PARAMETER_MAPPERS: list[ParameterMapper] = [
+{PROVIDER}_PARAMETER_MAPPERS: list[ParameterMapper[{Content}]] = [
     AspectRatioMapper(),
 ]
 

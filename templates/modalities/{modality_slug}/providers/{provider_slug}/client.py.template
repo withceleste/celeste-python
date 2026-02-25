@@ -40,7 +40,7 @@ class {Provider}{Modality}Client({Provider}{Api}Mixin, {Modality}Client):
     """{Provider} {modality} client."""
 
     @classmethod
-    def parameter_mappers(cls) -> list[ParameterMapper]:
+    def parameter_mappers(cls) -> list[ParameterMapper[{Content}]]:
         return {PROVIDER}_PARAMETER_MAPPERS
 
     def _stream_class(self) -> type[{Modality}Stream]:

@@ -68,7 +68,7 @@ class TestParameterMapperBaseClass:
         """Test that ParameterMapper.parse_output default returns content unchanged."""
         from celeste.parameters import ParameterMapper
 
-        class TestMapper(ParameterMapper):
+        class TestMapper(ParameterMapper[TextContent]):
             name = Parameter.TEMPERATURE
 
             def map(
@@ -88,7 +88,7 @@ class TestParameterMapperBaseClass:
         """Test that _validate_value returns None when value is None."""
         from celeste.parameters import ParameterMapper
 
-        class TestMapper(ParameterMapper):
+        class TestMapper(ParameterMapper[TextContent]):
             name = Parameter.TEMPERATURE
 
             def map(
@@ -112,7 +112,7 @@ class TestParameterMapperBaseClass:
         """Missing constraints pass through without error."""
         from celeste.parameters import ParameterMapper
 
-        class TestMapper(ParameterMapper):
+        class TestMapper(ParameterMapper[TextContent]):
             name = Parameter.TEMPERATURE
 
             def map(
@@ -137,7 +137,7 @@ class TestParameterMapperBaseClass:
         """Test that _validate_value calls constraint when parameter is supported."""
         from celeste.parameters import ParameterMapper
 
-        class TestMapper(ParameterMapper):
+        class TestMapper(ParameterMapper[TextContent]):
             name = Parameter.TEMPERATURE
 
             def map(
@@ -165,7 +165,7 @@ class TestParameterMapperBaseClass:
         """Test that _validate_value returns constraint-validated value."""
         from celeste.parameters import ParameterMapper
 
-        class TestMapper(ParameterMapper):
+        class TestMapper(ParameterMapper[TextContent]):
             name = Parameter.TEMPERATURE
 
             def map(

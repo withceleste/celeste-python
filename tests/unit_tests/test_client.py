@@ -36,11 +36,11 @@ class _TestInput(Input):
 def _create_test_mapper(
     param_name: StrEnum,
     map_key: str | None = None,
-) -> ParameterMapper:
+) -> ParameterMapper[str]:
     """Create a test parameter mapper instance."""
     actual_map_key = map_key if map_key is not None else param_name.value
 
-    class TestMapperClass(ParameterMapper):
+    class TestMapperClass(ParameterMapper[str]):
         """Test mapper implementation."""
 
         name = param_name
@@ -66,11 +66,11 @@ def _create_test_mapper(
 def _create_transform_mapper(
     param_name: StrEnum,
     map_key: str | None = None,
-) -> ParameterMapper:
+) -> ParameterMapper[str]:
     """Create a test parameter mapper that transforms output."""
     actual_map_key = map_key if map_key is not None else param_name.value
 
-    class TransformMapperClass(ParameterMapper):
+    class TransformMapperClass(ParameterMapper[str]):
         """Test mapper with output transformation."""
 
         name = param_name
@@ -116,7 +116,7 @@ class ConcreteModalityClient(ModalityClient[_TestInput, Output, Parameters, str]
     """Concrete ModalityClient implementation for testing."""
 
     @classmethod
-    def parameter_mappers(cls) -> list[ParameterMapper]:
+    def parameter_mappers(cls) -> list[ParameterMapper[str]]:
         return []
 
     def _init_request(self, inputs: _TestInput) -> dict[str, Any]:
@@ -169,7 +169,7 @@ class TestModalityClientRequestBuilding:
             """Client with custom parameter mapper."""
 
             @classmethod
-            def parameter_mappers(cls) -> list[ParameterMapper]:
+            def parameter_mappers(cls) -> list[ParameterMapper[str]]:
                 return [_create_test_mapper(ParamEnum.TEST_PARAM)]
 
         client = ClientWithMapper(
@@ -198,7 +198,7 @@ class TestModalityClientRequestBuilding:
             """Client with multiple parameter mappers."""
 
             @classmethod
-            def parameter_mappers(cls) -> list[ParameterMapper]:
+            def parameter_mappers(cls) -> list[ParameterMapper[str]]:
                 return [
                     _create_test_mapper(ParamEnum.FIRST_PARAM),
                     _create_test_mapper(ParamEnum.SECOND_PARAM),
@@ -244,7 +244,7 @@ class TestModalityClientRequestBuilding:
             """Client with output transformation mapper."""
 
             @classmethod
-            def parameter_mappers(cls) -> list[ParameterMapper]:
+            def parameter_mappers(cls) -> list[ParameterMapper[str]]:
                 return [_create_transform_mapper(ParamEnum.TEST_PARAM)]
 
         client = ClientWithTransformMapper(
@@ -275,7 +275,7 @@ class TestPredictTransformOutput:
 
         class ClientWithTransformMapper(ConcreteModalityClient):
             @classmethod
-            def parameter_mappers(cls) -> list[ParameterMapper]:
+            def parameter_mappers(cls) -> list[ParameterMapper[str]]:
                 return [_create_transform_mapper(ParamEnum.TEST_PARAM)]
 
         client = ClientWithTransformMapper(
@@ -299,7 +299,7 @@ class TestPredictTransformOutput:
 
         class ClientWithTransformMapper(ConcreteModalityClient):
             @classmethod
-            def parameter_mappers(cls) -> list[ParameterMapper]:
+            def parameter_mappers(cls) -> list[ParameterMapper[str]]:
                 return [_create_transform_mapper(ParamEnum.TEST_PARAM)]
 
         client = ClientWithTransformMapper(
