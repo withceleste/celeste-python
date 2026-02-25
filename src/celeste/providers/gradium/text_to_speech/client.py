@@ -36,6 +36,7 @@ class GradiumTextToSpeechClient(APIMixin):
         request_body: dict[str, Any],
         *,
         endpoint: str | None = None,
+        extra_headers: dict[str, str] | None = None,
         **parameters: Any,
     ) -> AsyncIterator[dict[str, Any]]:
         """Execute WebSocket TTS flow as async generator.
@@ -63,7 +64,7 @@ class GradiumTextToSpeechClient(APIMixin):
         if endpoint is None:
             endpoint = config.GradiumTextToSpeechEndpoint.CREATE_SPEECH
         url = f"{config.BASE_URL}{endpoint}"
-        headers = self.auth.get_headers()
+        headers = self._merge_headers(self.auth.get_headers(), extra_headers)
 
         async with ws_connect(url, additional_headers=headers) as ws:
             # 1. Send setup message
@@ -143,6 +144,7 @@ class GradiumTextToSpeechClient(APIMixin):
         request_body: dict[str, Any],
         *,
         endpoint: str | None = None,
+        extra_headers: dict[str, str] | None = None,
         **parameters: Any,
     ) -> dict[str, Any]:
         """Collect audio from WebSocket stream.
@@ -153,7 +155,7 @@ class GradiumTextToSpeechClient(APIMixin):
         output_format = request_body.get("output_format", "wav")
 
         async for event in self._make_stream_request(
-            request_body, endpoint=endpoint, **parameters
+            request_body, endpoint=endpoint, extra_headers=extra_headers, **parameters
         ):
             if "data" in event:
                 audio_chunks.append(event["data"])

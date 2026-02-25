@@ -38,6 +38,7 @@ class EmbeddingsClient(
         text: str | list[str],
         *,
         extra_body: dict[str, Any] | None = None,
+        extra_headers: dict[str, str] | None = None,
         **parameters: Unpack[EmbeddingsParameters],
     ) -> EmbeddingsOutput:
         """Generate embeddings from text.
@@ -45,6 +46,7 @@ class EmbeddingsClient(
         Args:
             text: Text to embed. Single string or list of strings.
             extra_body: Additional provider-specific fields to merge into request.
+            extra_headers: Additional HTTP headers to include in the request.
             **parameters: Embedding parameters (e.g., dimensions).
 
         Returns:
@@ -53,7 +55,9 @@ class EmbeddingsClient(
             - list[list[float]] if text was a list
         """
         inputs = EmbeddingsInput(text=text)
-        output = await self._predict(inputs, extra_body=extra_body, **parameters)
+        output = await self._predict(
+            inputs, extra_body=extra_body, extra_headers=extra_headers, **parameters
+        )
 
         # If single text input, unwrap from batch format to single embedding
         if (
@@ -83,11 +87,12 @@ class EmbeddingsSyncNamespace:
         text: str | list[str],
         *,
         extra_body: dict[str, Any] | None = None,
+        extra_headers: dict[str, str] | None = None,
         **parameters: Unpack[EmbeddingsParameters],
     ) -> EmbeddingsOutput:
         """Blocking embeddings generation."""
         return async_to_sync(self._client.embed)(
-            text, extra_body=extra_body, **parameters
+            text, extra_body=extra_body, extra_headers=extra_headers, **parameters
         )
 
 

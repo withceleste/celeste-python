@@ -63,6 +63,7 @@ class OpenAIVideosClient(APIMixin):
         request_body: dict[str, Any],
         *,
         endpoint: str | None = None,
+        extra_headers: dict[str, str] | None = None,
         **parameters: Any,
     ) -> AsyncIterator[dict[str, Any]]:
         """OpenAI Videos API does not support SSE streaming in this client."""
@@ -73,6 +74,7 @@ class OpenAIVideosClient(APIMixin):
         request_body: dict[str, Any],
         *,
         endpoint: str | None = None,
+        extra_headers: dict[str, str] | None = None,
         **parameters: Any,
     ) -> dict[str, Any]:
         """Make HTTP request with async polling for OpenAI video generation.
@@ -85,7 +87,7 @@ class OpenAIVideosClient(APIMixin):
         if endpoint is None:
             endpoint = config.OpenAIVideosEndpoint.CREATE_VIDEO
 
-        headers = self._json_headers()
+        headers = self._json_headers(extra_headers)
 
         files, data = await self._prepare_multipart_request(request_body.copy())
 

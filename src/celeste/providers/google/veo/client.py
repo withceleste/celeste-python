@@ -65,13 +65,15 @@ class GoogleVeoClient(APIMixin):
         )
         return f"{config.BASE_URL}{poll_path}"
 
-    async def _make_poll_request(self, operation_name: str) -> dict[str, Any]:
+    async def _make_poll_request(
+        self, operation_name: str, extra_headers: dict[str, str] | None = None
+    ) -> dict[str, Any]:
         """Poll a long-running operation.
 
         Vertex AI uses POST to fetchPredictOperation with operationName in body.
         AI Studio uses GET to /v1beta/{operation_name}.
         """
-        headers = self._json_headers()
+        headers = self._json_headers(extra_headers)
         poll_url = self._build_poll_url(operation_name)
 
         if isinstance(self.auth, GoogleADC):
@@ -97,6 +99,7 @@ class GoogleVeoClient(APIMixin):
         request_body: dict[str, Any],
         *,
         endpoint: str | None = None,
+        extra_headers: dict[str, str] | None = None,
         **parameters: Any,
     ) -> AsyncIterator[dict[str, Any]]:
         """Veo API does not support SSE streaming in this client."""
@@ -107,13 +110,14 @@ class GoogleVeoClient(APIMixin):
         request_body: dict[str, Any],
         *,
         endpoint: str | None = None,
+        extra_headers: dict[str, str] | None = None,
         **parameters: Any,
     ) -> dict[str, Any]:
         """Make HTTP request with async polling for Veo video generation."""
         if endpoint is None:
             endpoint = config.GoogleVeoEndpoint.CREATE_VIDEO
 
-        headers = self._json_headers()
+        headers = self._json_headers(extra_headers)
 
         logger.info(f"Initiating video generation with model {self.model.id}")
         response = await self.http_client.post(
@@ -133,7 +137,9 @@ class GoogleVeoClient(APIMixin):
             await asyncio.sleep(config.POLL_INTERVAL)
             logger.debug(f"Polling operation status: {operation_name}")
 
-            operation_data = await self._make_poll_request(operation_name)
+            operation_data = await self._make_poll_request(
+                operation_name, extra_headers=extra_headers
+            )
 
             if operation_data.get("done"):
                 if "error" in operation_data:

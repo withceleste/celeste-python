@@ -78,13 +78,14 @@ class {Provider}{Api}Client(APIMixin):
         request_body: dict[str, Any],
         *,
         endpoint: str | None = None,
+        extra_headers: dict[str, str] | None = None,
         **parameters: Any,
     ) -> dict[str, Any]:
         """Make HTTP request to {Provider} {Api} API."""
         if endpoint is None:
             endpoint = config.{Provider}{Api}Endpoint.CREATE_...
 
-        headers = self._json_headers()
+        headers = self._json_headers(extra_headers)
 
         response = await self.http_client.post(
             f"{config.BASE_URL}{endpoint}",
@@ -100,6 +101,7 @@ class {Provider}{Api}Client(APIMixin):
         request_body: dict[str, Any],
         *,
         endpoint: str | None = None,
+        extra_headers: dict[str, str] | None = None,
         **parameters: Any,
     ) -> AsyncIterator[dict[str, Any]]:
         """Make streaming request to {Provider} {Api} API.
@@ -110,6 +112,7 @@ class {Provider}{Api}Client(APIMixin):
                 request_body: dict[str, Any],
                 *,
                 endpoint: str | None = None,
+                extra_headers: dict[str, str] | None = None,
                 **parameters: Any,
             ) -> AsyncIterator[dict[str, Any]]:
                 \"\"\"{Provider} {Api} does not support SSE streaming in this client.\"\"\"
@@ -118,7 +121,7 @@ class {Provider}{Api}Client(APIMixin):
         if endpoint is None:
             endpoint = config.{Provider}{Api}Endpoint.CREATE_...
 
-        headers = self._json_headers()
+        headers = self._json_headers(extra_headers)
 
         return self.http_client.stream_post(
             f"{config.BASE_URL}{endpoint}",
@@ -129,13 +132,14 @@ class {Provider}{Api}Client(APIMixin):
     async def _make_poll_request(
         self,
         operation_name: str,
+        extra_headers: dict[str, str] | None = None,
     ) -> dict[str, Any]:
         """Poll a long-running operation.
 
         If this API does not use long-running operations, remove this method.
         Override for Vertex AI support (POST to fetchPredictOperation).
         """
-        headers = self.auth.get_headers()
+        headers = self._merge_headers(self.auth.get_headers(), extra_headers)
         poll_url = f"{config.BASE_URL}{config.{Provider}{Api}Endpoint.GET_OPERATION.format(operation_name=operation_name)}"
 
         response = await self.http_client.get(

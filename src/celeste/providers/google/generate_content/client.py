@@ -63,13 +63,14 @@ class GoogleGenerateContentClient(APIMixin):
         request_body: dict[str, Any],
         *,
         endpoint: str | None = None,
+        extra_headers: dict[str, str] | None = None,
         **parameters: Any,
     ) -> dict[str, Any]:
         """Make HTTP request to generateContent endpoint."""
         if endpoint is None:
             endpoint = config.GoogleGenerateContentEndpoint.GENERATE_CONTENT
 
-        headers = self._json_headers()
+        headers = self._json_headers(extra_headers)
         response = await self.http_client.post(
             url=self._build_url(endpoint),
             headers=headers,
@@ -84,13 +85,14 @@ class GoogleGenerateContentClient(APIMixin):
         request_body: dict[str, Any],
         *,
         endpoint: str | None = None,
+        extra_headers: dict[str, str] | None = None,
         **parameters: Any,
     ) -> AsyncIterator[dict[str, Any]]:
         """Make streaming request to streamGenerateContent endpoint."""
         if endpoint is None:
             endpoint = config.GoogleGenerateContentEndpoint.STREAM_GENERATE_CONTENT
 
-        headers = self._json_headers()
+        headers = self._json_headers(extra_headers)
         return self.http_client.stream_post(
             url=self._build_url(endpoint),
             headers=headers,

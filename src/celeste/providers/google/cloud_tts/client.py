@@ -36,6 +36,7 @@ class GoogleCloudTTSClient(APIMixin):
         request_body: dict[str, Any],
         *,
         endpoint: str | None = None,
+        extra_headers: dict[str, str] | None = None,
         **parameters: Any,
     ) -> AsyncIterator[dict[str, Any]]:
         """Cloud TTS does not support SSE streaming in this client."""
@@ -60,13 +61,14 @@ class GoogleCloudTTSClient(APIMixin):
         request_body: dict[str, Any],
         *,
         endpoint: str | None = None,
+        extra_headers: dict[str, str] | None = None,
         **parameters: Any,
     ) -> dict[str, Any]:
         """Make HTTP request to Cloud TTS synthesize endpoint."""
         if endpoint is None:
             endpoint = config.GoogleCloudTTSEndpoint.CREATE_SPEECH
 
-        headers = self._json_headers()
+        headers = self._json_headers(extra_headers)
 
         response = await self.http_client.post(
             f"{config.BASE_URL}{endpoint}",

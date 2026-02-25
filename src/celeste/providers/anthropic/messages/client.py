@@ -55,7 +55,11 @@ class AnthropicMessagesClient(APIMixin):
             )
         return f"{config.BASE_URL}{endpoint}"
 
-    def _build_headers(self, beta_features: list[str] | None = None) -> dict[str, str]:
+    def _build_headers(
+        self,
+        beta_features: list[str] | None = None,
+        extra_headers: dict[str, str] | None = None,
+    ) -> dict[str, str]:
         """Build Anthropic request headers."""
         headers: dict[str, str] = {
             **self._json_headers(),
@@ -67,6 +71,8 @@ class AnthropicMessagesClient(APIMixin):
                 for f in beta_features
             ]
             headers[config.HEADER_ANTHROPIC_BETA] = ",".join(beta_values)
+        if extra_headers:
+            headers.update(extra_headers)
         return headers
 
     def _build_request(
@@ -90,6 +96,7 @@ class AnthropicMessagesClient(APIMixin):
         request_body: dict[str, Any],
         *,
         endpoint: str | None = None,
+        extra_headers: dict[str, str] | None = None,
         **parameters: Any,
     ) -> dict[str, Any]:
         """Make HTTP request to Anthropic Messages API endpoint."""
@@ -98,7 +105,9 @@ class AnthropicMessagesClient(APIMixin):
             request_body["max_tokens"] = config.DEFAULT_MAX_TOKENS
 
         beta_features: list[str] = request_body.pop("_beta_features", [])
-        headers = self._build_headers(beta_features=beta_features)
+        headers = self._build_headers(
+            beta_features=beta_features, extra_headers=extra_headers
+        )
 
         if endpoint is None:
             endpoint = config.AnthropicMessagesEndpoint.CREATE_MESSAGE
@@ -117,6 +126,7 @@ class AnthropicMessagesClient(APIMixin):
         request_body: dict[str, Any],
         *,
         endpoint: str | None = None,
+        extra_headers: dict[str, str] | None = None,
         **parameters: Any,
     ) -> AsyncIterator[dict[str, Any]]:
         """Make streaming request to Anthropic Messages API endpoint."""
@@ -125,7 +135,9 @@ class AnthropicMessagesClient(APIMixin):
             request_body["max_tokens"] = config.DEFAULT_MAX_TOKENS
 
         beta_features: list[str] = request_body.pop("_beta_features", [])
-        headers = self._build_headers(beta_features=beta_features)
+        headers = self._build_headers(
+            beta_features=beta_features, extra_headers=extra_headers
+        )
 
         if endpoint is None:
             endpoint = config.AnthropicMessagesEndpoint.CREATE_MESSAGE

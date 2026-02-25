@@ -59,13 +59,14 @@ class GoogleInteractionsClient(APIMixin):
         request_body: dict[str, Any],
         *,
         endpoint: str | None = None,
+        extra_headers: dict[str, str] | None = None,
         **parameters: Any,
     ) -> dict[str, Any]:
         """Make HTTP request to interactions endpoint."""
         if endpoint is None:
             endpoint = config.GoogleInteractionsEndpoint.CREATE_INTERACTION
 
-        headers = self._json_headers()
+        headers = self._json_headers(extra_headers)
         response = await self.http_client.post(
             f"{config.BASE_URL}{endpoint}",
             headers=headers,
@@ -80,13 +81,14 @@ class GoogleInteractionsClient(APIMixin):
         request_body: dict[str, Any],
         *,
         endpoint: str | None = None,
+        extra_headers: dict[str, str] | None = None,
         **parameters: Any,
     ) -> AsyncIterator[dict[str, Any]]:
         """Make streaming request to interactions endpoint."""
         if endpoint is None:
             endpoint = config.GoogleInteractionsEndpoint.STREAM_INTERACTION
 
-        headers = self._json_headers()
+        headers = self._json_headers(extra_headers)
         return self.http_client.stream_post(
             f"{config.BASE_URL}{endpoint}",
             headers=headers,

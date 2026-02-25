@@ -53,9 +53,27 @@ class APIMixin(ABC):
         """HTTP client with connection pooling for this provider."""
         ...
 
-    def _json_headers(self) -> dict[str, str]:
+    def _json_headers(
+        self, extra_headers: dict[str, str] | None = None
+    ) -> dict[str, str]:
         """Build standard JSON request headers with auth."""
-        return {**self.auth.get_headers(), "Content-Type": ApplicationMimeType.JSON}
+        headers = {**self.auth.get_headers(), "Content-Type": ApplicationMimeType.JSON}
+        if extra_headers:
+            headers.update(extra_headers)
+        return headers
+
+    @staticmethod
+    def _merge_headers(
+        headers: dict[str, str],
+        extra_headers: dict[str, str] | None = None,
+    ) -> dict[str, str]:
+        """Merge user-provided extra headers into provider headers.
+
+        User-provided headers take precedence over provider defaults.
+        """
+        if extra_headers:
+            headers.update(extra_headers)
+        return headers
 
     @staticmethod
     def _deep_merge(
@@ -160,6 +178,7 @@ class ModalityClient[In: Input, Out: Output, Params: Parameters, Content](
         *,
         endpoint: str | None = None,
         extra_body: dict[str, Any] | None = None,
+        extra_headers: dict[str, str] | None = None,
         **parameters: Unpack[Params],  # type: ignore[misc]
     ) -> Out:
         """Generic prediction - called by operation methods.
@@ -168,6 +187,7 @@ class ModalityClient[In: Input, Out: Output, Params: Parameters, Content](
             inputs: Operation-specific input object.
             endpoint: Optional endpoint path (e.g., "/generations").
             extra_body: Additional parameters to merge into the request body.
+            extra_headers: Additional headers to merge into the request headers.
             **parameters: Operation-specific keyword arguments.
 
         Returns:
@@ -176,7 +196,7 @@ class ModalityClient[In: Input, Out: Output, Params: Parameters, Content](
         inputs, parameters = self._validate_artifacts(inputs, **parameters)
         request_body = self._build_request(inputs, extra_body=extra_body, **parameters)
         response_data = await self._make_request(
-            request_body, endpoint=endpoint, **parameters
+            request_body, endpoint=endpoint, extra_headers=extra_headers, **parameters
         )
         content = self._parse_content(response_data, **parameters)
         content = self._transform_output(content, **parameters)
@@ -195,6 +215,7 @@ class ModalityClient[In: Input, Out: Output, Params: Parameters, Content](
         endpoint: str | None = None,
         base_url: str | None = None,
         extra_body: dict[str, Any] | None = None,
+        extra_headers: dict[str, str] | None = None,
         **parameters: Unpack[Params],  # type: ignore[misc]
     ) -> Stream[Out, Params, Chunk]:
         """Generic streaming - called by operation methods.
@@ -206,6 +227,7 @@ class ModalityClient[In: Input, Out: Output, Params: Parameters, Content](
             inputs: Operation-specific input object.
             stream_class: The Stream class to instantiate.
             extra_body: Additional parameters to merge into the request body.
+            extra_headers: Additional headers to merge into the request headers.
             **parameters: Operation-specific keyword arguments.
 
         Returns:
@@ -222,7 +244,11 @@ class ModalityClient[In: Input, Out: Output, Params: Parameters, Content](
             inputs, extra_body=extra_body, streaming=True, **parameters
         )
         sse_iterator = self._make_stream_request(
-            request_body, endpoint=endpoint, base_url=base_url, **parameters
+            request_body,
+            endpoint=endpoint,
+            base_url=base_url,
+            extra_headers=extra_headers,
+            **parameters,
         )
         return stream_class(
             sse_iterator,
@@ -287,6 +313,7 @@ class ModalityClient[In: Input, Out: Output, Params: Parameters, Content](
         request_body: dict[str, Any],
         *,
         endpoint: str | None = None,
+        extra_headers: dict[str, str] | None = None,
         **parameters: Unpack[Params],  # type: ignore[misc]
     ) -> dict[str, Any]:
         """Make HTTP request(s) and return response data."""

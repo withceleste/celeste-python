@@ -47,6 +47,7 @@ class OllamaGenerateClient(APIMixin):
         *,
         endpoint: str | None = None,
         base_url: str | None = None,
+        extra_headers: dict[str, str] | None = None,
         **parameters: Any,
     ) -> dict[str, Any]:
         """Make HTTP request to Ollama Generate API."""
@@ -55,7 +56,7 @@ class OllamaGenerateClient(APIMixin):
         if base_url is None:
             base_url = config.DEFAULT_BASE_URL
 
-        headers = self._json_headers()
+        headers = self._json_headers(extra_headers)
 
         response = await self.http_client.post(
             f"{base_url}{endpoint}",
@@ -72,6 +73,7 @@ class OllamaGenerateClient(APIMixin):
         *,
         endpoint: str | None = None,
         base_url: str | None = None,
+        extra_headers: dict[str, str] | None = None,
         **parameters: Any,
     ) -> AsyncIterator[dict[str, Any]]:
         """Make NDJSON streaming request to Ollama Generate API."""
@@ -80,7 +82,7 @@ class OllamaGenerateClient(APIMixin):
         if base_url is None:
             base_url = config.DEFAULT_BASE_URL
 
-        headers = self._json_headers()
+        headers = self._json_headers(extra_headers)
 
         return self.http_client.stream_post_ndjson(
             f"{base_url}{endpoint}",

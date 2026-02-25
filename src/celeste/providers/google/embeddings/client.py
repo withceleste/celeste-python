@@ -35,6 +35,7 @@ class GoogleEmbeddingsClient(APIMixin):
         request_body: dict[str, Any],
         *,
         endpoint: str | None = None,
+        extra_headers: dict[str, str] | None = None,
         **parameters: Any,
     ) -> AsyncIterator[dict[str, Any]]:
         """Embeddings API does not support SSE streaming in this client."""
@@ -72,6 +73,7 @@ class GoogleEmbeddingsClient(APIMixin):
         request_body: dict[str, Any],
         *,
         endpoint: str | None = None,
+        extra_headers: dict[str, str] | None = None,
         **parameters: Any,
     ) -> dict[str, Any]:
         """Make HTTP request to embeddings endpoint."""
@@ -95,7 +97,7 @@ class GoogleEmbeddingsClient(APIMixin):
         if endpoint is None:
             endpoint = endpoint_template
 
-        headers = self._json_headers()
+        headers = self._json_headers(extra_headers)
 
         response = await self.http_client.post(
             self._build_url(endpoint),

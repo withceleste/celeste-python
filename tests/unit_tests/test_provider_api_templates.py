@@ -59,6 +59,7 @@ def _extract_template_expectations(template_text: str) -> TemplateExpectations:
     # Also ensure the endpoint routing contract is present in the template.
     assert "async def _make_request" in template_text
     assert "endpoint: str | None = None" in template_text
+    assert "extra_headers: dict[str, str] | None = None" in template_text
     assert "def _make_stream_request" in template_text
 
     return TemplateExpectations(
@@ -201,6 +202,22 @@ def test_all_provider_api_mixins_match_template_contract() -> None:
                 isinstance(endpoint_default, ast.Constant)
                 and endpoint_default.value is None
             ), f"{client_path}: {fn_name} endpoint default must be None"
+
+            kw_headers = _kwonly_arg(fn, "extra_headers")
+            assert kw_headers is not None, (
+                f"{client_path}: {fn_name} missing kw-only extra_headers"
+            )
+            headers_arg, headers_default = kw_headers
+            assert headers_arg.annotation is not None, (
+                f"{client_path}: {fn_name} extra_headers missing annotation"
+            )
+            assert (
+                ast.unparse(headers_arg.annotation).strip() == "dict[str, str] | None"
+            ), f"{client_path}: {fn_name} extra_headers annotation mismatch"
+            assert (
+                isinstance(headers_default, ast.Constant)
+                and headers_default.value is None
+            ), f"{client_path}: {fn_name} extra_headers default must be None"
 
         # Usage typing parity (matches template)
         map_usage_fields = methods["map_usage_fields"]
