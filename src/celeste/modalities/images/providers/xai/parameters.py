@@ -10,6 +10,7 @@ from celeste.providers.xai.images.parameters import (
 from celeste.providers.xai.images.parameters import (
     ResponseFormatMapper as _ResponseFormatMapper,
 )
+from celeste.types import ImageContent
 
 from ...parameters import ImageParameter
 
@@ -32,7 +33,7 @@ class OutputFormatMapper(_ResponseFormatMapper):
     name = ImageParameter.OUTPUT_FORMAT
 
 
-XAI_PARAMETER_MAPPERS: list[ParameterMapper] = [
+XAI_PARAMETER_MAPPERS: list[ParameterMapper[ImageContent]] = [
     AspectRatioMapper(),
     NumImagesMapper(),
     OutputFormatMapper(),

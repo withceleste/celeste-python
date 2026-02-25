@@ -9,6 +9,7 @@ from celeste.providers.google.cloud_tts import config
 from celeste.providers.google.cloud_tts.client import (
     GoogleCloudTTSClient as GoogleCloudTTSMixin,
 )
+from celeste.types import AudioContent
 
 from ...client import AudioClient
 from ...io import (
@@ -23,7 +24,7 @@ class GoogleAudioClient(GoogleCloudTTSMixin, AudioClient):
     """Google audio client (Cloud TTS)."""
 
     @classmethod
-    def parameter_mappers(cls) -> list[ParameterMapper]:
+    def parameter_mappers(cls) -> list[ParameterMapper[AudioContent]]:
         return GOOGLE_PARAMETER_MAPPERS
 
     async def speak(

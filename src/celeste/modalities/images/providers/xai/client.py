@@ -6,6 +6,7 @@ from celeste.artifacts import ImageArtifact
 from celeste.parameters import ParameterMapper
 from celeste.providers.xai.images import config
 from celeste.providers.xai.images.client import XAIImagesClient as XAIImagesMixin
+from celeste.types import ImageContent
 
 from ...client import ImagesClient
 from ...io import (
@@ -20,7 +21,7 @@ class XAIImagesClient(XAIImagesMixin, ImagesClient):
     """xAI images client."""
 
     @classmethod
-    def parameter_mappers(cls) -> list[ParameterMapper]:
+    def parameter_mappers(cls) -> list[ParameterMapper[ImageContent]]:
         return XAI_PARAMETER_MAPPERS
 
     def _init_request(self, inputs: ImageInput) -> dict[str, Any]:

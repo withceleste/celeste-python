@@ -4,15 +4,16 @@ from typing import Any
 
 from celeste.models import Model
 from celeste.parameters import FieldMapper, ParameterMapper
+from celeste.types import AudioContent
 
 
-class VoiceMapper(FieldMapper):
+class VoiceMapper(FieldMapper[AudioContent]):
     """Map voice to Gradium voice_id field."""
 
     field = "voice_id"
 
 
-class PaddingBonusMapper(ParameterMapper):
+class PaddingBonusMapper(ParameterMapper[AudioContent]):
     """Map padding_bonus to Gradium json_config.padding_bonus field."""
 
     def map(
@@ -30,7 +31,7 @@ class PaddingBonusMapper(ParameterMapper):
         return request
 
 
-class OutputFormatMapper(FieldMapper):
+class OutputFormatMapper(FieldMapper[AudioContent]):
     """Map output_format to Gradium output_format field."""
 
     field = "output_format"

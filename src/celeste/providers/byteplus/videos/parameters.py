@@ -5,9 +5,10 @@ from typing import Any
 from celeste.exceptions import ValidationError
 from celeste.models import Model
 from celeste.parameters import ParameterMapper
+from celeste.types import VideoContent
 
 
-class DurationMapper(ParameterMapper):
+class DurationMapper(ParameterMapper[VideoContent]):
     """Map duration parameter to BytePlus text prompt format.
 
     Appends --duration to the text prompt.
@@ -32,7 +33,7 @@ class DurationMapper(ParameterMapper):
         return request
 
 
-class ResolutionMapper(ParameterMapper):
+class ResolutionMapper(ParameterMapper[VideoContent]):
     """Map resolution parameter to BytePlus text prompt format.
 
     Appends --resolution to the text prompt.
@@ -57,7 +58,7 @@ class ResolutionMapper(ParameterMapper):
         return request
 
 
-class AspectRatioMapper(ParameterMapper):
+class AspectRatioMapper(ParameterMapper[VideoContent]):
     """Map aspect_ratio parameter to BytePlus text prompt format.
 
     Appends --ratio to the text prompt.
@@ -82,7 +83,7 @@ class AspectRatioMapper(ParameterMapper):
         return request
 
 
-class ReferenceImagesMapper(ParameterMapper):
+class ReferenceImagesMapper(ParameterMapper[VideoContent]):
     """Map reference_images to BytePlus content array format.
 
     Adds images with role="reference_image" to the content array.
@@ -109,7 +110,7 @@ class ReferenceImagesMapper(ParameterMapper):
         return request
 
 
-class FirstFrameMapper(ParameterMapper):
+class FirstFrameMapper(ParameterMapper[VideoContent]):
     """Map first_frame to BytePlus content array format.
 
     Adds image with role="first_frame" to the content array.
@@ -139,7 +140,7 @@ class FirstFrameMapper(ParameterMapper):
         return request
 
 
-class LastFrameMapper(ParameterMapper):
+class LastFrameMapper(ParameterMapper[VideoContent]):
     """Map last_frame to BytePlus content array format.
 
     Adds image with role="last_frame" to the content array.

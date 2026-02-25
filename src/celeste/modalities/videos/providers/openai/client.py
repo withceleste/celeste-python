@@ -9,6 +9,7 @@ from celeste.providers.openai.videos import config
 from celeste.providers.openai.videos.client import (
     OpenAIVideosClient as OpenAIVideosMixin,
 )
+from celeste.types import VideoContent
 
 from ...client import VideosClient
 from ...io import VideoInput, VideoOutput
@@ -20,7 +21,7 @@ class OpenAIVideosClient(OpenAIVideosMixin, VideosClient):
     """OpenAI client for video generation."""
 
     @classmethod
-    def parameter_mappers(cls) -> list[ParameterMapper]:
+    def parameter_mappers(cls) -> list[ParameterMapper[VideoContent]]:
         return OPENAI_PARAMETER_MAPPERS
 
     def _init_request(self, inputs: VideoInput) -> dict[str, Any]:

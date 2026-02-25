@@ -6,6 +6,7 @@ from celeste.artifacts import AudioArtifact
 from celeste.parameters import ParameterMapper
 from celeste.providers.openai.audio import config
 from celeste.providers.openai.audio.client import OpenAIAudioClient as OpenAIAudioMixin
+from celeste.types import AudioContent
 
 from ...client import AudioClient
 from ...io import AudioFinishReason, AudioInput, AudioOutput
@@ -17,7 +18,7 @@ class OpenAIAudioClient(OpenAIAudioMixin, AudioClient):
     """OpenAI audio client (TTS)."""
 
     @classmethod
-    def parameter_mappers(cls) -> list[ParameterMapper]:
+    def parameter_mappers(cls) -> list[ParameterMapper[AudioContent]]:
         return OPENAI_PARAMETER_MAPPERS
 
     async def speak(

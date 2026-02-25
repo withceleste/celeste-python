@@ -5,9 +5,10 @@ from typing import Any, ClassVar
 from celeste.mime_types import AudioMimeType
 from celeste.models import Model
 from celeste.parameters import ParameterMapper
+from celeste.types import AudioContent
 
 
-class VoiceMapper(ParameterMapper):
+class VoiceMapper(ParameterMapper[AudioContent]):
     """Map voice to Google Cloud TTS voice.name field."""
 
     def map(
@@ -25,7 +26,7 @@ class VoiceMapper(ParameterMapper):
         return request
 
 
-class LanguageMapper(ParameterMapper):
+class LanguageMapper(ParameterMapper[AudioContent]):
     """Map language to Google Cloud TTS voice.languageCode field."""
 
     locale_map: ClassVar[dict[str, str]] = {}
@@ -52,7 +53,7 @@ class LanguageMapper(ParameterMapper):
         return request
 
 
-class PromptMapper(ParameterMapper):
+class PromptMapper(ParameterMapper[AudioContent]):
     """Map prompt to Google Cloud TTS input.prompt field."""
 
     def map(
@@ -69,7 +70,7 @@ class PromptMapper(ParameterMapper):
         return request
 
 
-class AudioEncodingMapper(ParameterMapper):
+class AudioEncodingMapper(ParameterMapper[AudioContent]):
     """Map audio_encoding to Google Cloud TTS audioConfig.audioEncoding field."""
 
     encoding_map: ClassVar[dict[AudioMimeType, str]] = {}

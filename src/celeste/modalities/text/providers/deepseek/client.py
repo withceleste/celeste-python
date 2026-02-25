@@ -27,7 +27,7 @@ class DeepSeekTextClient(DeepSeekChatClient, TextClient):
     """DeepSeek text client."""
 
     @classmethod
-    def parameter_mappers(cls) -> list[ParameterMapper]:
+    def parameter_mappers(cls) -> list[ParameterMapper[TextContent]]:
         return DEEPSEEK_PARAMETER_MAPPERS
 
     async def generate(

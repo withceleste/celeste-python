@@ -16,6 +16,7 @@ from celeste.providers.cohere.chat.parameters import (
 from celeste.providers.cohere.chat.parameters import (
     ThinkingMapper as _ThinkingMapper,
 )
+from celeste.types import TextContent
 
 from ...parameters import TextParameter
 
@@ -65,7 +66,7 @@ class OutputSchemaMapper(_ResponseFormatMapper):
     name = TextParameter.OUTPUT_SCHEMA
 
 
-COHERE_PARAMETER_MAPPERS: list[ParameterMapper] = [
+COHERE_PARAMETER_MAPPERS: list[ParameterMapper[TextContent]] = [
     TemperatureMapper(),
     MaxTokensMapper(),
     ThinkingBudgetMapper(),

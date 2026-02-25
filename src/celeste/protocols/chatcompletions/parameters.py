@@ -10,19 +10,19 @@ from celeste.parameters import FieldMapper, ParameterMapper
 from celeste.types import TextContent
 
 
-class TemperatureMapper(FieldMapper):
+class TemperatureMapper(FieldMapper[TextContent]):
     """Map temperature to Chat Completions temperature field."""
 
     field = "temperature"
 
 
-class MaxTokensMapper(FieldMapper):
+class MaxTokensMapper(FieldMapper[TextContent]):
     """Map max_tokens to Chat Completions max_tokens field."""
 
     field = "max_tokens"
 
 
-class ResponseFormatMapper(ParameterMapper):
+class ResponseFormatMapper(ParameterMapper[TextContent]):
     """Map output_schema to Chat Completions response_format field.
 
     Default uses json_object mode (no schema validation server-side).

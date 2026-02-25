@@ -237,7 +237,7 @@ class ModalityClient[In: Input, Out: Output, Params: Parameters, Content](
 
     @classmethod
     @abstractmethod
-    def parameter_mappers(cls) -> list[ParameterMapper]:
+    def parameter_mappers(cls) -> list[ParameterMapper[Content]]:
         """Provider-specific parameter mappers."""
         ...
 

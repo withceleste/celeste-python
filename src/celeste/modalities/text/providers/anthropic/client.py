@@ -54,7 +54,7 @@ class AnthropicTextClient(AnthropicMessagesClient, TextClient):
     """Anthropic text client."""
 
     @classmethod
-    def parameter_mappers(cls) -> list[ParameterMapper]:
+    def parameter_mappers(cls) -> list[ParameterMapper[TextContent]]:
         return ANTHROPIC_PARAMETER_MAPPERS
 
     async def generate(

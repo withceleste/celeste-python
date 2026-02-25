@@ -13,6 +13,7 @@ from celeste.protocols.chatcompletions.parameters import (
 from celeste.providers.mistral.chat.parameters import (
     ResponseFormatMapper as _ResponseFormatMapper,
 )
+from celeste.types import TextContent
 
 from ...parameters import TextParameter
 
@@ -29,7 +30,7 @@ class MaxTokensMapper(_MaxTokensMapper):
     name = TextParameter.MAX_TOKENS
 
 
-class ThinkingBudgetMapper(ParameterMapper):
+class ThinkingBudgetMapper(ParameterMapper[TextContent]):
     """Map thinking_budget to Mistral's prompt_mode parameter."""
 
     name = TextParameter.THINKING_BUDGET
@@ -62,7 +63,7 @@ class OutputSchemaMapper(_ResponseFormatMapper):
     name = TextParameter.OUTPUT_SCHEMA
 
 
-MISTRAL_PARAMETER_MAPPERS: list[ParameterMapper] = [
+MISTRAL_PARAMETER_MAPPERS: list[ParameterMapper[TextContent]] = [
     TemperatureMapper(),
     MaxTokensMapper(),
     ThinkingBudgetMapper(),

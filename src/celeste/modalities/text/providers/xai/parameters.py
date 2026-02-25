@@ -22,6 +22,7 @@ from celeste.protocols.openresponses.parameters import (
 from celeste.protocols.openresponses.parameters import (
     XSearchMapper as _XSearchMapper,
 )
+from celeste.types import TextContent
 
 from ...parameters import TextParameter
 
@@ -68,7 +69,7 @@ class CodeExecutionMapper(_CodeExecutionMapper):
     name = TextParameter.CODE_EXECUTION
 
 
-XAI_PARAMETER_MAPPERS: list[ParameterMapper] = [
+XAI_PARAMETER_MAPPERS: list[ParameterMapper[TextContent]] = [
     TemperatureMapper(),
     MaxTokensMapper(),
     ThinkingBudgetMapper(),

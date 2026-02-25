@@ -7,21 +7,22 @@ Naming convention:
 """
 
 from celeste.parameters import FieldMapper
+from celeste.types import ImageContent
 
 
-class AspectRatioMapper(FieldMapper):
+class AspectRatioMapper(FieldMapper[ImageContent]):
     """Map aspect_ratio to xAI aspect_ratio field."""
 
     field = "aspect_ratio"
 
 
-class NumImagesMapper(FieldMapper):
+class NumImagesMapper(FieldMapper[ImageContent]):
     """Map num_images to xAI n field."""
 
     field = "n"
 
 
-class ResponseFormatMapper(FieldMapper):
+class ResponseFormatMapper(FieldMapper[ImageContent]):
     """Map response_format to xAI response_format field."""
 
     field = "response_format"

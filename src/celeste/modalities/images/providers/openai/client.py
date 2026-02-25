@@ -11,6 +11,7 @@ from celeste.providers.openai.images.client import (
 from celeste.providers.openai.images.streaming import (
     OpenAIImagesStream as _OpenAIImagesStream,
 )
+from celeste.types import ImageContent
 
 from ...client import ImagesClient
 from ...io import (
@@ -35,7 +36,7 @@ class OpenAIImagesClient(OpenAIImagesMixin, ImagesClient):
     """OpenAI images client."""
 
     @classmethod
-    def parameter_mappers(cls) -> list[ParameterMapper]:
+    def parameter_mappers(cls) -> list[ParameterMapper[ImageContent]]:
         return OPENAI_PARAMETER_MAPPERS
 
     def _init_request(self, inputs: ImageInput) -> dict[str, Any]:

@@ -10,6 +10,7 @@ from celeste.providers.xai.videos.parameters import (
 from celeste.providers.xai.videos.parameters import (
     ResolutionMapper as _ResolutionMapper,
 )
+from celeste.types import VideoContent
 
 from ...parameters import VideoParameter
 
@@ -32,7 +33,7 @@ class ResolutionMapper(_ResolutionMapper):
     name = VideoParameter.RESOLUTION
 
 
-XAI_PARAMETER_MAPPERS: list[ParameterMapper] = [
+XAI_PARAMETER_MAPPERS: list[ParameterMapper[VideoContent]] = [
     DurationMapper(),
     AspectRatioMapper(),
     ResolutionMapper(),

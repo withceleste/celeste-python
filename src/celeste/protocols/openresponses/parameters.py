@@ -11,19 +11,19 @@ from celeste.structured_outputs import StrictJsonSchemaGenerator
 from celeste.types import TextContent
 
 
-class TemperatureMapper(FieldMapper):
+class TemperatureMapper(FieldMapper[TextContent]):
     """Map temperature to Responses temperature field."""
 
     field = "temperature"
 
 
-class MaxOutputTokensMapper(FieldMapper):
+class MaxOutputTokensMapper(FieldMapper[TextContent]):
     """Map max_tokens to Responses max_output_tokens field."""
 
     field = "max_output_tokens"
 
 
-class TextFormatMapper(ParameterMapper):
+class TextFormatMapper(ParameterMapper[TextContent]):
     """Map output_schema to Responses text.format field.
 
     Handles both single BaseModel and list[BaseModel] types.
@@ -92,7 +92,7 @@ class TextFormatMapper(ParameterMapper):
         return TypeAdapter(value).validate_python(parsed)
 
 
-class ReasoningEffortMapper(ParameterMapper):
+class ReasoningEffortMapper(ParameterMapper[TextContent]):
     """Map reasoning_effort to Responses reasoning.effort field."""
 
     def map(
@@ -110,7 +110,7 @@ class ReasoningEffortMapper(ParameterMapper):
         return request
 
 
-class VerbosityMapper(ParameterMapper):
+class VerbosityMapper(ParameterMapper[TextContent]):
     """Map verbosity to Responses text.verbosity field."""
 
     def map(
@@ -128,7 +128,7 @@ class VerbosityMapper(ParameterMapper):
         return request
 
 
-class WebSearchMapper(ParameterMapper):
+class WebSearchMapper(ParameterMapper[TextContent]):
     """Map web_search to Responses tools array."""
 
     def map(
@@ -146,7 +146,7 @@ class WebSearchMapper(ParameterMapper):
         return request
 
 
-class XSearchMapper(ParameterMapper):
+class XSearchMapper(ParameterMapper[TextContent]):
     """Map x_search to Responses tools array (search X/Twitter)."""
 
     def map(
@@ -164,7 +164,7 @@ class XSearchMapper(ParameterMapper):
         return request
 
 
-class CodeExecutionMapper(ParameterMapper):
+class CodeExecutionMapper(ParameterMapper[TextContent]):
     """Map code_execution to Responses tools array."""
 
     def map(

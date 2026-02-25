@@ -10,6 +10,7 @@ from celeste.providers.openai.audio.parameters import (
 from celeste.providers.openai.audio.parameters import (
     VoiceMapper as _VoiceMapper,
 )
+from celeste.types import AudioContent
 
 from ...parameters import AudioParameter
 
@@ -32,7 +33,7 @@ class OutputFormatMapper(_ResponseFormatMapper):
     name = AudioParameter.OUTPUT_FORMAT
 
 
-OPENAI_PARAMETER_MAPPERS: list[ParameterMapper] = [
+OPENAI_PARAMETER_MAPPERS: list[ParameterMapper[AudioContent]] = [
     VoiceMapper(),
     SpeedMapper(),
     OutputFormatMapper(),

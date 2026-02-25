@@ -7,6 +7,7 @@ from celeste.parameters import ParameterMapper
 from celeste.providers.bfl.images import config as bfl_config
 from celeste.providers.bfl.images.client import BFLImagesClient as _BFLImagesClient
 from celeste.providers.bfl.images.utils import encode_image
+from celeste.types import ImageContent
 
 from ...client import ImagesClient
 from ...io import ImageFinishReason, ImageInput, ImageOutput
@@ -18,7 +19,7 @@ class BFLImagesClient(_BFLImagesClient, ImagesClient):
     """BFL images client (generate + edit)."""
 
     @classmethod
-    def parameter_mappers(cls) -> list[ParameterMapper]:
+    def parameter_mappers(cls) -> list[ParameterMapper[ImageContent]]:
         return BFL_PARAMETER_MAPPERS
 
     async def generate(

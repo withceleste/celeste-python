@@ -18,7 +18,7 @@ class GoogleEmbeddingsClient(GoogleEmbeddingsMixin, EmbeddingsClient):
     """Google embeddings client."""
 
     @classmethod
-    def parameter_mappers(cls) -> list[ParameterMapper]:
+    def parameter_mappers(cls) -> list[ParameterMapper[EmbeddingsContent]]:
         """Return parameter mappers for Google embeddings."""
         return GOOGLE_PARAMETER_MAPPERS
 

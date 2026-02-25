@@ -5,9 +5,10 @@ from typing import Any
 from celeste.constraints import Int
 from celeste.models import Model
 from celeste.parameters import FieldMapper, ParameterMapper
+from celeste.types import ImageContent
 
 
-class WidthMapper(ParameterMapper):
+class WidthMapper(ParameterMapper[ImageContent]):
     """Map width to BFL width field."""
 
     def map(
@@ -24,7 +25,7 @@ class WidthMapper(ParameterMapper):
         return request
 
 
-class HeightMapper(ParameterMapper):
+class HeightMapper(ParameterMapper[ImageContent]):
     """Map height to BFL height field."""
 
     def map(
@@ -41,37 +42,37 @@ class HeightMapper(ParameterMapper):
         return request
 
 
-class PromptUpsamplingMapper(FieldMapper):
+class PromptUpsamplingMapper(FieldMapper[ImageContent]):
     """Map prompt_upsampling to BFL prompt_upsampling field."""
 
     field = "prompt_upsampling"
 
 
-class SeedMapper(FieldMapper):
+class SeedMapper(FieldMapper[ImageContent]):
     """Map seed to BFL seed field."""
 
     field = "seed"
 
 
-class SafetyToleranceMapper(FieldMapper):
+class SafetyToleranceMapper(FieldMapper[ImageContent]):
     """Map safety_tolerance to BFL safety_tolerance field."""
 
     field = "safety_tolerance"
 
 
-class OutputFormatMapper(FieldMapper):
+class OutputFormatMapper(FieldMapper[ImageContent]):
     """Map output_format to BFL output_format field."""
 
     field = "output_format"
 
 
-class StepsMapper(FieldMapper):
+class StepsMapper(FieldMapper[ImageContent]):
     """Map steps to BFL steps field."""
 
     field = "steps"
 
 
-class GuidanceMapper(FieldMapper):
+class GuidanceMapper(FieldMapper[ImageContent]):
     """Map guidance to BFL guidance field."""
 
     field = "guidance"

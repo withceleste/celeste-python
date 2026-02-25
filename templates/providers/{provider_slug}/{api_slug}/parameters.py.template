@@ -15,7 +15,7 @@ from celeste.parameters import ParameterMapper
 
 # PATTERN 1: Simple flat mapping
 # Use when provider expects flat request body: {"param": value}
-class ExampleParamMapper(ParameterMapper):
+class ExampleParamMapper[Content](ParameterMapper[Content]):
     """Map example_param to {Provider} example_param field."""
 
     def map(
@@ -36,7 +36,7 @@ class ExampleParamMapper(ParameterMapper):
 
 # PATTERN 2: Nested mapping
 # Use when provider expects nested structure: {"parameters": {"param": value}}
-class NestedParamMapper(ParameterMapper):
+class NestedParamMapper[Content](ParameterMapper[Content]):
     """Map nested_param to {Provider} parameters.nestedParam field."""
 
     def map(

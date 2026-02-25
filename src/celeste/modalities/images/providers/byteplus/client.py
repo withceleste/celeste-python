@@ -13,6 +13,7 @@ from celeste.providers.byteplus.images.client import (
 from celeste.providers.byteplus.images.streaming import (
     BytePlusImagesStream as _BytePlusImagesStream,
 )
+from celeste.types import ImageContent
 
 from ...client import ImagesClient
 from ...io import (
@@ -94,7 +95,7 @@ class BytePlusImagesClient(BytePlusImagesMixin, ImagesClient):
     """BytePlus images client (generate + streaming)."""
 
     @classmethod
-    def parameter_mappers(cls) -> list[ParameterMapper]:
+    def parameter_mappers(cls) -> list[ParameterMapper[ImageContent]]:
         return BYTEPLUS_PARAMETER_MAPPERS
 
     async def generate(

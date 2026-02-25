@@ -6,6 +6,7 @@ from celeste.artifacts import VideoArtifact
 from celeste.parameters import ParameterMapper
 from celeste.providers.xai.videos import config
 from celeste.providers.xai.videos.client import XAIVideosClient as XAIVideosMixin
+from celeste.types import VideoContent
 
 from ...client import VideosClient
 from ...io import VideoInput, VideoOutput
@@ -17,7 +18,7 @@ class XAIVideosClient(XAIVideosMixin, VideosClient):
     """xAI client for video generation."""
 
     @classmethod
-    def parameter_mappers(cls) -> list[ParameterMapper]:
+    def parameter_mappers(cls) -> list[ParameterMapper[VideoContent]]:
         return XAI_PARAMETER_MAPPERS
 
     def _init_request(self, inputs: VideoInput) -> dict[str, Any]:

@@ -11,7 +11,7 @@ class Parameters(TypedDict, total=False):
     """Base parameters for all capabilities."""
 
 
-class ParameterMapper(ABC):
+class ParameterMapper[Content](ABC):
     """Base class for provider-specific parameter transformation."""
 
     name: ClassVar[StrEnum]
@@ -31,7 +31,7 @@ class ParameterMapper(ABC):
         """
         ...
 
-    def parse_output(self, content: Any, value: object | None) -> Any:  # noqa: ANN401
+    def parse_output(self, content: Content, value: object | None) -> Content:
         """Optionally transform parsed content based on parameter value (default: return unchanged)."""
         return content
 
@@ -47,7 +47,7 @@ class ParameterMapper(ABC):
         return constraint(value)
 
 
-class FieldMapper(ParameterMapper):
+class FieldMapper[Content](ParameterMapper[Content]):
     """Maps a parameter directly to a flat request field after validation."""
 
     field: ClassVar[str]

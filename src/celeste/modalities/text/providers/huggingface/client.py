@@ -28,7 +28,7 @@ class HuggingFaceTextClient(HuggingFaceChatClient, TextClient):
     """HuggingFace text client."""
 
     @classmethod
-    def parameter_mappers(cls) -> list[ParameterMapper]:
+    def parameter_mappers(cls) -> list[ParameterMapper[TextContent]]:
         return HUGGINGFACE_PARAMETER_MAPPERS
 
     async def generate(

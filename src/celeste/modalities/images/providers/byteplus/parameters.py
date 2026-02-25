@@ -7,6 +7,7 @@ from celeste.providers.byteplus.images.parameters import (
 from celeste.providers.byteplus.images.parameters import (
     WatermarkMapper as _WatermarkMapper,
 )
+from celeste.types import ImageContent
 
 from ...parameters import ImageParameter
 
@@ -25,7 +26,7 @@ class WatermarkMapper(_WatermarkMapper):
     name = ImageParameter.WATERMARK
 
 
-BYTEPLUS_PARAMETER_MAPPERS: list[ParameterMapper] = [
+BYTEPLUS_PARAMETER_MAPPERS: list[ParameterMapper[ImageContent]] = [
     AspectRatioMapper(),
     QualityMapper(),
     WatermarkMapper(),

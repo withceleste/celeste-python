@@ -19,11 +19,12 @@ from celeste.providers.ollama.generate.parameters import (
 from celeste.providers.ollama.generate.parameters import (
     WidthMapper as _WidthMapper,
 )
+from celeste.types import ImageContent
 
 from ...parameters import ImageParameter
 
 
-class AspectRatioMapper(ParameterMapper):
+class AspectRatioMapper(ParameterMapper[ImageContent]):
     """Map aspect_ratio to Ollama's width and height parameters.
 
     Parses 'WxH' string and delegates to native mappers.
@@ -69,7 +70,7 @@ class NegativePromptMapper(_NegativePromptMapper):
     name = ImageParameter.NEGATIVE_PROMPT
 
 
-OLLAMA_PARAMETER_MAPPERS: list[ParameterMapper] = [
+OLLAMA_PARAMETER_MAPPERS: list[ParameterMapper[ImageContent]] = [
     AspectRatioMapper(),
     StepsMapper(),
     SeedMapper(),

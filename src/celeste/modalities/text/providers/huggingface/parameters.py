@@ -10,6 +10,7 @@ from celeste.protocols.chatcompletions.parameters import (
 from celeste.providers.huggingface.chat.parameters import (
     ResponseFormatMapper as _ResponseFormatMapper,
 )
+from celeste.types import TextContent
 
 from ...parameters import TextParameter
 
@@ -32,7 +33,7 @@ class OutputSchemaMapper(_ResponseFormatMapper):
     name = TextParameter.OUTPUT_SCHEMA
 
 
-HUGGINGFACE_PARAMETER_MAPPERS: list[ParameterMapper] = [
+HUGGINGFACE_PARAMETER_MAPPERS: list[ParameterMapper[TextContent]] = [
     TemperatureMapper(),
     MaxTokensMapper(),
     OutputSchemaMapper(),

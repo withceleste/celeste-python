@@ -11,6 +11,7 @@ from celeste.providers.gradium.text_to_speech.client import (
 from celeste.providers.gradium.text_to_speech.streaming import (
     GradiumTextToSpeechStream as _GradiumTextToSpeechStream,
 )
+from celeste.types import AudioContent
 
 from ...client import AudioClient
 from ...io import (
@@ -40,7 +41,7 @@ class GradiumAudioClient(GradiumTextToSpeechMixin, AudioClient):
     """Gradium audio client (TTS)."""
 
     @classmethod
-    def parameter_mappers(cls) -> list[ParameterMapper]:
+    def parameter_mappers(cls) -> list[ParameterMapper[AudioContent]]:
         return GRADIUM_PARAMETER_MAPPERS
 
     async def speak(

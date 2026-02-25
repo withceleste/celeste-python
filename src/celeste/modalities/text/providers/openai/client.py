@@ -31,7 +31,7 @@ class OpenAITextClient(OpenAIResponsesMixin, TextClient):
     """OpenAI text client using Responses API."""
 
     @classmethod
-    def parameter_mappers(cls) -> list[ParameterMapper]:
+    def parameter_mappers(cls) -> list[ParameterMapper[TextContent]]:
         return OPENAI_PARAMETER_MAPPERS
 
     async def generate(

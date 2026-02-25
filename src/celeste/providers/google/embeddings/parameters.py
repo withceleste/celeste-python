@@ -4,9 +4,10 @@ from typing import Any
 
 from celeste.models import Model
 from celeste.parameters import ParameterMapper
+from celeste.types import EmbeddingsContent
 
 
-class OutputDimensionalityMapper(ParameterMapper):
+class OutputDimensionalityMapper(ParameterMapper[EmbeddingsContent]):
     """Map dimensions to Google Embeddings outputDimensionality field."""
 
     def map(

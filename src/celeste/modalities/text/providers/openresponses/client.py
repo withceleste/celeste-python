@@ -52,7 +52,7 @@ class OpenResponsesTextClient(OpenResponsesMixin, TextClient):
     """OpenResponses text client using Responses API."""
 
     @classmethod
-    def parameter_mappers(cls) -> list[ParameterMapper]:
+    def parameter_mappers(cls) -> list[ParameterMapper[TextContent]]:
         return OPENRESPONSES_PARAMETER_MAPPERS
 
     async def generate(

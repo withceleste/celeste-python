@@ -44,7 +44,7 @@ class GeminiImagesClient(GoogleGenerateContentClient, ImagesClient):
     """Google Gemini client for images modality (generate + edit)."""
 
     @classmethod
-    def parameter_mappers(cls) -> list[ParameterMapper]:
+    def parameter_mappers(cls) -> list[ParameterMapper[ImageContent]]:
         return GEMINI_PARAMETER_MAPPERS
 
     async def generate(
