@@ -99,7 +99,7 @@ class Credentials(BaseSettings):
             MissingCredentialsError: If provider requires credentials but none are configured,
                 or the configured value is empty/whitespace-only.
         """
-        if override_key:
+        if override_key is not None:
             raw = (
                 override_key
                 if isinstance(override_key, str)

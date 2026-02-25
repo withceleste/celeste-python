@@ -381,9 +381,25 @@ class TestEdgeCases:
         with pytest.raises(MissingCredentialsError):
             creds.get_credentials(Provider.OPENAI)
 
-    @pytest.mark.parametrize("value", ["", "   ", "\t\n"])
-    def test_whitespace_override_key_treated_as_missing(self, value: str) -> None:
+    @pytest.mark.parametrize(
+        "value",
+        ["", "   ", "\t\n", SecretStr(""), SecretStr("   "), SecretStr("\t\n")],
+    )
+    def test_whitespace_override_key_treated_as_missing(
+        self, value: str | SecretStr
+    ) -> None:
         """Test that empty/whitespace override_key raises MissingCredentialsError."""
+        creds = Credentials()  # type: ignore[call-arg]
+
+        with pytest.raises(MissingCredentialsError):
+            creds.get_credentials(Provider.OPENAI, override_key=value)
+
+    @pytest.mark.parametrize("value", ["", "   ", SecretStr(""), SecretStr("   ")])
+    def test_whitespace_override_key_not_fallthrough(
+        self, monkeypatch: pytest.MonkeyPatch, value: str | SecretStr
+    ) -> None:
+        """Test that empty override_key raises even when a valid env var exists."""
+        monkeypatch.setenv("OPENAI_API_KEY", "valid-env-key")
         creds = Credentials()  # type: ignore[call-arg]
 
         with pytest.raises(MissingCredentialsError):
