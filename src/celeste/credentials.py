@@ -116,7 +116,7 @@ class Credentials(BaseSettings):
         field_name = secret_name.lower()
 
         credential: SecretStr | None = getattr(self, field_name, None)
-        if credential is None:
+        if credential is None or not credential.get_secret_value().strip():
             raise MissingCredentialsError(provider=provider)
 
         return credential
@@ -142,7 +142,8 @@ class Credentials(BaseSettings):
         secret_name, _, _ = registered
         field_name = secret_name.lower()
 
-        return getattr(self, field_name, None) is not None
+        credential = getattr(self, field_name, None)
+        return credential is not None and bool(credential.get_secret_value().strip())
 
     def get_auth(
         self,

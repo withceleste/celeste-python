@@ -362,23 +362,24 @@ class TestEdgeCases:
     """Test edge cases and error conditions."""
 
     @pytest.mark.parametrize("value", ["", "   ", "\t\n"])
-    def test_whitespace_credentials(
+    def test_whitespace_credentials_are_treated_as_missing(
         self, monkeypatch: pytest.MonkeyPatch, value: str
     ) -> None:
-        """Test handling of whitespace-only credentials.
+        """Test that empty/whitespace-only credentials are treated as missing.
 
-        Note: Currently treats whitespace as 'present' credentials.
-        This is a deliberate choice - empty/whitespace values are still
-        considered as having credentials set (may be used for optional APIs).
+        When an env var is set to empty string or whitespace (e.g. OPENAI_API_KEY=""),
+        Pydantic BaseSettings produces SecretStr("") instead of None. The SDK must
+        detect this and raise MissingCredentialsError rather than sending invalid
+        Authorization headers.
         """
         # Arrange
         monkeypatch.setenv("OPENAI_API_KEY", value)
         creds = Credentials()  # type: ignore[call-arg]
 
         # Act & Assert
-        assert creds.has_credential(Provider.OPENAI) is True
-        credential = creds.get_credentials(Provider.OPENAI)
-        assert credential.get_secret_value() == value
+        assert creds.has_credential(Provider.OPENAI) is False
+        with pytest.raises(MissingCredentialsError):
+            creds.get_credentials(Provider.OPENAI)
 
     def test_special_characters_in_credentials(
         self, monkeypatch: pytest.MonkeyPatch
