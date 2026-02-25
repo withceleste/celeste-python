@@ -28,7 +28,7 @@ class MoonshotTextClient(MoonshotChatClient, TextClient):
     """Moonshot text client."""
 
     @classmethod
-    def parameter_mappers(cls) -> list[ParameterMapper]:
+    def parameter_mappers(cls) -> list[ParameterMapper[TextContent]]:
         return MOONSHOT_PARAMETER_MAPPERS
 
     async def generate(

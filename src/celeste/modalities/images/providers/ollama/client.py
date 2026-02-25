@@ -9,6 +9,7 @@ from celeste.providers.ollama.generate.client import OllamaGenerateClient
 from celeste.providers.ollama.generate.streaming import (
     OllamaGenerateStream as _OllamaGenerateStream,
 )
+from celeste.types import ImageContent
 
 from ...client import ImagesClient
 from ...io import (
@@ -54,7 +55,7 @@ class OllamaImagesClient(OllamaGenerateClient, ImagesClient):
     """Ollama images client (generate only, no edit support yet)."""
 
     @classmethod
-    def parameter_mappers(cls) -> list[ParameterMapper]:
+    def parameter_mappers(cls) -> list[ParameterMapper[ImageContent]]:
         return OLLAMA_PARAMETER_MAPPERS
 
     async def generate(

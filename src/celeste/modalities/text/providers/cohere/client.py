@@ -28,7 +28,7 @@ class CohereTextClient(CohereChatClient, TextClient):
     """Cohere text client."""
 
     @classmethod
-    def parameter_mappers(cls) -> list[ParameterMapper]:
+    def parameter_mappers(cls) -> list[ParameterMapper[TextContent]]:
         return COHERE_PARAMETER_MAPPERS
 
     async def generate(

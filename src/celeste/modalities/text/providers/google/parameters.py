@@ -19,29 +19,30 @@ from celeste.providers.google.generate_content.parameters import (
 from celeste.providers.google.generate_content.parameters import (
     WebSearchMapper as _WebSearchMapper,
 )
+from celeste.types import TextContent
 
 from ...parameters import TextParameter
 
 
-class TemperatureMapper(_TemperatureMapper):
+class TemperatureMapper(_TemperatureMapper[TextContent]):
     """Map temperature to Google's generationConfig.temperature parameter."""
 
     name = TextParameter.TEMPERATURE
 
 
-class MaxTokensMapper(_MaxOutputTokensMapper):
+class MaxTokensMapper(_MaxOutputTokensMapper[TextContent]):
     """Map max_tokens to Google's generationConfig.maxOutputTokens parameter."""
 
     name = TextParameter.MAX_TOKENS
 
 
-class ThinkingBudgetMapper(_ThinkingBudgetMapper):
+class ThinkingBudgetMapper(_ThinkingBudgetMapper[TextContent]):
     """Map thinking_budget to Google's generationConfig.thinkingConfig.thinkingBudget parameter."""
 
     name = TextParameter.THINKING_BUDGET
 
 
-class ThinkingLevelMapper(_ThinkingLevelMapper):
+class ThinkingLevelMapper(_ThinkingLevelMapper[TextContent]):
     """Map thinking_level to Google's generationConfig.thinkingConfig.thinkingLevel parameter."""
 
     name = TextParameter.THINKING_LEVEL
@@ -53,13 +54,13 @@ class OutputSchemaMapper(_ResponseJsonSchemaMapper):
     name = TextParameter.OUTPUT_SCHEMA
 
 
-class WebSearchMapper(_WebSearchMapper):
+class WebSearchMapper(_WebSearchMapper[TextContent]):
     """Map web_search to Google's tools parameter."""
 
     name = TextParameter.WEB_SEARCH
 
 
-GOOGLE_PARAMETER_MAPPERS: list[ParameterMapper] = [
+GOOGLE_PARAMETER_MAPPERS: list[ParameterMapper[TextContent]] = [
     TemperatureMapper(),
     MaxTokensMapper(),
     ThinkingBudgetMapper(),

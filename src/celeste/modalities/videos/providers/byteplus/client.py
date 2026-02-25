@@ -8,6 +8,7 @@ from celeste.providers.byteplus.videos import config
 from celeste.providers.byteplus.videos.client import (
     BytePlusVideosClient as BytePlusVideosMixin,
 )
+from celeste.types import VideoContent
 
 from ...client import VideosClient
 from ...io import VideoInput, VideoOutput
@@ -19,7 +20,7 @@ class BytePlusVideosClient(BytePlusVideosMixin, VideosClient):
     """BytePlus client for video generation."""
 
     @classmethod
-    def parameter_mappers(cls) -> list[ParameterMapper]:
+    def parameter_mappers(cls) -> list[ParameterMapper[VideoContent]]:
         return BYTEPLUS_PARAMETER_MAPPERS
 
     def _init_request(self, inputs: VideoInput) -> dict[str, Any]:

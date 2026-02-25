@@ -29,11 +29,12 @@ from celeste.providers.bfl.images.parameters import (
     WidthMapper as _WidthMapper,
 )
 from celeste.providers.bfl.images.utils import add_reference_images
+from celeste.types import ImageContent
 
 from ...parameters import ImageParameter
 
 
-class AspectRatioMapper(ParameterMapper):
+class AspectRatioMapper(ParameterMapper[ImageContent]):
     """Map aspect_ratio to BFL width/height parameters.
 
     Converts 'WxH' string to width/height, rounded to nearest multiple of 16.
@@ -91,7 +92,7 @@ class GuidanceMapper(_GuidanceMapper):
     name = ImageParameter.GUIDANCE
 
 
-class ReferenceImagesMapper(ParameterMapper):
+class ReferenceImagesMapper(ParameterMapper[ImageContent]):
     name = ImageParameter.REFERENCE_IMAGES
 
     def map(
@@ -108,7 +109,7 @@ class ReferenceImagesMapper(ParameterMapper):
         return add_reference_images(request, validated_value)
 
 
-BFL_PARAMETER_MAPPERS: list[ParameterMapper] = [
+BFL_PARAMETER_MAPPERS: list[ParameterMapper[ImageContent]] = [
     AspectRatioMapper(),
     PromptUpsamplingMapper(),
     SeedMapper(),

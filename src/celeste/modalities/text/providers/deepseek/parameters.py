@@ -10,6 +10,7 @@ from celeste.protocols.chatcompletions.parameters import (
 from celeste.protocols.chatcompletions.parameters import (
     TemperatureMapper as _TemperatureMapper,
 )
+from celeste.types import TextContent
 
 from ...parameters import TextParameter
 
@@ -32,7 +33,7 @@ class OutputSchemaMapper(_ResponseFormatMapper):
     name = TextParameter.OUTPUT_SCHEMA
 
 
-DEEPSEEK_PARAMETER_MAPPERS: list[ParameterMapper] = [
+DEEPSEEK_PARAMETER_MAPPERS: list[ParameterMapper[TextContent]] = [
     TemperatureMapper(),
     MaxTokensMapper(),
     OutputSchemaMapper(),

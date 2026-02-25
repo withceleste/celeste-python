@@ -44,7 +44,7 @@ class GoogleImagesClient(ImagesClient):
         object.__setattr__(self, "_strategy", strategy)
 
     @classmethod
-    def parameter_mappers(cls) -> list[ParameterMapper]:
+    def parameter_mappers(cls) -> list[ParameterMapper[ImageContent]]:
         return [*GEMINI_PARAMETER_MAPPERS, *IMAGEN_PARAMETER_MAPPERS]
 
     async def generate(

@@ -7,6 +7,7 @@ from celeste.mime_types import VideoMimeType
 from celeste.parameters import ParameterMapper
 from celeste.providers.google.veo import config
 from celeste.providers.google.veo.client import GoogleVeoClient as GoogleVeoMixin
+from celeste.types import VideoContent
 
 from ...client import VideosClient
 from ...io import VideoInput, VideoOutput
@@ -18,7 +19,7 @@ class GoogleVideosClient(GoogleVeoMixin, VideosClient):
     """Google client for video generation."""
 
     @classmethod
-    def parameter_mappers(cls) -> list[ParameterMapper]:
+    def parameter_mappers(cls) -> list[ParameterMapper[VideoContent]]:
         return GOOGLE_PARAMETER_MAPPERS
 
     def _init_request(self, inputs: VideoInput) -> dict[str, Any]:

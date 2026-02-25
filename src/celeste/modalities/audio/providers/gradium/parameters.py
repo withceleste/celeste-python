@@ -7,6 +7,7 @@ from celeste.providers.gradium.text_to_speech.parameters import (
 from celeste.providers.gradium.text_to_speech.parameters import (
     VoiceMapper as _VoiceMapper,
 )
+from celeste.types import AudioContent
 
 from ...parameters import AudioParameter
 
@@ -23,7 +24,7 @@ class OutputFormatMapper(_OutputFormatMapper):
     name = AudioParameter.OUTPUT_FORMAT
 
 
-GRADIUM_PARAMETER_MAPPERS: list[ParameterMapper] = [
+GRADIUM_PARAMETER_MAPPERS: list[ParameterMapper[AudioContent]] = [
     VoiceMapper(),
     OutputFormatMapper(),
 ]

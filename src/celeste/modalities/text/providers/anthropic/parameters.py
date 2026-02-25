@@ -19,6 +19,7 @@ from celeste.providers.anthropic.messages.parameters import (
 from celeste.providers.anthropic.messages.parameters import (
     WebSearchMapper as _WebSearchMapper,
 )
+from celeste.types import TextContent
 
 from ...parameters import TextParameter
 
@@ -72,7 +73,7 @@ class WebSearchMapper(_WebSearchMapper):
     name = TextParameter.WEB_SEARCH
 
 
-ANTHROPIC_PARAMETER_MAPPERS: list[ParameterMapper] = [
+ANTHROPIC_PARAMETER_MAPPERS: list[ParameterMapper[TextContent]] = [
     TemperatureMapper(),
     MaxTokensMapper(),
     ThinkingBudgetMapper(),

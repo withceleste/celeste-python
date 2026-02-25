@@ -10,6 +10,7 @@ from celeste.providers.openai.images.parameters import (
 from celeste.providers.openai.images.parameters import (
     SizeMapper as _SizeMapper,
 )
+from celeste.types import ImageContent
 
 from ...parameters import ImageParameter
 
@@ -32,7 +33,7 @@ class QualityMapper(_QualityMapper):
     name = ImageParameter.QUALITY
 
 
-OPENAI_PARAMETER_MAPPERS: list[ParameterMapper] = [
+OPENAI_PARAMETER_MAPPERS: list[ParameterMapper[ImageContent]] = [
     AspectRatioMapper(),
     PartialImagesMapper(),
     QualityMapper(),

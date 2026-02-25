@@ -26,7 +26,7 @@ class GroqTextClient(GroqChatClient, TextClient):
     """Groq text client."""
 
     @classmethod
-    def parameter_mappers(cls) -> list[ParameterMapper]:
+    def parameter_mappers(cls) -> list[ParameterMapper[TextContent]]:
         return GROQ_PARAMETER_MAPPERS
 
     async def generate(

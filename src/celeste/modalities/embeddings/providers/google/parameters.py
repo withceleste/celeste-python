@@ -4,6 +4,7 @@ from celeste.parameters import ParameterMapper
 from celeste.providers.google.embeddings.parameters import (
     OutputDimensionalityMapper as _OutputDimensionalityMapper,
 )
+from celeste.types import EmbeddingsContent
 
 from ...parameters import EmbeddingsParameter
 
@@ -14,7 +15,7 @@ class DimensionsMapper(_OutputDimensionalityMapper):
     name = EmbeddingsParameter.DIMENSIONS
 
 
-GOOGLE_PARAMETER_MAPPERS: list[ParameterMapper] = [
+GOOGLE_PARAMETER_MAPPERS: list[ParameterMapper[EmbeddingsContent]] = [
     DimensionsMapper(),
 ]
 

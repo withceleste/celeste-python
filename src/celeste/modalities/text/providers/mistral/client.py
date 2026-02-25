@@ -28,7 +28,7 @@ class MistralTextClient(MistralChatClient, TextClient):
     """Mistral text client."""
 
     @classmethod
-    def parameter_mappers(cls) -> list[ParameterMapper]:
+    def parameter_mappers(cls) -> list[ParameterMapper[TextContent]]:
         return MISTRAL_PARAMETER_MAPPERS
 
     async def generate(

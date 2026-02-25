@@ -19,6 +19,7 @@ from celeste.providers.google.veo.parameters import (
 from celeste.providers.google.veo.parameters import (
     ResolutionMapper as _ResolutionMapper,
 )
+from celeste.types import VideoContent
 
 from ...parameters import VideoParameter
 
@@ -59,7 +60,7 @@ class LastFrameMapper(_LastFrameMapper):
     name = VideoParameter.LAST_FRAME
 
 
-GOOGLE_PARAMETER_MAPPERS: list[ParameterMapper] = [
+GOOGLE_PARAMETER_MAPPERS: list[ParameterMapper[VideoContent]] = [
     AspectRatioMapper(),
     ResolutionMapper(),
     DurationMapper(),

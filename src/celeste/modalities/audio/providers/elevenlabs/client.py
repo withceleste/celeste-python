@@ -11,6 +11,7 @@ from celeste.providers.elevenlabs.text_to_speech.client import (
 from celeste.providers.elevenlabs.text_to_speech.streaming import (
     ElevenLabsTextToSpeechStream as _ElevenLabsTextToSpeechStream,
 )
+from celeste.types import AudioContent
 
 from ...client import AudioClient
 from ...io import (
@@ -40,7 +41,7 @@ class ElevenLabsAudioClient(ElevenLabsTextToSpeechMixin, AudioClient):
     """ElevenLabs audio client (TTS)."""
 
     @classmethod
-    def parameter_mappers(cls) -> list[ParameterMapper]:
+    def parameter_mappers(cls) -> list[ParameterMapper[AudioContent]]:
         return ELEVENLABS_PARAMETER_MAPPERS
 
     async def speak(

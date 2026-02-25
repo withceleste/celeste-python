@@ -19,6 +19,7 @@ from celeste.providers.openai.videos.parameters import (
 from celeste.providers.openai.videos.parameters import (
     SizeMapper as _SizeMapper,
 )
+from celeste.types import VideoContent
 
 from ...parameters import VideoParameter
 
@@ -58,7 +59,7 @@ def _compute_size(aspect_ratio: str, resolution: str) -> str:
     return f"{width}x{height}"
 
 
-class AspectRatioMapper(ParameterMapper):
+class AspectRatioMapper(ParameterMapper[VideoContent]):
     """Store aspect_ratio for later combination with resolution."""
 
     name = VideoParameter.ASPECT_RATIO
@@ -107,7 +108,7 @@ class DurationMapper(_SecondsMapper):
     name = VideoParameter.DURATION
 
 
-OPENAI_PARAMETER_MAPPERS: list[ParameterMapper] = [
+OPENAI_PARAMETER_MAPPERS: list[ParameterMapper[VideoContent]] = [
     AspectRatioMapper(),
     ResolutionMapper(),
     DurationMapper(),

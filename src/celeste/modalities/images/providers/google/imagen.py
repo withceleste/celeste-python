@@ -19,7 +19,7 @@ class ImagenImagesClient(GoogleImagenClient, ImagesClient):
     """Google Imagen client for images modality (generate)."""
 
     @classmethod
-    def parameter_mappers(cls) -> list[ParameterMapper]:
+    def parameter_mappers(cls) -> list[ParameterMapper[ImageContent]]:
         return IMAGEN_PARAMETER_MAPPERS
 
     async def generate(

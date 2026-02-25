@@ -19,6 +19,7 @@ from celeste.providers.google.imagen.parameters import (
 from celeste.providers.google.imagen.parameters import (
     SampleCountMapper as _ImagenSampleCountMapper,
 )
+from celeste.types import ImageContent
 
 from ...parameters import ImageParameter
 
@@ -41,32 +42,32 @@ class ImagenNumImagesMapper(_ImagenSampleCountMapper):
     name = ImageParameter.NUM_IMAGES
 
 
-IMAGEN_PARAMETER_MAPPERS: list[ParameterMapper] = [
+IMAGEN_PARAMETER_MAPPERS: list[ParameterMapper[ImageContent]] = [
     ImagenAspectRatioMapper(),
     ImagenQualityMapper(),
     ImagenNumImagesMapper(),
 ]
 
 
-class GeminiAspectRatioMapper(_GeminiAspectRatioMapper):
+class GeminiAspectRatioMapper(_GeminiAspectRatioMapper[ImageContent]):
     """Map aspect_ratio to Gemini generationConfig.imageConfig.aspectRatio."""
 
     name = ImageParameter.ASPECT_RATIO
 
 
-class GeminiQualityMapper(_GeminiImageSizeMapper):
+class GeminiQualityMapper(_GeminiImageSizeMapper[ImageContent]):
     """Map quality to Gemini generationConfig.imageConfig.imageSize."""
 
     name = ImageParameter.QUALITY
 
 
-class GeminiReferenceImagesMapper(_GeminiMediaContentMapper):
+class GeminiReferenceImagesMapper(_GeminiMediaContentMapper[ImageContent]):
     """Map reference_images to Gemini contents.parts."""
 
     name = ImageParameter.REFERENCE_IMAGES
 
 
-GEMINI_PARAMETER_MAPPERS: list[ParameterMapper] = [
+GEMINI_PARAMETER_MAPPERS: list[ParameterMapper[ImageContent]] = [
     GeminiAspectRatioMapper(),
     GeminiQualityMapper(),
     GeminiReferenceImagesMapper(),

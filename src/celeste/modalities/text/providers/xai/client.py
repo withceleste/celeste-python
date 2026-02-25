@@ -29,7 +29,7 @@ class XAITextClient(XAIResponsesClient, TextClient):
     """xAI text client."""
 
     @classmethod
-    def parameter_mappers(cls) -> list[ParameterMapper]:
+    def parameter_mappers(cls) -> list[ParameterMapper[TextContent]]:
         return XAI_PARAMETER_MAPPERS
 
     async def generate(

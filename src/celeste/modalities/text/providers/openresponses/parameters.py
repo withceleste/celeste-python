@@ -10,6 +10,7 @@ from celeste.protocols.openresponses.parameters import (
 from celeste.protocols.openresponses.parameters import (
     TextFormatMapper as _TextFormatMapper,
 )
+from celeste.types import TextContent
 
 from ...parameters import TextParameter
 
@@ -32,7 +33,7 @@ class OutputSchemaMapper(_TextFormatMapper):
     name = TextParameter.OUTPUT_SCHEMA
 
 
-OPENRESPONSES_PARAMETER_MAPPERS: list[ParameterMapper] = [
+OPENRESPONSES_PARAMETER_MAPPERS: list[ParameterMapper[TextContent]] = [
     TemperatureMapper(),
     MaxTokensMapper(),
     OutputSchemaMapper(),

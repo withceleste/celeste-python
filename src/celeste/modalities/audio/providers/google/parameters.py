@@ -13,6 +13,7 @@ from celeste.providers.google.cloud_tts.parameters import (
 from celeste.providers.google.cloud_tts.parameters import (
     VoiceMapper as _VoiceMapper,
 )
+from celeste.types import AudioContent
 
 from ...parameters import AudioParameter
 
@@ -63,7 +64,7 @@ class OutputFormatMapper(_AudioEncodingMapper):
     }
 
 
-GOOGLE_PARAMETER_MAPPERS: list[ParameterMapper] = [
+GOOGLE_PARAMETER_MAPPERS: list[ParameterMapper[AudioContent]] = [
     VoiceMapper(),
     LanguageMapper(),
     OutputFormatMapper(),

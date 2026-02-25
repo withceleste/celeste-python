@@ -13,6 +13,7 @@ from celeste.providers.elevenlabs.text_to_speech.parameters import (
 from celeste.providers.elevenlabs.text_to_speech.parameters import (
     VoiceMapper as _VoiceMapper,
 )
+from celeste.types import AudioContent
 
 from ...parameters import AudioParameter
 
@@ -41,7 +42,7 @@ class LanguageCodeMapper(_LanguageCodeMapper):
     name = AudioParameter.LANGUAGE
 
 
-ELEVENLABS_PARAMETER_MAPPERS: list[ParameterMapper] = [
+ELEVENLABS_PARAMETER_MAPPERS: list[ParameterMapper[AudioContent]] = [
     VoiceMapper(),
     SpeedMapper(),
     OutputFormatMapper(),

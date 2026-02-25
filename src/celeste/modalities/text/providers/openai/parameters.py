@@ -19,6 +19,7 @@ from celeste.protocols.openresponses.parameters import (
 from celeste.protocols.openresponses.parameters import (
     WebSearchMapper as _WebSearchMapper,
 )
+from celeste.types import TextContent
 
 from ...parameters import TextParameter
 
@@ -59,7 +60,7 @@ class ThinkingBudgetMapper(_ReasoningEffortMapper):
     name = TextParameter.THINKING_BUDGET
 
 
-OPENAI_PARAMETER_MAPPERS: list[ParameterMapper] = [
+OPENAI_PARAMETER_MAPPERS: list[ParameterMapper[TextContent]] = [
     TemperatureMapper(),
     MaxTokensMapper(),
     OutputSchemaMapper(),
