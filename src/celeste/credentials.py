@@ -96,12 +96,18 @@ class Credentials(BaseSettings):
             SecretStr containing the API key for the provider.
 
         Raises:
-            MissingCredentialsError: If provider requires credentials but none are configured.
+            MissingCredentialsError: If provider requires credentials but none are configured,
+                or the configured value is empty/whitespace-only.
         """
-        if override_key:
-            if isinstance(override_key, str):
-                return SecretStr(override_key)
-            return override_key
+        if override_key is not None:
+            raw = (
+                override_key
+                if isinstance(override_key, str)
+                else override_key.get_secret_value()
+            )
+            if not raw.strip():
+                raise MissingCredentialsError(provider=provider)
+            return SecretStr(raw) if isinstance(override_key, str) else override_key
 
         registered = _auth_registry.get(provider)
         if registered is None:
@@ -116,7 +122,7 @@ class Credentials(BaseSettings):
         field_name = secret_name.lower()
 
         credential: SecretStr | None = getattr(self, field_name, None)
-        if credential is None:
+        if credential is None or not credential.get_secret_value().strip():
             raise MissingCredentialsError(provider=provider)
 
         return credential
@@ -130,7 +136,7 @@ class Credentials(BaseSettings):
         ]
 
     def has_credential(self, provider: Provider) -> bool:
-        """Check if a specific provider has credentials configured."""
+        """Check if a specific provider has non-empty credentials configured."""
         registered = _auth_registry.get(provider)
         if registered is None:
             raise UnsupportedProviderError(provider=provider)
@@ -142,7 +148,8 @@ class Credentials(BaseSettings):
         secret_name, _, _ = registered
         field_name = secret_name.lower()
 
-        return getattr(self, field_name, None) is not None
+        credential = getattr(self, field_name, None)
+        return credential is not None and bool(credential.get_secret_value().strip())
 
     def get_auth(
         self,
