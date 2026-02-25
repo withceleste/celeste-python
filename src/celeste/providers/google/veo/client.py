@@ -199,13 +199,16 @@ class GoogleVeoClient(APIMixin):
         """Veo API doesn't provide finish reasons."""
         return FinishReason(reason=None)
 
-    async def download_content(self, url: str) -> bytes:
+    async def download_content(
+        self, url: str, extra_headers: dict[str, str] | None = None
+    ) -> bytes:
         """Download video content from GCS URL.
 
         Returns raw bytes that capability clients wrap in VideoArtifact.
 
         Args:
             url: GCS URL (gs://) or HTTPS URL to download from.
+            extra_headers: Optional extra HTTP headers to include.
 
         Returns:
             Raw video bytes.
@@ -216,7 +219,7 @@ class GoogleVeoClient(APIMixin):
 
         logger.info(f"Downloading video from: {download_url}")
 
-        headers = self.auth.get_headers()
+        headers = self._merge_headers(self.auth.get_headers(), extra_headers)
 
         response = await self.http_client.get(
             download_url,

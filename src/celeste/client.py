@@ -72,7 +72,7 @@ class APIMixin(ABC):
         User-provided headers take precedence over provider defaults.
         """
         if extra_headers:
-            headers.update(extra_headers)
+            return {**headers, **extra_headers}
         return headers
 
     @staticmethod
@@ -322,6 +322,9 @@ class ModalityClient[In: Input, Out: Output, Params: Parameters, Content](
     def _make_stream_request(
         self,
         request_body: dict[str, Any],
+        *,
+        endpoint: str | None = None,
+        extra_headers: dict[str, str] | None = None,
         **parameters: Unpack[Params],  # type: ignore[misc]
     ) -> AsyncIterator[dict[str, Any]]:
         """Make HTTP streaming request and return async iterator of events."""

@@ -98,6 +98,7 @@ class GoogleInteractionsClient(APIMixin):
     async def _get_interaction(
         self,
         interaction_id: str,
+        extra_headers: dict[str, str] | None = None,
     ) -> httpx.Response:
         """Get an existing interaction by ID.
 
@@ -106,7 +107,7 @@ class GoogleInteractionsClient(APIMixin):
         endpoint = config.GoogleInteractionsEndpoint.GET_INTERACTION.format(
             interaction_id=interaction_id
         )
-        headers = self.auth.get_headers()
+        headers = self._merge_headers(self.auth.get_headers(), extra_headers)
 
         return await self.http_client.get(
             f"{config.BASE_URL}{endpoint}",

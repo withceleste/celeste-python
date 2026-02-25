@@ -50,9 +50,10 @@ class BFLImagesClient(APIMixin):
         2. Poll polling_url until Ready/Failed
         3. Return response with _submit_metadata for usage parsing
         """
-        headers = self._merge_headers(
-            {**self._json_headers(), "Accept": ApplicationMimeType.JSON}, extra_headers
-        )
+        headers = {
+            **self._json_headers(extra_headers),
+            "Accept": ApplicationMimeType.JSON,
+        }
 
         if endpoint is None:
             endpoint = config.BFLImagesEndpoint.CREATE_IMAGE
