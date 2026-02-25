@@ -1,6 +1,6 @@
 """Google Interactions SSE parsing for streaming."""
 
-from typing import Any
+from typing import Any, ClassVar
 
 from celeste.io import FinishReason
 
@@ -21,6 +21,15 @@ class GoogleInteractionsStream:
 
     Modality streams call super() methods which resolve to this via MRO.
     """
+
+    _error_type_fields: ClassVar[tuple[str, ...]] = ("status", "code")
+
+    def _parse_stream_error(self, event_data: dict[str, Any]) -> dict[str, Any] | None:
+        """Detect Interactions error events (dual event_type/type field)."""
+        event_type = event_data.get("event_type") or event_data.get("type")
+        if event_type == "error":
+            return self._build_error_from_value(event_data.get("error", {}))
+        return None
 
     def _parse_chunk_content(self, event_data: dict[str, Any]) -> str | None:
         """Extract content from SSE event.
