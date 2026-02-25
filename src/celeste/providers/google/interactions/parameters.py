@@ -12,7 +12,7 @@ from celeste.parameters import FieldMapper, ParameterMapper
 from celeste.types import TextContent
 
 
-class TemperatureMapper(ParameterMapper):
+class TemperatureMapper(ParameterMapper[TextContent]):
     """Map temperature to Google Interactions generation_config.temperature field."""
 
     def map(
@@ -30,7 +30,7 @@ class TemperatureMapper(ParameterMapper):
         return request
 
 
-class MaxOutputTokensMapper(ParameterMapper):
+class MaxOutputTokensMapper(ParameterMapper[TextContent]):
     """Map max_tokens to Google Interactions generation_config.max_output_tokens field."""
 
     def map(
@@ -50,7 +50,7 @@ class MaxOutputTokensMapper(ParameterMapper):
         return request
 
 
-class ThinkingBudgetMapper(ParameterMapper):
+class ThinkingBudgetMapper(ParameterMapper[TextContent]):
     """Map thinking_budget to Interactions generation_config.thinking_config.thinking_budget."""
 
     def map(
@@ -70,7 +70,7 @@ class ThinkingBudgetMapper(ParameterMapper):
         return request
 
 
-class ThinkingLevelMapper(ParameterMapper):
+class ThinkingLevelMapper(ParameterMapper[TextContent]):
     """Map thinking_level to Interactions generation_config.thinking_level field."""
 
     def map(
@@ -88,13 +88,13 @@ class ThinkingLevelMapper(ParameterMapper):
         return request
 
 
-class PreviousInteractionIdMapper(FieldMapper):
+class PreviousInteractionIdMapper(FieldMapper[TextContent]):
     """Map previous_interaction_id for stateful conversations."""
 
     field = "previous_interaction_id"
 
 
-class BackgroundMapper(ParameterMapper):
+class BackgroundMapper(ParameterMapper[TextContent]):
     """Map background mode for long-running operations."""
 
     def map(
@@ -112,7 +112,7 @@ class BackgroundMapper(ParameterMapper):
         return request
 
 
-class GoogleSearchMapper(ParameterMapper):
+class GoogleSearchMapper(ParameterMapper[TextContent]):
     """Map google_search to Google Interactions tools field."""
 
     def map(
@@ -131,7 +131,7 @@ class GoogleSearchMapper(ParameterMapper):
         return request
 
 
-class CodeExecutionMapper(ParameterMapper):
+class CodeExecutionMapper(ParameterMapper[TextContent]):
     """Map code_execution to Google Interactions tools field."""
 
     def map(
@@ -150,7 +150,7 @@ class CodeExecutionMapper(ParameterMapper):
         return request
 
 
-class UrlContextMapper(ParameterMapper):
+class UrlContextMapper(ParameterMapper[TextContent]):
     """Map url_context to Google Interactions tools field."""
 
     def map(
@@ -169,7 +169,7 @@ class UrlContextMapper(ParameterMapper):
         return request
 
 
-class ResponseFormatMapper(ParameterMapper):
+class ResponseFormatMapper(ParameterMapper[TextContent]):
     """Map response_format to Google Interactions response_format field."""
 
     def map(
@@ -254,7 +254,7 @@ class ResponseFormatMapper(ParameterMapper):
         return result
 
 
-class MediaContentMapper(ParameterMapper):
+class MediaContentMapper(ParameterMapper[TextContent]):
     """Map reference_images to Google Interactions input content."""
 
     def _build_image_part(self, image: ImageArtifact) -> dict[str, Any]:
@@ -317,13 +317,13 @@ class MediaContentMapper(ParameterMapper):
         return request
 
 
-class ResponseModalitiesMapper(FieldMapper):
+class ResponseModalitiesMapper(FieldMapper[TextContent]):
     """Map response_modalities for multimodal output generation."""
 
     field = "response_modalities"
 
 
-class SystemInstructionMapper(FieldMapper):
+class SystemInstructionMapper(FieldMapper[TextContent]):
     """Map system_instruction for system prompts."""
 
     field = "system_instruction"

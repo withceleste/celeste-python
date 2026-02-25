@@ -4,9 +4,10 @@ from typing import Any
 
 from celeste.models import Model
 from celeste.parameters import ParameterMapper
+from celeste.types import ImageContent
 
 
-class SampleCountMapper(ParameterMapper):
+class SampleCountMapper(ParameterMapper[ImageContent]):
     """Map num_images to Google Imagen parameters.sampleCount field."""
 
     def map(
@@ -24,7 +25,7 @@ class SampleCountMapper(ParameterMapper):
         return request
 
 
-class AspectRatioMapper(ParameterMapper):
+class AspectRatioMapper(ParameterMapper[ImageContent]):
     """Map aspect_ratio to Google Imagen parameters.aspectRatio field."""
 
     def map(
@@ -42,7 +43,7 @@ class AspectRatioMapper(ParameterMapper):
         return request
 
 
-class ImageSizeMapper(ParameterMapper):
+class ImageSizeMapper(ParameterMapper[ImageContent]):
     """Map image_size to Google Imagen parameters.imageSize field."""
 
     def map(

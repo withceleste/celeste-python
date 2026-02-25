@@ -5,10 +5,11 @@ from typing import Any
 from celeste.exceptions import ValidationError
 from celeste.models import Model
 from celeste.parameters import ParameterMapper
+from celeste.types import VideoContent
 from celeste.utils import detect_mime_type
 
 
-class AspectRatioMapper(ParameterMapper):
+class AspectRatioMapper(ParameterMapper[VideoContent]):
     """Map aspect_ratio to Google Veo parameters.aspectRatio field."""
 
     def map(
@@ -27,7 +28,7 @@ class AspectRatioMapper(ParameterMapper):
         return request
 
 
-class ResolutionMapper(ParameterMapper):
+class ResolutionMapper(ParameterMapper[VideoContent]):
     """Map resolution to Google Veo parameters.resolution field."""
 
     def map(
@@ -46,7 +47,7 @@ class ResolutionMapper(ParameterMapper):
         return request
 
 
-class DurationSecondsMapper(ParameterMapper):
+class DurationSecondsMapper(ParameterMapper[VideoContent]):
     """Map duration to Google Veo parameters.durationSeconds field."""
 
     def map(
@@ -69,7 +70,7 @@ class DurationSecondsMapper(ParameterMapper):
         return request
 
 
-class ReferenceImagesMapper(ParameterMapper):
+class ReferenceImagesMapper(ParameterMapper[VideoContent]):
     """Map reference_images to Google Veo instances.referenceImages field."""
 
     def map(
@@ -104,7 +105,7 @@ class ReferenceImagesMapper(ParameterMapper):
         return request
 
 
-class FirstFrameMapper(ParameterMapper):
+class FirstFrameMapper(ParameterMapper[VideoContent]):
     """Map first_frame to Google Veo instances.image field."""
 
     def map(
@@ -131,7 +132,7 @@ class FirstFrameMapper(ParameterMapper):
         return request
 
 
-class LastFrameMapper(ParameterMapper):
+class LastFrameMapper(ParameterMapper[VideoContent]):
     """Map last_frame to Google Veo instances.lastFrame field."""
 
     def map(

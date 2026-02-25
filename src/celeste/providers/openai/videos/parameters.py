@@ -4,9 +4,10 @@ from typing import Any
 
 from celeste.models import Model
 from celeste.parameters import FieldMapper, ParameterMapper
+from celeste.types import VideoContent
 
 
-class SecondsMapper(ParameterMapper):
+class SecondsMapper(ParameterMapper[VideoContent]):
     """Map seconds to OpenAI seconds field."""
 
     def map(
@@ -27,7 +28,7 @@ class SecondsMapper(ParameterMapper):
         return request
 
 
-class SizeMapper(ParameterMapper):
+class SizeMapper(ParameterMapper[VideoContent]):
     """Map size to OpenAI size field."""
 
     def map(
@@ -44,7 +45,7 @@ class SizeMapper(ParameterMapper):
         return request
 
 
-class InputReferenceMapper(FieldMapper):
+class InputReferenceMapper(FieldMapper[VideoContent]):
     """Map input_reference to OpenAI input_reference field."""
 
     field = "input_reference"

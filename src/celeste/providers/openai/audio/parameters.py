@@ -5,21 +5,22 @@ from typing import Any
 from celeste.mime_types import AudioMimeType
 from celeste.models import Model
 from celeste.parameters import FieldMapper, ParameterMapper
+from celeste.types import AudioContent
 
 
-class VoiceMapper(FieldMapper):
+class VoiceMapper(FieldMapper[AudioContent]):
     """Map voice to OpenAI voice field."""
 
     field = "voice"
 
 
-class SpeedMapper(FieldMapper):
+class SpeedMapper(FieldMapper[AudioContent]):
     """Map speed to OpenAI speed field."""
 
     field = "speed"
 
 
-class ResponseFormatMapper(ParameterMapper):
+class ResponseFormatMapper(ParameterMapper[AudioContent]):
     """Map response_format to OpenAI response_format field."""
 
     def map(
@@ -56,7 +57,7 @@ class ResponseFormatMapper(ParameterMapper):
         return request
 
 
-class InstructionsMapper(FieldMapper):
+class InstructionsMapper(FieldMapper[AudioContent]):
     """Map instructions to OpenAI instructions field."""
 
     field = "instructions"

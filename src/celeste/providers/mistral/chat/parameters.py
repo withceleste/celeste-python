@@ -10,9 +10,10 @@ from celeste.protocols.chatcompletions.parameters import (
     ResponseFormatMapper as _ResponseFormatMapper,
 )
 from celeste.structured_outputs import StrictRefResolvingJsonSchemaGenerator
+from celeste.types import TextContent
 
 
-class WebSearchMapper(ParameterMapper):
+class WebSearchMapper(ParameterMapper[TextContent]):
     """Map web_search to Mistral tools field."""
 
     def map(

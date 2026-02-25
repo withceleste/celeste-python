@@ -11,37 +11,37 @@ from celeste.structured_outputs import StrictJsonSchemaGenerator
 from celeste.types import TextContent
 
 
-class TemperatureMapper(FieldMapper):
+class TemperatureMapper(FieldMapper[TextContent]):
     """Map temperature to Anthropic temperature field."""
 
     field = "temperature"
 
 
-class TopPMapper(FieldMapper):
+class TopPMapper(FieldMapper[TextContent]):
     """Map top_p to Anthropic top_p field."""
 
     field = "top_p"
 
 
-class TopKMapper(FieldMapper):
+class TopKMapper(FieldMapper[TextContent]):
     """Map top_k to Anthropic top_k field."""
 
     field = "top_k"
 
 
-class MaxTokensMapper(FieldMapper):
+class MaxTokensMapper(FieldMapper[TextContent]):
     """Map max_tokens to Anthropic max_tokens field."""
 
     field = "max_tokens"
 
 
-class StopSequencesMapper(FieldMapper):
+class StopSequencesMapper(FieldMapper[TextContent]):
     """Map stop_sequences to Anthropic stop_sequences field."""
 
     field = "stop_sequences"
 
 
-class ThinkingMapper(ParameterMapper):
+class ThinkingMapper(ParameterMapper[TextContent]):
     """Map thinking to Anthropic thinking field.
 
     Accepts provider-native values:
@@ -67,7 +67,7 @@ class ThinkingMapper(ParameterMapper):
         return request
 
 
-class WebSearchMapper(ParameterMapper):
+class WebSearchMapper(ParameterMapper[TextContent]):
     """Map web_search to Anthropic tools field."""
 
     def map(
@@ -90,7 +90,7 @@ class WebSearchMapper(ParameterMapper):
         return request
 
 
-class OutputFormatMapper(ParameterMapper):
+class OutputFormatMapper(ParameterMapper[TextContent]):
     """Map output_schema to Anthropic output_format field.
 
     Handles both single BaseModel and list[BaseModel] types.

@@ -11,9 +11,10 @@ from typing import Any
 from celeste.constraints import Int
 from celeste.models import Model
 from celeste.parameters import FieldMapper, ParameterMapper
+from celeste.types import ImageContent
 
 
-class WidthMapper(ParameterMapper):
+class WidthMapper(ParameterMapper[ImageContent]):
     """Map width to Ollama width field."""
 
     def map(
@@ -30,7 +31,7 @@ class WidthMapper(ParameterMapper):
         return request
 
 
-class HeightMapper(ParameterMapper):
+class HeightMapper(ParameterMapper[ImageContent]):
     """Map height to Ollama height field."""
 
     def map(
@@ -47,13 +48,13 @@ class HeightMapper(ParameterMapper):
         return request
 
 
-class StepsMapper(FieldMapper):
+class StepsMapper(FieldMapper[ImageContent]):
     """Map steps to Ollama steps field."""
 
     field = "steps"
 
 
-class SeedMapper(ParameterMapper):
+class SeedMapper(ParameterMapper[ImageContent]):
     """Map seed to Ollama options.seed field (nested)."""
 
     def map(
@@ -71,7 +72,7 @@ class SeedMapper(ParameterMapper):
         return request
 
 
-class NegativePromptMapper(FieldMapper):
+class NegativePromptMapper(FieldMapper[ImageContent]):
     """Map negative_prompt to Ollama negative_prompt field."""
 
     field = "negative_prompt"

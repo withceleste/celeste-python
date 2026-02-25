@@ -11,19 +11,19 @@ from celeste.structured_outputs import RefResolvingJsonSchemaGenerator
 from celeste.types import TextContent
 
 
-class TemperatureMapper(FieldMapper):
+class TemperatureMapper(FieldMapper[TextContent]):
     """Map temperature to Cohere temperature field."""
 
     field = "temperature"
 
 
-class MaxTokensMapper(FieldMapper):
+class MaxTokensMapper(FieldMapper[TextContent]):
     """Map max_tokens to Cohere max_tokens field."""
 
     field = "max_tokens"
 
 
-class ThinkingMapper(ParameterMapper):
+class ThinkingMapper(ParameterMapper[TextContent]):
     """Map thinking to Cohere thinking field."""
 
     def map(
@@ -46,7 +46,7 @@ class ThinkingMapper(ParameterMapper):
         return request
 
 
-class ResponseFormatMapper(ParameterMapper):
+class ResponseFormatMapper(ParameterMapper[TextContent]):
     """Map output_schema to Cohere response_format field.
 
     Handles both single BaseModel and list[BaseModel] types.

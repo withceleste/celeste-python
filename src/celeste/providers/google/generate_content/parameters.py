@@ -13,7 +13,7 @@ from celeste.parameters import ParameterMapper
 from celeste.types import TextContent
 
 
-class TemperatureMapper(ParameterMapper):
+class TemperatureMapper[Content](ParameterMapper[Content]):
     """Map temperature to Google generationConfig.temperature field."""
 
     def map(
@@ -31,7 +31,7 @@ class TemperatureMapper(ParameterMapper):
         return request
 
 
-class MaxOutputTokensMapper(ParameterMapper):
+class MaxOutputTokensMapper[Content](ParameterMapper[Content]):
     """Map max_tokens to Google generationConfig.maxOutputTokens field."""
 
     def map(
@@ -49,7 +49,7 @@ class MaxOutputTokensMapper(ParameterMapper):
         return request
 
 
-class ThinkingBudgetMapper(ParameterMapper):
+class ThinkingBudgetMapper[Content](ParameterMapper[Content]):
     """Map thinkingBudget to Google generationConfig.thinkingConfig.thinkingBudget field."""
 
     def map(
@@ -69,7 +69,7 @@ class ThinkingBudgetMapper(ParameterMapper):
         return request
 
 
-class ThinkingLevelMapper(ParameterMapper):
+class ThinkingLevelMapper[Content](ParameterMapper[Content]):
     """Map thinkingLevel to Google generationConfig.thinkingConfig.thinkingLevel field."""
 
     def map(
@@ -89,7 +89,7 @@ class ThinkingLevelMapper(ParameterMapper):
         return request
 
 
-class AspectRatioMapper(ParameterMapper):
+class AspectRatioMapper[Content](ParameterMapper[Content]):
     """Map aspect_ratio to Google generationConfig.imageConfig.aspectRatio field."""
 
     def map(
@@ -109,7 +109,7 @@ class AspectRatioMapper(ParameterMapper):
         return request
 
 
-class ImageSizeMapper(ParameterMapper):
+class ImageSizeMapper[Content](ParameterMapper[Content]):
     """Map image_size to Google generationConfig.imageConfig.imageSize field."""
 
     def map(
@@ -129,7 +129,7 @@ class ImageSizeMapper(ParameterMapper):
         return request
 
 
-class MediaContentMapper(ParameterMapper):
+class MediaContentMapper[Content](ParameterMapper[Content]):
     """Map reference_images to Google contents.parts field."""
 
     def _build_image_part(self, image: ImageArtifact) -> dict[str, Any]:
@@ -181,7 +181,7 @@ class MediaContentMapper(ParameterMapper):
         return request
 
 
-class WebSearchMapper(ParameterMapper):
+class WebSearchMapper[Content](ParameterMapper[Content]):
     """Map web_search to Google tools field."""
 
     def map(
@@ -199,7 +199,7 @@ class WebSearchMapper(ParameterMapper):
         return request
 
 
-class ResponseJsonSchemaMapper(ParameterMapper):
+class ResponseJsonSchemaMapper(ParameterMapper[TextContent]):
     """Map output_schema to Google generationConfig.responseJsonSchema field."""
 
     def map(

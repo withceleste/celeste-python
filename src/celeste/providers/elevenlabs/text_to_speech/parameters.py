@@ -4,9 +4,10 @@ from typing import Any
 
 from celeste.models import Model
 from celeste.parameters import FieldMapper, ParameterMapper
+from celeste.types import AudioContent
 
 
-class VoiceMapper(FieldMapper):
+class VoiceMapper(FieldMapper[AudioContent]):
     """Map voice parameter to ElevenLabs URL path.
 
     Note: Voice ID goes in URL path, not request body.
@@ -17,7 +18,7 @@ class VoiceMapper(FieldMapper):
     field = "_voice_id"
 
 
-class OutputFormatMapper(ParameterMapper):
+class OutputFormatMapper(ParameterMapper[AudioContent]):
     """Map response_format parameter to ElevenLabs output_format field."""
 
     def map(
@@ -36,7 +37,7 @@ class OutputFormatMapper(ParameterMapper):
         return request
 
 
-class SpeedMapper(ParameterMapper):
+class SpeedMapper(ParameterMapper[AudioContent]):
     """Map speed parameter to ElevenLabs voice_settings.speed field."""
 
     def map(
@@ -57,7 +58,7 @@ class SpeedMapper(ParameterMapper):
         return request
 
 
-class LanguageCodeMapper(ParameterMapper):
+class LanguageCodeMapper(ParameterMapper[AudioContent]):
     """Map language parameter to ElevenLabs language_code field.
 
     Only supported by eleven_turbo_v2_5 and eleven_flash_v2_5 models.
