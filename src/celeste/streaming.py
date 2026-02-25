@@ -8,7 +8,7 @@ from typing import Any, ClassVar, Self, Unpack
 
 from anyio.from_thread import BlockingPortal, start_blocking_portal
 
-from celeste.exceptions import StreamNotExhaustedError
+from celeste.exceptions import StreamEventError, StreamNotExhaustedError
 from celeste.io import Chunk as ChunkBase
 from celeste.io import FinishReason, Output, Usage
 from celeste.parameters import Parameters
@@ -31,6 +31,7 @@ class Stream[Out: Output, Params: Parameters, Chunk: ChunkBase](ABC):
     _chunk_class: ClassVar[type[ChunkBase]]
     _output_class: ClassVar[type[Output]]
     _empty_content: ClassVar[Any]
+    _error_type_fields: ClassVar[tuple[str, ...]] = ("type", "code")
 
     def __init__(
         self,
@@ -51,6 +52,45 @@ class Stream[Out: Output, Params: Parameters, Chunk: ChunkBase](ABC):
         self._portal: BlockingPortal | None = None
         self._portal_cm: AbstractContextManager[BlockingPortal] | None = None
 
+    def _build_error_from_value(self, error: Any) -> dict[str, Any]:  # noqa: ANN401
+        """Extract {type, message} from an error value using _error_type_fields."""
+        if isinstance(error, dict):
+            error_type = None
+            for field in self._error_type_fields:
+                val = error.get(field)
+                if val is not None:
+                    error_type = str(val)
+                    break
+            return {
+                "type": error_type,
+                "message": error.get("message", "Unknown error"),
+            }
+        # Non-dict error value (e.g., plain string from Cohere)
+        return {"message": str(error) if error else "Unknown error"}
+
+    def _parse_stream_error(self, event_data: dict[str, Any]) -> dict[str, Any] | None:
+        """Detect error events in the SSE stream.
+
+        Handles two generic SSE error patterns:
+        1. Type-based: {"type": "error", "error": {"type": "...", "message": "..."}}
+        2. Field-based: {"error": {"message": "...", "type": "..."}}
+
+        Override in provider mixin for non-standard error shapes.
+        """
+        error = None
+
+        # Pattern 1: Type-based — event has "type": "error" with nested error
+        if event_data.get("type") == "error":
+            error = event_data.get("error", {})
+        # Pattern 2: Field-based — event has top-level "error" dict
+        elif isinstance(event_data.get("error"), dict):
+            error = event_data["error"]
+
+        if error is None:
+            return None
+
+        return self._build_error_from_value(error)
+
     def _parse_chunk_content(self, event_data: dict[str, Any]) -> Any | None:  # noqa: ANN401
         """Parse content from chunk event. Override in provider mixin."""
         return None
@@ -61,6 +101,14 @@ class Stream[Out: Output, Params: Parameters, Chunk: ChunkBase](ABC):
 
     def _parse_chunk(self, event: dict[str, Any]) -> Chunk | None:
         """Parse SSE event into Chunk (returns None to filter lifecycle events)."""
+        error = self._parse_stream_error(event)
+        if error is not None:
+            raise StreamEventError(
+                message=error.get("message", "Unknown stream error"),
+                error_type=error.get("type"),
+                event_data=event,
+                provider=self._stream_metadata.get("provider"),
+            )
         content = self._parse_chunk_content(event)
         usage = self._get_chunk_usage(event)
         finish_reason = self._get_chunk_finish_reason(event)
