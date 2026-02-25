@@ -36,7 +36,7 @@ Primitives, not frameworks.
 
 Type-safe, modality/provider-agnostic primitives.
 
-- **Unified Interface:** One API for OpenAI, Anthropic, Gemini, Mistral, and 14+ others.
+- **Unified Interface:** One API for OpenAI, Anthropic, Gemini, Vertexai, Ollama, Mistral, and 14+ others.
 - **True Multi-Modal:** Text, Image, Audio, Video, Embeddings, Search —all first-class citizens.
 - **Type-Safe by Design:** Full Pydantic validation and IDE autocomplete.
 - **Zero Lock-In:** Switch providers instantly by changing a single config string.
