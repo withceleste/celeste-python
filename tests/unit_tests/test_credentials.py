@@ -381,6 +381,14 @@ class TestEdgeCases:
         with pytest.raises(MissingCredentialsError):
             creds.get_credentials(Provider.OPENAI)
 
+    @pytest.mark.parametrize("value", ["", "   ", "\t\n"])
+    def test_whitespace_override_key_treated_as_missing(self, value: str) -> None:
+        """Test that empty/whitespace override_key raises MissingCredentialsError."""
+        creds = Credentials()  # type: ignore[call-arg]
+
+        with pytest.raises(MissingCredentialsError):
+            creds.get_credentials(Provider.OPENAI, override_key=value)
+
     def test_special_characters_in_credentials(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:

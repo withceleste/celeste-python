@@ -96,12 +96,18 @@ class Credentials(BaseSettings):
             SecretStr containing the API key for the provider.
 
         Raises:
-            MissingCredentialsError: If provider requires credentials but none are configured.
+            MissingCredentialsError: If provider requires credentials but none are configured,
+                or the configured value is empty/whitespace-only.
         """
         if override_key:
-            if isinstance(override_key, str):
-                return SecretStr(override_key)
-            return override_key
+            raw = (
+                override_key
+                if isinstance(override_key, str)
+                else override_key.get_secret_value()
+            )
+            if not raw.strip():
+                raise MissingCredentialsError(provider=provider)
+            return SecretStr(raw) if isinstance(override_key, str) else override_key
 
         registered = _auth_registry.get(provider)
         if registered is None:
@@ -130,7 +136,7 @@ class Credentials(BaseSettings):
         ]
 
     def has_credential(self, provider: Provider) -> bool:
-        """Check if a specific provider has credentials configured."""
+        """Check if a specific provider has non-empty credentials configured."""
         registered = _auth_registry.get(provider)
         if registered is None:
             raise UnsupportedProviderError(provider=provider)
