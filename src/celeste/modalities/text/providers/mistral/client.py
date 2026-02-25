@@ -93,7 +93,7 @@ class MistralTextClient(MistralChatClient, TextClient):
                     text_parts.append(block.get("text", ""))
             content = "".join(text_parts)
 
-        return self._transform_output(content, **parameters)
+        return content
 
     def _stream_class(self) -> type[TextStream]:
         """Return the Stream class for this provider."""

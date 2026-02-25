@@ -33,7 +33,7 @@ class GoogleInteractionsClient(APIMixin):
             def _parse_content(self, response_data, **parameters):
                 outputs = super()._parse_content(response_data)
                 text = "".join(o.get("text", "") for o in outputs if o.get("type") == "text")
-                return self._transform_output(text, **parameters)
+                return text
     """
 
     _content_fields: ClassVar[set[str]] = {"outputs"}

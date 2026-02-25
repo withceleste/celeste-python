@@ -32,7 +32,7 @@ class AnthropicMessagesClient(APIMixin):
                 content = super()._parse_content(response_data)  # Raw content array
                 for block in content:
                     if block.get("type") == "text":
-                        return self._transform_output(block.get("text") or "", **parameters)
+                        return block.get("text") or ""
                 return ""
     """
 

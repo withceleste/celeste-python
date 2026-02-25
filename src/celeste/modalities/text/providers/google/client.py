@@ -178,7 +178,7 @@ class GoogleTextClient(GoogleGenerateContentClient, TextClient):
         candidates = super()._parse_content(response_data)
         parts = candidates[0].get("content", {}).get("parts", [])
         text = parts[0].get("text") if parts else ""
-        return self._transform_output(text or "", **parameters)
+        return text or ""
 
     def _stream_class(self) -> type[TextStream]:
         """Return the Stream class for this provider."""

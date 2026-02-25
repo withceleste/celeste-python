@@ -115,9 +115,9 @@ class OpenResponsesTextClient(OpenResponsesMixin, TextClient):
                 for part in item.get("content", []):
                     if part.get("type") == "output_text":
                         text = part.get("text") or ""
-                        return self._transform_output(text, **parameters)
+                        return text
 
-        return self._transform_output("", **parameters)
+        return ""
 
     def _stream_class(self) -> type[TextStream]:
         """Return the Stream class for this provider."""

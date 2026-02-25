@@ -26,7 +26,7 @@ class CohereChatClient(APIMixin):
             def _parse_content(self, response_data, **parameters):
                 content_array = super()._parse_content(response_data)
                 text = content_array[0].get("text") or ""
-                return self._transform_output(text, **parameters)
+                return text
     """
 
     _content_fields: ClassVar[set[str]] = {"message"}

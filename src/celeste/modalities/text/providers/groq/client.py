@@ -84,7 +84,7 @@ class GroqTextClient(GroqChatClient, TextClient):
         choices = super()._parse_content(response_data)
         message = choices[0].get("message", {})
         content = message.get("content") or ""
-        return self._transform_output(content, **parameters)
+        return content
 
     def _stream_class(self) -> type[TextStream]:
         """Return the Stream class for this provider."""
