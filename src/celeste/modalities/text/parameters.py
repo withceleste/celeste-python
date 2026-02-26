@@ -9,6 +9,7 @@ from enum import StrEnum
 from pydantic import BaseModel
 
 from celeste.parameters import Parameters
+from celeste.tools import ToolDefinition
 
 
 class TextParameter(StrEnum):
@@ -23,10 +24,8 @@ class TextParameter(StrEnum):
     THINKING_BUDGET = "thinking_budget"
     THINKING_LEVEL = "thinking_level"
     OUTPUT_SCHEMA = "output_schema"
-    WEB_SEARCH = "web_search"
+    TOOLS = "tools"
     VERBOSITY = "verbosity"
-    X_SEARCH = "x_search"
-    CODE_EXECUTION = "code_execution"
 
     # Media input declarations (for optional_input_types)
     IMAGE = "image"
@@ -46,10 +45,8 @@ class TextParameters(Parameters):
     thinking_budget: int | str
     thinking_level: str
     output_schema: type[BaseModel]
-    web_search: bool
+    tools: list[ToolDefinition]
     verbosity: str
-    x_search: bool
-    code_execution: bool
 
 
 __all__ = [
