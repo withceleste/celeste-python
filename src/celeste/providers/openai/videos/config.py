@@ -1,5 +1,6 @@
 """Configuration for OpenAI Videos API."""
 
+import os
 from enum import StrEnum
 
 
@@ -9,7 +10,8 @@ class OpenAIVideosEndpoint(StrEnum):
     CREATE_VIDEO = "/v1/videos"
 
 
-BASE_URL = "https://api.openai.com"
+# Support custom base URL via environment variable (for OpenAI-compatible APIs)
+BASE_URL = os.getenv("OPENAI_BASE_URL", "https://api.openai.com")
 CONTENT_ENDPOINT_SUFFIX = "/content"
 
 # Polling Configuration
