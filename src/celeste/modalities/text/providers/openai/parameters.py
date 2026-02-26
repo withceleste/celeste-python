@@ -14,10 +14,10 @@ from celeste.protocols.openresponses.parameters import (
     TextFormatMapper as _TextFormatMapper,
 )
 from celeste.protocols.openresponses.parameters import (
-    VerbosityMapper as _VerbosityMapper,
+    ToolsMapper as _ToolsMapper,
 )
 from celeste.protocols.openresponses.parameters import (
-    WebSearchMapper as _WebSearchMapper,
+    VerbosityMapper as _VerbosityMapper,
 )
 from celeste.types import TextContent
 
@@ -42,10 +42,10 @@ class OutputSchemaMapper(_TextFormatMapper):
     name = TextParameter.OUTPUT_SCHEMA
 
 
-class WebSearchMapper(_WebSearchMapper):
-    """Map web_search to OpenAI's tools parameter."""
+class ToolsMapper(_ToolsMapper):
+    """Map tools to OpenAI's tools parameter."""
 
-    name = TextParameter.WEB_SEARCH
+    name = TextParameter.TOOLS
 
 
 class VerbosityMapper(_VerbosityMapper):
@@ -64,7 +64,7 @@ OPENAI_PARAMETER_MAPPERS: list[ParameterMapper[TextContent]] = [
     TemperatureMapper(),
     MaxTokensMapper(),
     OutputSchemaMapper(),
-    WebSearchMapper(),
+    ToolsMapper(),
     VerbosityMapper(),
     ThinkingBudgetMapper(),
 ]

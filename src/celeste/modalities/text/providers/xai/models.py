@@ -1,14 +1,15 @@
 """xAI models for text modality."""
 
 from celeste.constraints import (
-    Bool,
     Choice,
     ImagesConstraint,
     Range,
     Schema,
+    ToolSupport,
 )
 from celeste.core import Modality, Operation, Parameter, Provider
 from celeste.models import Model
+from celeste.tools import CodeExecution, WebSearch, XSearch
 
 from ...parameters import TextParameter
 
@@ -22,10 +23,8 @@ MODELS: list[Model] = [
         parameter_constraints={
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0),
             Parameter.MAX_TOKENS: Range(min=1, max=30000),
+            TextParameter.TOOLS: ToolSupport(tools=[WebSearch, XSearch, CodeExecution]),
             TextParameter.OUTPUT_SCHEMA: Schema(),
-            TextParameter.WEB_SEARCH: Bool(),
-            TextParameter.X_SEARCH: Bool(),
-            TextParameter.CODE_EXECUTION: Bool(),
         },
     ),
     Model(
@@ -37,10 +36,8 @@ MODELS: list[Model] = [
         parameter_constraints={
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0),
             Parameter.MAX_TOKENS: Range(min=1, max=30000),
+            TextParameter.TOOLS: ToolSupport(tools=[WebSearch, XSearch, CodeExecution]),
             TextParameter.OUTPUT_SCHEMA: Schema(),
-            TextParameter.WEB_SEARCH: Bool(),
-            TextParameter.X_SEARCH: Bool(),
-            TextParameter.CODE_EXECUTION: Bool(),
         },
     ),
     Model(
@@ -52,10 +49,8 @@ MODELS: list[Model] = [
         parameter_constraints={
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0),
             Parameter.MAX_TOKENS: Range(min=1, max=30000),
+            TextParameter.TOOLS: ToolSupport(tools=[WebSearch, XSearch, CodeExecution]),
             TextParameter.OUTPUT_SCHEMA: Schema(),
-            TextParameter.WEB_SEARCH: Bool(),
-            TextParameter.X_SEARCH: Bool(),
-            TextParameter.CODE_EXECUTION: Bool(),
         },
     ),
     Model(
@@ -67,10 +62,8 @@ MODELS: list[Model] = [
         parameter_constraints={
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0),
             Parameter.MAX_TOKENS: Range(min=1, max=30000),
+            TextParameter.TOOLS: ToolSupport(tools=[WebSearch, XSearch, CodeExecution]),
             TextParameter.OUTPUT_SCHEMA: Schema(),
-            TextParameter.WEB_SEARCH: Bool(),
-            TextParameter.X_SEARCH: Bool(),
-            TextParameter.CODE_EXECUTION: Bool(),
         },
     ),
     Model(
@@ -82,10 +75,8 @@ MODELS: list[Model] = [
         parameter_constraints={
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0),
             Parameter.MAX_TOKENS: Range(min=1, max=64000),
+            TextParameter.TOOLS: ToolSupport(tools=[WebSearch, XSearch, CodeExecution]),
             TextParameter.OUTPUT_SCHEMA: Schema(),
-            TextParameter.WEB_SEARCH: Bool(),
-            TextParameter.X_SEARCH: Bool(),
-            TextParameter.CODE_EXECUTION: Bool(),
         },
     ),
     Model(
@@ -98,10 +89,8 @@ MODELS: list[Model] = [
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0),
             Parameter.MAX_TOKENS: Range(min=1, max=16000),
             TextParameter.THINKING_BUDGET: Choice(options=["low", "high"]),
+            TextParameter.TOOLS: ToolSupport(tools=[WebSearch, XSearch, CodeExecution]),
             TextParameter.OUTPUT_SCHEMA: Schema(),
-            TextParameter.WEB_SEARCH: Bool(),
-            TextParameter.X_SEARCH: Bool(),
-            TextParameter.CODE_EXECUTION: Bool(),
         },
     ),
     Model(

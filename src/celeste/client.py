@@ -17,6 +17,7 @@ from celeste.mime_types import ApplicationMimeType
 from celeste.models import Model
 from celeste.parameters import ParameterMapper, Parameters
 from celeste.streaming import Stream, enrich_stream_errors
+from celeste.tools import ToolCall
 from celeste.types import RawUsage
 
 
@@ -200,12 +201,18 @@ class ModalityClient[In: Input, Out: Output, Params: Parameters, Content](
         )
         content = self._parse_content(response_data, **parameters)
         content = self._transform_output(content, **parameters)
+        tool_calls = self._parse_tool_calls(response_data)
         return self._output_class()(
             content=content,
             usage=self._get_usage(response_data),
             finish_reason=self._get_finish_reason(response_data),
             metadata=self._build_metadata(response_data),
+            tool_calls=tool_calls,
         )
+
+    def _parse_tool_calls(self, response_data: dict[str, Any]) -> list[ToolCall]:
+        """Parse tool calls from response. Override in providers that support tools."""
+        return []
 
     def _stream(
         self,

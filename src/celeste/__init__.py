@@ -51,6 +51,7 @@ from celeste.structured_outputs import (
     StrictJsonSchemaGenerator,
     StrictRefResolvingJsonSchemaGenerator,
 )
+from celeste.tools import CodeExecution, Tool, ToolCall, ToolResult, WebSearch, XSearch
 from celeste.types import Content, JsonValue, Message, Role
 from celeste.websocket import WebSocketClient, WebSocketConnection, close_all_ws_clients
 
@@ -245,6 +246,7 @@ __all__ = [
     "Authentication",
     "Capability",
     "ClientNotFoundError",
+    "CodeExecution",
     "ConstraintViolationError",
     "Content",
     "Error",
@@ -270,14 +272,19 @@ __all__ = [
     "StreamingNotSupportedError",
     "StrictJsonSchemaGenerator",
     "StrictRefResolvingJsonSchemaGenerator",
+    "Tool",
+    "ToolCall",
+    "ToolResult",
     "UnsupportedCapabilityError",
     "UnsupportedParameterError",
     "UnsupportedProviderError",
     "Usage",
     "UsageField",
     "ValidationError",
+    "WebSearch",
     "WebSocketClient",
     "WebSocketConnection",
+    "XSearch",
     "audio",
     "close_all_http_clients",
     "close_all_ws_clients",

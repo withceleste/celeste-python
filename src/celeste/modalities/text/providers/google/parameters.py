@@ -17,7 +17,7 @@ from celeste.providers.google.generate_content.parameters import (
     ThinkingLevelMapper as _ThinkingLevelMapper,
 )
 from celeste.providers.google.generate_content.parameters import (
-    WebSearchMapper as _WebSearchMapper,
+    ToolsMapper as _ToolsMapper,
 )
 from celeste.types import TextContent
 
@@ -54,10 +54,10 @@ class OutputSchemaMapper(_ResponseJsonSchemaMapper):
     name = TextParameter.OUTPUT_SCHEMA
 
 
-class WebSearchMapper(_WebSearchMapper[TextContent]):
-    """Map web_search to Google's tools parameter."""
+class ToolsMapper(_ToolsMapper[TextContent]):
+    """Map tools to Google's tools parameter."""
 
-    name = TextParameter.WEB_SEARCH
+    name = TextParameter.TOOLS
 
 
 GOOGLE_PARAMETER_MAPPERS: list[ParameterMapper[TextContent]] = [
@@ -66,7 +66,7 @@ GOOGLE_PARAMETER_MAPPERS: list[ParameterMapper[TextContent]] = [
     ThinkingBudgetMapper(),
     ThinkingLevelMapper(),
     OutputSchemaMapper(),
-    WebSearchMapper(),
+    ToolsMapper(),
 ]
 
 __all__ = ["GOOGLE_PARAMETER_MAPPERS"]

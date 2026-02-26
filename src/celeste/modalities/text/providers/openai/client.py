@@ -1,5 +1,6 @@
 """OpenAI text client."""
 
+import json
 from typing import Any, Unpack
 
 from celeste.parameters import ParameterMapper
@@ -9,6 +10,7 @@ from celeste.providers.openai.responses.client import (
 from celeste.providers.openai.responses.streaming import (
     OpenAIResponsesStream as _OpenAIResponsesStream,
 )
+from celeste.tools import ToolCall, ToolResult
 from celeste.types import ImageContent, Message, TextContent, VideoContent
 from celeste.utils import build_image_data_url
 
@@ -61,7 +63,19 @@ class OpenAITextClient(OpenAIResponsesMixin, TextClient):
     def _init_request(self, inputs: TextInput) -> dict[str, Any]:
         """Initialize request with input content."""
         if inputs.messages is not None:
-            return {"input": [message.model_dump() for message in inputs.messages]}
+            items: list[dict[str, Any]] = []
+            for msg in inputs.messages:
+                if isinstance(msg, ToolResult):
+                    items.append(
+                        {
+                            "type": "function_call_output",
+                            "call_id": msg.tool_call_id,
+                            "output": str(msg.content),
+                        }
+                    )
+                else:
+                    items.append(msg.model_dump())
+            return {"input": items}
 
         content: list[dict[str, Any]] = []
 
@@ -92,6 +106,20 @@ class OpenAITextClient(OpenAIResponsesMixin, TextClient):
                         return text
 
         return ""
+
+    def _parse_tool_calls(self, response_data: dict[str, Any]) -> list[ToolCall]:
+        """Parse tool calls from OpenAI response."""
+        return [
+            ToolCall(
+                id=item.get("call_id", item.get("id", "")),
+                name=item["name"],
+                arguments=json.loads(item["arguments"])
+                if isinstance(item.get("arguments"), str)
+                else item.get("arguments", {}),
+            )
+            for item in response_data.get("output", [])
+            if item.get("type") == "function_call"
+        ]
 
     def _stream_class(self) -> type[TextStream]:
         """Return the Stream class for this provider."""

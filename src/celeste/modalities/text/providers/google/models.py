@@ -2,15 +2,16 @@
 
 from celeste.constraints import (
     AudioConstraint,
-    Bool,
     Choice,
     ImagesConstraint,
     Range,
     Schema,
+    ToolSupport,
     VideosConstraint,
 )
 from celeste.core import Modality, Operation, Parameter, Provider
 from celeste.models import Model
+from celeste.tools import CodeExecution, WebSearch
 
 from ...parameters import TextParameter
 
@@ -26,8 +27,8 @@ MODELS: list[Model] = [
             Parameter.MAX_TOKENS: Range(min=1, max=65536),
             # Flash: allows -1 (dynamic), 0 (disable), or >= 0
             TextParameter.THINKING_BUDGET: Range(min=-1, max=24576),
+            TextParameter.TOOLS: ToolSupport(tools=[WebSearch, CodeExecution]),
             TextParameter.OUTPUT_SCHEMA: Schema(),
-            TextParameter.WEB_SEARCH: Bool(),
             # Media input support
             TextParameter.IMAGE: ImagesConstraint(),
             TextParameter.VIDEO: VideosConstraint(),
@@ -47,8 +48,8 @@ MODELS: list[Model] = [
             TextParameter.THINKING_BUDGET: Range(
                 min=512, max=24576, special_values=[-1, 0]
             ),
+            TextParameter.TOOLS: ToolSupport(tools=[WebSearch, CodeExecution]),
             TextParameter.OUTPUT_SCHEMA: Schema(),
-            TextParameter.WEB_SEARCH: Bool(),
             # Media input support
             TextParameter.IMAGE: ImagesConstraint(),
             TextParameter.VIDEO: VideosConstraint(),
@@ -68,8 +69,8 @@ MODELS: list[Model] = [
             TextParameter.THINKING_BUDGET: Range(
                 min=128, max=32768, special_values=[-1]
             ),
+            TextParameter.TOOLS: ToolSupport(tools=[WebSearch, CodeExecution]),
             TextParameter.OUTPUT_SCHEMA: Schema(),
-            TextParameter.WEB_SEARCH: Bool(),
             # Media input support
             TextParameter.IMAGE: ImagesConstraint(),
             TextParameter.VIDEO: VideosConstraint(),
@@ -86,8 +87,8 @@ MODELS: list[Model] = [
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0),
             Parameter.MAX_TOKENS: Range(min=1, max=65536),
             TextParameter.THINKING_LEVEL: Choice(options=["low", "high"]),
+            TextParameter.TOOLS: ToolSupport(tools=[WebSearch, CodeExecution]),
             TextParameter.OUTPUT_SCHEMA: Schema(),
-            TextParameter.WEB_SEARCH: Bool(),
             # Media input support
             TextParameter.IMAGE: ImagesConstraint(),
             TextParameter.VIDEO: VideosConstraint(),
@@ -104,8 +105,8 @@ MODELS: list[Model] = [
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0),
             Parameter.MAX_TOKENS: Range(min=1, max=65536),
             TextParameter.THINKING_LEVEL: Choice(options=["low", "high"]),
+            TextParameter.TOOLS: ToolSupport(tools=[WebSearch, CodeExecution]),
             TextParameter.OUTPUT_SCHEMA: Schema(),
-            TextParameter.WEB_SEARCH: Bool(),
             # Media input support
             TextParameter.IMAGE: ImagesConstraint(),
             TextParameter.VIDEO: VideosConstraint(),
@@ -122,8 +123,8 @@ MODELS: list[Model] = [
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0),
             Parameter.MAX_TOKENS: Range(min=1, max=65536),
             TextParameter.THINKING_LEVEL: Choice(options=["low", "medium", "high"]),
+            TextParameter.TOOLS: ToolSupport(tools=[WebSearch, CodeExecution]),
             TextParameter.OUTPUT_SCHEMA: Schema(),
-            TextParameter.WEB_SEARCH: Bool(),
             # Media input support
             TextParameter.IMAGE: ImagesConstraint(),
             TextParameter.VIDEO: VideosConstraint(),
