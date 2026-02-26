@@ -1,6 +1,6 @@
 """OpenResponses protocol SSE parsing for streaming."""
 
-from typing import Any
+from typing import Any, ClassVar
 
 from celeste.io import FinishReason
 
@@ -21,6 +21,14 @@ class OpenResponsesStream:
 
     Modality streams call super() methods which resolve to this via MRO.
     """
+
+    _error_type_fields: ClassVar[tuple[str, ...]] = ("code",)
+
+    def _parse_stream_error(self, event_data: dict[str, Any]) -> dict[str, Any] | None:
+        """Detect Responses API error events (flat shape: code/message at root level)."""
+        if event_data.get("type") == "error":
+            return self._build_error_from_value(event_data)  # type: ignore[attr-defined, no-any-return]
+        return None
 
     def _parse_chunk_content(self, event_data: dict[str, Any]) -> str | None:
         """Extract content from SSE event."""

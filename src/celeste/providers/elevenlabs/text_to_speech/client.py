@@ -35,6 +35,7 @@ class ElevenLabsTextToSpeechClient(APIMixin):
         request_body: dict[str, Any],
         *,
         endpoint: str | None = None,
+        extra_headers: dict[str, str] | None = None,
         **parameters: Any,
     ) -> dict[str, Any]:
         """Make HTTP request to ElevenLabs TTS endpoint.
@@ -55,7 +56,7 @@ class ElevenLabsTextToSpeechClient(APIMixin):
             endpoint = config.ElevenLabsTextToSpeechEndpoint.CREATE_SPEECH
         endpoint = endpoint.format(voice_id=voice_id)
 
-        headers = self._json_headers()
+        headers = self._json_headers(extra_headers)
 
         response = await self.http_client.post(
             f"{config.BASE_URL}{endpoint}",
@@ -73,6 +74,7 @@ class ElevenLabsTextToSpeechClient(APIMixin):
         request_body: dict[str, Any],
         *,
         endpoint: str | None = None,
+        extra_headers: dict[str, str] | None = None,
         **parameters: Any,
     ) -> AsyncIterator[dict[str, Any]]:
         """Make HTTP streaming request returning binary audio chunks.
@@ -93,7 +95,7 @@ class ElevenLabsTextToSpeechClient(APIMixin):
             endpoint = config.ElevenLabsTextToSpeechEndpoint.STREAM_SPEECH
         endpoint = endpoint.format(voice_id=voice_id)
 
-        headers = self._json_headers()
+        headers = self._json_headers(extra_headers)
 
         return self._stream_binary_audio(
             f"{config.BASE_URL}{endpoint}",

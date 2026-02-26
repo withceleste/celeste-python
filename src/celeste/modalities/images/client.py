@@ -53,6 +53,7 @@ class ImagesStreamNamespace:
         prompt: str,
         *,
         extra_body: dict[str, Any] | None = None,
+        extra_headers: dict[str, str] | None = None,
         **parameters: Unpack[ImageParameters],
     ) -> ImagesStream:
         """Stream image generation."""
@@ -61,6 +62,7 @@ class ImagesStreamNamespace:
             inputs,
             stream_class=self._client._stream_class(),
             extra_body=extra_body,
+            extra_headers=extra_headers,
             **parameters,
         )
 
@@ -70,6 +72,7 @@ class ImagesStreamNamespace:
         prompt: str,
         *,
         extra_body: dict[str, Any] | None = None,
+        extra_headers: dict[str, str] | None = None,
         **parameters: Unpack[ImageParameters],
     ) -> ImagesStream:
         """Stream image editing."""
@@ -78,6 +81,7 @@ class ImagesStreamNamespace:
             inputs,
             stream_class=self._client._stream_class(),
             extra_body=extra_body,
+            extra_headers=extra_headers,
             **parameters,
         )
 
@@ -96,6 +100,7 @@ class ImagesSyncNamespace:
         prompt: str,
         *,
         extra_body: dict[str, Any] | None = None,
+        extra_headers: dict[str, str] | None = None,
         **parameters: Unpack[ImageParameters],
     ) -> ImageOutput:
         """Blocking image generation.
@@ -106,7 +111,7 @@ class ImagesSyncNamespace:
         """
         inputs = ImageInput(prompt=prompt)
         return async_to_sync(self._client._predict)(
-            inputs, extra_body=extra_body, **parameters
+            inputs, extra_body=extra_body, extra_headers=extra_headers, **parameters
         )
 
     def edit(
@@ -115,6 +120,7 @@ class ImagesSyncNamespace:
         prompt: str,
         *,
         extra_body: dict[str, Any] | None = None,
+        extra_headers: dict[str, str] | None = None,
         **parameters: Unpack[ImageParameters],
     ) -> ImageOutput:
         """Blocking image edit.
@@ -125,7 +131,7 @@ class ImagesSyncNamespace:
         """
         inputs = ImageInput(prompt=prompt, image=image)
         return async_to_sync(self._client._predict)(
-            inputs, extra_body=extra_body, **parameters
+            inputs, extra_body=extra_body, extra_headers=extra_headers, **parameters
         )
 
     @property
@@ -145,6 +151,7 @@ class ImagesSyncStreamNamespace:
         prompt: str,
         *,
         extra_body: dict[str, Any] | None = None,
+        extra_headers: dict[str, str] | None = None,
         **parameters: Unpack[ImageParameters],
     ) -> ImagesStream:
         """Sync streaming image generation.
@@ -158,7 +165,9 @@ class ImagesSyncStreamNamespace:
             print(stream.output.usage)
         """
         # Return same stream as async version - __iter__/__next__ handle sync iteration
-        return self._client.stream.generate(prompt, extra_body=extra_body, **parameters)
+        return self._client.stream.generate(
+            prompt, extra_body=extra_body, extra_headers=extra_headers, **parameters
+        )
 
     def edit(
         self,
@@ -166,6 +175,7 @@ class ImagesSyncStreamNamespace:
         prompt: str,
         *,
         extra_body: dict[str, Any] | None = None,
+        extra_headers: dict[str, str] | None = None,
         **parameters: Unpack[ImageParameters],
     ) -> ImagesStream:
         """Sync streaming image editing.
@@ -179,7 +189,11 @@ class ImagesSyncStreamNamespace:
             print(stream.output.usage)
         """
         return self._client.stream.edit(
-            image, prompt, extra_body=extra_body, **parameters
+            image,
+            prompt,
+            extra_body=extra_body,
+            extra_headers=extra_headers,
+            **parameters,
         )
 
 

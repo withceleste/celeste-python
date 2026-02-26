@@ -1,5 +1,7 @@
 """Custom exceptions for Celeste."""
 
+from typing import Any
+
 
 class Error(Exception):
     """Base exception for all Celeste errors."""
@@ -170,6 +172,27 @@ class StreamEmptyError(StreamingError):
         super().__init__("Stream completed but no chunks were produced")
 
 
+class StreamEventError(StreamingError):
+    """Raised when the provider sends an error event during streaming."""
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        error_type: str | None = None,
+        event_data: dict[str, Any] | None = None,
+        provider: str | None = None,
+    ) -> None:
+        """Initialize with error details from the stream event."""
+        self.error_type = error_type
+        self.event_data = event_data or {}
+        self.provider = provider
+
+        prefix = f"{provider} stream error" if provider else "Stream error"
+        suffix = f" [{error_type}]" if error_type else ""
+        super().__init__(f"{prefix}{suffix}: {message}")
+
+
 class MissingDependencyError(Error):
     """Raised when a required optional dependency is not installed."""
 
@@ -231,6 +254,7 @@ __all__ = [
     "ModalityNotFoundError",
     "ModelNotFoundError",
     "StreamEmptyError",
+    "StreamEventError",
     "StreamNotExhaustedError",
     "StreamingNotSupportedError",
     "UnsupportedCapabilityError",

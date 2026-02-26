@@ -1,6 +1,6 @@
 """Google GenerateContent SSE parsing for streaming."""
 
-from typing import Any
+from typing import Any, ClassVar
 
 from celeste.io import FinishReason
 
@@ -17,6 +17,8 @@ class GoogleGenerateContentStream:
 
     Modality streams call super() methods which resolve to this via MRO.
     """
+
+    _error_type_fields: ClassVar[tuple[str, ...]] = ("status", "code")
 
     def _parse_chunk_content(self, event_data: dict[str, Any]) -> str | None:
         """Extract content from SSE event."""
