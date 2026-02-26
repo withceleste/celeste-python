@@ -16,7 +16,7 @@ from celeste.io import Chunk, FinishReason, Input, Output, Usage
 from celeste.mime_types import ApplicationMimeType
 from celeste.models import Model
 from celeste.parameters import ParameterMapper, Parameters
-from celeste.streaming import Stream
+from celeste.streaming import Stream, enrich_stream_errors
 from celeste.types import RawUsage
 
 
@@ -250,6 +250,7 @@ class ModalityClient[In: Input, Out: Output, Params: Parameters, Content](
             extra_headers=extra_headers,
             **parameters,
         )
+        sse_iterator = enrich_stream_errors(sse_iterator, self._handle_error_response)
         return stream_class(
             sse_iterator,
             transform_output=self._transform_output,

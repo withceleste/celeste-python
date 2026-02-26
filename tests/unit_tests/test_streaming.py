@@ -4,13 +4,14 @@ from collections.abc import AsyncIterator
 from typing import Any, ClassVar, Unpack
 from unittest.mock import AsyncMock
 
+import httpx
 import pytest
 from pydantic import Field
 
 from celeste.exceptions import StreamEventError, StreamNotExhaustedError
 from celeste.io import Chunk, FinishReason, Output, Usage
 from celeste.parameters import Parameters
-from celeste.streaming import Stream
+from celeste.streaming import Stream, enrich_stream_errors
 
 
 class ConcreteOutput(Output[str]):
@@ -876,3 +877,86 @@ class TestStreamErrorDetection:
             async for _ in stream:
                 pass
         assert exc_info.value.event_data == event
+
+
+class TestEnrichStreamErrors:
+    """Test enrich_stream_errors wraps streaming HTTP errors with provider messages."""
+
+    async def test_enriches_http_error_with_provider_message(self) -> None:
+        """HTTP errors from stream iterators are enriched via error_handler."""
+
+        async def _failing_stream() -> AsyncIterator[dict[str, Any]]:
+            response = httpx.Response(
+                401,
+                content=b'{"error": {"message": "Invalid API Key"}}',
+                request=httpx.Request("POST", "https://api.example.com/v1/chat"),
+            )
+            raise httpx.HTTPStatusError(
+                "Client error '401 Unauthorized'",
+                request=response.request,
+                response=response,
+            )
+            yield  # type: ignore[misc]  # Make this an async generator
+
+        def _handle_error(response: httpx.Response) -> None:
+            error_msg = response.json()["error"]["message"]
+            raise httpx.HTTPStatusError(
+                f"TestProvider API error: {error_msg}",
+                request=response.request,
+                response=response,
+            )
+
+        enriched = enrich_stream_errors(_failing_stream(), _handle_error)
+
+        with pytest.raises(
+            httpx.HTTPStatusError, match="TestProvider API error: Invalid API Key"
+        ):
+            async for _ in enriched:
+                pass
+
+    async def test_passes_through_events_on_success(self) -> None:
+        """Successful streams pass through events unmodified."""
+
+        async def _ok_stream() -> AsyncIterator[dict[str, Any]]:
+            yield {"delta": "Hello"}
+            yield {"delta": " world"}
+
+        enriched = enrich_stream_errors(_ok_stream(), lambda r: None)
+        events = [event async for event in enriched]
+
+        assert events == [{"delta": "Hello"}, {"delta": " world"}]
+
+    async def test_enriches_error_with_non_json_body(self) -> None:
+        """Error handler receives response even when body isn't valid JSON."""
+
+        async def _failing_stream() -> AsyncIterator[dict[str, Any]]:
+            response = httpx.Response(
+                500,
+                content=b"Internal Server Error",
+                request=httpx.Request("POST", "https://api.example.com/v1/chat"),
+            )
+            raise httpx.HTTPStatusError(
+                "Server error '500 Internal Server Error'",
+                request=response.request,
+                response=response,
+            )
+            yield  # type: ignore[misc]  # Make this an async generator
+
+        def _handle_error(response: httpx.Response) -> None:
+            try:
+                error_msg = response.json()["error"]["message"]
+            except Exception:
+                error_msg = response.text or f"HTTP {response.status_code}"
+            raise httpx.HTTPStatusError(
+                f"TestProvider API error: {error_msg}",
+                request=response.request,
+                response=response,
+            )
+
+        enriched = enrich_stream_errors(_failing_stream(), _handle_error)
+
+        with pytest.raises(
+            httpx.HTTPStatusError, match="TestProvider API error: Internal Server Error"
+        ):
+            async for _ in enriched:
+                pass
