@@ -89,7 +89,7 @@ MODELS: list[Model] = [
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0),
             Parameter.MAX_TOKENS: Range(min=1, max=16000),
             TextParameter.THINKING_BUDGET: Choice(options=["low", "high"]),
-            TextParameter.TOOLS: ToolSupport(tools=[WebSearch, XSearch, CodeExecution]),
+            TextParameter.TOOLS: ToolSupport(tools=[]),
             TextParameter.OUTPUT_SCHEMA: Schema(),
         },
     ),
