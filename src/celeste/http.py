@@ -185,7 +185,9 @@ class HTTPClient:
             headers=headers,
             timeout=timeout,
         ) as event_source:
-            event_source.response.raise_for_status()
+            if not event_source.response.is_success:
+                await event_source.response.aread()
+                event_source.response.raise_for_status()
             async for sse in event_source.aiter_sse():
                 try:
                     yield json.loads(sse.data)
@@ -221,7 +223,9 @@ class HTTPClient:
             headers=headers,
             timeout=timeout,
         ) as response:
-            response.raise_for_status()
+            if not response.is_success:
+                await response.aread()
+                response.raise_for_status()
             async for line in response.aiter_lines():
                 if line:
                     yield json.loads(line)

@@ -6,6 +6,7 @@ from contextlib import AbstractContextManager, suppress
 from types import TracebackType
 from typing import Any, ClassVar, Self, Unpack
 
+import httpx
 from anyio.from_thread import BlockingPortal, start_blocking_portal
 
 from celeste.exceptions import StreamEventError, StreamNotExhaustedError
@@ -13,6 +14,19 @@ from celeste.io import Chunk as ChunkBase
 from celeste.io import FinishReason, Output, Usage
 from celeste.parameters import Parameters
 from celeste.types import RawUsage
+
+
+async def enrich_stream_errors(
+    iterator: AsyncIterator[dict[str, Any]],
+    error_handler: Callable[[httpx.Response], None],
+) -> AsyncIterator[dict[str, Any]]:
+    """Wrap stream iterator to enrich HTTP errors with provider-specific messages."""
+    try:
+        async for event in iterator:
+            yield event
+    except httpx.HTTPStatusError as e:
+        error_handler(e.response)
+        raise  # Unreachable — error_handler always raises for error responses
 
 
 class Stream[Out: Output, Params: Parameters, Chunk: ChunkBase](ABC):
@@ -332,4 +346,4 @@ class Stream[Out: Output, Params: Parameters, Chunk: ChunkBase](ABC):
                 await self._sse_iterator.aclose()
 
 
-__all__ = ["Stream"]
+__all__ = ["Stream", "enrich_stream_errors"]
