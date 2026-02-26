@@ -76,6 +76,7 @@ class TextStreamNamespace:
         messages: list[Message] | None = None,
         base_url: str | None = None,
         extra_body: dict[str, Any] | None = None,
+        extra_headers: dict[str, str] | None = None,
         **parameters: Unpack[TextParameters],
     ) -> TextStream:
         """Stream text generation.
@@ -90,6 +91,7 @@ class TextStreamNamespace:
             stream_class=self._client._stream_class(),
             base_url=base_url,
             extra_body=extra_body,
+            extra_headers=extra_headers,
             **parameters,
         )
 
@@ -103,6 +105,7 @@ class TextStreamNamespace:
         audio: AudioContent | None = None,
         base_url: str | None = None,
         extra_body: dict[str, Any] | None = None,
+        extra_headers: dict[str, str] | None = None,
         **parameters: Unpack[TextParameters],
     ) -> TextStream:
         """Stream media analysis (image, video, or audio).
@@ -127,6 +130,7 @@ class TextStreamNamespace:
             stream_class=self._client._stream_class(),
             base_url=base_url,
             extra_body=extra_body,
+            extra_headers=extra_headers,
             **parameters,
         )
 
@@ -147,6 +151,7 @@ class TextSyncNamespace:
         messages: list[Message] | None = None,
         base_url: str | None = None,
         extra_body: dict[str, Any] | None = None,
+        extra_headers: dict[str, str] | None = None,
         **parameters: Unpack[TextParameters],
     ) -> TextOutput:
         """Blocking text generation.
@@ -157,7 +162,11 @@ class TextSyncNamespace:
         """
         inputs = TextInput(prompt=prompt, messages=messages)
         return async_to_sync(self._client._predict)(
-            inputs, base_url=base_url, extra_body=extra_body, **parameters
+            inputs,
+            base_url=base_url,
+            extra_body=extra_body,
+            extra_headers=extra_headers,
+            **parameters,
         )
 
     def analyze(
@@ -170,6 +179,7 @@ class TextSyncNamespace:
         audio: AudioContent | None = None,
         base_url: str | None = None,
         extra_body: dict[str, Any] | None = None,
+        extra_headers: dict[str, str] | None = None,
         **parameters: Unpack[TextParameters],
     ) -> TextOutput:
         """Blocking media analysis (image, video, or audio).
@@ -190,7 +200,11 @@ class TextSyncNamespace:
             prompt=prompt, messages=messages, image=image, video=video, audio=audio
         )
         return async_to_sync(self._client._predict)(
-            inputs, base_url=base_url, extra_body=extra_body, **parameters
+            inputs,
+            base_url=base_url,
+            extra_body=extra_body,
+            extra_headers=extra_headers,
+            **parameters,
         )
 
     @property
@@ -212,6 +226,7 @@ class TextSyncStreamNamespace:
         messages: list[Message] | None = None,
         base_url: str | None = None,
         extra_body: dict[str, Any] | None = None,
+        extra_headers: dict[str, str] | None = None,
         **parameters: Unpack[TextParameters],
     ) -> TextStream:
         """Sync streaming text generation.
@@ -230,6 +245,7 @@ class TextSyncStreamNamespace:
             messages=messages,
             base_url=base_url,
             extra_body=extra_body,
+            extra_headers=extra_headers,
             **parameters,
         )
 
@@ -243,6 +259,7 @@ class TextSyncStreamNamespace:
         audio: AudioContent | None = None,
         base_url: str | None = None,
         extra_body: dict[str, Any] | None = None,
+        extra_headers: dict[str, str] | None = None,
         **parameters: Unpack[TextParameters],
     ) -> TextStream:
         """Sync streaming media analysis (image, video, or audio).
@@ -274,6 +291,7 @@ class TextSyncStreamNamespace:
             audio=audio,
             base_url=base_url,
             extra_body=extra_body,
+            extra_headers=extra_headers,
             **parameters,
         )
 

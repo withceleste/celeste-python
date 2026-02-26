@@ -49,6 +49,7 @@ class OpenAIAudioClient(APIMixin):
         request_body: dict[str, Any],
         *,
         endpoint: str | None = None,
+        extra_headers: dict[str, str] | None = None,
         **parameters: Any,
     ) -> AsyncIterator[dict[str, Any]]:
         """OpenAI Audio API speech endpoint does not support SSE streaming in this client."""
@@ -59,6 +60,7 @@ class OpenAIAudioClient(APIMixin):
         request_body: dict[str, Any],
         *,
         endpoint: str | None = None,
+        extra_headers: dict[str, str] | None = None,
         **parameters: Any,
     ) -> dict[str, Any]:
         """Make HTTP request to OpenAI Audio API speech endpoint.
@@ -68,7 +70,7 @@ class OpenAIAudioClient(APIMixin):
         if endpoint is None:
             endpoint = config.OpenAIAudioEndpoint.CREATE_SPEECH
 
-        headers = self._json_headers()
+        headers = self._json_headers(extra_headers)
 
         response = await self.http_client.post(
             f"{config.BASE_URL}{endpoint}",

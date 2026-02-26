@@ -40,6 +40,7 @@ class BFLImagesClient(APIMixin):
         request_body: dict[str, Any],
         *,
         endpoint: str | None = None,
+        extra_headers: dict[str, str] | None = None,
         **parameters: Any,
     ) -> dict[str, Any]:
         """Make HTTP request with async polling for BFL image generation.
@@ -49,7 +50,10 @@ class BFLImagesClient(APIMixin):
         2. Poll polling_url until Ready/Failed
         3. Return response with _submit_metadata for usage parsing
         """
-        headers = {**self._json_headers(), "Accept": ApplicationMimeType.JSON}
+        headers = {
+            **self._json_headers(extra_headers),
+            "Accept": ApplicationMimeType.JSON,
+        }
 
         if endpoint is None:
             endpoint = config.BFLImagesEndpoint.CREATE_IMAGE
@@ -72,7 +76,10 @@ class BFLImagesClient(APIMixin):
 
         # Phase 2: Poll for completion
         start_time = time.monotonic()
-        poll_headers = {**self.auth.get_headers(), "Accept": ApplicationMimeType.JSON}
+        poll_headers = self._merge_headers(
+            {**self.auth.get_headers(), "Accept": ApplicationMimeType.JSON},
+            extra_headers,
+        )
 
         while True:
             elapsed = time.monotonic() - start_time
@@ -107,6 +114,7 @@ class BFLImagesClient(APIMixin):
         request_body: dict[str, Any],
         *,
         endpoint: str | None = None,
+        extra_headers: dict[str, str] | None = None,
         **parameters: Any,
     ) -> AsyncIterator[dict[str, Any]]:
         """BFL Images API does not support SSE streaming in this client."""

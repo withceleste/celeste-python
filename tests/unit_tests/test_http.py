@@ -823,8 +823,83 @@ class TestHTTPClientStreaming:
             timeout=timeout,
         )
 
+    async def test_stream_post_raises_http_error_with_readable_body(
+        self, mock_httpx_client: AsyncMock
+    ) -> None:
+        """stream_post reads response body before raising on HTTP errors."""
+        # Arrange
+        http_client = HTTPClient()
+        mock_response = httpx.Response(
+            401,
+            content=b'{"error": {"message": "Invalid API Key"}}',
+            request=httpx.Request("POST", "https://api.example.com/stream"),
+        )
+
+        mock_source = MagicMock()
+        mock_source.response = mock_response
+        mock_source.__aenter__ = AsyncMock(return_value=mock_source)
+        mock_source.__aexit__ = AsyncMock(return_value=False)
+
+        # Act & Assert
+        with (
+            patch("celeste.http.httpx.AsyncClient", return_value=mock_httpx_client),
+            patch("celeste.http.aconnect_sse", return_value=mock_source),
+            pytest.raises(httpx.HTTPStatusError) as exc_info,
+        ):
+            async for _ in http_client.stream_post(
+                url="https://api.example.com/stream",
+                headers={"Authorization": "Bearer bad-key"},
+                json_body={"prompt": "test"},
+            ):
+                pass
+
+        # Body should be readable for downstream enrichment
+        assert exc_info.value.response.json()["error"]["message"] == "Invalid API Key"
+
+    async def test_stream_post_ndjson_raises_http_error_with_readable_body(
+        self, mock_httpx_client: AsyncMock
+    ) -> None:
+        """stream_post_ndjson reads response body before raising on HTTP errors."""
+        # Arrange
+        http_client = HTTPClient()
+        error_body = b'{"error": {"message": "Forbidden"}}'
+        mock_response = httpx.Response(
+            403,
+            content=error_body,
+            request=httpx.Request("POST", "https://api.example.com/stream"),
+        )
+        mock_httpx_client.stream = MagicMock(return_value=_async_context(mock_response))
+
+        # Act & Assert
+        with (
+            patch("celeste.http.httpx.AsyncClient", return_value=mock_httpx_client),
+            pytest.raises(httpx.HTTPStatusError) as exc_info,
+        ):
+            async for _ in http_client.stream_post_ndjson(
+                url="https://api.example.com/stream",
+                headers={"Authorization": "Bearer bad-key"},
+                json_body={"prompt": "test"},
+            ):
+                pass
+
+        # Body should be readable for downstream enrichment
+        assert exc_info.value.response.json()["error"]["message"] == "Forbidden"
+
     @staticmethod
     async def _async_iter(items: list) -> AsyncIterator:
         """Helper to create async iterator from list."""
         for item in items:
             yield item
+
+
+class _async_context:
+    """Async context manager wrapping a response for client.stream() mocking."""
+
+    def __init__(self, response: httpx.Response) -> None:
+        self._response = response
+
+    async def __aenter__(self) -> httpx.Response:
+        return self._response
+
+    async def __aexit__(self, *args: object) -> None:
+        pass

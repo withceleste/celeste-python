@@ -1,16 +1,17 @@
 """High-value tests for Stream - focusing on lifecycle, resource cleanup, and state management."""
 
 from collections.abc import AsyncIterator
-from typing import Any, Unpack
+from typing import Any, ClassVar, Unpack
 from unittest.mock import AsyncMock
 
+import httpx
 import pytest
 from pydantic import Field
 
-from celeste.exceptions import StreamNotExhaustedError
+from celeste.exceptions import StreamEventError, StreamNotExhaustedError
 from celeste.io import Chunk, FinishReason, Output, Usage
 from celeste.parameters import Parameters
-from celeste.streaming import Stream
+from celeste.streaming import Stream, enrich_stream_errors
 
 
 class ConcreteOutput(Output[str]):
@@ -720,3 +721,242 @@ class TestStreamWithTypedUsageAndFinishReason:
         assert output.finish_reason is not None
         assert isinstance(output.finish_reason, TypedFinishReason)
         assert output.finish_reason.reason == "stop"
+
+
+class PipelineStream(Stream[ConcreteOutput, Parameters, Chunk]):
+    """Stream that uses the base _parse_chunk pipeline (for testing error detection).
+
+    Unlike ConcreteStream which overrides _parse_chunk entirely, this class
+    only overrides _parse_chunk_content and _aggregate_content, so the base
+    _parse_stream_error → StreamEventError pipeline is exercised.
+    """
+
+    _chunk_class: ClassVar[type[Chunk]] = Chunk
+    _output_class: ClassVar[type[Output]] = ConcreteOutput
+    _empty_content: ClassVar[str] = ""
+
+    def _aggregate_content(self, chunks: list[Chunk]) -> str:
+        """Aggregate content from chunks."""
+        return "".join(str(chunk.content) for chunk in chunks)
+
+    def _parse_chunk_content(self, event_data: dict[str, Any]) -> str | None:
+        """Extract content from delta field."""
+        return event_data.get("delta") or None
+
+
+class TestStreamErrorDetection:
+    """Test Stream error detection via base _parse_stream_error pipeline."""
+
+    async def test_type_based_error_raises_stream_event_error(self) -> None:
+        """Type-based error pattern (Anthropic) must raise StreamEventError."""
+        events = [
+            {
+                "type": "error",
+                "error": {"type": "overloaded_error", "message": "Server overloaded"},
+            },
+        ]
+        stream = PipelineStream(
+            _async_iter(events),
+            stream_metadata={"provider": "anthropic"},
+        )
+        with pytest.raises(StreamEventError, match="Server overloaded") as exc_info:
+            async for _ in stream:
+                pass
+        assert exc_info.value.error_type == "overloaded_error"
+        assert exc_info.value.provider == "anthropic"
+        assert exc_info.value.event_data == events[0]
+
+    async def test_field_based_error_raises_stream_event_error(self) -> None:
+        """Field-based error pattern (ChatCompletions) must raise StreamEventError."""
+        events = [
+            {"error": {"type": "invalid_request", "message": "Bad request"}},
+        ]
+        stream = PipelineStream(
+            _async_iter(events),
+            stream_metadata={"provider": "openai"},
+        )
+        with pytest.raises(StreamEventError, match="Bad request") as exc_info:
+            async for _ in stream:
+                pass
+        assert exc_info.value.error_type == "invalid_request"
+        assert exc_info.value.provider == "openai"
+
+    async def test_field_based_error_falls_back_to_code_field(self) -> None:
+        """Field-based error without 'type' must fall back to 'code' field."""
+        events = [
+            {"error": {"code": "rate_limit_exceeded", "message": "Rate limited"}},
+        ]
+        stream = PipelineStream(_async_iter(events))
+        with pytest.raises(StreamEventError) as exc_info:
+            async for _ in stream:
+                pass
+        assert exc_info.value.error_type == "rate_limit_exceeded"
+
+    async def test_type_based_error_with_string_error_value(self) -> None:
+        """Type-based error with non-dict error value must use string fallback."""
+        events = [
+            {"type": "error", "error": "Something went wrong"},
+        ]
+        stream = PipelineStream(_async_iter(events))
+        with pytest.raises(StreamEventError, match="Something went wrong") as exc_info:
+            async for _ in stream:
+                pass
+        assert exc_info.value.error_type is None
+
+    async def test_error_type_fields_classvar_override(self) -> None:
+        """ClassVar override of _error_type_fields must change field lookup order."""
+
+        class GoogleLikeStream(PipelineStream):
+            _error_type_fields: ClassVar[tuple[str, ...]] = ("status", "code")
+
+        events = [
+            {
+                "error": {
+                    "status": "PERMISSION_DENIED",
+                    "code": 403,
+                    "message": "Forbidden",
+                },
+            },
+        ]
+        stream = GoogleLikeStream(_async_iter(events))
+        with pytest.raises(StreamEventError) as exc_info:
+            async for _ in stream:
+                pass
+        assert exc_info.value.error_type == "PERMISSION_DENIED"
+
+    async def test_non_error_events_pass_through(self) -> None:
+        """Normal events must not trigger error detection."""
+        events = [
+            {"delta": "Hello"},
+            {"delta": " world"},
+        ]
+        stream = PipelineStream(_async_iter(events))
+        chunks = [chunk async for chunk in stream]
+        assert len(chunks) == 2
+        assert stream.output.content == "Hello world"
+
+    async def test_error_after_successful_chunks(self) -> None:
+        """Error mid-stream (after successful chunks) must raise StreamEventError."""
+        events = [
+            {"delta": "Hello"},
+            {
+                "type": "error",
+                "error": {"type": "server_error", "message": "Internal error"},
+            },
+        ]
+        stream = PipelineStream(
+            _async_iter(events),
+            stream_metadata={"provider": "test"},
+        )
+        chunks: list[Chunk] = []
+        with pytest.raises(StreamEventError, match="Internal error"):
+            async for chunk in stream:
+                chunks.append(chunk)
+        assert len(chunks) == 1
+        assert chunks[0].content == "Hello"
+
+    async def test_error_with_no_message_uses_default(self) -> None:
+        """Error event without message field must use 'Unknown error' default."""
+        events = [
+            {"error": {"type": "mystery_error"}},
+        ]
+        stream = PipelineStream(_async_iter(events))
+        with pytest.raises(StreamEventError, match="Unknown error"):
+            async for _ in stream:
+                pass
+
+    async def test_error_provides_full_event_data(self) -> None:
+        """StreamEventError must include the full original event data."""
+        event = {
+            "type": "error",
+            "error": {"type": "api_error", "message": "Fail"},
+            "extra": "data",
+        }
+        stream = PipelineStream(_async_iter([event]))
+        with pytest.raises(StreamEventError) as exc_info:
+            async for _ in stream:
+                pass
+        assert exc_info.value.event_data == event
+
+
+class TestEnrichStreamErrors:
+    """Test enrich_stream_errors wraps streaming HTTP errors with provider messages."""
+
+    async def test_enriches_http_error_with_provider_message(self) -> None:
+        """HTTP errors from stream iterators are enriched via error_handler."""
+
+        async def _failing_stream() -> AsyncIterator[dict[str, Any]]:
+            response = httpx.Response(
+                401,
+                content=b'{"error": {"message": "Invalid API Key"}}',
+                request=httpx.Request("POST", "https://api.example.com/v1/chat"),
+            )
+            raise httpx.HTTPStatusError(
+                "Client error '401 Unauthorized'",
+                request=response.request,
+                response=response,
+            )
+            yield  # type: ignore[misc]  # Make this an async generator
+
+        def _handle_error(response: httpx.Response) -> None:
+            error_msg = response.json()["error"]["message"]
+            raise httpx.HTTPStatusError(
+                f"TestProvider API error: {error_msg}",
+                request=response.request,
+                response=response,
+            )
+
+        enriched = enrich_stream_errors(_failing_stream(), _handle_error)
+
+        with pytest.raises(
+            httpx.HTTPStatusError, match="TestProvider API error: Invalid API Key"
+        ):
+            async for _ in enriched:
+                pass
+
+    async def test_passes_through_events_on_success(self) -> None:
+        """Successful streams pass through events unmodified."""
+
+        async def _ok_stream() -> AsyncIterator[dict[str, Any]]:
+            yield {"delta": "Hello"}
+            yield {"delta": " world"}
+
+        enriched = enrich_stream_errors(_ok_stream(), lambda r: None)
+        events = [event async for event in enriched]
+
+        assert events == [{"delta": "Hello"}, {"delta": " world"}]
+
+    async def test_enriches_error_with_non_json_body(self) -> None:
+        """Error handler receives response even when body isn't valid JSON."""
+
+        async def _failing_stream() -> AsyncIterator[dict[str, Any]]:
+            response = httpx.Response(
+                500,
+                content=b"Internal Server Error",
+                request=httpx.Request("POST", "https://api.example.com/v1/chat"),
+            )
+            raise httpx.HTTPStatusError(
+                "Server error '500 Internal Server Error'",
+                request=response.request,
+                response=response,
+            )
+            yield  # type: ignore[misc]  # Make this an async generator
+
+        def _handle_error(response: httpx.Response) -> None:
+            try:
+                error_msg = response.json()["error"]["message"]
+            except Exception:
+                error_msg = response.text or f"HTTP {response.status_code}"
+            raise httpx.HTTPStatusError(
+                f"TestProvider API error: {error_msg}",
+                request=response.request,
+                response=response,
+            )
+
+        enriched = enrich_stream_errors(_failing_stream(), _handle_error)
+
+        with pytest.raises(
+            httpx.HTTPStatusError, match="TestProvider API error: Internal Server Error"
+        ):
+            async for _ in enriched:
+                pass

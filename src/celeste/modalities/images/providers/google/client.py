@@ -101,11 +101,13 @@ class GoogleImagesClient(ImagesClient):
         request_body: dict[str, Any],
         *,
         endpoint: str | None = None,
+        extra_headers: dict[str, str] | None = None,
         **parameters: Unpack[ImageParameters],
     ) -> dict[str, Any]:
         return await self._strategy._make_request(  # type: ignore[union-attr]
             request_body,
             endpoint=endpoint,
+            extra_headers=extra_headers,
             **parameters,
         )
 

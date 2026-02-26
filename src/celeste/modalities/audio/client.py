@@ -49,6 +49,7 @@ class AudioStreamNamespace:
         text: str,
         *,
         extra_body: dict[str, Any] | None = None,
+        extra_headers: dict[str, str] | None = None,
         **parameters: Unpack[AudioParameters],
     ) -> AudioStream:
         """Stream speech generation."""
@@ -57,6 +58,7 @@ class AudioStreamNamespace:
             inputs,
             stream_class=self._client._stream_class(),
             extra_body=extra_body,
+            extra_headers=extra_headers,
             **parameters,
         )
 
@@ -72,12 +74,13 @@ class AudioSyncNamespace:
         text: str,
         *,
         extra_body: dict[str, Any] | None = None,
+        extra_headers: dict[str, str] | None = None,
         **parameters: Unpack[AudioParameters],
     ) -> AudioOutput:
         """Blocking speech generation."""
         inputs = AudioInput(text=text)
         return async_to_sync(self._client._predict)(
-            inputs, extra_body=extra_body, **parameters
+            inputs, extra_body=extra_body, extra_headers=extra_headers, **parameters
         )
 
     @property
@@ -97,6 +100,7 @@ class AudioSyncStreamNamespace:
         text: str,
         *,
         extra_body: dict[str, Any] | None = None,
+        extra_headers: dict[str, str] | None = None,
         **parameters: Unpack[AudioParameters],
     ) -> AudioStream:
         """Sync streaming speech generation.
@@ -110,7 +114,9 @@ class AudioSyncStreamNamespace:
             stream.output.content.save("output.mp3")
         """
         # Return same stream as async version - __iter__/__next__ handle sync iteration
-        return self._client.stream.speak(text, extra_body=extra_body, **parameters)
+        return self._client.stream.speak(
+            text, extra_body=extra_body, extra_headers=extra_headers, **parameters
+        )
 
 
 __all__ = [

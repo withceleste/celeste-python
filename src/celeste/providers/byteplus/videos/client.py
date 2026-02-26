@@ -57,6 +57,7 @@ class BytePlusVideosClient(APIMixin):
         request_body: dict[str, Any],
         *,
         endpoint: str | None = None,
+        extra_headers: dict[str, str] | None = None,
         **parameters: Any,
     ) -> dict[str, Any]:
         """Make HTTP request with async polling for BytePlus video generation.
@@ -66,7 +67,7 @@ class BytePlusVideosClient(APIMixin):
         2. Poll CONTENT_STATUS endpoint until succeeded/failed/canceled
         3. Return response with final status data
         """
-        headers = self._json_headers()
+        headers = self._json_headers(extra_headers)
 
         if endpoint is None:
             endpoint = config.BytePlusVideosEndpoint.CREATE_VIDEO
@@ -130,6 +131,7 @@ class BytePlusVideosClient(APIMixin):
         request_body: dict[str, Any],
         *,
         endpoint: str | None = None,
+        extra_headers: dict[str, str] | None = None,
         **parameters: Any,
     ) -> AsyncIterator[dict[str, Any]]:
         """BytePlus Videos API does not support SSE streaming in this client."""

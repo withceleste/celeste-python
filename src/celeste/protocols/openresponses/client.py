@@ -72,13 +72,14 @@ class OpenResponsesClient(APIMixin):
         request_body: dict[str, Any],
         *,
         endpoint: str | None = None,
+        extra_headers: dict[str, str] | None = None,
         **parameters: Any,
     ) -> dict[str, Any]:
         """Make HTTP request to Responses API endpoint."""
         if endpoint is None:
             endpoint = self._default_endpoint
 
-        headers = self._json_headers()
+        headers = self._json_headers(extra_headers)
 
         response = await self.http_client.post(
             self._build_url(endpoint),
@@ -94,13 +95,14 @@ class OpenResponsesClient(APIMixin):
         request_body: dict[str, Any],
         *,
         endpoint: str | None = None,
+        extra_headers: dict[str, str] | None = None,
         **parameters: Any,
     ) -> AsyncIterator[dict[str, Any]]:
         """Make streaming request to Responses API endpoint."""
         if endpoint is None:
             endpoint = self._default_endpoint
 
-        headers = self._json_headers()
+        headers = self._json_headers(extra_headers)
 
         return self.http_client.stream_post(
             self._build_url(endpoint, streaming=True),

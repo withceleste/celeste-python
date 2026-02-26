@@ -49,6 +49,7 @@ class XAIVideosClient(APIMixin):
         request_body: dict[str, Any],
         *,
         endpoint: str | None = None,
+        extra_headers: dict[str, str] | None = None,
         **parameters: Any,
     ) -> AsyncIterator[dict[str, Any]]:
         """xAI Videos API does not support SSE streaming."""
@@ -59,13 +60,14 @@ class XAIVideosClient(APIMixin):
         request_body: dict[str, Any],
         *,
         endpoint: str | None = None,
+        extra_headers: dict[str, str] | None = None,
         **parameters: Any,
     ) -> dict[str, Any]:
         """Make HTTP request with async polling for xAI video generation."""
         if endpoint is None:
             endpoint = config.XAIVideosEndpoint.CREATE_VIDEO
 
-        headers = self._json_headers()
+        headers = self._json_headers(extra_headers)
 
         # Submit video generation request
         response = await self.http_client.post(

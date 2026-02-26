@@ -149,6 +149,7 @@ class BytePlusImagesClient(BytePlusImagesMixin, ImagesClient):
         request_body: dict[str, Any],
         *,
         endpoint: str | None = None,
+        extra_headers: dict[str, str] | None = None,
         **parameters: Unpack[ImageParameters],
     ) -> dict[str, Any]:
         """Make HTTP request with parameter validation."""
@@ -164,7 +165,7 @@ class BytePlusImagesClient(BytePlusImagesMixin, ImagesClient):
             raise ConstraintViolationError(msg)
 
         return await super()._make_request(
-            request_body, endpoint=endpoint, **parameters
+            request_body, endpoint=endpoint, extra_headers=extra_headers, **parameters
         )
 
     def _stream_class(self) -> type[ImagesStream]:

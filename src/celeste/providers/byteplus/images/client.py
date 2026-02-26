@@ -50,13 +50,14 @@ class BytePlusImagesClient(APIMixin):
         request_body: dict[str, Any],
         *,
         endpoint: str | None = None,
+        extra_headers: dict[str, str] | None = None,
         **parameters: Any,
     ) -> dict[str, Any]:
         """Make HTTP request to BytePlus Images API endpoint."""
         if endpoint is None:
             endpoint = config.BytePlusImagesEndpoint.CREATE_IMAGE
 
-        headers = self._json_headers()
+        headers = self._json_headers(extra_headers)
 
         response = await self.http_client.post(
             f"{config.BASE_URL}{endpoint}",
@@ -72,13 +73,14 @@ class BytePlusImagesClient(APIMixin):
         request_body: dict[str, Any],
         *,
         endpoint: str | None = None,
+        extra_headers: dict[str, str] | None = None,
         **parameters: Any,
     ) -> AsyncIterator[dict[str, Any]]:
         """Make streaming request to BytePlus Images API endpoint."""
         if endpoint is None:
             endpoint = config.BytePlusImagesEndpoint.CREATE_IMAGE
 
-        headers = self._json_headers()
+        headers = self._json_headers(extra_headers)
 
         return self.http_client.stream_post(
             f"{config.BASE_URL}{endpoint}",
