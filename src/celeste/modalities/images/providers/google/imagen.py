@@ -44,7 +44,6 @@ class ImagenImagesClient(GoogleImagenClient, ImagesClient):
     def _parse_content(
         self,
         response_data: dict[str, Any],
-        **parameters: Unpack[ImageParameters],
     ) -> ImageContent:
         """Parse image artifacts from Imagen predictions."""
         predictions = super()._parse_content(response_data)
@@ -57,14 +56,27 @@ class ImagenImagesClient(GoogleImagenClient, ImagesClient):
             mime_type = ImageMimeType(prediction.get("mimeType", "image/png"))
             images.append(ImageArtifact(data=base64_data, mime_type=mime_type))
 
-        num_images_requested = parameters.get("num_images")
-        if num_images_requested == 1:
-            return images[0] if images else ImageArtifact()
-        if num_images_requested is not None and num_images_requested > 1:
-            return images if images else []
         if len(images) == 1:
             return images[0]
         return images if images else ImageArtifact()
+
+    def _transform_output(
+        self,
+        content: ImageContent,
+        **parameters: Unpack[ImageParameters],
+    ) -> ImageContent:
+        """Singularize/pluralize based on num_images parameter."""
+        content = super()._transform_output(content, **parameters)
+        num_images_requested = parameters.get("num_images")
+        if num_images_requested == 1 and isinstance(content, list):
+            return content[0] if content else ImageArtifact()
+        if (
+            num_images_requested is not None
+            and num_images_requested > 1
+            and not isinstance(content, list)
+        ):
+            return [content]
+        return content
 
 
 __all__ = ["ImagenImagesClient"]

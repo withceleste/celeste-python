@@ -46,7 +46,6 @@ class OpenAIVideosClient(OpenAIVideosMixin, VideosClient):
     def _parse_content(
         self,
         response_data: dict[str, Any],
-        **parameters: Unpack[VideoParameters],
     ) -> VideoArtifact:
         """Parse content from response."""
         video_data_b64 = super()._parse_content(response_data)

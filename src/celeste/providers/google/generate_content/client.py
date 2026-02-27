@@ -30,7 +30,7 @@ class GoogleGenerateContentClient(APIMixin):
 
     Usage:
         class GoogleTextGenerationClient(GoogleGenerateContentClient, TextGenerationClient):
-            def _parse_content(self, response_data, **parameters):
+            def _parse_content(self, response_data):
                 parts = super()._parse_content(response_data)
                 text = parts[0].get("text") or ""
                 return text

@@ -28,7 +28,7 @@ class AnthropicMessagesClient(APIMixin):
 
     Usage:
         class AnthropicTextGenerationClient(AnthropicMessagesClient, TextGenerationClient):
-            def _parse_content(self, response_data, **parameters):
+            def _parse_content(self, response_data):
                 content = super()._parse_content(response_data)  # Raw content array
                 for block in content:
                     if block.get("type") == "text":

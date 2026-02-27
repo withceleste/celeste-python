@@ -1,7 +1,8 @@
 """OpenAI Audio API parameter mappers."""
 
-from typing import Any
+from typing import Any, ClassVar
 
+from celeste.artifacts import AudioArtifact
 from celeste.mime_types import AudioMimeType
 from celeste.models import Model
 from celeste.parameters import FieldMapper, ParameterMapper
@@ -22,6 +23,15 @@ class SpeedMapper(FieldMapper[AudioContent]):
 
 class ResponseFormatMapper(ParameterMapper[AudioContent]):
     """Map response_format to OpenAI response_format field."""
+
+    _mime_map: ClassVar[dict[str, AudioMimeType]] = {
+        "mp3": AudioMimeType.MP3,
+        "opus": AudioMimeType.OGG,
+        "aac": AudioMimeType.AAC,
+        "flac": AudioMimeType.FLAC,
+        "wav": AudioMimeType.WAV,
+        "pcm": AudioMimeType.WAV,
+    }
 
     def map(
         self,
@@ -55,6 +65,13 @@ class ResponseFormatMapper(ParameterMapper[AudioContent]):
         response_format = mime_type_to_openai_format.get(validated_value, "mp3")
         request["response_format"] = response_format
         return request
+
+    def parse_output(self, content: AudioContent, value: object | None) -> AudioContent:
+        """Apply response_format → MIME type mapping to parsed content."""
+        if not isinstance(content, AudioArtifact):
+            return content
+        mime_type = self._mime_map.get(str(value) if value else "", AudioMimeType.MP3)
+        return AudioArtifact(data=content.data, mime_type=mime_type)
 
 
 class InstructionsMapper(FieldMapper[AudioContent]):

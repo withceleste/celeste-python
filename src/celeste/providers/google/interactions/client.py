@@ -30,7 +30,7 @@ class GoogleInteractionsClient(APIMixin):
         class GoogleInteractionsTextGenerationClient(
             GoogleInteractionsClient, TextGenerationClient
         ):
-            def _parse_content(self, response_data, **parameters):
+            def _parse_content(self, response_data):
                 outputs = super()._parse_content(response_data)
                 text = "".join(o.get("text", "") for o in outputs if o.get("type") == "text")
                 return text

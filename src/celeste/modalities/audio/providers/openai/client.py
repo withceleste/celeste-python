@@ -41,7 +41,6 @@ class OpenAIAudioClient(OpenAIAudioMixin, AudioClient):
     def _parse_content(
         self,
         response_data: dict[str, Any],
-        **parameters: Unpack[AudioParameters],
     ) -> AudioArtifact:
         """Extract audio bytes from response."""
         audio_bytes = response_data.get("audio_bytes")
@@ -49,11 +48,7 @@ class OpenAIAudioClient(OpenAIAudioMixin, AudioClient):
             msg = "No audio data in response"
             raise ValueError(msg)
 
-        # Use mixin helper to determine MIME type from output_format
-        output_format = parameters.get("output_format")
-        mime_type = self._map_response_format_to_mime_type(output_format)
-
-        return AudioArtifact(data=audio_bytes, mime_type=mime_type)
+        return AudioArtifact(data=audio_bytes)
 
     def _parse_finish_reason(self, response_data: dict[str, Any]) -> AudioFinishReason:
         """OpenAI TTS doesn't provide finish reasons."""

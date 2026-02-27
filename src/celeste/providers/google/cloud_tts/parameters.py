@@ -2,6 +2,7 @@
 
 from typing import Any, ClassVar
 
+from celeste.artifacts import AudioArtifact
 from celeste.mime_types import AudioMimeType
 from celeste.models import Model
 from celeste.parameters import ParameterMapper
@@ -96,6 +97,13 @@ class AudioEncodingMapper(ParameterMapper[AudioContent]):
         encoding = self.encoding_map.get(validated_value, "MP3")
         request.setdefault("audioConfig", {})["audioEncoding"] = encoding
         return request
+
+    def parse_output(self, content: AudioContent, value: object | None) -> AudioContent:
+        """Apply output_format → MIME type mapping to parsed content."""
+        if not isinstance(content, AudioArtifact):
+            return content
+        mime_type = AudioMimeType(value) if value else AudioMimeType.MP3
+        return AudioArtifact(data=content.data, mime_type=mime_type)
 
 
 __all__ = [

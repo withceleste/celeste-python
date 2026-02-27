@@ -23,7 +23,7 @@ class BytePlusImagesClient(APIMixin):
 
     Usage:
         class BytePlusImageGenerationClient(BytePlusImagesClient, ImageGenerationClient):
-            def _parse_content(self, response_data, **parameters):
+            def _parse_content(self, response_data):
                 images = response_data.get("images", [])
                 # Extract image from images[0] or data[0]...
     """

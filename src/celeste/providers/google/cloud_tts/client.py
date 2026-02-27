@@ -23,7 +23,7 @@ class GoogleCloudTTSClient(APIMixin):
 
     Capability clients extend via super() to wrap results in artifacts:
         class GoogleSpeechGenerationClient(GoogleCloudTTSClient, SpeechGenerationClient):
-            def _parse_content(self, response_data, **params):
+            def _parse_content(self, response_data):
                 audio_b64 = super()._parse_content(response_data)  # Get base64 string
                 audio_bytes = base64.b64decode(audio_b64)
                 return AudioArtifact(data=audio_bytes, mime_type=..., ...)

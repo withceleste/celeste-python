@@ -87,7 +87,6 @@ class OllamaImagesClient(OllamaGenerateClient, ImagesClient):
     def _parse_content(
         self,
         response_data: dict[str, Any],
-        **parameters: Unpack[ImageParameters],
     ) -> ImageArtifact:
         """Parse content from response.
 

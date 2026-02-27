@@ -101,7 +101,6 @@ class GeminiImagesClient(GoogleGenerateContentClient, ImagesClient):
     def _parse_content(
         self,
         response_data: dict[str, Any],
-        **parameters: Unpack[ImageParameters],
     ) -> ImageContent:
         """Parse image artifacts from Gemini candidates."""
         candidates = super()._parse_content(response_data)

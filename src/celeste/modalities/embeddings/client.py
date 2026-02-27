@@ -9,6 +9,7 @@ from celeste.core import Modality
 from celeste.types import EmbeddingsContent
 
 from .io import (
+    EmbeddingsChunk,
     EmbeddingsFinishReason,
     EmbeddingsInput,
     EmbeddingsOutput,
@@ -19,7 +20,11 @@ from .parameters import EmbeddingsParameters
 
 class EmbeddingsClient(
     ModalityClient[
-        EmbeddingsInput, EmbeddingsOutput, EmbeddingsParameters, EmbeddingsContent
+        EmbeddingsInput,
+        EmbeddingsOutput,
+        EmbeddingsParameters,
+        EmbeddingsContent,
+        EmbeddingsChunk,
     ]
 ):
     """Base embeddings client. Providers implement operation methods."""

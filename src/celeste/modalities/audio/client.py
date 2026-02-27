@@ -8,13 +8,13 @@ from celeste.client import ModalityClient
 from celeste.core import Modality
 from celeste.types import AudioContent
 
-from .io import AudioFinishReason, AudioInput, AudioOutput, AudioUsage
+from .io import AudioChunk, AudioFinishReason, AudioInput, AudioOutput, AudioUsage
 from .parameters import AudioParameters
 from .streaming import AudioStream
 
 
 class AudioClient(
-    ModalityClient[AudioInput, AudioOutput, AudioParameters, AudioContent]
+    ModalityClient[AudioInput, AudioOutput, AudioParameters, AudioContent, AudioChunk]
 ):
     """Base audio client. Providers implement speak() method."""
 

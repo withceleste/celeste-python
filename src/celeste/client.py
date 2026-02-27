@@ -12,7 +12,8 @@ from celeste.auth import Authentication
 from celeste.core import Modality, Provider
 from celeste.exceptions import StreamingNotSupportedError
 from celeste.http import HTTPClient, get_http_client
-from celeste.io import Chunk, FinishReason, Input, Output, Usage
+from celeste.io import Chunk as ChunkBase
+from celeste.io import FinishReason, Input, Output, Usage
 from celeste.mime_types import ApplicationMimeType
 from celeste.models import Model
 from celeste.parameters import ParameterMapper, Parameters
@@ -130,15 +131,19 @@ class APIMixin(ABC):
         super()._handle_error_response(response)  # type: ignore[misc]
 
 
-class ModalityClient[In: Input, Out: Output, Params: Parameters, Content](
-    APIMixin, BaseModel
-):
+class ModalityClient[
+    In: Input,
+    Out: Output,
+    Params: Parameters,
+    Content,
+    Chunk: ChunkBase,
+](APIMixin, BaseModel):
     """Base class for unified modality clients.
 
     Operation methods in subclasses delegate to _predict().
 
     Example:
-        class ImagesClient(ModalityClient[ImagesInput, ImagesOutput, ImagesParameters, ImageContent]):
+        class ImagesClient(ModalityClient[ImagesInput, ImagesOutput, ImagesParameters, ImageContent, ImageChunk]):
             modality = Modality.IMAGES
 
             async def generate(self, prompt: str, **parameters) -> ImageGenerationOutput:
@@ -198,7 +203,7 @@ class ModalityClient[In: Input, Out: Output, Params: Parameters, Content](
         response_data = await self._make_request(
             request_body, endpoint=endpoint, extra_headers=extra_headers, **parameters
         )
-        content = self._parse_content(response_data, **parameters)
+        content = self._parse_content(response_data)
         content = self._transform_output(content, **parameters)
         return self._output_class()(
             content=content,
@@ -277,7 +282,6 @@ class ModalityClient[In: Input, Out: Output, Params: Parameters, Content](
     def _parse_content(
         self,
         response_data: dict[str, Any],
-        **parameters: Unpack[Params],  # type: ignore[misc]
     ) -> Content:
         """Parse content from provider response."""
         ...
@@ -384,8 +388,7 @@ class ModalityClient[In: Input, Out: Output, Params: Parameters, Content](
         """Transform content using parameter mapper output transformations."""
         for mapper in self.parameter_mappers():
             value = parameters.get(mapper.name)
-            if value is not None:
-                content = mapper.parse_output(content, value)
+            content = mapper.parse_output(content, value)
         return content
 
     @abstractmethod

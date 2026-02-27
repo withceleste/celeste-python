@@ -2,6 +2,7 @@
 
 from typing import Any
 
+from celeste.artifacts import AudioArtifact
 from celeste.models import Model
 from celeste.parameters import FieldMapper, ParameterMapper
 from celeste.types import AudioContent
@@ -35,6 +36,21 @@ class OutputFormatMapper(ParameterMapper[AudioContent]):
 
         request["output_format"] = validated_value
         return request
+
+    def parse_output(self, content: AudioContent, value: object | None) -> AudioContent:
+        """Apply output_format → MIME type mapping to parsed content."""
+        if not isinstance(content, AudioArtifact):
+            return content
+
+        # Lazy import to avoid circular dependency
+        from celeste.providers.elevenlabs.text_to_speech.client import (
+            ElevenLabsTextToSpeechClient,
+        )
+
+        mime_type = ElevenLabsTextToSpeechClient._map_output_format_to_mime_type(
+            str(value) if value else None
+        )
+        return AudioArtifact(data=content.data, mime_type=mime_type)
 
 
 class SpeedMapper(ParameterMapper[AudioContent]):
