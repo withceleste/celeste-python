@@ -5,7 +5,7 @@ from typing import Any, ClassVar
 
 from pydantic import BaseModel, ConfigDict
 
-from celeste.types import Message, Role
+from celeste.types import Message, Role, ToolCall
 
 
 class Tool(BaseModel):
@@ -49,14 +49,6 @@ class ToolMapper(ABC):
 
     @abstractmethod
     def map_tool(self, tool: Tool) -> dict[str, Any]: ...
-
-
-class ToolCall(BaseModel):
-    """A tool call returned by the model."""
-
-    id: str
-    name: str
-    arguments: dict[str, Any]
 
 
 type ToolDefinition = Tool | dict[str, Any]

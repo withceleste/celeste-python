@@ -10,7 +10,14 @@ Types are unified per-modality since generate and analyze produce identical outp
 from pydantic import Field
 
 from celeste.io import Chunk, FinishReason, Input, Output, Usage
-from celeste.types import AudioContent, ImageContent, Message, TextContent, VideoContent
+from celeste.types import (
+    AudioContent,
+    ImageContent,
+    Message,
+    Role,
+    TextContent,
+    VideoContent,
+)
 
 
 class TextInput(Input):
@@ -45,6 +52,15 @@ class TextOutput(Output[TextContent]):
 
     usage: TextUsage = Field(default_factory=TextUsage)
     finish_reason: TextFinishReason | None = None
+
+    @property
+    def message(self) -> Message:
+        """The assistant message for multi-turn conversations."""
+        return Message(
+            role=Role.ASSISTANT,
+            content=self.content,
+            tool_calls=self.tool_calls if self.tool_calls else None,
+        )
 
 
 class TextChunk(Chunk[str]):

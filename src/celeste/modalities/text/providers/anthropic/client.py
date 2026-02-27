@@ -155,7 +155,22 @@ class AnthropicTextClient(AnthropicMessagesClient, TextClient):
                     messages.append({"role": "user", "content": pending_tool_results})
                     pending_tool_results = []
 
-                messages.append({"role": role, "content": content})
+                if role == "assistant" and message.tool_calls:
+                    content_blocks: list[dict[str, Any]] = []
+                    if content:
+                        content_blocks.append({"type": "text", "text": str(content)})
+                    for tc in message.tool_calls:
+                        content_blocks.append(
+                            {
+                                "type": "tool_use",
+                                "id": tc.id,
+                                "name": tc.name,
+                                "input": tc.arguments,
+                            }
+                        )
+                    messages.append({"role": "assistant", "content": content_blocks})
+                else:
+                    messages.append({"role": role, "content": content})
 
             # Flush remaining tool results
             if pending_tool_results:

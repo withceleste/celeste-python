@@ -136,9 +136,18 @@ class GoogleTextClient(GoogleGenerateContentClient, TextClient):
                     )
                 else:
                     role = "model" if msg.role == "assistant" else msg.role
-                    contents.append(
-                        {"role": role, "parts": content_to_parts(msg.content)}
-                    )
+                    msg_parts = content_to_parts(msg.content)
+                    if msg.tool_calls:
+                        for tc in msg.tool_calls:
+                            msg_parts.append(
+                                {
+                                    "functionCall": {
+                                        "name": tc.name,
+                                        "args": tc.arguments,
+                                    }
+                                }
+                            )
+                    contents.append({"role": role, "parts": msg_parts})
 
             result: dict[str, Any] = {"contents": contents}
             if system_parts:
