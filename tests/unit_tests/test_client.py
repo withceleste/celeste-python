@@ -112,7 +112,9 @@ def api_key() -> str:
     return "sk-test123456789"
 
 
-class ConcreteModalityClient(ModalityClient[_TestInput, Output, Parameters, str]):
+class ConcreteModalityClient(
+    ModalityClient[_TestInput, Output, Parameters, str, Chunk]
+):
     """Concrete ModalityClient implementation for testing."""
 
     @classmethod
@@ -127,9 +129,7 @@ class ConcreteModalityClient(ModalityClient[_TestInput, Output, Parameters, str]
     ) -> dict[str, int | float | None]:
         return {}
 
-    def _parse_content(  # type: ignore[override]
-        self, response_data: dict[str, Any], **parameters: Unpack[Parameters]
-    ) -> str:
+    def _parse_content(self, response_data: dict[str, Any]) -> str:
         content = response_data.get("content", "test content")
         return content if isinstance(content, str) else "test content"
 

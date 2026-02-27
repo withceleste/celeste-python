@@ -67,7 +67,6 @@ class XAIImagesClient(XAIImagesMixin, ImagesClient):
     def _parse_content(
         self,
         response_data: dict[str, Any],
-        **parameters: Unpack[ImageParameters],
     ) -> ImageArtifact:
         """Parse content from response."""
         data = super()._parse_content(response_data)

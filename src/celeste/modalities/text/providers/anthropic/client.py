@@ -207,7 +207,6 @@ class AnthropicTextClient(AnthropicMessagesClient, TextClient):
     def _parse_content(
         self,
         response_data: dict[str, Any],
-        **parameters: Unpack[TextParameters],
     ) -> TextContent:
         """Parse content from response."""
         content = super()._parse_content(response_data)

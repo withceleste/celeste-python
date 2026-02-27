@@ -92,7 +92,6 @@ class XAITextClient(XAIResponsesClient, TextClient):
     def _parse_content(
         self,
         response_data: dict[str, Any],
-        **parameters: Unpack[TextParameters],
     ) -> TextContent:
         """Parse content from response."""
         output = super()._parse_content(response_data)

@@ -8,12 +8,14 @@ from celeste.client import ModalityClient
 from celeste.core import InputType, Modality
 from celeste.types import AudioContent, ImageContent, Message, TextContent, VideoContent
 
-from .io import TextFinishReason, TextInput, TextOutput, TextUsage
+from .io import TextChunk, TextFinishReason, TextInput, TextOutput, TextUsage
 from .parameters import TextParameters
 from .streaming import TextStream
 
 
-class TextClient(ModalityClient[TextInput, TextOutput, TextParameters, TextContent]):
+class TextClient(
+    ModalityClient[TextInput, TextOutput, TextParameters, TextContent, TextChunk]
+):
     """Base text client.
 
     Providers implement operation methods (generate, analyze).

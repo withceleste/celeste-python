@@ -58,7 +58,6 @@ class XAIVideosClient(XAIVideosMixin, VideosClient):
     def _parse_content(
         self,
         response_data: dict[str, Any],
-        **parameters: Unpack[VideoParameters],
     ) -> VideoArtifact:
         """Parse content from response."""
         # xAI returns video URL directly

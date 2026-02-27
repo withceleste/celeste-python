@@ -44,7 +44,6 @@ class GoogleVideosClient(GoogleVeoMixin, VideosClient):
     def _parse_content(
         self,
         response_data: dict[str, Any],
-        **parameters: Unpack[VideoParameters],
     ) -> VideoArtifact:
         """Parse content from response."""
         video_data = super()._parse_content(response_data)

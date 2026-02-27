@@ -3,7 +3,6 @@
 from typing import Any, Unpack
 
 from celeste.artifacts import AudioArtifact
-from celeste.mime_types import AudioMimeType
 from celeste.parameters import ParameterMapper
 from celeste.providers.google.cloud_tts import config
 from celeste.providers.google.cloud_tts.client import (
@@ -16,7 +15,7 @@ from ...io import (
     AudioInput,
     AudioOutput,
 )
-from ...parameters import AudioParameter, AudioParameters
+from ...parameters import AudioParameters
 from .parameters import GOOGLE_PARAMETER_MAPPERS
 
 
@@ -51,15 +50,10 @@ class GoogleAudioClient(GoogleCloudTTSMixin, AudioClient):
     def _parse_content(
         self,
         response_data: dict[str, Any],
-        **parameters: Unpack[AudioParameters],
     ) -> AudioArtifact:
         """Extract audio bytes from response."""
         audio_b64 = super()._parse_content(response_data)
-
-        output_format = parameters.get(AudioParameter.OUTPUT_FORMAT)
-        mime_type = AudioMimeType(output_format) if output_format else AudioMimeType.MP3
-
-        return AudioArtifact(data=audio_b64, mime_type=mime_type)
+        return AudioArtifact(data=audio_b64)
 
 
 __all__ = ["GoogleAudioClient"]

@@ -8,12 +8,12 @@ from celeste.client import ModalityClient
 from celeste.core import InputType, Modality
 from celeste.types import AudioContent, ImageContent, {Content}, VideoContent
 
-from .io import {Modality}Input, {Modality}Output
+from .io import {Modality}Chunk, {Modality}Input, {Modality}Output
 from .parameters import {Modality}Parameters
 from .streaming import {Modality}Stream
 
 
-class {Modality}Client(ModalityClient[{Modality}Input, {Modality}Output, {Modality}Parameters, {Content}]):
+class {Modality}Client(ModalityClient[{Modality}Input, {Modality}Output, {Modality}Parameters, {Content}, {Modality}Chunk]):
     """Base {modality} client.
 
     Providers implement operation methods (generate, analyze).

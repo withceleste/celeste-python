@@ -28,7 +28,7 @@ class BFLImagesClient(APIMixin):
 
     Usage:
         class BFLImageGenerationClient(BFLImagesClient, ImageGenerationClient):
-            def _parse_content(self, response_data, **parameters):
+            def _parse_content(self, response_data):
                 result = response_data.get("result", {})
                 # Extract image from result["sample"]...
     """

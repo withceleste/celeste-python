@@ -25,7 +25,7 @@ class GoogleVeoClient(APIMixin):
 
     Capability clients extend via super() to wrap results in artifacts:
         class GoogleVideoGenerationClient(GoogleVeoClient, VideoGenerationClient):
-            def _parse_content(self, response_data, **params):
+            def _parse_content(self, response_data):
                 video_data = super()._parse_content(response_data)  # Get generic dict
                 return VideoArtifact(url=video_data["uri"])  # Capability-specific
 

@@ -24,7 +24,7 @@ class GoogleEmbeddingsClient(APIMixin):
 
     Capability clients extend via super():
         class GoogleEmbeddingsClient(GoogleEmbeddingsClient, EmbeddingsClient):
-            def _parse_content(self, response_data, **params):
+            def _parse_content(self, response_data):
                 return super()._parse_content(response_data)  # No transformation needed
     """
 
