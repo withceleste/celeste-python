@@ -59,7 +59,6 @@ class BFLImagesClient(_BFLImagesClient, ImagesClient):
     def _parse_content(
         self,
         response_data: dict[str, Any],
-        **parameters: Unpack[ImageParameters],
     ) -> ImageArtifact:
         """Parse content from response."""
         result = super()._parse_content(response_data)

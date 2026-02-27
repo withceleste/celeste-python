@@ -89,9 +89,8 @@ class GoogleImagesClient(ImagesClient):
     def _parse_content(
         self,
         response_data: dict[str, Any],
-        **parameters: Unpack[ImageParameters],
     ) -> ImageContent:
-        return self._strategy._parse_content(response_data, **parameters)  # type: ignore[union-attr]
+        return self._strategy._parse_content(response_data)  # type: ignore[union-attr]
 
     def _parse_finish_reason(self, response_data: dict[str, Any]) -> ImageFinishReason:
         return self._strategy._parse_finish_reason(response_data)  # type: ignore[union-attr]

@@ -30,7 +30,7 @@ class GoogleImagenClient(APIMixin):
 
     Usage:
         class GoogleImageGenerationClient(GoogleImagenClient, ImageGenerationClient):
-            def _parse_content(self, response_data, **parameters):
+            def _parse_content(self, response_data):
                 predictions = super()._parse_content(response_data)
                 # Extract image from predictions[0]...
     """

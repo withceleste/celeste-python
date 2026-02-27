@@ -1,6 +1,6 @@
 """Google embeddings client."""
 
-from typing import Any, Unpack
+from typing import Any
 
 from celeste.parameters import ParameterMapper
 from celeste.providers.google.embeddings.client import (
@@ -10,7 +10,6 @@ from celeste.types import EmbeddingsContent
 
 from ...client import EmbeddingsClient
 from ...io import EmbeddingsInput
-from ...parameters import EmbeddingsParameters
 from .parameters import GOOGLE_PARAMETER_MAPPERS
 
 
@@ -42,7 +41,6 @@ class GoogleEmbeddingsClient(GoogleEmbeddingsMixin, EmbeddingsClient):
     def _parse_content(
         self,
         response_data: dict[str, Any],
-        **parameters: Unpack[EmbeddingsParameters],
     ) -> EmbeddingsContent:
         """Parse embedding vectors from response."""
         return super()._parse_content(response_data)

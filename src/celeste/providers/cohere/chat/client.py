@@ -23,7 +23,7 @@ class CohereChatClient(APIMixin):
 
     Usage:
         class CohereTextGenerationClient(CohereChatClient, TextGenerationClient):
-            def _parse_content(self, response_data, **parameters):
+            def _parse_content(self, response_data):
                 content_array = super()._parse_content(response_data)
                 text = content_array[0].get("text") or ""
                 return text

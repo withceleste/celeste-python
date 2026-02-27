@@ -45,7 +45,6 @@ class BytePlusVideosClient(BytePlusVideosMixin, VideosClient):
     def _parse_content(
         self,
         response_data: dict[str, Any],
-        **parameters: Unpack[VideoParameters],
     ) -> VideoArtifact:
         """Parse content from response."""
         content = super()._parse_content(response_data)

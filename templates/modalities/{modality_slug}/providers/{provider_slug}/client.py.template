@@ -63,7 +63,6 @@ class {Provider}{Modality}Client({Provider}{Api}Mixin, {Modality}Client):
     def _parse_content(
         self,
         response_data: dict[str, Any],
-        **parameters: Unpack[{Modality}Parameters],
     ) -> {Content}:
         """Parse content from response."""
         data = super()._parse_content(response_data)
