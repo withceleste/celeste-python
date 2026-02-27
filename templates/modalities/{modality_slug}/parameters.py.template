@@ -23,7 +23,7 @@ class {Modality}Parameter(StrEnum):
     # THINKING_BUDGET = "thinking_budget"
     # THINKING_LEVEL = "thinking_level"
     # OUTPUT_SCHEMA = "output_schema"
-    # WEB_SEARCH = "web_search"
+    # TOOLS = "tools"
     # VERBOSITY = "verbosity"
 
     # Media input declarations (for optional_input_types)
@@ -44,7 +44,7 @@ class {Modality}Parameters(Parameters):
     # thinking_budget: int | str
     # thinking_level: str
     # output_schema: type[BaseModel]
-    # web_search: bool
+    # tools: list[ToolDefinition]
     # verbosity: str
 
 

@@ -8,7 +8,10 @@ from pydantic import BaseModel, TypeAdapter
 from celeste.models import Model
 from celeste.parameters import FieldMapper, ParameterMapper
 from celeste.structured_outputs import StrictJsonSchemaGenerator
+from celeste.tools import Tool
 from celeste.types import TextContent
+
+from .tools import TOOL_MAPPERS
 
 
 class TemperatureMapper(FieldMapper[TextContent]):
@@ -67,8 +70,8 @@ class ThinkingMapper(ParameterMapper[TextContent]):
         return request
 
 
-class WebSearchMapper(ParameterMapper[TextContent]):
-    """Map web_search to Anthropic tools field."""
+class ToolsMapper(ParameterMapper[TextContent]):
+    """Map tools list to Anthropic tools field."""
 
     def map(
         self,
@@ -76,18 +79,44 @@ class WebSearchMapper(ParameterMapper[TextContent]):
         value: object,
         model: Model,
     ) -> dict[str, Any]:
-        """Transform web_search into provider request."""
+        """Transform tools into provider request."""
         validated_value = self._validate_value(value, model)
         if not validated_value:
             return request
 
-        request.setdefault("tools", []).append(
-            {
-                "type": "web_search_20250305",
-                "name": "web_search",
-            }
-        )
+        dispatch = {m.tool_type: m for m in TOOL_MAPPERS}
+        tools = request.setdefault("tools", [])
+
+        for item in validated_value:
+            if isinstance(item, Tool):
+                mapper = dispatch.get(type(item))
+                if mapper is None:
+                    msg = f"Tool '{type(item).__name__}' is not supported by Anthropic"
+                    raise ValueError(msg)
+                tools.append(mapper.map_tool(item))
+            elif isinstance(item, dict) and "name" in item:
+                tools.append(self._map_user_tool(item))
+            elif isinstance(item, dict):
+                tools.append(item)
+
         return request
+
+    @staticmethod
+    def _map_user_tool(tool: dict[str, Any]) -> dict[str, Any]:
+        """Map a user-defined tool dict to Anthropic wire format."""
+        params = tool.get("parameters", {})
+        if isinstance(params, type) and issubclass(params, BaseModel):
+            input_schema = TypeAdapter(params).json_schema(
+                schema_generator=StrictJsonSchemaGenerator,
+                mode="serialization",
+            )
+        else:
+            input_schema = params
+
+        result: dict[str, Any] = {"name": tool["name"], "input_schema": input_schema}
+        if "description" in tool:
+            result["description"] = tool["description"]
+        return result
 
 
 class OutputFormatMapper(ParameterMapper[TextContent]):
@@ -161,7 +190,7 @@ __all__ = [
     "StopSequencesMapper",
     "TemperatureMapper",
     "ThinkingMapper",
+    "ToolsMapper",
     "TopKMapper",
     "TopPMapper",
-    "WebSearchMapper",
 ]

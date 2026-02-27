@@ -1,6 +1,7 @@
 """Anthropic text client (modality)."""
 
 import base64
+import contextlib
 from typing import Any, Unpack
 
 from celeste.artifacts import ImageArtifact
@@ -10,6 +11,7 @@ from celeste.providers.anthropic.messages.client import AnthropicMessagesClient
 from celeste.providers.anthropic.messages.streaming import (
     AnthropicMessagesStream as _AnthropicMessagesStream,
 )
+from celeste.tools import ToolCall, ToolResult
 from celeste.types import ImageContent, Message, TextContent, VideoContent
 from celeste.utils import detect_mime_type
 
@@ -30,15 +32,31 @@ class AnthropicTextStream(_AnthropicMessagesStream, TextStream):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         self._message_start: dict[str, Any] | None = None
+        self._tool_calls: dict[int, dict[str, Any]] = {}
 
     def _parse_chunk(self, event_data: dict[str, Any]) -> TextChunk | None:
-        """Parse one SSE event into a typed chunk (captures message_start)."""
+        """Parse one SSE event into a typed chunk (captures message_start and tool_use)."""
         event_type = event_data.get("type")
         if event_type == "message_start":
             message = event_data.get("message")
             if isinstance(message, dict):
                 self._message_start = message
             return None
+        if event_type == "content_block_start":
+            block = event_data.get("content_block", {})
+            if block.get("type") == "tool_use":
+                idx = event_data.get("index", len(self._tool_calls))
+                self._tool_calls[idx] = {
+                    "id": block.get("id", ""),
+                    "name": block.get("name", ""),
+                    "input_json": "",
+                }
+        elif event_type == "content_block_delta":
+            delta = event_data.get("delta", {})
+            if delta.get("type") == "input_json_delta":
+                idx = event_data.get("index", -1)
+                if idx in self._tool_calls:
+                    self._tool_calls[idx]["input_json"] += delta.get("partial_json", "")
         return super()._parse_chunk(event_data)
 
     def _aggregate_event_data(self, chunks: list[TextChunk]) -> list[dict[str, Any]]:
@@ -48,6 +66,21 @@ class AnthropicTextStream(_AnthropicMessagesStream, TextStream):
             events.append({"type": "message_start", "message": self._message_start})
         events.extend(super()._aggregate_event_data(chunks))
         return events
+
+    def _aggregate_tool_calls(
+        self, chunks: list[TextChunk], raw_events: list[dict[str, Any]]
+    ) -> list[ToolCall]:
+        """Reconstruct tool calls from accumulated content_block events."""
+        import json as _json
+
+        result: list[ToolCall] = []
+        for tc in self._tool_calls.values():
+            arguments = {}
+            if tc["input_json"]:
+                with contextlib.suppress(ValueError, TypeError):
+                    arguments = _json.loads(tc["input_json"])
+            result.append(ToolCall(id=tc["id"], name=tc["name"], arguments=arguments))
+        return result
 
 
 class AnthropicTextClient(AnthropicMessagesClient, TextClient):
@@ -86,10 +119,12 @@ class AnthropicTextClient(AnthropicMessagesClient, TextClient):
         if inputs.messages is not None:
             system_blocks: list[dict[str, Any]] = []
             messages: list[dict[str, Any]] = []
+            pending_tool_results: list[dict[str, Any]] = []
 
             for message in inputs.messages:
                 role = message.role
                 content = message.content
+
                 if role in {"system", "developer"}:
                     if isinstance(content, list):
                         for block in content:
@@ -105,7 +140,41 @@ class AnthropicTextClient(AnthropicMessagesClient, TextClient):
                         system_blocks.append({"type": "text", "text": str(content)})
                     continue
 
-                messages.append({"role": role, "content": content})
+                if isinstance(message, ToolResult):
+                    pending_tool_results.append(
+                        {
+                            "type": "tool_result",
+                            "tool_use_id": message.tool_call_id,
+                            "content": str(content),
+                        }
+                    )
+                    continue
+
+                # Flush pending tool results as a single user message
+                if pending_tool_results:
+                    messages.append({"role": "user", "content": pending_tool_results})
+                    pending_tool_results = []
+
+                if role == "assistant" and message.tool_calls:
+                    content_blocks: list[dict[str, Any]] = []
+                    if content:
+                        content_blocks.append({"type": "text", "text": str(content)})
+                    for tc in message.tool_calls:
+                        content_blocks.append(
+                            {
+                                "type": "tool_use",
+                                "id": tc.id,
+                                "name": tc.name,
+                                "input": tc.arguments,
+                            }
+                        )
+                    messages.append({"role": "assistant", "content": content_blocks})
+                else:
+                    messages.append({"role": role, "content": content})
+
+            # Flush remaining tool results
+            if pending_tool_results:
+                messages.append({"role": "user", "content": pending_tool_results})
 
             request: dict[str, Any] = {"messages": messages}
             if system_blocks:
@@ -164,6 +233,16 @@ class AnthropicTextClient(AnthropicMessagesClient, TextClient):
                 break
 
         return text_content
+
+    def _parse_tool_calls(self, response_data: dict[str, Any]) -> list[ToolCall]:
+        """Parse tool calls from Anthropic response."""
+        return [
+            ToolCall(
+                id=block["id"], name=block["name"], arguments=block.get("input", {})
+            )
+            for block in response_data.get("content", [])
+            if block.get("type") == "tool_use"
+        ]
 
     def _stream_class(self) -> type[TextStream]:
         """Return the Stream class for this provider."""

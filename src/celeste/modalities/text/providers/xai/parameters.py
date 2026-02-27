@@ -2,9 +2,6 @@
 
 from celeste.parameters import ParameterMapper
 from celeste.protocols.openresponses.parameters import (
-    CodeExecutionMapper as _CodeExecutionMapper,
-)
-from celeste.protocols.openresponses.parameters import (
     MaxOutputTokensMapper as _MaxOutputTokensMapper,
 )
 from celeste.protocols.openresponses.parameters import (
@@ -17,10 +14,7 @@ from celeste.protocols.openresponses.parameters import (
     TextFormatMapper as _TextFormatMapper,
 )
 from celeste.protocols.openresponses.parameters import (
-    WebSearchMapper as _WebSearchMapper,
-)
-from celeste.protocols.openresponses.parameters import (
-    XSearchMapper as _XSearchMapper,
+    ToolsMapper as _ToolsMapper,
 )
 from celeste.types import TextContent
 
@@ -51,22 +45,10 @@ class OutputSchemaMapper(_TextFormatMapper):
     name = TextParameter.OUTPUT_SCHEMA
 
 
-class WebSearchMapper(_WebSearchMapper):
-    """Map web_search to xAI's tools parameter."""
+class ToolsMapper(_ToolsMapper):
+    """Map tools to xAI's tools parameter."""
 
-    name = TextParameter.WEB_SEARCH
-
-
-class XSearchMapper(_XSearchMapper):
-    """Map x_search to xAI's tools parameter."""
-
-    name = TextParameter.X_SEARCH
-
-
-class CodeExecutionMapper(_CodeExecutionMapper):
-    """Map code_execution to xAI's tools parameter."""
-
-    name = TextParameter.CODE_EXECUTION
+    name = TextParameter.TOOLS
 
 
 XAI_PARAMETER_MAPPERS: list[ParameterMapper[TextContent]] = [
@@ -74,9 +56,7 @@ XAI_PARAMETER_MAPPERS: list[ParameterMapper[TextContent]] = [
     MaxTokensMapper(),
     ThinkingBudgetMapper(),
     OutputSchemaMapper(),
-    WebSearchMapper(),
-    XSearchMapper(),
-    CodeExecutionMapper(),
+    ToolsMapper(),
 ]
 
 __all__ = ["XAI_PARAMETER_MAPPERS"]

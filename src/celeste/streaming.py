@@ -13,6 +13,7 @@ from celeste.exceptions import StreamEventError, StreamNotExhaustedError
 from celeste.io import Chunk as ChunkBase
 from celeste.io import FinishReason, Output, Usage
 from celeste.parameters import Parameters
+from celeste.tools import ToolCall
 from celeste.types import RawUsage
 
 
@@ -158,7 +159,14 @@ class Stream[Out: Output, Params: Parameters, Chunk: ChunkBase](ABC):
             usage=self._aggregate_usage(chunks),
             finish_reason=self._aggregate_finish_reason(chunks),
             metadata=self._build_stream_metadata(raw_events),
+            tool_calls=self._aggregate_tool_calls(chunks, raw_events),
         )
+
+    def _aggregate_tool_calls(
+        self, chunks: list[Chunk], raw_events: list[dict[str, Any]]
+    ) -> list[ToolCall]:
+        """Aggregate tool calls from stream events. Override in providers that support tools."""
+        return []
 
     def _parse_chunk_usage(self, event_data: dict[str, Any]) -> RawUsage | None:
         """Parse usage from chunk event. Override in provider mixin."""

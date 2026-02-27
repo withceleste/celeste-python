@@ -17,11 +17,13 @@ from celeste.constraints import (
     Range,
     Schema,
     Str,
+    ToolSupport,
     VideoConstraint,
     VideosConstraint,
 )
 from celeste.exceptions import ConstraintViolationError
 from celeste.mime_types import AudioMimeType, ImageMimeType, VideoMimeType
+from celeste.tools import WebSearch, XSearch
 
 
 class TestChoice:
@@ -868,3 +870,47 @@ class TestAudiosConstraint:
         result = constraint(artifacts)
 
         assert result == artifacts
+
+
+class TestToolSupport:
+    """Test ToolSupport constraint validation."""
+
+    def test_valid_tool_passes(self) -> None:
+        """Supported Tool instance passes validation."""
+        constraint = ToolSupport(tools=[WebSearch])
+
+        result = constraint([WebSearch()])
+
+        assert len(result) == 1
+        assert isinstance(result[0], WebSearch)
+
+    def test_invalid_tool_raises(self) -> None:
+        """Unsupported Tool instance raises ConstraintViolationError."""
+        constraint = ToolSupport(tools=[WebSearch])
+
+        with pytest.raises(ConstraintViolationError, match="XSearch"):
+            constraint([XSearch()])
+
+    def test_dict_passes_unchecked(self) -> None:
+        """User-defined tool dicts pass through without validation."""
+        constraint = ToolSupport(tools=[WebSearch])
+
+        result = constraint([{"name": "custom_fn", "parameters": {}}])
+
+        assert result == [{"name": "custom_fn", "parameters": {}}]
+
+    def test_mixed_list(self) -> None:
+        """Mixed list of Tool instances and dicts validates correctly."""
+        constraint = ToolSupport(tools=[WebSearch])
+
+        result = constraint([WebSearch(), {"name": "custom"}])
+
+        assert len(result) == 2
+
+    def test_empty_list(self) -> None:
+        """Empty list passes validation."""
+        constraint = ToolSupport(tools=[WebSearch])
+
+        result = constraint([])
+
+        assert result == []
