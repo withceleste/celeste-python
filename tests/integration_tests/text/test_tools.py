@@ -13,7 +13,8 @@ import pytest  # noqa: E402
 
 from celeste import Modality, create_client  # noqa: E402
 from celeste.modalities.text import TextChunk, TextOutput  # noqa: E402
-from celeste.tools import WebSearch, XSearch  # noqa: E402
+from celeste.tools import ToolResult, WebSearch, XSearch  # noqa: E402
+from celeste.types import Message, Role  # noqa: E402
 
 # One cheap model per provider for server-side tools (WebSearch/XSearch)
 # xAI: only grok-4+ supports server-side tools
@@ -143,3 +144,46 @@ async def test_xai_x_search() -> None:
 
     assert isinstance(output, TextOutput)
     assert output.content
+
+
+# -- Multi-turn ToolResult round-trip --
+
+
+@pytest.mark.parametrize(
+    ("provider", "model_id"),
+    FUNCTION_TOOL_MODELS,
+    ids=[f"{p}-{m}" for p, m in FUNCTION_TOOL_MODELS],
+)
+@pytest.mark.integration
+@pytest.mark.asyncio
+async def test_tool_result_round_trip(provider: str, model_id: str) -> None:
+    """Test full round-trip: tool call -> tool result -> final answer."""
+    client = create_client(modality=Modality.TEXT, provider=provider, model=model_id)
+
+    # Step 1: Get tool call
+    output1 = await client.generate(
+        prompt="What is the weather in Paris right now? Use the get_weather tool.",
+        tools=[WEATHER_TOOL],
+        max_tokens=TEST_MAX_TOKENS,
+    )
+
+    assert output1.tool_calls, f"{provider}/{model_id} did not return tool_calls"
+    tc = output1.tool_calls[0]
+    assert tc.name == "get_weather"
+
+    # Step 2: Send tool result back using output.message for round-trip
+    output2 = await client.generate(
+        messages=[
+            Message(
+                role=Role.USER,
+                content="What is the weather in Paris right now? Use the get_weather tool.",
+            ),
+            output1.message,
+            ToolResult(content="18°C, sunny", tool_call_id=tc.id, name=tc.name),
+        ],
+        tools=[WEATHER_TOOL],
+        max_tokens=TEST_MAX_TOKENS,
+    )
+
+    assert isinstance(output2, TextOutput)
+    assert output2.content, f"{provider}/{model_id} did not return final text answer"

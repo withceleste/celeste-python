@@ -17,7 +17,7 @@ type ImageContent = ImageArtifact | list[ImageArtifact]
 type VideoContent = VideoArtifact | list[VideoArtifact]
 type EmbeddingsContent = list[float] | list[list[float]]
 
-type Content = str | JsonValue | dict[str, Any] | list[JsonValue | dict[str, Any]]
+type Content = TextContent | ImageContent | VideoContent | AudioContent
 
 type RawUsage = dict[str, int | float | None]
 
@@ -31,6 +31,14 @@ class Role(StrEnum):
     DEVELOPER = "developer"
 
 
+class ToolCall(BaseModel):
+    """A tool call returned by the model."""
+
+    id: str
+    name: str
+    arguments: dict[str, Any]
+
+
 class Message(BaseModel):
     """A message in a conversation."""
 
@@ -38,6 +46,7 @@ class Message(BaseModel):
 
     role: Role
     content: Content
+    tool_calls: list[ToolCall] | None = None
 
 
 __all__ = [
@@ -50,5 +59,6 @@ __all__ = [
     "RawUsage",
     "Role",
     "TextContent",
+    "ToolCall",
     "VideoContent",
 ]
