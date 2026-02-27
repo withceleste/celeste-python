@@ -29,8 +29,6 @@ class ResponseFormatMapper(ParameterMapper[AudioContent]):
         "opus": AudioMimeType.OGG,
         "aac": AudioMimeType.AAC,
         "flac": AudioMimeType.FLAC,
-        "wav": AudioMimeType.WAV,
-        "pcm": AudioMimeType.WAV,
     }
 
     def map(
