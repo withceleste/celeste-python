@@ -58,7 +58,7 @@ class ImagenImagesClient(GoogleImagenClient, ImagesClient):
 
         if len(images) == 1:
             return images[0]
-        return images if images else ImageArtifact()
+        return images
 
     def _transform_output(
         self,
