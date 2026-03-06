@@ -5,11 +5,12 @@ import re
 from abc import ABC, abstractmethod
 from typing import Any, ClassVar, get_args, get_origin
 
-from pydantic import BaseModel, Field, computed_field
+from pydantic import BaseModel, Field, computed_field, field_serializer
 
 from celeste.artifacts import AudioArtifact, ImageArtifact, VideoArtifact
 from celeste.exceptions import ConstraintViolationError
 from celeste.mime_types import AudioMimeType, ImageMimeType, MimeType, VideoMimeType
+from celeste.tools import Tool
 
 
 class Constraint(BaseModel, ABC):
@@ -367,6 +368,26 @@ class AudiosConstraint(_MediaListConstraint[AudioMimeType]):
     _media_label = "audio"
 
 
+class ToolSupport(Constraint):
+    """Tool support constraint - validates Tool instances are supported by the model."""
+
+    tools: list[type[Tool]]
+
+    @field_serializer("tools")
+    @classmethod
+    def _serialize_tools(cls, v: list[type[Tool]]) -> list[str]:
+        return [t.__name__ for t in v]
+
+    def __call__(self, value: list) -> list:
+        """Validate tools list against supported tools."""
+        for item in value:
+            if isinstance(item, Tool) and type(item) not in self.tools:
+                supported = [t.__name__ for t in self.tools]
+                msg = f"Tool '{type(item).__name__}' not supported. Supported: {supported}"
+                raise ConstraintViolationError(msg)
+        return value
+
+
 __all__ = [
     "AudioConstraint",
     "AudiosConstraint",
@@ -382,6 +403,7 @@ __all__ = [
     "Range",
     "Schema",
     "Str",
+    "ToolSupport",
     "VideoConstraint",
     "VideosConstraint",
 ]

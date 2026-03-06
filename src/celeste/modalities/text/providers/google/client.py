@@ -2,6 +2,7 @@
 
 import base64
 from typing import Any, Unpack
+from uuid import uuid4
 
 from celeste.artifacts import AudioArtifact, ImageArtifact, VideoArtifact
 from celeste.parameters import ParameterMapper
@@ -10,6 +11,7 @@ from celeste.providers.google.generate_content.client import GoogleGenerateConte
 from celeste.providers.google.generate_content.streaming import (
     GoogleGenerateContentStream as _GoogleGenerateContentStream,
 )
+from celeste.tools import ToolCall, ToolResult
 from celeste.types import AudioContent, ImageContent, Message, TextContent, VideoContent
 from celeste.utils import detect_mime_type
 
@@ -25,6 +27,24 @@ from .parameters import GOOGLE_PARAMETER_MAPPERS
 
 class GoogleTextStream(_GoogleGenerateContentStream, TextStream):
     """Google streaming for text modality."""
+
+    def _aggregate_tool_calls(
+        self, chunks: list, raw_events: list[dict[str, Any]]
+    ) -> list[ToolCall]:
+        """Extract tool calls from Google streaming events."""
+        tool_calls: list[ToolCall] = []
+        for event in raw_events:
+            for candidate in event.get("candidates", []):
+                for part in candidate.get("content", {}).get("parts", []):
+                    if "functionCall" in part:
+                        tool_calls.append(
+                            ToolCall(
+                                id=str(uuid4()),
+                                name=part["functionCall"]["name"],
+                                arguments=part["functionCall"].get("args", {}),
+                            )
+                        )
+        return tool_calls
 
 
 class GoogleTextClient(GoogleGenerateContentClient, TextClient):
@@ -100,11 +120,34 @@ class GoogleTextClient(GoogleGenerateContentClient, TextClient):
             for msg in inputs.messages:
                 if msg.role in ("system", "developer"):
                     system_parts.extend(content_to_parts(msg.content))
+                elif isinstance(msg, ToolResult):
+                    contents.append(
+                        {
+                            "role": "user",
+                            "parts": [
+                                {
+                                    "functionResponse": {
+                                        "name": msg.name,
+                                        "response": {"result": msg.content},
+                                    }
+                                }
+                            ],
+                        }
+                    )
                 else:
                     role = "model" if msg.role == "assistant" else msg.role
-                    contents.append(
-                        {"role": role, "parts": content_to_parts(msg.content)}
-                    )
+                    msg_parts = content_to_parts(msg.content)
+                    if msg.tool_calls:
+                        for tc in msg.tool_calls:
+                            msg_parts.append(
+                                {
+                                    "functionCall": {
+                                        "name": tc.name,
+                                        "args": tc.arguments,
+                                    }
+                                }
+                            )
+                    contents.append({"role": role, "parts": msg_parts})
 
             result: dict[str, Any] = {"contents": contents}
             if system_parts:
@@ -178,6 +221,22 @@ class GoogleTextClient(GoogleGenerateContentClient, TextClient):
         parts = candidates[0].get("content", {}).get("parts", [])
         text = parts[0].get("text") if parts else ""
         return text or ""
+
+    def _parse_tool_calls(self, response_data: dict[str, Any]) -> list[ToolCall]:
+        """Parse tool calls from Google response."""
+        candidates = response_data.get("candidates", [])
+        if not candidates:
+            return []
+        parts = candidates[0].get("content", {}).get("parts", [])
+        return [
+            ToolCall(
+                id=str(uuid4()),
+                name=p["functionCall"]["name"],
+                arguments=p["functionCall"].get("args", {}),
+            )
+            for p in parts
+            if "functionCall" in p
+        ]
 
     def _stream_class(self) -> type[TextStream]:
         """Return the Stream class for this provider."""
