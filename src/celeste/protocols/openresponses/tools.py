@@ -77,7 +77,7 @@ def parse_tool_calls(response_data: dict[str, Any]) -> list[ToolCall]:
     return tool_calls
 
 
-def parse_text_content(output: list[dict[str, Any]]) -> str:
+def parse_content(output: list[dict[str, Any]]) -> str:
     """Extract text from Responses API output items."""
     for item in output:
         if item.get("type") == "message":
@@ -121,7 +121,7 @@ __all__ = [
     "CodeExecutionMapper",
     "WebSearchMapper",
     "XSearchMapper",
-    "parse_text_content",
+    "parse_content",
     "parse_tool_calls",
     "serialize_messages",
 ]
