@@ -10,6 +10,7 @@ Types are unified per-modality since generate and analyze produce identical outp
 from pydantic import Field
 
 from celeste.io import Chunk, FinishReason, Input, Output, Usage
+from celeste.tools import ToolResult
 from celeste.types import (
     AudioContent,
     ImageContent,
@@ -24,7 +25,7 @@ class TextInput(Input):
     """Input for text operations."""
 
     prompt: str | None = None
-    messages: list[Message] | None = None
+    messages: list[ToolResult | Message] | None = None
     text: str | list[str] | None = None
     image: ImageContent | None = None
     video: VideoContent | None = None
