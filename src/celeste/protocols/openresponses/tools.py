@@ -1,8 +1,18 @@
-"""OpenResponses protocol tool mappers."""
+"""OpenResponses protocol tool mappers and shared parsing helpers."""
 
+import json
 from typing import Any
 
-from celeste.tools import CodeExecution, Tool, ToolMapper, WebSearch, XSearch
+from celeste.tools import (
+    CodeExecution,
+    Tool,
+    ToolCall,
+    ToolMapper,
+    ToolResult,
+    WebSearch,
+    XSearch,
+)
+from celeste.types import Message
 
 
 class WebSearchMapper(ToolMapper):
@@ -42,9 +52,76 @@ TOOL_MAPPERS: list[ToolMapper] = [
     CodeExecutionMapper(),
 ]
 
+
+def parse_tool_calls(response_data: dict[str, Any]) -> list[ToolCall]:
+    """Parse tool calls from Responses API output."""
+    tool_calls: list[ToolCall] = []
+    for item in response_data.get("output", []):
+        if item.get("type") != "function_call":
+            continue
+        raw_args = item.get("arguments")
+        if isinstance(raw_args, str):
+            try:
+                arguments = json.loads(raw_args)
+            except (json.JSONDecodeError, ValueError):
+                arguments = {}
+        else:
+            arguments = raw_args if isinstance(raw_args, dict) else {}
+        tool_calls.append(
+            ToolCall(
+                id=item.get("call_id", item.get("id", "")),
+                name=item.get("name", ""),
+                arguments=arguments,
+            )
+        )
+    return tool_calls
+
+
+def parse_text_content(output: list[dict[str, Any]]) -> str:
+    """Extract text from Responses API output items."""
+    for item in output:
+        if item.get("type") == "message":
+            for part in item.get("content", []):
+                if part.get("type") == "output_text":
+                    return part.get("text") or ""
+    return ""
+
+
+def serialize_messages(messages: list[Message]) -> list[dict[str, Any]]:
+    """Serialize messages to Responses API input format."""
+    items: list[dict[str, Any]] = []
+    for msg in messages:
+        if isinstance(msg, ToolResult):
+            items.append(
+                {
+                    "type": "function_call_output",
+                    "call_id": msg.tool_call_id,
+                    "output": str(msg.content),
+                }
+            )
+        elif msg.role == "assistant" and msg.tool_calls:
+            for tc in msg.tool_calls:
+                items.append(
+                    {
+                        "type": "function_call",
+                        "name": tc.name,
+                        "arguments": json.dumps(tc.arguments),
+                        "call_id": tc.id,
+                    }
+                )
+        else:
+            msg_dict = msg.model_dump(exclude_none=True)
+            msg_dict.pop("tool_calls", None)
+            items.append(msg_dict)
+    return items
+
+
 __all__ = [
     "TOOL_MAPPERS",
     "CodeExecutionMapper",
     "WebSearchMapper",
     "XSearchMapper",
+    "parse_text_content",
+    "parse_tool_calls",
+    "serialize_messages",
 ]

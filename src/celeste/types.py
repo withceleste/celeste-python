@@ -34,6 +34,8 @@ class Role(StrEnum):
 class ToolCall(BaseModel):
     """A tool call returned by the model."""
 
+    model_config = ConfigDict(extra="allow")
+
     id: str
     name: str
     arguments: dict[str, Any]
