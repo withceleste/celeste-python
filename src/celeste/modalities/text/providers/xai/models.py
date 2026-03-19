@@ -89,6 +89,21 @@ MODELS: list[Model] = [
         },
     ),
     Model(
+        id="grok-4.20-beta-0309-reasoning",
+        provider=Provider.XAI,
+        display_name="Grok 4.20 Beta 0309 Reasoning",
+        operations={Modality.TEXT: {Operation.GENERATE}},
+        streaming=True,
+        parameter_constraints={
+            Parameter.TEMPERATURE: Range(min=0.0, max=2.0),
+            Parameter.MAX_TOKENS: Range(min=1, max=30000),
+            TextParameter.WEB_SEARCH: Bool(),
+            TextParameter.X_SEARCH: Bool(),
+            TextParameter.CODE_EXECUTION: Bool(),
+            TextParameter.OUTPUT_SCHEMA: Schema(),
+        },
+    ),
+    Model(
         id="grok-3-mini",
         provider=Provider.XAI,
         display_name="Grok 3 Mini",

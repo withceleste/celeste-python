@@ -219,6 +219,40 @@ MODELS: list[Model] = [
         },
     ),
     Model(
+        id="gpt-5.4",
+        provider=Provider.OPENAI,
+        display_name="GPT-5.4",
+        operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
+        streaming=True,
+        parameter_constraints={
+            Parameter.MAX_TOKENS: Range(min=1, max=128000),
+            TextParameter.THINKING_BUDGET: Choice(
+                options=["minimal", "low", "medium", "high", "xhigh"]
+            ),
+            TextParameter.VERBOSITY: Choice(options=["low", "medium", "high"]),
+            TextParameter.WEB_SEARCH: Bool(),
+            TextParameter.OUTPUT_SCHEMA: Schema(),
+            TextParameter.IMAGE: ImagesConstraint(),
+        },
+    ),
+    Model(
+        id="gpt-5.4-pro",
+        provider=Provider.OPENAI,
+        display_name="GPT-5.4 Pro",
+        operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
+        streaming=True,
+        parameter_constraints={
+            Parameter.MAX_TOKENS: Range(min=1, max=128000),
+            TextParameter.THINKING_BUDGET: Choice(
+                options=["minimal", "low", "medium", "high", "xhigh"]
+            ),
+            TextParameter.VERBOSITY: Choice(options=["low", "medium", "high"]),
+            TextParameter.WEB_SEARCH: Bool(),
+            TextParameter.OUTPUT_SCHEMA: Schema(),
+            TextParameter.IMAGE: ImagesConstraint(),
+        },
+    ),
+    Model(
         id="gpt-4.1",
         provider=Provider.OPENAI,
         display_name="GPT-4.1",

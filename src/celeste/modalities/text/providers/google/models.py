@@ -130,4 +130,23 @@ MODELS: list[Model] = [
             TextParameter.AUDIO: AudioConstraint(),
         },
     ),
+    Model(
+        id="gemini-3.1-flash-lite-preview",
+        provider=Provider.GOOGLE,
+        display_name="Gemini 3.1 Flash Lite Preview",
+        operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
+        streaming=True,
+        parameter_constraints={
+            Parameter.TEMPERATURE: Range(min=0.0, max=2.0),
+            Parameter.MAX_TOKENS: Range(min=1, max=65536),
+            TextParameter.THINKING_LEVEL: Choice(options=["low", "high"]),
+            TextParameter.WEB_SEARCH: Bool(),
+            TextParameter.CODE_EXECUTION: Bool(),
+            TextParameter.OUTPUT_SCHEMA: Schema(),
+            # Media input support
+            TextParameter.IMAGE: ImagesConstraint(),
+            TextParameter.VIDEO: VideosConstraint(),
+            TextParameter.AUDIO: AudioConstraint(),
+        },
+    ),
 ]
