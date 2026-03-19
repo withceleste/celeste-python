@@ -408,15 +408,12 @@ class ModalityClient[
         _ = streaming  # Passed through to provider mixins
         request = self._init_request(inputs)
 
-        mappers = self.parameter_mappers()
-        mapped_names = {m.name for m in mappers}
-
-        for mapper in mappers:
-            value = parameters.get(mapper.name)
+        for mapper in self.parameter_mappers():
+            value = parameters.pop(mapper.name, None)
             request = mapper.map(request, value, self.model)
 
         for name, value in parameters.items():
-            if value is not None and name not in mapped_names:
+            if value is not None:
                 warnings.warn(
                     f"Parameter '{name}' is not supported by model "
                     f"'{self.model.id}' and will be ignored.",
