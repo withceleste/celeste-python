@@ -11,7 +11,7 @@ from pydantic import SecretStr
 from celeste.auth import APIKey
 from celeste.client import ModalityClient
 from celeste.core import Modality, Provider
-from celeste.exceptions import StreamingNotSupportedError
+from celeste.exceptions import StreamingNotSupportedError, UnsupportedParameterWarning
 from celeste.io import Chunk, Input, Output, Usage
 from celeste.models import Model, Operation
 from celeste.parameters import ParameterMapper, Parameters
@@ -221,6 +221,71 @@ class TestModalityClientRequestBuilding:
         # Assert
         assert request["first_param"] == "first"
         assert request["second_param"] == "second"
+
+    def test_build_request_warns_on_unsupported_parameter(
+        self, text_model: Model, api_key: str
+    ) -> None:
+        """_build_request emits UnsupportedParameterWarning for unmapped parameters."""
+
+        class ClientWithOneMapper(ConcreteModalityClient):
+            @classmethod
+            def parameter_mappers(cls) -> list[ParameterMapper[str]]:
+                return [_create_test_mapper(ParamEnum.FIRST_PARAM)]
+
+        client = ClientWithOneMapper(
+            modality=Modality.TEXT,
+            model=text_model,
+            provider=text_model.provider,
+            auth=APIKey(secret=SecretStr(api_key)),
+        )
+
+        inputs = _TestInput(prompt="test")
+
+        with pytest.warns(UnsupportedParameterWarning, match="second_param.*gpt-4"):
+            client._build_request(inputs, first_param="ok", second_param="unsupported")
+
+    def test_build_request_no_warning_for_supported_parameters(
+        self, text_model: Model, api_key: str
+    ) -> None:
+        """_build_request does not warn when all parameters have mappers."""
+        import warnings
+
+        class ClientWithMapper(ConcreteModalityClient):
+            @classmethod
+            def parameter_mappers(cls) -> list[ParameterMapper[str]]:
+                return [_create_test_mapper(ParamEnum.TEST_PARAM)]
+
+        client = ClientWithMapper(
+            modality=Modality.TEXT,
+            model=text_model,
+            provider=text_model.provider,
+            auth=APIKey(secret=SecretStr(api_key)),
+        )
+
+        inputs = _TestInput(prompt="test")
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", UnsupportedParameterWarning)
+            client._build_request(inputs, test_param="supported")
+
+    def test_build_request_no_warning_for_none_unsupported_parameter(
+        self, text_model: Model, api_key: str
+    ) -> None:
+        """_build_request does not warn when unsupported parameter value is None."""
+        import warnings
+
+        client = ConcreteModalityClient(
+            modality=Modality.TEXT,
+            model=text_model,
+            provider=text_model.provider,
+            auth=APIKey(secret=SecretStr(api_key)),
+        )
+
+        inputs = _TestInput(prompt="test")
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", UnsupportedParameterWarning)
+            client._build_request(inputs, test_param=None)
 
     @pytest.mark.parametrize(
         "param_value,expected_output",

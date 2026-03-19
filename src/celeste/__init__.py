@@ -29,6 +29,7 @@ from celeste.exceptions import (
     StreamNotExhaustedError,
     UnsupportedCapabilityError,
     UnsupportedParameterError,
+    UnsupportedParameterWarning,
     UnsupportedProviderError,
     ValidationError,
 )
@@ -272,6 +273,7 @@ __all__ = [
     "StrictRefResolvingJsonSchemaGenerator",
     "UnsupportedCapabilityError",
     "UnsupportedParameterError",
+    "UnsupportedParameterWarning",
     "UnsupportedProviderError",
     "Usage",
     "UsageField",

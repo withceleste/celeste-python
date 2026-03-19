@@ -245,6 +245,10 @@ class UnsupportedParameterError(ValidationError):
         )
 
 
+class UnsupportedParameterWarning(UserWarning):
+    """Emitted when a parameter is not supported by a provider and will be ignored."""
+
+
 __all__ = [
     "ClientNotFoundError",
     "ConstraintViolationError",
@@ -259,5 +263,6 @@ __all__ = [
     "StreamingNotSupportedError",
     "UnsupportedCapabilityError",
     "UnsupportedParameterError",
+    "UnsupportedParameterWarning",
     "UnsupportedProviderError",
 ]
