@@ -1,11 +1,13 @@
 """Text modality client."""
 
-from typing import Any, Unpack
+import warnings
+from typing import Any, ClassVar, Unpack
 
 from asgiref.sync import async_to_sync
 
 from celeste.client import ModalityClient
 from celeste.core import InputType, Modality
+from celeste.tools import CodeExecution, WebSearch, XSearch
 from celeste.types import AudioContent, ImageContent, Message, TextContent, VideoContent
 
 from .io import TextChunk, TextFinishReason, TextInput, TextOutput, TextUsage
@@ -25,10 +27,44 @@ class TextClient(
     _usage_class = TextUsage
     _finish_reason_class = TextFinishReason
 
+    # Deprecated param → Tool class mapping.
+    # TODO(deprecation): Remove on 2026-06-07.
+    _DEPRECATED_TOOL_PARAMS: ClassVar[dict[str, type]] = {
+        "web_search": WebSearch,
+        "x_search": XSearch,
+        "code_execution": CodeExecution,
+    }
+
     @classmethod
     def _output_class(cls) -> type[TextOutput]:
         """Return the Output class for text modality."""
         return TextOutput
+
+    def _build_request(
+        self,
+        inputs: TextInput,
+        extra_body: dict[str, Any] | None = None,
+        streaming: bool = False,
+        **parameters: Unpack[TextParameters],
+    ) -> dict[str, Any]:
+        """Build request, migrating deprecated boolean tool params first.
+
+        TODO(deprecation): Remove this override on 2026-06-07.
+        """
+        for old_param, tool_cls in self._DEPRECATED_TOOL_PARAMS.items():
+            value = parameters.pop(old_param, None)  # type: ignore[misc]
+            if value:
+                warnings.warn(
+                    f"'{old_param}=True' is deprecated, "
+                    f"use tools=[{tool_cls.__name__}()] instead. "
+                    "Will be removed on 2026-06-07.",
+                    DeprecationWarning,
+                    stacklevel=4,
+                )
+                parameters.setdefault("tools", []).append(tool_cls())
+        return super()._build_request(
+            inputs, extra_body=extra_body, streaming=streaming, **parameters
+        )
 
     def _check_media_support(
         self,

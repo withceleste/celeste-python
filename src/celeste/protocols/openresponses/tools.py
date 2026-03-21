@@ -1,0 +1,127 @@
+"""OpenResponses protocol tool mappers and shared parsing helpers."""
+
+import json
+from typing import Any
+
+from celeste.tools import (
+    CodeExecution,
+    Tool,
+    ToolCall,
+    ToolMapper,
+    ToolResult,
+    WebSearch,
+    XSearch,
+)
+from celeste.types import Message
+
+
+class WebSearchMapper(ToolMapper):
+    """Map WebSearch to OpenResponses web_search wire format."""
+
+    tool_type = WebSearch
+
+    def map_tool(self, tool: Tool) -> dict[str, Any]:
+        assert isinstance(tool, WebSearch)
+        result: dict[str, Any] = {"type": "web_search"}
+        if tool.allowed_domains is not None:
+            result.setdefault("filters", {})["allowed_domains"] = tool.allowed_domains
+        return result
+
+
+class XSearchMapper(ToolMapper):
+    """Map XSearch to OpenResponses x_search wire format."""
+
+    tool_type = XSearch
+
+    def map_tool(self, tool: Tool) -> dict[str, Any]:
+        return {"type": "x_search"}
+
+
+class CodeExecutionMapper(ToolMapper):
+    """Map CodeExecution to OpenResponses code_execution wire format."""
+
+    tool_type = CodeExecution
+
+    def map_tool(self, tool: Tool) -> dict[str, Any]:
+        return {"type": "code_execution"}
+
+
+TOOL_MAPPERS: list[ToolMapper] = [
+    WebSearchMapper(),
+    XSearchMapper(),
+    CodeExecutionMapper(),
+]
+
+
+def parse_tool_calls(response_data: dict[str, Any]) -> list[ToolCall]:
+    """Parse tool calls from Responses API output."""
+    tool_calls: list[ToolCall] = []
+    for item in response_data.get("output", []):
+        if item.get("type") != "function_call":
+            continue
+        raw_args = item.get("arguments")
+        if isinstance(raw_args, str):
+            try:
+                arguments = json.loads(raw_args)
+            except (json.JSONDecodeError, ValueError):
+                arguments = {}
+        else:
+            arguments = raw_args if isinstance(raw_args, dict) else {}
+        tool_calls.append(
+            ToolCall(
+                id=item.get("call_id", item.get("id", "")),
+                name=item.get("name", ""),
+                arguments=arguments,
+            )
+        )
+    return tool_calls
+
+
+def parse_content(output: list[dict[str, Any]]) -> str:
+    """Extract text from Responses API output items."""
+    for item in output:
+        if item.get("type") == "message":
+            for part in item.get("content", []):
+                if part.get("type") == "output_text":
+                    return part.get("text") or ""
+    return ""
+
+
+def serialize_messages(messages: list[Message]) -> list[dict[str, Any]]:
+    """Serialize messages to Responses API input format."""
+    items: list[dict[str, Any]] = []
+    for msg in messages:
+        if isinstance(msg, ToolResult):
+            items.append(
+                {
+                    "type": "function_call_output",
+                    "call_id": msg.tool_call_id,
+                    "output": str(msg.content),
+                }
+            )
+        elif msg.role == "assistant" and msg.tool_calls:
+            for tc in msg.tool_calls:
+                items.append(
+                    {
+                        "type": "function_call",
+                        "name": tc.name,
+                        "arguments": json.dumps(tc.arguments),
+                        "call_id": tc.id,
+                    }
+                )
+        else:
+            msg_dict = msg.model_dump(exclude_none=True)
+            msg_dict.pop("tool_calls", None)
+            items.append(msg_dict)
+    return items
+
+
+__all__ = [
+    "TOOL_MAPPERS",
+    "CodeExecutionMapper",
+    "WebSearchMapper",
+    "XSearchMapper",
+    "parse_content",
+    "parse_tool_calls",
+    "serialize_messages",
+]

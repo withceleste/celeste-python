@@ -30,8 +30,12 @@ class GoogleGenerateContentStream:
         content = candidate.get("content", {})
         parts = content.get("parts", [])
 
-        if parts:
-            return parts[0].get("text") or None
+        for p in parts:
+            if p.get("thought"):
+                continue
+            text = p.get("text")
+            if text is not None:
+                return text
 
         return None
 

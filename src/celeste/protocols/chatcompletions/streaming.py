@@ -1,8 +1,11 @@
 """Chat Completions protocol SSE parsing for streaming."""
 
+import contextlib
+import json
 from typing import Any
 
 from celeste.io import FinishReason
+from celeste.tools import ToolCall
 
 from .client import ChatCompletionsClient
 
@@ -14,6 +17,8 @@ class ChatCompletionsStream:
     - _parse_chunk_content(event_data) - Extract content from SSE event
     - _parse_chunk_usage(event_data) - Extract and normalize usage from SSE event
     - _parse_chunk_finish_reason(event_data) - Extract finish reason from SSE event
+    - _parse_chunk(event_data) - Capture tool_call deltas before delegating
+    - _aggregate_tool_calls(chunks, raw_events) - Reconstruct tool calls from deltas
     - _build_stream_metadata(raw_events) - Filter content-only events
 
     Provider streams inherit this and override methods for provider-specific behavior
@@ -21,6 +26,10 @@ class ChatCompletionsStream:
 
     Modality streams call super() methods which resolve to this via MRO.
     """
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:  # noqa: ANN401
+        super().__init__(*args, **kwargs)
+        self._tool_call_deltas: dict[int, dict[str, Any]] = {}
 
     def _parse_chunk_content(self, event_data: dict[str, Any]) -> str | None:
         """Extract content from SSE event."""
@@ -73,6 +82,44 @@ class ChatCompletionsStream:
             return FinishReason(reason=finish_reason)
 
         return None
+
+    def _parse_chunk(self, event_data: dict[str, Any]) -> Any:  # noqa: ANN401
+        """Capture tool_call deltas before delegating to base _parse_chunk."""
+        choices = event_data.get("choices", [])
+        if choices and isinstance(choices[0], dict):
+            delta = choices[0].get("delta", {})
+            if isinstance(delta, dict):
+                for tc_delta in delta.get("tool_calls", []):
+                    idx = tc_delta.get("index", 0)
+                    if idx not in self._tool_call_deltas:
+                        self._tool_call_deltas[idx] = {
+                            "id": tc_delta.get("id", ""),
+                            "name": tc_delta.get("function", {}).get("name", ""),
+                            "arguments": "",
+                        }
+                    else:
+                        if tc_delta.get("id"):
+                            self._tool_call_deltas[idx]["id"] = tc_delta["id"]
+                        fn = tc_delta.get("function", {})
+                        if fn.get("name"):
+                            self._tool_call_deltas[idx]["name"] = fn["name"]
+                    # Accumulate argument fragments
+                    fn = tc_delta.get("function", {})
+                    self._tool_call_deltas[idx]["arguments"] += fn.get("arguments", "")
+        return super()._parse_chunk(event_data)  # type: ignore[misc]
+
+    def _aggregate_tool_calls(
+        self, chunks: list, raw_events: list[dict[str, Any]]
+    ) -> list[ToolCall]:
+        """Reconstruct tool calls from accumulated Chat Completions deltas."""
+        result: list[ToolCall] = []
+        for tc in self._tool_call_deltas.values():
+            arguments: dict[str, Any] = {}
+            if tc["arguments"]:
+                with contextlib.suppress(json.JSONDecodeError, ValueError, TypeError):
+                    arguments = json.loads(tc["arguments"])
+            result.append(ToolCall(id=tc["id"], name=tc["name"], arguments=arguments))
+        return result
 
     def _build_stream_metadata(
         self, raw_events: list[dict[str, Any]]
