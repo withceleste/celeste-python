@@ -4,11 +4,12 @@ import json
 from typing import Any, Unpack
 
 from celeste.parameters import ParameterMapper
+from celeste.protocols.openresponses.tools import serialize_messages
 from celeste.providers.xai.responses.client import XAIResponsesClient
 from celeste.providers.xai.responses.streaming import (
     XAIResponsesStream as _XAIResponsesStream,
 )
-from celeste.tools import ToolCall, ToolResult
+from celeste.tools import ToolCall
 from celeste.types import ImageContent, Message, TextContent, VideoContent
 from celeste.utils import build_image_data_url
 
@@ -61,19 +62,7 @@ class XAITextClient(XAIResponsesClient, TextClient):
     def _init_request(self, inputs: TextInput) -> dict[str, Any]:
         """Initialize request from XAI Responses API format."""
         if inputs.messages is not None:
-            items: list[dict[str, Any]] = []
-            for msg in inputs.messages:
-                if isinstance(msg, ToolResult):
-                    items.append(
-                        {
-                            "type": "function_call_output",
-                            "call_id": msg.tool_call_id,
-                            "output": str(msg.content),
-                        }
-                    )
-                else:
-                    items.append(msg.model_dump(exclude_none=True))
-            return {"input": items}
+            return {"input": serialize_messages(inputs.messages)}
 
         if inputs.image is None:
             return {"input": inputs.prompt or ""}

@@ -10,7 +10,8 @@ from celeste.protocols.openresponses.client import (
 from celeste.protocols.openresponses.streaming import (
     OpenResponsesStream as _OpenResponsesStream,
 )
-from celeste.tools import ToolCall, ToolResult
+from celeste.protocols.openresponses.tools import serialize_messages
+from celeste.tools import ToolCall
 from celeste.types import ImageContent, Message, TextContent, VideoContent
 from celeste.utils import build_image_data_url
 
@@ -110,19 +111,7 @@ class OpenResponsesTextClient(OpenResponsesMixin, TextClient):
     def _init_request(self, inputs: TextInput) -> dict[str, Any]:
         """Initialize request with input content."""
         if inputs.messages is not None:
-            items: list[dict[str, Any]] = []
-            for msg in inputs.messages:
-                if isinstance(msg, ToolResult):
-                    items.append(
-                        {
-                            "type": "function_call_output",
-                            "call_id": msg.tool_call_id,
-                            "output": str(msg.content),
-                        }
-                    )
-                else:
-                    items.append(msg.model_dump(exclude_none=True))
-            return {"input": items}
+            return {"input": serialize_messages(inputs.messages)}
 
         content: list[dict[str, Any]] = []
         if inputs.image is not None:
