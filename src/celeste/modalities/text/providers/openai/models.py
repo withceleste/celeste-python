@@ -232,7 +232,7 @@ MODELS: list[Model] = [
                 options=["minimal", "low", "medium", "high", "xhigh"]
             ),
             TextParameter.VERBOSITY: Choice(options=["low", "medium", "high"]),
-            TextParameter.WEB_SEARCH: Bool(),
+            TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.IMAGE: ImagesConstraint(),
         },
@@ -249,37 +249,7 @@ MODELS: list[Model] = [
                 options=["minimal", "low", "medium", "high", "xhigh"]
             ),
             TextParameter.VERBOSITY: Choice(options=["low", "medium", "high"]),
-            TextParameter.WEB_SEARCH: Bool(),
-            TextParameter.OUTPUT_SCHEMA: Schema(),
-            TextParameter.IMAGE: ImagesConstraint(),
-        },
-    ),
-    Model(
-        id="gpt-5.4-mini",
-        provider=Provider.OPENAI,
-        display_name="GPT-5.4 Mini",
-        operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
-        streaming=True,
-        parameter_constraints={
-            Parameter.MAX_TOKENS: Range(min=1, max=128000),
-            TextParameter.THINKING_BUDGET: Choice(
-                options=["minimal", "low", "medium", "high", "xhigh"]
-            ),
-            TextParameter.OUTPUT_SCHEMA: Schema(),
-            TextParameter.IMAGE: ImagesConstraint(),
-        },
-    ),
-    Model(
-        id="gpt-5.4-nano",
-        provider=Provider.OPENAI,
-        display_name="GPT-5.4 Nano",
-        operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
-        streaming=True,
-        parameter_constraints={
-            Parameter.MAX_TOKENS: Range(min=1, max=128000),
-            TextParameter.THINKING_BUDGET: Choice(
-                options=["minimal", "low", "medium", "high", "xhigh"]
-            ),
+            TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.IMAGE: ImagesConstraint(),
         },

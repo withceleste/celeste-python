@@ -141,8 +141,7 @@ MODELS: list[Model] = [
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0),
             Parameter.MAX_TOKENS: Range(min=1, max=65536),
             TextParameter.THINKING_LEVEL: Choice(options=["low", "high"]),
-            TextParameter.WEB_SEARCH: Bool(),
-            TextParameter.CODE_EXECUTION: Bool(),
+            TextParameter.TOOLS: ToolSupport(tools=[WebSearch, CodeExecution]),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             # Media input support
             TextParameter.IMAGE: ImagesConstraint(),

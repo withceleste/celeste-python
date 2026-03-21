@@ -57,23 +57,19 @@ def serialize_messages(
                 }
             )
         elif msg.role == "assistant" and msg.tool_calls:
-            items.append(
+            msg_dict = msg.model_dump(exclude_none=True)
+            msg_dict["tool_calls"] = [
                 {
-                    "role": msg.role.value,
-                    "content": msg.content if msg.content else None,
-                    "tool_calls": [
-                        {
-                            "id": tc.id,
-                            "type": "function",
-                            "function": {
-                                "name": tc.name,
-                                "arguments": json.dumps(tc.arguments),
-                            },
-                        }
-                        for tc in msg.tool_calls
-                    ],
+                    "id": tc.id,
+                    "type": "function",
+                    "function": {
+                        "name": tc.name,
+                        "arguments": json.dumps(tc.arguments),
+                    },
                 }
-            )
+                for tc in msg.tool_calls
+            ]
+            items.append(msg_dict)
         else:
             msg_dict = msg.model_dump(exclude_none=True)
             msg_dict.pop("tool_calls", None)

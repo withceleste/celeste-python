@@ -72,7 +72,7 @@ class XAITextClient(XAIResponsesClient, TextClient):
                         }
                     )
                 else:
-                    items.append(msg.model_dump())
+                    items.append(msg.model_dump(exclude_none=True))
             return {"input": items}
 
         if inputs.image is None:

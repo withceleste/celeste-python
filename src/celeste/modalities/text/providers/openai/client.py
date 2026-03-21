@@ -74,7 +74,7 @@ class OpenAITextClient(OpenAIResponsesMixin, TextClient):
                         }
                     )
                 else:
-                    items.append(msg.model_dump())
+                    items.append(msg.model_dump(exclude_none=True))
             return {"input": items}
 
         content: list[dict[str, Any]] = []

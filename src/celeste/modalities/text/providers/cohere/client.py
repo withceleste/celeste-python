@@ -59,7 +59,11 @@ class CohereTextClient(CohereChatClient, TextClient):
         """Initialize request from Cohere v2 Chat API messages array format."""
         # If messages provided, use them directly (messages take precedence)
         if inputs.messages is not None:
-            return {"messages": [message.model_dump() for message in inputs.messages]}
+            return {
+                "messages": [
+                    message.model_dump(exclude_none=True) for message in inputs.messages
+                ]
+            }
 
         # Fall back to prompt-based input
         if inputs.image is None:

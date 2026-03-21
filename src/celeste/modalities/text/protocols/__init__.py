@@ -1,0 +1,1 @@
+"""Text modality protocol implementations."""

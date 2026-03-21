@@ -88,9 +88,7 @@ MODELS: list[Model] = [
         parameter_constraints={
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0),
             Parameter.MAX_TOKENS: Range(min=1, max=30000),
-            TextParameter.WEB_SEARCH: Bool(),
-            TextParameter.X_SEARCH: Bool(),
-            TextParameter.CODE_EXECUTION: Bool(),
+            TextParameter.TOOLS: ToolSupport(tools=[WebSearch, XSearch, CodeExecution]),
             TextParameter.OUTPUT_SCHEMA: Schema(),
         },
     ),
@@ -103,9 +101,7 @@ MODELS: list[Model] = [
         parameter_constraints={
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0),
             Parameter.MAX_TOKENS: Range(min=1, max=30000),
-            TextParameter.WEB_SEARCH: Bool(),
-            TextParameter.X_SEARCH: Bool(),
-            TextParameter.CODE_EXECUTION: Bool(),
+            TextParameter.TOOLS: ToolSupport(tools=[WebSearch, XSearch, CodeExecution]),
             TextParameter.OUTPUT_SCHEMA: Schema(),
         },
     ),

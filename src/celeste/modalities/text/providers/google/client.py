@@ -37,11 +37,15 @@ class GoogleTextStream(_GoogleGenerateContentStream, TextStream):
             for candidate in event.get("candidates", []):
                 for part in candidate.get("content", {}).get("parts", []):
                     if "functionCall" in part:
+                        kwargs: dict[str, Any] = {}
+                        if "thoughtSignature" in part:
+                            kwargs["thoughtSignature"] = part["thoughtSignature"]
                         tool_calls.append(
                             ToolCall(
                                 id=str(uuid4()),
                                 name=part["functionCall"]["name"],
                                 arguments=part["functionCall"].get("args", {}),
+                                **kwargs,
                             )
                         )
         return tool_calls
@@ -139,14 +143,16 @@ class GoogleTextClient(GoogleGenerateContentClient, TextClient):
                     msg_parts = content_to_parts(msg.content)
                     if msg.tool_calls:
                         for tc in msg.tool_calls:
-                            msg_parts.append(
-                                {
-                                    "functionCall": {
-                                        "name": tc.name,
-                                        "args": tc.arguments,
-                                    }
+                            part: dict[str, Any] = {
+                                "functionCall": {
+                                    "name": tc.name,
+                                    "args": tc.arguments,
                                 }
-                            )
+                            }
+                            thought_sig = getattr(tc, "thoughtSignature", None)
+                            if thought_sig:
+                                part["thoughtSignature"] = thought_sig
+                            msg_parts.append(part)
                     contents.append({"role": role, "parts": msg_parts})
 
             result: dict[str, Any] = {"contents": contents}
@@ -219,8 +225,13 @@ class GoogleTextClient(GoogleGenerateContentClient, TextClient):
         """Parse content from response."""
         candidates = super()._parse_content(response_data)
         parts = candidates[0].get("content", {}).get("parts", [])
-        text = parts[0].get("text") if parts else ""
-        return text or ""
+        for p in parts:
+            if p.get("thought"):
+                continue
+            text = p.get("text")
+            if text is not None:
+                return text
+        return ""
 
     def _parse_tool_calls(self, response_data: dict[str, Any]) -> list[ToolCall]:
         """Parse tool calls from Google response."""
@@ -228,15 +239,21 @@ class GoogleTextClient(GoogleGenerateContentClient, TextClient):
         if not candidates:
             return []
         parts = candidates[0].get("content", {}).get("parts", [])
-        return [
-            ToolCall(
-                id=str(uuid4()),
-                name=p["functionCall"]["name"],
-                arguments=p["functionCall"].get("args", {}),
-            )
-            for p in parts
-            if "functionCall" in p
-        ]
+        tool_calls: list[ToolCall] = []
+        for p in parts:
+            if "functionCall" in p:
+                kwargs: dict[str, Any] = {}
+                if "thoughtSignature" in p:
+                    kwargs["thoughtSignature"] = p["thoughtSignature"]
+                tool_calls.append(
+                    ToolCall(
+                        id=str(uuid4()),
+                        name=p["functionCall"]["name"],
+                        arguments=p["functionCall"].get("args", {}),
+                        **kwargs,
+                    )
+                )
+        return tool_calls
 
     def _stream_class(self) -> type[TextStream]:
         """Return the Stream class for this provider."""

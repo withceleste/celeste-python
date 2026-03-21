@@ -27,6 +27,12 @@ class TextParameter(StrEnum):
     TOOLS = "tools"
     VERBOSITY = "verbosity"
 
+    # Deprecated: use tools=[WebSearch()], tools=[XSearch()], tools=[CodeExecution()] instead.
+    # TODO(deprecation): Remove on 2026-06-07.
+    WEB_SEARCH = "web_search"
+    X_SEARCH = "x_search"
+    CODE_EXECUTION = "code_execution"
+
     # Media input declarations (for optional_input_types)
     IMAGE = "image"
     VIDEO = "video"
@@ -47,6 +53,12 @@ class TextParameters(Parameters):
     output_schema: type[BaseModel]
     tools: list[ToolDefinition]
     verbosity: str
+
+    # Deprecated: use tools=[WebSearch()], tools=[XSearch()], tools=[CodeExecution()] instead.
+    # TODO(deprecation): Remove on 2026-06-07.
+    web_search: bool
+    x_search: bool
+    code_execution: bool
 
 
 __all__ = [
