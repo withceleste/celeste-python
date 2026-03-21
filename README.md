@@ -10,11 +10,10 @@ All modalities. All providers. One interface.
 
 Primitives, not frameworks.
 
-
-
 [![Python](https://img.shields.io/badge/Python-3.12+-blue?style=for-the-badge)](https://www.python.org/)
 [![License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](LICENSE)
 [![PyPI](https://img.shields.io/pypi/v/celeste-ai?style=for-the-badge)](https://pypi.org/project/celeste-ai/)
+[![DeepWiki](https://img.shields.io/badge/DeepWiki-withceleste%2Fceleste--python-blue?style=for-the-badge)](https://deepwiki.com/withceleste/celeste-python)
 
 <a href="https://github.com/withceleste/celeste-python" target="_parent">
   <img alt="" src="https://img.shields.io/github/stars/withceleste/celeste-python.svg?style=social&label=Star" alt="GitHub stars" />
@@ -215,6 +214,55 @@ print(response.metadata["model"])     # str
 ```
 
 Catch errors **before** production.
+---
+
+## 🧠 Connect Celeste with your favourite IDE
+
+Bring Celeste’s documentation directly into your editor via **MCP (Model Context Protocol)**.  
+Your IDE gets first-class access to the Celeste Python docs, schemas, and examples.  
+Less tab-switching. More flow.
+
+---
+
+### ▶️ Cursor
+
+To add the Celeste MCP to **Cursor**, update your `~/.cursor/mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "celeste-python Docs": {
+      "url": "https://gitmcp.io/withceleste/celeste-python"
+    }
+  }
+}
+```
+
+Restart Cursor, and Celeste’s docs are now available as contextual knowledge.
+
+---
+
+### ▶️ VS Code
+
+To add the Celeste MCP to **VS Code**, update your `.vscode/mcp.json`:
+
+```json
+{
+  "servers": {
+    "celeste-python Docs": {
+      "type": "sse",
+      "url": "https://gitmcp.io/withceleste/celeste-python"
+    }
+  }
+}
+```
+
+Reload VS Code, and enjoy in-editor access to Celeste’s primitives and APIs.
+
+---
+
+💡 **Why MCP?**  
+Because documentation should feel like an extension of your brain, not a browser tab.
 
 ---
 
