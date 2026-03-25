@@ -2,7 +2,7 @@
 
 from typing import ClassVar
 
-from celeste.modalities.text.providers.openresponses.client import (
+from celeste.modalities.text.protocols.openresponses.client import (
     OpenResponsesTextClient,
     OpenResponsesTextStream,
 )
