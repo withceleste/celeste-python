@@ -5,6 +5,7 @@ from typing import Any, ClassVar, get_origin
 
 from pydantic import BaseModel, TypeAdapter
 
+from celeste.exceptions import InvalidToolError
 from celeste.models import Model
 from celeste.parameters import FieldMapper, ParameterMapper
 from celeste.structured_outputs import StrictJsonSchemaGenerator
@@ -105,6 +106,8 @@ class ToolsMapper(ParameterMapper[TextContent]):
                 tools.append(self._map_user_tool(item))
             elif isinstance(item, dict):
                 tools.append(item)
+            else:
+                raise InvalidToolError(item)
 
         return request
 
