@@ -7,6 +7,7 @@ from typing import Any, get_args, get_origin
 from pydantic import BaseModel, TypeAdapter
 
 from celeste.artifacts import ImageArtifact
+from celeste.exceptions import InvalidToolError
 from celeste.mime_types import ApplicationMimeType
 from celeste.models import Model
 from celeste.parameters import ParameterMapper
@@ -213,6 +214,8 @@ class ToolsMapper[Content](ParameterMapper[Content]):
                 fn_declarations.append(self._map_user_tool(item))
             elif isinstance(item, dict):
                 tools.append(item)
+            else:
+                raise InvalidToolError(item)
 
         if fn_declarations:
             tools.append({"functionDeclarations": fn_declarations})
