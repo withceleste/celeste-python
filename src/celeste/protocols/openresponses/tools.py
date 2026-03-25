@@ -1,8 +1,10 @@
 """OpenResponses protocol tool mappers and shared parsing helpers."""
 
 import json
-from typing import Any
+import warnings
+from typing import Any, ClassVar
 
+from celeste.exceptions import UnsupportedParameterWarning
 from celeste.tools import (
     CodeExecution,
     Tool,
@@ -19,12 +21,21 @@ class WebSearchMapper(ToolMapper):
     """Map WebSearch to OpenResponses web_search wire format."""
 
     tool_type = WebSearch
+    _supported_fields: ClassVar[set[str]] = {"allowed_domains"}
 
     def map_tool(self, tool: Tool) -> dict[str, Any]:
         assert isinstance(tool, WebSearch)
         result: dict[str, Any] = {"type": "web_search"}
         if tool.allowed_domains is not None:
             result.setdefault("filters", {})["allowed_domains"] = tool.allowed_domains
+        for field in tool.model_fields:
+            if field not in self._supported_fields and getattr(tool, field) is not None:
+                warnings.warn(
+                    f"WebSearch.{field} is not supported by OpenResponses "
+                    f"and will be ignored. Workaround: use a raw dict tool instead.",
+                    UnsupportedParameterWarning,
+                    stacklevel=2,
+                )
         return result
 
 
