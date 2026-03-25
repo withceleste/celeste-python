@@ -382,8 +382,11 @@ class ToolSupport(Constraint):
         """Validate tools list against supported tools."""
         for item in value:
             if isinstance(item, Tool) and type(item) not in self.tools:
-                supported = [t.__name__ for t in self.tools]
-                msg = f"Tool '{type(item).__name__}' not supported. Supported: {supported}"
+                if self.tools:
+                    supported = [t.__name__ for t in self.tools]
+                    msg = f"Tool '{type(item).__name__}' not supported. Supported: {supported}"
+                else:
+                    msg = f"Tool '{type(item).__name__}' is not supported by this model"
                 raise ConstraintViolationError(msg)
         return value
 
