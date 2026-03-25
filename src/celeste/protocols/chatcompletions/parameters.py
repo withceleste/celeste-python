@@ -99,7 +99,7 @@ class ToolsMapper(ParameterMapper[TextContent]):
             if isinstance(item, Tool):
                 mapper = dispatch.get(type(item))
                 if mapper is None:
-                    msg = f"Tool '{type(item).__name__}' is not supported by this provider"
+                    msg = f"Tool '{type(item).__name__}' is not supported by Chat Completions"
                     raise ValueError(msg)
                 tools.append(mapper.map_tool(item))
             elif isinstance(item, dict) and "name" in item:
