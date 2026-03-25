@@ -128,6 +128,7 @@ MODELS: list[Model] = [
         parameter_constraints={
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0),
             Parameter.MAX_TOKENS: Range(min=1, max=32768),
+            TextParameter.TOOLS: ToolSupport(tools=[]),
             TextParameter.IMAGE: ImagesConstraint(),
         },
     ),

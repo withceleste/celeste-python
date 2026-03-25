@@ -51,6 +51,7 @@ MODELS: list[Model] = [
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0),
             Parameter.MAX_TOKENS: Range(min=1, max=4096),
             TextParameter.OUTPUT_SCHEMA: Schema(),
+            TextParameter.TOOLS: ToolSupport(tools=[]),
             TextParameter.IMAGE: ImagesConstraint(),
         },
     ),
@@ -63,6 +64,7 @@ MODELS: list[Model] = [
         parameter_constraints={
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0),
             Parameter.MAX_TOKENS: Range(min=1, max=8192),
+            TextParameter.TOOLS: ToolSupport(tools=[]),
         },
     ),
     Model(
@@ -74,6 +76,7 @@ MODELS: list[Model] = [
         parameter_constraints={
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0),
             Parameter.MAX_TOKENS: Range(min=1, max=4096),
+            TextParameter.TOOLS: ToolSupport(tools=[]),
         },
     ),
     Model(
