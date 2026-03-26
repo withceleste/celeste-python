@@ -181,13 +181,13 @@ def _infer_operation(model: Model, modality: Modality) -> Operation:
 
 def create_client(
     capability: Capability | None = None,
-    modality: Modality | str | None = None,
-    operation: Operation | str | None = None,
+    modality: Modality | None = None,
+    operation: Operation | None = None,
     provider: Provider | None = None,
     model: Model | str | None = None,
     api_key: str | SecretStr | None = None,
     auth: Authentication | None = None,
-    protocol: Protocol | str | None = None,
+    protocol: Protocol | None = None,
     base_url: str | None = None,
 ) -> ModalityClient:
     """Create an async client for the specified AI capability or modality.
@@ -230,12 +230,10 @@ def create_client(
         msg = "Either 'modality' or 'model' must be provided"
         raise ValueError(msg)
 
-    resolved_modality = Modality(modality) if isinstance(modality, str) else modality
-    resolved_operation = (
-        Operation(operation) if isinstance(operation, str) else operation
-    )
-    resolved_provider = Provider(provider) if isinstance(provider, str) else provider
-    resolved_protocol = Protocol(protocol) if isinstance(protocol, str) else protocol
+    resolved_modality = modality
+    resolved_operation = operation
+    resolved_provider = provider
+    resolved_protocol = protocol
 
     # Default to openresponses when base_url is given without protocol or provider
     if base_url is not None and resolved_protocol is None and resolved_provider is None:
