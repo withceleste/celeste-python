@@ -3,6 +3,7 @@
 from celeste.core import Provider
 
 from ..client import TextClient
+from ..protocols.openresponses import OpenResponsesTextClient
 from .anthropic import AnthropicTextClient
 from .cohere import CohereTextClient
 from .deepseek import DeepSeekTextClient
@@ -13,7 +14,6 @@ from .mistral import MistralTextClient
 from .moonshot import MoonshotTextClient
 from .ollama import OllamaTextClient
 from .openai import OpenAITextClient
-from .openresponses import OpenResponsesTextClient
 from .xai import XAITextClient
 
 PROVIDERS: dict[Provider, type[TextClient]] = {

@@ -9,6 +9,12 @@ from celeste.protocols.openresponses.client import (
 from celeste.protocols.openresponses.streaming import (
     OpenResponsesStream as _OpenResponsesStream,
 )
+from celeste.protocols.openresponses.tools import (
+    parse_content,
+    parse_tool_calls,
+    serialize_messages,
+)
+from celeste.tools import ToolCall
 from celeste.types import ImageContent, Message, TextContent, VideoContent
 from celeste.utils import build_image_data_url
 
@@ -46,6 +52,14 @@ class OpenResponsesTextStream(_OpenResponsesStream, TextStream):
             events.append(self._response_data)
         events.extend(super()._aggregate_event_data(chunks))
         return events
+
+    def _aggregate_tool_calls(
+        self, chunks: list[TextChunk], raw_events: list[dict[str, Any]]
+    ) -> list[ToolCall]:
+        """Extract tool calls from response.completed data."""
+        if self._response_data is None:
+            return []
+        return parse_tool_calls(self._response_data)
 
 
 class OpenResponsesTextClient(OpenResponsesMixin, TextClient):
@@ -90,7 +104,7 @@ class OpenResponsesTextClient(OpenResponsesMixin, TextClient):
     def _init_request(self, inputs: TextInput) -> dict[str, Any]:
         """Initialize request with input content."""
         if inputs.messages is not None:
-            return {"input": [message.model_dump() for message in inputs.messages]}
+            return {"input": serialize_messages(inputs.messages)}
 
         content: list[dict[str, Any]] = []
         if inputs.image is not None:
@@ -109,14 +123,11 @@ class OpenResponsesTextClient(OpenResponsesMixin, TextClient):
     ) -> TextContent:
         """Parse text content from response."""
         output = super()._parse_content(response_data)
-        for item in output:
-            if item.get("type") == "message":
-                for part in item.get("content", []):
-                    if part.get("type") == "output_text":
-                        text = part.get("text") or ""
-                        return text
+        return parse_content(output)
 
-        return ""
+    def _parse_tool_calls(self, response_data: dict[str, Any]) -> list[ToolCall]:
+        """Parse tool calls from OpenResponses response."""
+        return parse_tool_calls(response_data)
 
     def _stream_class(self) -> type[TextStream]:
         """Return the Stream class for this provider."""

@@ -10,6 +10,9 @@ from celeste.protocols.chatcompletions.parameters import (
 from celeste.protocols.chatcompletions.parameters import (
     TemperatureMapper as _TemperatureMapper,
 )
+from celeste.protocols.chatcompletions.parameters import (
+    ToolsMapper as _ToolsMapper,
+)
 from celeste.types import TextContent
 
 from ...parameters import TextParameter
@@ -33,10 +36,17 @@ class OutputSchemaMapper(_ResponseFormatMapper):
     name = TextParameter.OUTPUT_SCHEMA
 
 
+class ToolsMapper(_ToolsMapper):
+    """Map tools to DeepSeek's tools parameter (user-defined only)."""
+
+    name = TextParameter.TOOLS
+
+
 DEEPSEEK_PARAMETER_MAPPERS: list[ParameterMapper[TextContent]] = [
     TemperatureMapper(),
     MaxTokensMapper(),
     OutputSchemaMapper(),
+    ToolsMapper(),
 ]
 
 __all__ = ["DEEPSEEK_PARAMETER_MAPPERS"]

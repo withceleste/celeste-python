@@ -10,6 +10,9 @@ from celeste.protocols.chatcompletions.parameters import (
 from celeste.protocols.chatcompletions.parameters import (
     TemperatureMapper as _TemperatureMapper,
 )
+from celeste.protocols.chatcompletions.parameters import (
+    ToolsMapper as _ToolsMapper,
+)
 from celeste.providers.mistral.chat.parameters import (
     ResponseFormatMapper as _ResponseFormatMapper,
 )
@@ -63,11 +66,18 @@ class OutputSchemaMapper(_ResponseFormatMapper):
     name = TextParameter.OUTPUT_SCHEMA
 
 
+class ToolsMapper(_ToolsMapper):
+    """Map tools to Mistral's tools parameter."""
+
+    name = TextParameter.TOOLS
+
+
 MISTRAL_PARAMETER_MAPPERS: list[ParameterMapper[TextContent]] = [
     TemperatureMapper(),
     MaxTokensMapper(),
     ThinkingBudgetMapper(),
     OutputSchemaMapper(),
+    ToolsMapper(),
 ]
 
 __all__ = ["MISTRAL_PARAMETER_MAPPERS"]

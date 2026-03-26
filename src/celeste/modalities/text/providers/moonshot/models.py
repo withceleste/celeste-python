@@ -1,12 +1,27 @@
 """Moonshot models for text modality."""
 
-from celeste.constraints import ImagesConstraint, Range, Schema
+from celeste.constraints import ImagesConstraint, Range, Schema, ToolSupport
 from celeste.core import Modality, Operation, Parameter, Provider
 from celeste.models import Model
+from celeste.tools import WebSearch
 
 from ...parameters import TextParameter
 
 MODELS: list[Model] = [
+    Model(
+        id="kimi-k2.5",
+        provider=Provider.MOONSHOT,
+        display_name="Kimi K2.5",
+        operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
+        streaming=True,
+        parameter_constraints={
+            Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
+            Parameter.MAX_TOKENS: Range(min=1, max=65535, step=1),
+            TextParameter.OUTPUT_SCHEMA: Schema(),
+            TextParameter.IMAGE: ImagesConstraint(),
+            TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
+        },
+    ),
     Model(
         id="moonshot-v1-8k-vision-preview",
         provider=Provider.MOONSHOT,
@@ -18,6 +33,7 @@ MODELS: list[Model] = [
             Parameter.MAX_TOKENS: Range(min=1, max=8192, step=1),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.IMAGE: ImagesConstraint(),
+            TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
         },
     ),
     Model(
@@ -30,6 +46,7 @@ MODELS: list[Model] = [
             Parameter.TEMPERATURE: Range(min=0.0, max=1.0, step=0.01),
             Parameter.MAX_TOKENS: Range(min=1, max=32768, step=1),
             TextParameter.OUTPUT_SCHEMA: Schema(),
+            TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
         },
     ),
     Model(
@@ -42,6 +59,7 @@ MODELS: list[Model] = [
             Parameter.TEMPERATURE: Range(min=0.0, max=1.0, step=0.01),
             Parameter.MAX_TOKENS: Range(min=1, max=32768, step=1),
             TextParameter.OUTPUT_SCHEMA: Schema(),
+            TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
         },
     ),
     Model(
@@ -54,6 +72,7 @@ MODELS: list[Model] = [
             Parameter.TEMPERATURE: Range(min=0.0, max=1.0, step=0.01),
             Parameter.MAX_TOKENS: Range(min=1, max=32768, step=1),
             TextParameter.OUTPUT_SCHEMA: Schema(),
+            TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
         },
     ),
     Model(
@@ -66,6 +85,7 @@ MODELS: list[Model] = [
             Parameter.TEMPERATURE: Range(min=0.0, max=1.0, step=0.01),
             Parameter.MAX_TOKENS: Range(min=1, max=32768, step=1),
             TextParameter.OUTPUT_SCHEMA: Schema(),
+            TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
         },
     ),
     Model(
@@ -78,6 +98,7 @@ MODELS: list[Model] = [
             Parameter.TEMPERATURE: Range(min=0.0, max=1.0, step=0.01),
             Parameter.MAX_TOKENS: Range(min=1, max=32768, step=1),
             TextParameter.OUTPUT_SCHEMA: Schema(),
+            TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
         },
     ),
 ]

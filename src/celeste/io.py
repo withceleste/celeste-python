@@ -9,6 +9,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from celeste.artifacts import AudioArtifact, ImageArtifact, VideoArtifact
 from celeste.constraints import Constraint
 from celeste.core import InputType
+from celeste.tools import ToolCall
 
 
 class Input(BaseModel):
@@ -38,6 +39,7 @@ class Output[Content](BaseModel):
     usage: Usage = Field(default_factory=Usage)
     finish_reason: FinishReason | None = None
     metadata: dict[str, Any] = Field(default_factory=dict)
+    tool_calls: list[ToolCall] = Field(default_factory=list)
 
 
 class Chunk[Content](BaseModel):

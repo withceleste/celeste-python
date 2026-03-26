@@ -7,6 +7,7 @@ from celeste.exceptions import (
     ClientNotFoundError,
     ConstraintViolationError,
     Error,
+    InvalidToolError,
     MissingCredentialsError,
     ModalityNotFoundError,
     ModelNotFoundError,
@@ -16,6 +17,7 @@ from celeste.exceptions import (
     UnsupportedCapabilityError,
     UnsupportedParameterError,
     UnsupportedProviderError,
+    ValidationError,
 )
 from celeste.models import Model
 
@@ -367,4 +369,25 @@ class TestUnsupportedProviderError:
 
         exc = UnsupportedProviderError("test_provider")
         assert isinstance(exc, CredentialsError)
+        assert isinstance(exc, Error)
+
+
+class TestInvalidToolError:
+    """Test InvalidToolError exception."""
+
+    def test_creates_with_item(self) -> None:
+        """Test exception stores the invalid item."""
+        exc = InvalidToolError(42)
+        assert exc.item == 42
+        assert "int" in str(exc)
+
+    def test_message_includes_type_name(self) -> None:
+        """Test exception message shows the actual type passed."""
+        exc = InvalidToolError("web_search")
+        assert str(exc) == "Expected Tool instance or dict, got str"
+
+    def test_inherits_from_validation_error(self) -> None:
+        """Test InvalidToolError inherits from ValidationError."""
+        exc = InvalidToolError(42)
+        assert isinstance(exc, ValidationError)
         assert isinstance(exc, Error)
