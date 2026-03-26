@@ -30,7 +30,7 @@ from celeste.modalities.text import TextOutput, TextUsage  # noqa: E402
         for m in list_models(modality=Modality.TEXT, operation=Operation.ANALYZE)
         if not m.streaming and InputType.AUDIO in m.optional_input_types
     ],
-    ids=lambda m: f"{m.provider.value}-{m.id}",
+    ids=lambda m: f"{m.provider}-{m.id}",
 )
 @pytest.mark.integration
 @pytest.mark.asyncio
@@ -56,7 +56,7 @@ async def test_analyze_audio(model: Model, test_audio: AudioArtifact) -> None:
     # Empty/None content is valid for reasoning models that use all tokens for thinking
     if not response.content:
         assert response.finish_reason is not None, (
-            f"Model {model.provider.value}/{model.id} returned empty content without finish_reason"
+            f"Model {model.provider}/{model.id} returned empty content without finish_reason"
         )
     assert isinstance(response.usage, TextUsage), (
         f"Expected TextUsage, got {type(response.usage)}"

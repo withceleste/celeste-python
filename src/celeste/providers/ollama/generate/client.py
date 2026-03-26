@@ -23,7 +23,13 @@ class OllamaGenerateClient(APIMixin):
     - _content_fields: ClassVar - Content field names to exclude from metadata
     """
 
+    _default_base_url: ClassVar[str] = config.DEFAULT_BASE_URL
     _content_fields: ClassVar[set[str]] = {"image", "response"}
+
+    def _build_url(self, endpoint: str, streaming: bool = False) -> str:
+        """Build full URL for Ollama Generate API."""
+        base = self.base_url if self.base_url is not None else self._default_base_url
+        return f"{base}{endpoint}"
 
     def _build_request(
         self,
@@ -46,20 +52,17 @@ class OllamaGenerateClient(APIMixin):
         request_body: dict[str, Any],
         *,
         endpoint: str | None = None,
-        base_url: str | None = None,
         extra_headers: dict[str, str] | None = None,
         **parameters: Any,
     ) -> dict[str, Any]:
         """Make HTTP request to Ollama Generate API."""
         if endpoint is None:
             endpoint = config.OllamaGenerateEndpoint.GENERATE
-        if base_url is None:
-            base_url = config.DEFAULT_BASE_URL
 
         headers = self._json_headers(extra_headers)
 
         response = await self.http_client.post(
-            f"{base_url}{endpoint}",
+            self._build_url(endpoint),
             headers=headers,
             json_body=request_body,
         )
@@ -72,20 +75,17 @@ class OllamaGenerateClient(APIMixin):
         request_body: dict[str, Any],
         *,
         endpoint: str | None = None,
-        base_url: str | None = None,
         extra_headers: dict[str, str] | None = None,
         **parameters: Any,
     ) -> AsyncIterator[dict[str, Any]]:
         """Make NDJSON streaming request to Ollama Generate API."""
         if endpoint is None:
             endpoint = config.OllamaGenerateEndpoint.GENERATE
-        if base_url is None:
-            base_url = config.DEFAULT_BASE_URL
 
         headers = self._json_headers(extra_headers)
 
         return self.http_client.stream_post_ndjson(
-            f"{base_url}{endpoint}",
+            self._build_url(endpoint),
             headers=headers,
             json_body=request_body,
         )

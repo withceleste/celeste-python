@@ -176,6 +176,8 @@ class Credentials(BaseSettings):
 
         registered = _auth_registry.get(provider)
         if registered is None:
+            if override_key is not None:
+                return AuthHeader(secret=override_key)  # type: ignore[arg-type]  # validator converts str
             raise UnsupportedProviderError(provider=provider)
 
         # Auth class (GoogleADC, OAuth, etc.) → instantiate

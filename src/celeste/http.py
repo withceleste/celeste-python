@@ -9,7 +9,7 @@ from typing import Any
 import httpx
 from httpx_sse import aconnect_sse
 
-from celeste.core import Modality, Provider
+from celeste.core import Modality, Protocol, Provider
 
 logger = logging.getLogger(__name__)
 
@@ -246,10 +246,10 @@ class HTTPClient:
 
 
 # Module-level registry of shared HTTPClient instances
-_http_clients: dict[tuple[Provider, Modality], HTTPClient] = {}
+_http_clients: dict[tuple[Provider | Protocol, Modality], HTTPClient] = {}
 
 
-def get_http_client(provider: Provider, modality: Modality) -> HTTPClient:
+def get_http_client(provider: Provider | Protocol, modality: Modality) -> HTTPClient:
     """Get or create shared HTTP client for provider and modality combination.
 
     Args:

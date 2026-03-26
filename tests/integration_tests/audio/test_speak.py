@@ -29,7 +29,7 @@ from celeste.modalities.audio import AudioOutput, AudioUsage  # noqa: E402
         for m in list_models(modality=Modality.AUDIO, operation=Operation.SPEAK)
         if not m.streaming  # Streaming models tested in test_stream_speak
     ],
-    ids=lambda m: f"{m.provider.value}-{m.id}",
+    ids=lambda m: f"{m.provider}-{m.id}",
 )
 @pytest.mark.integration
 @pytest.mark.asyncio
@@ -57,7 +57,7 @@ async def test_speak(model: Model) -> None:
         f"Expected AudioArtifact content, got {type(response.content)}"
     )
     assert response.content.has_content, (
-        f"Model {model.provider.value}/{model.id} returned AudioArtifact with no content"
+        f"Model {model.provider}/{model.id} returned AudioArtifact with no content"
     )
     assert isinstance(response.usage, AudioUsage), (
         f"Expected AudioUsage, got {type(response.usage)}"

@@ -32,7 +32,7 @@ TEST_MAX_TOKENS = 200
         for m in list_models(modality=Modality.TEXT, operation=Operation.ANALYZE)
         if m.streaming and InputType.IMAGE in m.optional_input_types
     ],
-    ids=lambda m: f"{m.provider.value}-{m.id}",
+    ids=lambda m: f"{m.provider}-{m.id}",
 )
 @pytest.mark.integration
 @pytest.mark.asyncio
@@ -69,7 +69,7 @@ async def test_stream_analyze(model: Model, square_image: ImageArtifact) -> None
     if not content:
         usage_chunks = [c for c in chunks if c.usage is not None]
         assert usage_chunks, (
-            f"Model {model.provider.value}/{model.id} returned empty content without usage"
+            f"Model {model.provider}/{model.id} returned empty content without usage"
         )
 
     # Assert - usage in final chunks (provider-dependent)
@@ -79,7 +79,7 @@ async def test_stream_analyze(model: Model, square_image: ImageArtifact) -> None
         assert isinstance(usage, TextUsage), f"Expected TextUsage, got {type(usage)}"
         if usage.output_tokens is not None and usage.output_tokens > TEST_MAX_TOKENS:
             warnings.warn(
-                f"Model {model.provider.value}/{model.id} exceeded max_tokens: {usage.output_tokens} > {TEST_MAX_TOKENS}",
+                f"Model {model.provider}/{model.id} exceeded max_tokens: {usage.output_tokens} > {TEST_MAX_TOKENS}",
                 stacklevel=1,
             )
 

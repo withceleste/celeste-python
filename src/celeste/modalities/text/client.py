@@ -112,7 +112,6 @@ class TextStreamNamespace:
         prompt: str | None = None,
         *,
         messages: list[Message] | None = None,
-        base_url: str | None = None,
         extra_body: dict[str, Any] | None = None,
         extra_headers: dict[str, str] | None = None,
         **parameters: Unpack[TextParameters],
@@ -127,7 +126,6 @@ class TextStreamNamespace:
         return self._client._stream(
             inputs,
             stream_class=self._client._stream_class(),
-            base_url=base_url,
             extra_body=extra_body,
             extra_headers=extra_headers,
             **parameters,
@@ -141,7 +139,6 @@ class TextStreamNamespace:
         image: ImageContent | None = None,
         video: VideoContent | None = None,
         audio: AudioContent | None = None,
-        base_url: str | None = None,
         extra_body: dict[str, Any] | None = None,
         extra_headers: dict[str, str] | None = None,
         **parameters: Unpack[TextParameters],
@@ -166,7 +163,6 @@ class TextStreamNamespace:
         return self._client._stream(
             inputs,
             stream_class=self._client._stream_class(),
-            base_url=base_url,
             extra_body=extra_body,
             extra_headers=extra_headers,
             **parameters,
@@ -187,7 +183,6 @@ class TextSyncNamespace:
         prompt: str | None = None,
         *,
         messages: list[Message] | None = None,
-        base_url: str | None = None,
         extra_body: dict[str, Any] | None = None,
         extra_headers: dict[str, str] | None = None,
         **parameters: Unpack[TextParameters],
@@ -201,7 +196,6 @@ class TextSyncNamespace:
         inputs = TextInput(prompt=prompt, messages=messages)
         return async_to_sync(self._client._predict)(
             inputs,
-            base_url=base_url,
             extra_body=extra_body,
             extra_headers=extra_headers,
             **parameters,
@@ -215,7 +209,6 @@ class TextSyncNamespace:
         image: ImageContent | None = None,
         video: VideoContent | None = None,
         audio: AudioContent | None = None,
-        base_url: str | None = None,
         extra_body: dict[str, Any] | None = None,
         extra_headers: dict[str, str] | None = None,
         **parameters: Unpack[TextParameters],
@@ -239,7 +232,6 @@ class TextSyncNamespace:
         )
         return async_to_sync(self._client._predict)(
             inputs,
-            base_url=base_url,
             extra_body=extra_body,
             extra_headers=extra_headers,
             **parameters,
@@ -262,7 +254,6 @@ class TextSyncStreamNamespace:
         prompt: str | None = None,
         *,
         messages: list[Message] | None = None,
-        base_url: str | None = None,
         extra_body: dict[str, Any] | None = None,
         extra_headers: dict[str, str] | None = None,
         **parameters: Unpack[TextParameters],
@@ -281,7 +272,6 @@ class TextSyncStreamNamespace:
         return self._client.stream.generate(
             prompt,
             messages=messages,
-            base_url=base_url,
             extra_body=extra_body,
             extra_headers=extra_headers,
             **parameters,
@@ -295,7 +285,6 @@ class TextSyncStreamNamespace:
         image: ImageContent | None = None,
         video: VideoContent | None = None,
         audio: AudioContent | None = None,
-        base_url: str | None = None,
         extra_body: dict[str, Any] | None = None,
         extra_headers: dict[str, str] | None = None,
         **parameters: Unpack[TextParameters],
@@ -327,7 +316,6 @@ class TextSyncStreamNamespace:
             image=image,
             video=video,
             audio=audio,
-            base_url=base_url,
             extra_body=extra_body,
             extra_headers=extra_headers,
             **parameters,

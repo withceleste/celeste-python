@@ -32,7 +32,7 @@ TEST_MAX_TOKENS = 200
         if m.streaming
         and not m.optional_input_types  # Media-capable models tested in test_stream_analyze_*
     ],
-    ids=lambda m: f"{m.provider.value}-{m.id}",
+    ids=lambda m: f"{m.provider}-{m.id}",
 )
 @pytest.mark.integration
 @pytest.mark.asyncio
@@ -67,7 +67,7 @@ async def test_stream_generate(model: Model) -> None:
         assert isinstance(usage, TextUsage), f"Expected TextUsage, got {type(usage)}"
         if usage.output_tokens is not None and usage.output_tokens > TEST_MAX_TOKENS:
             warnings.warn(
-                f"Model {model.provider.value}/{model.id} exceeded max_tokens: {usage.output_tokens} > {TEST_MAX_TOKENS}",
+                f"Model {model.provider}/{model.id} exceeded max_tokens: {usage.output_tokens} > {TEST_MAX_TOKENS}",
                 stacklevel=1,
             )
 

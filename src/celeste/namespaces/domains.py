@@ -10,7 +10,7 @@ from pydantic import SecretStr
 
 from celeste import Authentication, create_client
 from celeste.artifacts import ImageArtifact
-from celeste.core import Modality, Operation, Provider
+from celeste.core import Modality, Operation, Protocol, Provider
 from celeste.modalities.audio.io import AudioOutput
 from celeste.modalities.audio.parameters import AudioParameters
 from celeste.modalities.audio.streaming import AudioStream
@@ -19,7 +19,7 @@ from celeste.modalities.embeddings.parameters import EmbeddingsParameters
 from celeste.modalities.images.io import ImageOutput
 from celeste.modalities.images.parameters import ImageParameters
 from celeste.modalities.images.streaming import ImagesStream
-from celeste.modalities.text.io import TextInput, TextOutput
+from celeste.modalities.text.io import TextOutput
 from celeste.modalities.text.parameters import TextParameters
 from celeste.modalities.text.streaming import TextStream
 from celeste.modalities.videos.io import VideoOutput
@@ -37,6 +37,7 @@ class SyncStreamTextNamespace:
         messages: list[Message] | None = None,
         model: str,
         provider: Provider | None = None,
+        protocol: Protocol | str | None = None,
         api_key: str | SecretStr | None = None,
         auth: Authentication | None = None,
         base_url: str | None = None,
@@ -49,13 +50,14 @@ class SyncStreamTextNamespace:
             operation=Operation.GENERATE,
             model=model,
             provider=provider,
+            protocol=protocol,
             api_key=api_key,
             auth=auth,
+            base_url=base_url,
         )
         return client.sync.stream.generate(
             prompt,
             messages=messages,
-            base_url=base_url,
             extra_body=extra_body,
             **params,
         )
@@ -71,6 +73,7 @@ class StreamTextNamespace:
         messages: list[Message] | None = None,
         model: str,
         provider: Provider | None = None,
+        protocol: Protocol | str | None = None,
         api_key: str | SecretStr | None = None,
         auth: Authentication | None = None,
         base_url: str | None = None,
@@ -83,13 +86,14 @@ class StreamTextNamespace:
             operation=Operation.GENERATE,
             model=model,
             provider=provider,
+            protocol=protocol,
             api_key=api_key,
             auth=auth,
+            base_url=base_url,
         )
         return client.stream.generate(
             prompt,
             messages=messages,
-            base_url=base_url,
             extra_body=extra_body,
             **params,
         )
@@ -105,6 +109,7 @@ class SyncTextNamespace:
         messages: list[Message] | None = None,
         model: str,
         provider: Provider | None = None,
+        protocol: Protocol | str | None = None,
         api_key: str | SecretStr | None = None,
         auth: Authentication | None = None,
         base_url: str | None = None,
@@ -117,13 +122,14 @@ class SyncTextNamespace:
             operation=Operation.GENERATE,
             model=model,
             provider=provider,
+            protocol=protocol,
             api_key=api_key,
             auth=auth,
+            base_url=base_url,
         )
         return client.sync.generate(
             prompt,
             messages=messages,
-            base_url=base_url,
             extra_body=extra_body,
             **params,
         )
@@ -168,6 +174,7 @@ class TextNamespace:
         messages: list[Message] | None = None,
         model: str,
         provider: Provider | None = None,
+        protocol: Protocol | str | None = None,
         api_key: str | SecretStr | None = None,
         auth: Authentication | None = None,
         base_url: str | None = None,
@@ -181,9 +188,10 @@ class TextNamespace:
             messages: List of messages for multi-turn conversations.
             model: Model ID to use (required).
             provider: Optional provider override.
+            protocol: Wire format protocol for compatible APIs (e.g., "openresponses").
             api_key: Optional API key override.
             auth: Optional Authentication object (e.g., GoogleADC for Vertex AI).
-            base_url: Optional base URL for OpenResponses providers.
+            base_url: Custom base URL for compatible APIs or proxy endpoints.
             extra_body: Optional provider-specific request body fields.
             **parameters: Additional model parameters.
 
@@ -195,12 +203,13 @@ class TextNamespace:
             operation=Operation.GENERATE,
             model=model,
             provider=provider,
+            protocol=protocol,
             api_key=api_key,
             auth=auth,
+            base_url=base_url,
         )
-        inputs = TextInput(prompt=prompt, messages=messages)
-        return await client._predict(
-            inputs, base_url=base_url, extra_body=extra_body, **parameters
+        return await client.generate(
+            prompt, messages=messages, extra_body=extra_body, **parameters
         )
 
     async def embed(

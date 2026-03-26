@@ -28,7 +28,7 @@ from celeste.modalities.audio import AudioChunk, AudioUsage  # noqa: E402
         for m in list_models(modality=Modality.AUDIO, operation=Operation.SPEAK)
         if m.streaming
     ],
-    ids=lambda m: f"{m.provider.value}-{m.id}",
+    ids=lambda m: f"{m.provider}-{m.id}",
 )
 @pytest.mark.integration
 @pytest.mark.asyncio
@@ -52,7 +52,7 @@ async def test_stream_speak(model: Model) -> None:
         chunks.append(chunk)
 
     # Assert - received at least one chunk
-    assert chunks, f"Model {model.provider.value}/{model.id} returned no chunks"
+    assert chunks, f"Model {model.provider}/{model.id} returned no chunks"
 
     # Assert - all chunks are valid type
     assert all(isinstance(c, AudioChunk) for c in chunks), (

@@ -32,7 +32,7 @@ TEST_MAX_TOKENS = 200
         for m in list_models(modality=Modality.TEXT, operation=Operation.ANALYZE)
         if not m.streaming and InputType.IMAGE in m.optional_input_types
     ],
-    ids=lambda m: f"{m.provider.value}-{m.id}",
+    ids=lambda m: f"{m.provider}-{m.id}",
 )
 @pytest.mark.integration
 @pytest.mark.asyncio
@@ -59,7 +59,7 @@ async def test_analyze(model: Model, square_image: ImageArtifact) -> None:
     # Empty/None content is valid for reasoning models that use all tokens for thinking
     if not response.content:
         assert response.finish_reason is not None, (
-            f"Model {model.provider.value}/{model.id} returned empty content without finish_reason"
+            f"Model {model.provider}/{model.id} returned empty content without finish_reason"
         )
     assert isinstance(response.usage, TextUsage), (
         f"Expected TextUsage, got {type(response.usage)}"
@@ -69,7 +69,7 @@ async def test_analyze(model: Model, square_image: ImageArtifact) -> None:
         and response.usage.output_tokens > TEST_MAX_TOKENS
     ):
         warnings.warn(
-            f"Model {model.provider.value}/{model.id} exceeded max_tokens: {response.usage.output_tokens} > {TEST_MAX_TOKENS}",
+            f"Model {model.provider}/{model.id} exceeded max_tokens: {response.usage.output_tokens} > {TEST_MAX_TOKENS}",
             stacklevel=1,
         )
 

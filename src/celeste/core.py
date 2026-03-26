@@ -25,8 +25,14 @@ class Provider(StrEnum):
     ELEVENLABS = "elevenlabs"
     GROQ = "groq"
     GRADIUM = "gradium"
-    OPENRESPONSES = "openresponses"
     OLLAMA = "ollama"
+
+
+class Protocol(StrEnum):
+    """Wire format protocols for compatible APIs."""
+
+    OPENRESPONSES = "openresponses"
+    CHATCOMPLETIONS = "chatcompletions"
 
 
 class Modality(StrEnum):
@@ -167,6 +173,7 @@ __all__ = [
     "Modality",
     "Operation",
     "Parameter",
+    "Protocol",
     "Provider",
     "UsageField",
     "infer_modality",
