@@ -30,7 +30,7 @@ from celeste.modalities.text import TextChunk, TextUsage  # noqa: E402
         for m in list_models(modality=Modality.TEXT, operation=Operation.ANALYZE)
         if m.streaming and InputType.VIDEO in m.optional_input_types
     ],
-    ids=lambda m: f"{m.provider.value}-{m.id}",
+    ids=lambda m: f"{m.provider}-{m.id}",
 )
 @pytest.mark.integration
 @pytest.mark.asyncio
@@ -66,7 +66,7 @@ async def test_stream_analyze_video(model: Model, test_video: VideoArtifact) -> 
     if not content:
         usage_chunks = [c for c in chunks if c.usage is not None]
         assert usage_chunks, (
-            f"Model {model.provider.value}/{model.id} returned empty content without usage"
+            f"Model {model.provider}/{model.id} returned empty content without usage"
         )
 
     # Assert - usage in final chunks (provider-dependent)

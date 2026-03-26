@@ -11,7 +11,7 @@ class Model(BaseModel):
     """Represents an AI model with its capabilities and metadata."""
 
     id: str
-    provider: Provider
+    provider: Provider | None = None
     display_name: str
     capabilities: set[Capability] = Field(default_factory=set)
     operations: dict[Modality, set[Operation]] = Field(default_factory=dict)
@@ -76,6 +76,9 @@ def register_models(
         models = [models]
 
     for model in models:
+        if model.provider is None:
+            msg = "Cannot register a model without a provider"
+            raise ValueError(msg)
         key = (model.id, model.provider)
 
         # Get existing or create new model with empty capabilities/constraints
@@ -136,10 +139,10 @@ def get_model(model_id: str, provider: Provider | None = None) -> Model | None:
     if len(matches) > 1:
         import warnings
 
-        providers = ", ".join(m.provider.value for m in matches)
+        providers = ", ".join(str(m.provider) for m in matches)
         warnings.warn(
             f"Model '{model_id}' found in multiple providers: {providers}. "
-            f"Using '{matches[0].provider.value}'.",
+            f"Using '{matches[0].provider}'.",
             UserWarning,
             stacklevel=2,
         )

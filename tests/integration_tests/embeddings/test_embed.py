@@ -28,7 +28,7 @@ from celeste.providers.google.auth import GoogleADC  # noqa: E402
 @pytest.mark.parametrize(
     "model",
     [m for m in list_models(modality=Modality.EMBEDDINGS, operation=Operation.EMBED)],
-    ids=lambda m: f"{m.provider.value}-{m.id}",
+    ids=lambda m: f"{m.provider}-{m.id}",
 )
 @pytest.mark.integration
 @pytest.mark.asyncio
@@ -45,7 +45,7 @@ async def test_embed_single(model: Model) -> None:
         f"Expected EmbeddingsOutput, got {type(response)}"
     )
     assert response.content is not None, (
-        f"Model {model.provider.value}/{model.id} returned None content"
+        f"Model {model.provider}/{model.id} returned None content"
     )
     # Single text input should return list[float]
     assert isinstance(response.content, list), "Content should be a list"
@@ -61,7 +61,7 @@ async def test_embed_single(model: Model) -> None:
 @pytest.mark.parametrize(
     "model",
     [m for m in list_models(modality=Modality.EMBEDDINGS, operation=Operation.EMBED)],
-    ids=lambda m: f"{m.provider.value}-{m.id}",
+    ids=lambda m: f"{m.provider}-{m.id}",
 )
 @pytest.mark.integration
 @pytest.mark.asyncio
@@ -78,7 +78,7 @@ async def test_embed_batch(model: Model) -> None:
         f"Expected EmbeddingsOutput, got {type(response)}"
     )
     assert response.content is not None, (
-        f"Model {model.provider.value}/{model.id} returned None content"
+        f"Model {model.provider}/{model.id} returned None content"
     )
     # Batch text input should return list[list[float]]
     assert isinstance(response.content, list), "Content should be a list"

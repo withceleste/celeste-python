@@ -74,15 +74,12 @@ class OpenResponsesTextClient(OpenResponsesMixin, TextClient):
         prompt: str | None = None,
         *,
         messages: list[Message] | None = None,
-        base_url: str | None = None,
         extra_body: dict[str, Any] | None = None,
         **parameters: Unpack[TextParameters],
     ) -> TextOutput:
         """Generate text from prompt."""
         inputs = TextInput(prompt=prompt, messages=messages)
-        return await self._predict(
-            inputs, base_url=base_url, extra_body=extra_body, **parameters
-        )
+        return await self._predict(inputs, extra_body=extra_body, **parameters)
 
     async def analyze(
         self,
@@ -91,15 +88,12 @@ class OpenResponsesTextClient(OpenResponsesMixin, TextClient):
         messages: list[Message] | None = None,
         image: ImageContent | None = None,
         video: VideoContent | None = None,
-        base_url: str | None = None,
         extra_body: dict[str, Any] | None = None,
         **parameters: Unpack[TextParameters],
     ) -> TextOutput:
         """Analyze image(s) or video(s) with prompt or messages."""
         inputs = TextInput(prompt=prompt, messages=messages, image=image, video=video)
-        return await self._predict(
-            inputs, base_url=base_url, extra_body=extra_body, **parameters
-        )
+        return await self._predict(inputs, extra_body=extra_body, **parameters)
 
     def _init_request(self, inputs: TextInput) -> dict[str, Any]:
         """Initialize request with input content."""

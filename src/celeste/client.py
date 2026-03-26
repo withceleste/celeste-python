@@ -10,8 +10,12 @@ import httpx
 from pydantic import BaseModel, ConfigDict, Field
 
 from celeste.auth import Authentication
-from celeste.core import Modality, Provider
-from celeste.exceptions import StreamingNotSupportedError, UnsupportedParameterWarning
+from celeste.core import Modality, Protocol, Provider
+from celeste.exceptions import (
+    ClientNotFoundError,
+    StreamingNotSupportedError,
+    UnsupportedParameterWarning,
+)
 from celeste.http import HTTPClient, get_http_client
 from celeste.io import Chunk as ChunkBase
 from celeste.io import FinishReason, Input, Output, Usage
@@ -47,7 +51,9 @@ class APIMixin(ABC):
 
     model: Model
     auth: Authentication
-    provider: Provider
+    provider: Provider | None
+    protocol: Protocol | None
+    base_url: str | None
     _content_fields: ClassVar[set[str]] = set()
 
     @property
@@ -160,13 +166,19 @@ class ModalityClient[
 
     modality: Modality
     model: Model
-    provider: Provider
+    provider: Provider | None = None
+    protocol: Protocol | None = None
     auth: Authentication = Field(exclude=True)
+    base_url: str | None = Field(None, exclude=True)
 
     @property
     def http_client(self) -> HTTPClient:
         """Shared HTTP client with connection pooling."""
-        return get_http_client(self.provider, self.modality)
+        if self.provider is not None:
+            return get_http_client(self.provider, self.modality)
+        if self.protocol is not None:
+            return get_http_client(self.protocol, self.modality)
+        raise ClientNotFoundError(modality=self.modality)
 
     # Namespace properties - implemented by modality clients
     @property
@@ -226,7 +238,6 @@ class ModalityClient[
         stream_class: type[Stream[Out, Params, Chunk]],
         *,
         endpoint: str | None = None,
-        base_url: str | None = None,
         extra_body: dict[str, Any] | None = None,
         extra_headers: dict[str, str] | None = None,
         **parameters: Unpack[Params],  # type: ignore[misc]
@@ -259,7 +270,6 @@ class ModalityClient[
         sse_iterator = self._make_stream_request(
             request_body,
             endpoint=endpoint,
-            base_url=base_url,
             extra_headers=extra_headers,
             **parameters,
         )
@@ -269,7 +279,7 @@ class ModalityClient[
             transform_output=self._transform_output,
             stream_metadata={
                 "model": self.model.id,
-                "provider": self.provider,
+                "provider": self.provider or self.protocol,
                 "modality": self.modality,
             },
             **parameters,
@@ -361,12 +371,16 @@ class ModalityClient[
             response_data = {
                 k: v for k, v in response_data.items() if k not in self._content_fields
             }
-        return {
+        metadata: dict[str, Any] = {
             "model": self.model.id,
-            "provider": self.provider,
             "modality": self.modality,
             "raw_response": response_data,
         }
+        if self.provider is not None:
+            metadata["provider"] = self.provider
+        if self.protocol is not None:
+            metadata["protocol"] = self.protocol
+        return metadata
 
     def _handle_error_response(self, response: httpx.Response) -> None:
         """Handle error responses from provider APIs."""
@@ -383,7 +397,7 @@ class ModalityClient[
                 error_msg = response.text or f"HTTP {response.status_code}"
 
             raise httpx.HTTPStatusError(
-                f"{self.provider} API error: {error_msg}",
+                f"{self.provider or self.protocol} API error: {error_msg}",
                 request=response.request,
                 response=response,
             )

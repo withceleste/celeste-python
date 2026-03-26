@@ -49,7 +49,8 @@ class OpenResponsesClient(APIMixin):
                     return self.auth.build_url(self._get_vertex_endpoint(endpoint, streaming))
                 return super()._build_url(endpoint, streaming)
         """
-        return f"{self._default_base_url}{endpoint}"
+        base = self.base_url if self.base_url is not None else self._default_base_url
+        return f"{base}{endpoint}"
 
     def _build_request(
         self,

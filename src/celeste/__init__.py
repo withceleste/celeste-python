@@ -6,13 +6,14 @@ import warnings
 from pydantic import SecretStr
 
 from celeste import providers as _providers  # noqa: F401
-from celeste.auth import APIKey, Authentication
+from celeste.auth import APIKey, Authentication, AuthHeader, NoAuth
 from celeste.client import ModalityClient
 from celeste.core import (
     Capability,
     Modality,
     Operation,
     Parameter,
+    Protocol,
     Provider,
     UsageField,
 )
@@ -42,6 +43,8 @@ from celeste.modalities.embeddings.providers import PROVIDERS as _embeddings_pro
 from celeste.modalities.images.models import MODELS as _images_models
 from celeste.modalities.images.providers import PROVIDERS as _images_providers
 from celeste.modalities.text.models import MODELS as _text_models
+from celeste.modalities.text.protocols.chatcompletions import ChatCompletionsTextClient
+from celeste.modalities.text.protocols.openresponses import OpenResponsesTextClient
 from celeste.modalities.text.providers import PROVIDERS as _text_providers
 from celeste.modalities.videos.models import MODELS as _videos_models
 from celeste.modalities.videos.providers import PROVIDERS as _videos_providers
@@ -58,12 +61,15 @@ from celeste.websocket import WebSocketClient, WebSocketConnection, close_all_ws
 
 logger = logging.getLogger(__name__)
 
-_CLIENT_MAP: dict[tuple[Modality, Provider], type[ModalityClient]] = {
+_CLIENT_MAP: dict[tuple[Modality, Provider | Protocol], type[ModalityClient]] = {
     **{(Modality.TEXT, p): c for p, c in _text_providers.items()},
     **{(Modality.IMAGES, p): c for p, c in _images_providers.items()},
     **{(Modality.VIDEOS, p): c for p, c in _videos_providers.items()},
     **{(Modality.AUDIO, p): c for p, c in _audio_providers.items()},
     **{(Modality.EMBEDDINGS, p): c for p, c in _embeddings_providers.items()},
+    # Protocol entries (for compatible APIs via protocol= + base_url=)
+    (Modality.TEXT, Protocol.OPENRESPONSES): OpenResponsesTextClient,
+    (Modality.TEXT, Protocol.CHATCOMPLETIONS): ChatCompletionsTextClient,
 }
 
 for _model in [
@@ -73,6 +79,7 @@ for _model in [
     *_audio_models,
     *_embeddings_models,
 ]:
+    assert _model.provider is not None
     _models[(_model.id, _model.provider)] = _model
 
 _CAPABILITY_TO_MODALITY_OPERATION: dict[Capability, tuple[Modality, Operation]] = {
@@ -89,6 +96,7 @@ def _resolve_model(
     operation: Operation | None = None,
     provider: Provider | None = None,
     model: Model | str | None = None,
+    protocol: Protocol | None = None,
 ) -> Model:
     """Resolve model parameter to Model object (auto-select if None, lookup if string)."""
     if model is None:
@@ -110,6 +118,21 @@ def _resolve_model(
     if isinstance(model, str):
         found = get_model(model, provider)
         if not found:
+            # Protocol path: unregistered models are expected
+            if protocol is not None:
+                if modality is None:
+                    msg = f"Model '{model}' not registered. Specify 'modality' explicitly."
+                    raise ValueError(msg)
+                operations: dict[Modality, set[Operation]] = {}
+                if modality is not None:
+                    operations[modality] = {operation} if operation else set()
+                return Model(
+                    id=model,
+                    provider=provider,
+                    display_name=model,
+                    operations=operations,
+                    streaming=True,
+                )
             if provider is None:
                 raise ModelNotFoundError(model_id=model, provider=provider)
             if modality is None:
@@ -121,7 +144,7 @@ def _resolve_model(
                 UserWarning,
                 stacklevel=3,
             )
-            operations: dict[Modality, set[Operation]] = {}
+            operations = {}
             if modality is not None:
                 operations[modality] = {operation} if operation else set()
             return Model(
@@ -164,32 +187,31 @@ def create_client(
     model: Model | str | None = None,
     api_key: str | SecretStr | None = None,
     auth: Authentication | None = None,
+    protocol: Protocol | str | None = None,
+    base_url: str | None = None,
 ) -> ModalityClient:
     """Create an async client for the specified AI capability or modality.
 
     Args:
         capability: The AI capability to use (deprecated, use modality instead).
-                    If not provided and model is specified, capability is inferred
-                    from the model (if unambiguous).
         modality: The modality to use (e.g., Modality.IMAGES, "images").
-                  Preferred over capability for new code.
         operation: The operation to use (e.g., Operation.GENERATE, "generate").
-                   If not provided and model supports exactly one operation for the
-                   modality, it is inferred automatically.
-        provider: Optional provider. If not specified and model ID matches multiple
-                  providers, the first match is used with a warning.
+        provider: Optional provider (e.g., Provider.OPENAI).
         model: Model object, string model ID, or None for auto-selection.
         api_key: Optional API key override (string or SecretStr).
         auth: Optional Authentication object for custom auth (e.g., GoogleADC).
+        protocol: Wire format protocol for compatible APIs (e.g., "openresponses",
+                  "chatcompletions"). Use with base_url for third-party compatible APIs.
+        base_url: Custom base URL override. Use with protocol for compatible APIs,
+                  or with provider to proxy through a custom endpoint.
 
     Returns:
         Configured client instance ready for generation operations.
 
     Raises:
         ModelNotFoundError: If no model found for the specified capability/provider.
-        ClientNotFoundError: If no client registered for capability/provider.
+        ClientNotFoundError: If no client registered for capability/provider/protocol.
         MissingCredentialsError: If required credentials are not configured.
-        UnsupportedCapabilityError: If the resolved model doesn't support the requested capability.
         ValueError: If capability/operation cannot be inferred from model.
     """
     # Translation layer: convert deprecated capability to modality/operation
@@ -213,32 +235,53 @@ def create_client(
         Operation(operation) if isinstance(operation, str) else operation
     )
     resolved_provider = Provider(provider) if isinstance(provider, str) else provider
+    resolved_protocol = Protocol(protocol) if isinstance(protocol, str) else protocol
+
+    # Default to openresponses when base_url is given without protocol or provider
+    if base_url is not None and resolved_protocol is None and resolved_provider is None:
+        resolved_protocol = Protocol.OPENRESPONSES
 
     resolved_model = _resolve_model(
         modality=resolved_modality,
         operation=resolved_operation,
         provider=resolved_provider,
         model=model,
+        protocol=resolved_protocol,
     )
 
-    key = (resolved_modality, resolved_model.provider)
-    if key not in _CLIENT_MAP:
-        raise ClientNotFoundError(
-            modality=resolved_modality, provider=resolved_model.provider
+    # Client lookup: protocol takes precedence for compatible API path
+    target = (
+        resolved_protocol if resolved_protocol is not None else resolved_model.provider
+    )
+    if target is None:
+        raise ClientNotFoundError(modality=resolved_modality)
+
+    if (resolved_modality, target) not in _CLIENT_MAP:
+        raise ClientNotFoundError(modality=resolved_modality, provider=target)
+    modality_client_class = _CLIENT_MAP[(resolved_modality, target)]
+
+    # Auth resolution: BYOA for protocol path, credentials for provider path
+    if resolved_protocol is not None and resolved_provider is None:
+        if auth is not None:
+            resolved_auth = auth
+        elif api_key is not None:
+            resolved_auth = AuthHeader(secret=api_key)  # type: ignore[arg-type]  # validator converts str
+        else:
+            resolved_auth = NoAuth()
+    else:
+        resolved_auth = credentials.get_auth(
+            resolved_model.provider,  # type: ignore[arg-type]  # always Provider in this branch
+            override_auth=auth,
+            override_key=api_key,
         )
-    modality_client_class = _CLIENT_MAP[key]
-
-    resolved_auth = credentials.get_auth(
-        resolved_model.provider,
-        override_auth=auth,
-        override_key=api_key,
-    )
 
     return modality_client_class(
         modality=resolved_modality,
         model=resolved_model,
-        provider=resolved_model.provider,
+        provider=resolved_provider,
+        protocol=resolved_protocol,
         auth=resolved_auth,
+        base_url=base_url,
     )
 
 
@@ -264,6 +307,7 @@ __all__ = [
     "Output",
     "Parameter",
     "Parameters",
+    "Protocol",
     "Provider",
     "RefResolvingJsonSchemaGenerator",
     "Role",
