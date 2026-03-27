@@ -15,7 +15,7 @@ class WebSearchMapper(ToolMapper):
 
     def map_tool(self, tool: Tool) -> dict[str, Any]:
         assert isinstance(tool, WebSearch)
-        for field in tool.model_fields:
+        for field in type(tool).model_fields:
             if field not in self._supported_fields and getattr(tool, field) is not None:
                 warnings.warn(
                     f"WebSearch.{field} is not supported by Moonshot "
