@@ -12,29 +12,15 @@ from celeste.core import (
     Capability,
     Modality,
     Operation,
-    Parameter,
     Protocol,
     Provider,
-    UsageField,
 )
 from celeste.credentials import credentials
 from celeste.exceptions import (
     ClientNotFoundError,
-    ConstraintViolationError,
     Error,
-    MissingCredentialsError,
     ModelNotFoundError,
-    StreamEmptyError,
-    StreamEventError,
-    StreamingNotSupportedError,
-    StreamNotExhaustedError,
-    UnsupportedCapabilityError,
-    UnsupportedParameterError,
-    UnsupportedParameterWarning,
-    UnsupportedProviderError,
-    ValidationError,
 )
-from celeste.http import HTTPClient, close_all_http_clients
 from celeste.io import Input, Output, Usage
 from celeste.modalities.audio.models import MODELS as _audio_models
 from celeste.modalities.audio.providers import PROVIDERS as _audio_providers
@@ -49,15 +35,8 @@ from celeste.modalities.text.providers import PROVIDERS as _text_providers
 from celeste.modalities.videos.models import MODELS as _videos_models
 from celeste.modalities.videos.providers import PROVIDERS as _videos_providers
 from celeste.models import Model, _models, get_model, list_models, register_models
-from celeste.parameters import Parameters
-from celeste.structured_outputs import (
-    RefResolvingJsonSchemaGenerator,
-    StrictJsonSchemaGenerator,
-    StrictRefResolvingJsonSchemaGenerator,
-)
 from celeste.tools import CodeExecution, Tool, ToolCall, ToolResult, WebSearch, XSearch
-from celeste.types import Content, JsonValue, Message, Role
-from celeste.websocket import WebSocketClient, WebSocketConnection, close_all_ws_clients
+from celeste.types import Content, Message, Role
 
 logger = logging.getLogger(__name__)
 
@@ -290,51 +269,25 @@ __all__ = [
     "APIKey",
     "Authentication",
     "Capability",
-    "ClientNotFoundError",
     "CodeExecution",
-    "ConstraintViolationError",
     "Content",
     "Error",
-    "HTTPClient",
     "Input",
-    "JsonValue",
     "Message",
-    "MissingCredentialsError",
     "Modality",
-    "ModalityClient",
     "Model",
-    "ModelNotFoundError",
     "Operation",
     "Output",
-    "Parameter",
-    "Parameters",
     "Protocol",
     "Provider",
-    "RefResolvingJsonSchemaGenerator",
     "Role",
-    "StreamEmptyError",
-    "StreamEventError",
-    "StreamNotExhaustedError",
-    "StreamingNotSupportedError",
-    "StrictJsonSchemaGenerator",
-    "StrictRefResolvingJsonSchemaGenerator",
     "Tool",
     "ToolCall",
     "ToolResult",
-    "UnsupportedCapabilityError",
-    "UnsupportedParameterError",
-    "UnsupportedParameterWarning",
-    "UnsupportedProviderError",
     "Usage",
-    "UsageField",
-    "ValidationError",
     "WebSearch",
-    "WebSocketClient",
-    "WebSocketConnection",
     "XSearch",
     "audio",
-    "close_all_http_clients",
-    "close_all_ws_clients",
     "create_client",
     "get_model",
     "images",
