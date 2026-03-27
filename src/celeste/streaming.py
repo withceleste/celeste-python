@@ -1,13 +1,13 @@
 """Streaming support for Celeste."""
 
 from abc import ABC, abstractmethod
-from collections.abc import AsyncIterator, Callable
-from contextlib import AbstractContextManager, suppress
+from collections.abc import AsyncIterator, Callable, Iterator
+from contextlib import suppress
 from types import TracebackType
 from typing import Any, ClassVar, Self, Unpack
 
 import httpx
-from anyio.from_thread import BlockingPortal, start_blocking_portal
+from anyio.from_thread import start_blocking_portal
 
 from celeste.exceptions import StreamEventError, StreamNotExhaustedError
 from celeste.io import Chunk as ChunkBase
@@ -63,9 +63,8 @@ class Stream[Out: Output, Params: Parameters, Chunk: ChunkBase](ABC):
         self._parameters = parameters
         self._transform_output = transform_output
         self._stream_metadata = stream_metadata or {}
-        # Sync iteration state
-        self._portal: BlockingPortal | None = None
-        self._portal_cm: AbstractContextManager[BlockingPortal] | None = None
+        # Sync iteration state (portal lifecycle managed by __iter__ generator)
+        self._sync_generator: Iterator[Chunk] | None = None
 
     def _build_error_from_value(self, error: Any) -> dict[str, Any]:  # noqa: ANN401
         """Extract {type, message} from an error value using _error_type_fields."""
@@ -267,38 +266,26 @@ class Stream[Out: Output, Params: Parameters, Chunk: ChunkBase](ABC):
         raise StopAsyncIteration
 
     # Iterator protocol (sync)
-    def __iter__(self) -> Self:
-        """Return self as sync iterator with dedicated event loop.
+    def __iter__(self) -> Iterator[Chunk]:
+        """Sync iterator using a generator with try/finally for guaranteed cleanup.
 
-        Creates a blocking portal that maintains a persistent event loop
-        in a dedicated thread for consistent async context.
+        Creates a blocking portal in a dedicated thread. The generator's finally
+        block ensures the portal is cleaned up on exhaustion, break, exception,
+        or garbage collection — unlike __next__ which only cleans up on exhaustion.
         """
-        if self._portal is None:
-            self._portal_cm = start_blocking_portal()
-            self._portal = self._portal_cm.__enter__()
-        return self
-
-    def __next__(self) -> Chunk:
-        """Yield next chunk via portal's persistent event loop."""
-        if self._portal is None:
-            self.__iter__()
-
+        portal_cm = start_blocking_portal()
+        portal = portal_cm.__enter__()
         try:
-            return self._portal.call(self.__anext__)  # type: ignore[union-attr,no-any-return]
-        except StopAsyncIteration:
-            self._cleanup_portal()
-            raise StopIteration from None
-
-    def _cleanup_portal(self) -> None:
-        """Clean up the blocking portal and its thread."""
-        if self._portal_cm is not None:
-            # Close stream via portal before exiting (ensures _closed = True)
-            if self._portal is not None and not self._closed:
+            while True:
+                try:
+                    yield portal.call(self.__anext__)
+                except StopAsyncIteration:
+                    return
+        finally:
+            if not self._closed:
                 with suppress(RuntimeError):
-                    self._portal.call(self.aclose)
-            self._portal_cm.__exit__(None, None, None)
-            self._portal = None
-            self._portal_cm = None
+                    portal.call(self.aclose)
+            portal_cm.__exit__(None, None, None)
 
     # AsyncContextManager protocol
     async def __aenter__(self) -> Self:
@@ -326,8 +313,8 @@ class Stream[Out: Output, Params: Parameters, Chunk: ChunkBase](ABC):
         exc_val: BaseException | None,
         exc_tb: TracebackType | None,
     ) -> None:
-        """Exit sync context - ensure cleanup."""
-        self._cleanup_portal()
+        """Exit sync context. Portal cleanup is handled by __iter__ generator's finally."""
+        return
 
     @property
     def output(self) -> Out:

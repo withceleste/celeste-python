@@ -28,7 +28,7 @@ class WebSearchMapper(ToolMapper):
         result: dict[str, Any] = {"type": "web_search"}
         if tool.allowed_domains is not None:
             result.setdefault("filters", {})["allowed_domains"] = tool.allowed_domains
-        for field in tool.model_fields:
+        for field in type(tool).model_fields:
             if field not in self._supported_fields and getattr(tool, field) is not None:
                 warnings.warn(
                     f"WebSearch.{field} is not supported by OpenResponses "

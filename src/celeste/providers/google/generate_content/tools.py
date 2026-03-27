@@ -18,7 +18,7 @@ class WebSearchMapper(ToolMapper):
         config: dict[str, Any] = {}
         if tool.blocked_domains is not None:
             config["exclude_domains"] = tool.blocked_domains
-        for field in tool.model_fields:
+        for field in type(tool).model_fields:
             if field not in self._supported_fields and getattr(tool, field) is not None:
                 warnings.warn(
                     f"WebSearch.{field} is not supported by Google "
