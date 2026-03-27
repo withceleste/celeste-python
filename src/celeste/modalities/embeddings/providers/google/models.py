@@ -16,4 +16,13 @@ MODELS: list[Model] = [
             EmbeddingsParameter.DIMENSIONS: Choice(options=[768, 1536, 3072]),
         },
     ),
+    Model(
+        id="gemini-embedding-2-preview",
+        provider=Provider.GOOGLE,
+        display_name="Gemini Embedding 2 Preview",
+        operations={Modality.EMBEDDINGS: {Operation.EMBED}},
+        parameter_constraints={
+            EmbeddingsParameter.DIMENSIONS: Choice(options=[768, 1536, 3072]),
+        },
+    ),
 ]
