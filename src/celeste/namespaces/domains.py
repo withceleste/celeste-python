@@ -802,6 +802,27 @@ class SyncAudioNamespace:
         )
         return client.sync.analyze(prompt, messages=messages, audio=audio, **params)
 
+    def embed(
+        self,
+        audio: AudioContent,
+        *,
+        model: str,
+        provider: Provider | None = None,
+        api_key: str | SecretStr | None = None,
+        auth: Authentication | None = None,
+        **params: Unpack[EmbeddingsParameters],
+    ) -> EmbeddingsOutput:
+        """Blocking audio embeddings generation."""
+        client = create_client(
+            modality=Modality.EMBEDDINGS,
+            operation=Operation.EMBED,
+            model=model,
+            provider=provider,
+            api_key=api_key,
+            auth=auth,
+        )
+        return client.sync.embed(audio=audio, **params)
+
     @property
     def stream(self) -> SyncStreamAudioNamespace:
         """Access sync streaming audio operations."""
@@ -885,6 +906,39 @@ class AudioNamespace:
         return await client.analyze(
             prompt, messages=messages, audio=audio, **parameters
         )
+
+    async def embed(
+        self,
+        audio: AudioContent,
+        *,
+        model: str,
+        provider: Provider | None = None,
+        api_key: str | SecretStr | None = None,
+        auth: Authentication | None = None,
+        **parameters: Unpack[EmbeddingsParameters],
+    ) -> EmbeddingsOutput:
+        """Generate embeddings from audio.
+
+        Args:
+            audio: Audio or list of audio files to embed.
+            model: Model ID to use (required).
+            provider: Optional provider override.
+            api_key: Optional API key override.
+            auth: Optional Authentication object (e.g., GoogleADC for Vertex AI).
+            **parameters: Additional model parameters.
+
+        Returns:
+            EmbeddingsOutput with embedding vectors.
+        """
+        client = create_client(
+            modality=Modality.EMBEDDINGS,
+            operation=Operation.EMBED,
+            model=model,
+            provider=provider,
+            api_key=api_key,
+            auth=auth,
+        )
+        return await client.embed(audio=audio, **parameters)
 
     @property
     def sync(self) -> SyncAudioNamespace:

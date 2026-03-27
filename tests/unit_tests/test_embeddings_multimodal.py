@@ -3,10 +3,10 @@
 from pydantic import SecretStr
 
 from celeste import Model
-from celeste.artifacts import ImageArtifact, VideoArtifact
+from celeste.artifacts import AudioArtifact, ImageArtifact, VideoArtifact
 from celeste.auth import AuthHeader
 from celeste.core import Modality, Operation, Provider
-from celeste.mime_types import ImageMimeType, VideoMimeType
+from celeste.mime_types import AudioMimeType, ImageMimeType, VideoMimeType
 from celeste.modalities.embeddings.io import EmbeddingsInput
 from celeste.modalities.embeddings.providers.google.client import GoogleEmbeddingsClient
 
@@ -111,3 +111,15 @@ def test_image_with_url_uses_file_data() -> None:
     parts = request["content"]["parts"]
     assert "file_data" in parts[0]
     assert parts[0]["file_data"]["file_uri"] == "https://example.com/image.png"
+
+
+def test_single_audio() -> None:
+    client = _make_client()
+    aud = AudioArtifact(data=b"\x00" * 10, mime_type=AudioMimeType.MP3)
+    request = client._init_request(EmbeddingsInput(audio=aud))
+
+    assert "content" in request
+    parts = request["content"]["parts"]
+    assert len(parts) == 1
+    assert "inline_data" in parts[0]
+    assert parts[0]["inline_data"]["mime_type"] == "audio/mpeg"

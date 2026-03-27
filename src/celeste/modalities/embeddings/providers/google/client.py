@@ -3,7 +3,7 @@
 import base64
 from typing import Any
 
-from celeste.artifacts import ImageArtifact, VideoArtifact
+from celeste.artifacts import AudioArtifact, ImageArtifact, VideoArtifact
 from celeste.parameters import ParameterMapper
 from celeste.providers.google.embeddings.client import (
     GoogleEmbeddingsClient as GoogleEmbeddingsMixin,
@@ -44,6 +44,16 @@ class GoogleEmbeddingsClient(GoogleEmbeddingsMixin, EmbeddingsClient):
         mime_str = mime.value if mime else None
         return {"inline_data": {"mime_type": mime_str, "data": b64}}
 
+    def _build_audio_part(self, audio: AudioArtifact) -> dict[str, Any]:
+        """Build a Gemini part from an AudioArtifact."""
+        if audio.url:
+            return {"file_data": {"file_uri": audio.url}}
+        audio_bytes = audio.get_bytes()
+        b64 = base64.b64encode(audio_bytes).decode("utf-8")
+        mime = audio.mime_type or detect_mime_type(audio_bytes)
+        mime_str = mime.value if mime else None
+        return {"inline_data": {"mime_type": mime_str, "data": b64}}
+
     def _init_request(self, inputs: EmbeddingsInput) -> dict[str, Any]:
         """Build Google embeddings request from inputs."""
         # Batch images → separate embeddings via batchEmbedContents
@@ -70,8 +80,24 @@ class GoogleEmbeddingsClient(GoogleEmbeddingsMixin, EmbeddingsClient):
                 ]
             }
 
+        # Batch audio → separate embeddings via batchEmbedContents
+        if isinstance(inputs.audio, list):
+            return {
+                "requests": [
+                    {
+                        "model": f"models/{self.model.id}",
+                        "content": {"parts": [self._build_audio_part(aud)]},
+                    }
+                    for aud in inputs.audio
+                ]
+            }
+
         # Single/combined multimodal → one aggregated embedding
-        if inputs.images is not None or inputs.videos is not None:
+        if (
+            inputs.images is not None
+            or inputs.videos is not None
+            or inputs.audio is not None
+        ):
             parts: list[dict[str, Any]] = []
             if inputs.text is not None:
                 parts.append({"text": inputs.text})
@@ -79,6 +105,8 @@ class GoogleEmbeddingsClient(GoogleEmbeddingsMixin, EmbeddingsClient):
                 parts.append(self._build_image_part(inputs.images))
             if inputs.videos is not None:
                 parts.append(self._build_video_part(inputs.videos))
+            if inputs.audio is not None:
+                parts.append(self._build_audio_part(inputs.audio))
             return {"content": {"parts": parts}}
 
         # Text-only (existing behavior)

@@ -2,8 +2,8 @@
 
 import pytest
 
-from celeste.artifacts import ImageArtifact, VideoArtifact
-from celeste.mime_types import ImageMimeType, VideoMimeType
+from celeste.artifacts import AudioArtifact, ImageArtifact, VideoArtifact
+from celeste.mime_types import AudioMimeType, ImageMimeType, VideoMimeType
 from celeste.modalities.embeddings.io import EmbeddingsInput
 
 _TEST_PNG_BYTES = (
@@ -69,3 +69,16 @@ def test_batch_text_with_video_raises() -> None:
     vid = VideoArtifact(data=b"\x00" * 10, mime_type=VideoMimeType.MP4)
     with pytest.raises(Exception, match="Batch text"):
         EmbeddingsInput(text=["a", "b"], videos=vid)
+
+
+def test_audio_only() -> None:
+    aud = AudioArtifact(data=b"\x00" * 10, mime_type=AudioMimeType.MP3)
+    inp = EmbeddingsInput(audio=aud)
+    assert inp.audio is not None
+    assert inp.text is None
+
+
+def test_batch_text_with_audio_raises() -> None:
+    aud = AudioArtifact(data=b"\x00" * 10, mime_type=AudioMimeType.MP3)
+    with pytest.raises(Exception, match="Batch text"):
+        EmbeddingsInput(text=["a", "b"], audio=aud)
