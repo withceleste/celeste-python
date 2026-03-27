@@ -20,7 +20,7 @@ class TextClient(
 ):
     """Base text client.
 
-    Providers implement operation methods (generate, analyze).
+    Provides default ``generate()`` and ``analyze()`` operations.
     """
 
     modality: Modality = Modality.TEXT
@@ -39,6 +39,43 @@ class TextClient(
     def _output_class(cls) -> type[TextOutput]:
         """Return the Output class for text modality."""
         return TextOutput
+
+    async def generate(
+        self,
+        prompt: str | None = None,
+        *,
+        messages: list[Message] | None = None,
+        extra_body: dict[str, Any] | None = None,
+        extra_headers: dict[str, str] | None = None,
+        **parameters: Unpack[TextParameters],
+    ) -> TextOutput:
+        """Generate text from prompt."""
+        inputs = TextInput(prompt=prompt, messages=messages)
+        return await self._predict(
+            inputs, extra_body=extra_body, extra_headers=extra_headers, **parameters
+        )
+
+    async def analyze(
+        self,
+        prompt: str | None = None,
+        *,
+        messages: list[Message] | None = None,
+        image: ImageContent | None = None,
+        video: VideoContent | None = None,
+        audio: AudioContent | None = None,
+        extra_body: dict[str, Any] | None = None,
+        extra_headers: dict[str, str] | None = None,
+        **parameters: Unpack[TextParameters],
+    ) -> TextOutput:
+        """Analyze image(s), video(s), or audio with prompt or messages."""
+        if messages is None:
+            self._check_media_support(image=image, video=video, audio=audio)
+        inputs = TextInput(
+            prompt=prompt, messages=messages, image=image, video=video, audio=audio
+        )
+        return await self._predict(
+            inputs, extra_body=extra_body, extra_headers=extra_headers, **parameters
+        )
 
     def _build_request(
         self,

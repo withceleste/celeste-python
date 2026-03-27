@@ -1,6 +1,6 @@
 """Google audio client."""
 
-from typing import Any, Unpack
+from typing import Any
 
 from celeste.artifacts import AudioArtifact
 from celeste.parameters import ParameterMapper
@@ -13,31 +13,18 @@ from celeste.types import AudioContent
 from ...client import AudioClient
 from ...io import (
     AudioInput,
-    AudioOutput,
 )
-from ...parameters import AudioParameters
 from .parameters import GOOGLE_PARAMETER_MAPPERS
 
 
 class GoogleAudioClient(GoogleCloudTTSMixin, AudioClient):
     """Google audio client (Cloud TTS)."""
 
+    _speak_endpoint = config.GoogleCloudTTSEndpoint.CREATE_SPEECH
+
     @classmethod
     def parameter_mappers(cls) -> list[ParameterMapper[AudioContent]]:
         return GOOGLE_PARAMETER_MAPPERS
-
-    async def speak(
-        self,
-        text: str,
-        **parameters: Unpack[AudioParameters],
-    ) -> AudioOutput:
-        """Convert text to speech audio."""
-        inputs = AudioInput(text=text)
-        return await self._predict(
-            inputs,
-            endpoint=config.GoogleCloudTTSEndpoint.CREATE_SPEECH,
-            **parameters,
-        )
 
     def _init_request(self, inputs: AudioInput) -> dict[str, Any]:
         """Initialize request with text input."""

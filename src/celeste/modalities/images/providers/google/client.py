@@ -2,12 +2,11 @@
 
 from typing import Any, Unpack
 
-from celeste.artifacts import ImageArtifact
 from celeste.parameters import ParameterMapper
 from celeste.types import ImageContent
 
 from ...client import ImagesClient
-from ...io import ImageFinishReason, ImageInput, ImageOutput
+from ...io import ImageFinishReason, ImageInput
 from ...parameters import ImageParameters
 from .gemini import GeminiImagesClient
 from .imagen import ImagenImagesClient
@@ -43,32 +42,14 @@ class GoogleImagesClient(ImagesClient):
         )
         object.__setattr__(self, "_strategy", strategy)
 
+        if strategy._generate_endpoint is not None:
+            object.__setattr__(self, "_generate_endpoint", strategy._generate_endpoint)
+        if strategy._edit_endpoint is not None:
+            object.__setattr__(self, "_edit_endpoint", strategy._edit_endpoint)
+
     @classmethod
     def parameter_mappers(cls) -> list[ParameterMapper[ImageContent]]:
         return [*GEMINI_PARAMETER_MAPPERS, *IMAGEN_PARAMETER_MAPPERS]
-
-    async def generate(
-        self,
-        prompt: str,
-        **parameters: Unpack[ImageParameters],
-    ) -> ImageOutput:
-        """Generate images from prompt."""
-        inputs = ImageInput(prompt=prompt)
-        return await self._predict(inputs, **parameters)
-
-    async def edit(
-        self,
-        image: ImageArtifact,
-        prompt: str,
-        **parameters: Unpack[ImageParameters],
-    ) -> ImageOutput:
-        # Only Gemini supports edit in Google provider
-        if not isinstance(self._strategy, GeminiImagesClient):
-            msg = f"Model '{self.model.id}' does not support image editing"
-            raise ValueError(msg)
-
-        inputs = ImageInput(prompt=prompt, image=image)
-        return await self._predict(inputs, **parameters)
 
     def _init_request(self, inputs: ImageInput) -> dict[str, Any]:
         """Delegate to strategy's _init_request."""

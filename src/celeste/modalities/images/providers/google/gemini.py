@@ -1,6 +1,6 @@
 """Gemini client for Google images modality."""
 
-from typing import Any, Unpack
+from typing import Any
 
 from celeste.artifacts import ImageArtifact
 from celeste.core import UsageField
@@ -12,42 +12,18 @@ from celeste.providers.google.utils import build_media_part
 from celeste.types import ImageContent
 
 from ...client import ImagesClient
-from ...io import ImageFinishReason, ImageInput, ImageOutput
-from ...parameters import ImageParameters
+from ...io import ImageFinishReason, ImageInput
 from .parameters import GEMINI_PARAMETER_MAPPERS
 
 
 class GeminiImagesClient(GoogleGenerateContentClient, ImagesClient):
     """Google Gemini client for images modality (generate + edit)."""
 
+    _edit_endpoint = google_config.GoogleGenerateContentEndpoint.GENERATE_CONTENT
+
     @classmethod
     def parameter_mappers(cls) -> list[ParameterMapper[ImageContent]]:
         return GEMINI_PARAMETER_MAPPERS
-
-    async def generate(
-        self,
-        prompt: str,
-        **parameters: Unpack[ImageParameters],
-    ) -> ImageOutput:
-        inputs = ImageInput(prompt=prompt)
-        return await self._predict(
-            inputs,
-            endpoint=google_config.GoogleGenerateContentEndpoint.GENERATE_CONTENT,
-            **parameters,
-        )
-
-    async def edit(
-        self,
-        image: ImageArtifact,
-        prompt: str,
-        **parameters: Unpack[ImageParameters],
-    ) -> ImageOutput:
-        inputs = ImageInput(prompt=prompt, image=image)
-        return await self._predict(
-            inputs,
-            endpoint=google_config.GoogleGenerateContentEndpoint.GENERATE_CONTENT,
-            **parameters,
-        )
 
     def _init_request(self, inputs: ImageInput) -> dict[str, Any]:
         """Initialize request for Gemini image generation/edit."""

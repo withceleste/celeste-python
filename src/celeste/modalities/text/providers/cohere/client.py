@@ -1,21 +1,19 @@
 """Cohere text client (modality)."""
 
-from typing import Any, Unpack
+from typing import Any
 
 from celeste.parameters import ParameterMapper
 from celeste.providers.cohere.chat.client import CohereChatClient
 from celeste.providers.cohere.chat.streaming import (
     CohereChatStream as _CohereChatStream,
 )
-from celeste.types import ImageContent, Message, TextContent, VideoContent
+from celeste.types import TextContent
 from celeste.utils import build_image_data_url
 
 from ...client import TextClient
 from ...io import (
     TextInput,
-    TextOutput,
 )
-from ...parameters import TextParameters
 from ...streaming import TextStream
 from .parameters import COHERE_PARAMETER_MAPPERS
 
@@ -30,30 +28,6 @@ class CohereTextClient(CohereChatClient, TextClient):
     @classmethod
     def parameter_mappers(cls) -> list[ParameterMapper[TextContent]]:
         return COHERE_PARAMETER_MAPPERS
-
-    async def generate(
-        self,
-        prompt: str | None = None,
-        *,
-        messages: list[Message] | None = None,
-        **parameters: Unpack[TextParameters],
-    ) -> TextOutput:
-        """Generate text from prompt."""
-        inputs = TextInput(prompt=prompt, messages=messages)
-        return await self._predict(inputs, **parameters)
-
-    async def analyze(
-        self,
-        prompt: str | None = None,
-        *,
-        messages: list[Message] | None = None,
-        image: ImageContent | None = None,
-        video: VideoContent | None = None,
-        **parameters: Unpack[TextParameters],
-    ) -> TextOutput:
-        """Analyze image(s) or video(s) with prompt or messages."""
-        inputs = TextInput(prompt=prompt, messages=messages, image=image, video=video)
-        return await self._predict(inputs, **parameters)
 
     def _init_request(self, inputs: TextInput) -> dict[str, Any]:
         """Initialize request from Cohere v2 Chat API messages array format."""

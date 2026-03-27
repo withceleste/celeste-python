@@ -1,6 +1,6 @@
 """xAI images client."""
 
-from typing import Any, Unpack
+from typing import Any
 
 from celeste.artifacts import ImageArtifact
 from celeste.parameters import ParameterMapper
@@ -11,14 +11,15 @@ from celeste.types import ImageContent
 from ...client import ImagesClient
 from ...io import (
     ImageInput,
-    ImageOutput,
 )
-from ...parameters import ImageParameters
 from .parameters import XAI_PARAMETER_MAPPERS
 
 
 class XAIImagesClient(XAIImagesMixin, ImagesClient):
     """xAI images client."""
+
+    _generate_endpoint = config.XAIImagesEndpoint.CREATE_IMAGE
+    _edit_endpoint = config.XAIImagesEndpoint.CREATE_EDIT
 
     @classmethod
     def parameter_mappers(cls) -> list[ParameterMapper[ImageContent]]:
@@ -36,33 +37,6 @@ class XAIImagesClient(XAIImagesMixin, ImagesClient):
                 base64_data = inputs.image.get_base64()
                 request["image"] = {"url": f"data:{mime_type};base64,{base64_data}"}
         return request
-
-    async def generate(
-        self,
-        prompt: str,
-        **parameters: Unpack[ImageParameters],
-    ) -> ImageOutput:
-        """Generate images from prompt."""
-        inputs = ImageInput(prompt=prompt)
-        return await self._predict(
-            inputs,
-            endpoint=config.XAIImagesEndpoint.CREATE_IMAGE,
-            **parameters,
-        )
-
-    async def edit(
-        self,
-        image: ImageArtifact,
-        prompt: str,
-        **parameters: Unpack[ImageParameters],
-    ) -> ImageOutput:
-        """Edit an image with text instructions."""
-        inputs = ImageInput(image=image, prompt=prompt)
-        return await self._predict(
-            inputs,
-            endpoint=config.XAIImagesEndpoint.CREATE_EDIT,
-            **parameters,
-        )
 
     def _parse_content(
         self,

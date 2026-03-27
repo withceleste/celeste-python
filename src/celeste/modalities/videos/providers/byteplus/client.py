@@ -1,6 +1,6 @@
 """BytePlus videos client."""
 
-from typing import Any, Unpack
+from typing import Any
 
 from celeste.artifacts import VideoArtifact
 from celeste.parameters import ParameterMapper
@@ -11,13 +11,14 @@ from celeste.providers.byteplus.videos.client import (
 from celeste.types import VideoContent
 
 from ...client import VideosClient
-from ...io import VideoInput, VideoOutput
-from ...parameters import VideoParameters
+from ...io import VideoInput
 from .parameters import BYTEPLUS_PARAMETER_MAPPERS
 
 
 class BytePlusVideosClient(BytePlusVideosMixin, VideosClient):
     """BytePlus client for video generation."""
+
+    _generate_endpoint = config.BytePlusVideosEndpoint.CREATE_VIDEO
 
     @classmethod
     def parameter_mappers(cls) -> list[ParameterMapper[VideoContent]]:
@@ -28,19 +29,6 @@ class BytePlusVideosClient(BytePlusVideosMixin, VideosClient):
         return {
             "content": [{"type": "text", "text": inputs.prompt}],
         }
-
-    async def generate(
-        self,
-        prompt: str,
-        **parameters: Unpack[VideoParameters],
-    ) -> VideoOutput:
-        """Generate videos from prompt."""
-        inputs = VideoInput(prompt=prompt)
-        return await self._predict(
-            inputs,
-            endpoint=config.BytePlusVideosEndpoint.CREATE_VIDEO,
-            **parameters,
-        )
 
     def _parse_content(
         self,

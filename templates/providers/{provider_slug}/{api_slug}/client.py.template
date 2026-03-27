@@ -32,8 +32,7 @@ class {Provider}{Api}Client(APIMixin):
     - GoogleADC auth -> Vertex AI endpoints (via _build_url + _get_vertex_endpoint)
     - API key auth -> native API endpoints
 
-    Modality clients pass endpoint parameter to route operations:
-        await self._predict(inputs, endpoint=config.{Provider}{Api}Endpoint.CREATE_..., **parameters)
+    Modality clients set ``_generate_endpoint`` class attribute to route operations.
     """
 
     _content_fields: ClassVar[set[str]] = {"..."}

@@ -1,6 +1,6 @@
 """BFL images client."""
 
-from typing import Any, Unpack
+from typing import Any
 
 from celeste.artifacts import ImageArtifact
 from celeste.parameters import ParameterMapper
@@ -10,44 +10,19 @@ from celeste.providers.bfl.images.utils import encode_image
 from celeste.types import ImageContent
 
 from ...client import ImagesClient
-from ...io import ImageFinishReason, ImageInput, ImageOutput
-from ...parameters import ImageParameters
+from ...io import ImageFinishReason, ImageInput
 from .parameters import BFL_PARAMETER_MAPPERS
 
 
 class BFLImagesClient(_BFLImagesClient, ImagesClient):
     """BFL images client (generate + edit)."""
 
+    _generate_endpoint = bfl_config.BFLImagesEndpoint.CREATE_IMAGE
+    _edit_endpoint = bfl_config.BFLImagesEndpoint.CREATE_IMAGE
+
     @classmethod
     def parameter_mappers(cls) -> list[ParameterMapper[ImageContent]]:
         return BFL_PARAMETER_MAPPERS
-
-    async def generate(
-        self,
-        prompt: str,
-        **parameters: Unpack[ImageParameters],
-    ) -> ImageOutput:
-        """Generate images from prompt."""
-        inputs = ImageInput(prompt=prompt)
-        return await self._predict(
-            inputs,
-            endpoint=bfl_config.BFLImagesEndpoint.CREATE_IMAGE,
-            **parameters,
-        )
-
-    async def edit(
-        self,
-        image: ImageArtifact,
-        prompt: str,
-        **parameters: Unpack[ImageParameters],
-    ) -> ImageOutput:
-        """Edit an image with a prompt."""
-        inputs = ImageInput(prompt=prompt, image=image)
-        return await self._predict(
-            inputs,
-            endpoint=bfl_config.BFLImagesEndpoint.CREATE_IMAGE,
-            **parameters,
-        )
 
     def _init_request(self, inputs: ImageInput) -> dict[str, Any]:
         """Build request with prompt and (optional) input image."""

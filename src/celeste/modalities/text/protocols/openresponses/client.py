@@ -1,6 +1,6 @@
 """OpenResponses text client."""
 
-from typing import Any, Unpack
+from typing import Any
 
 from celeste.parameters import ParameterMapper
 from celeste.protocols.openresponses.client import (
@@ -15,16 +15,14 @@ from celeste.protocols.openresponses.tools import (
     serialize_messages,
 )
 from celeste.tools import ToolCall
-from celeste.types import ImageContent, Message, TextContent, VideoContent
+from celeste.types import TextContent
 from celeste.utils import build_image_data_url
 
 from ...client import TextClient
 from ...io import (
     TextChunk,
     TextInput,
-    TextOutput,
 )
-from ...parameters import TextParameters
 from ...streaming import TextStream
 from .parameters import OPENRESPONSES_PARAMETER_MAPPERS
 
@@ -68,32 +66,6 @@ class OpenResponsesTextClient(OpenResponsesMixin, TextClient):
     @classmethod
     def parameter_mappers(cls) -> list[ParameterMapper[TextContent]]:
         return OPENRESPONSES_PARAMETER_MAPPERS
-
-    async def generate(
-        self,
-        prompt: str | None = None,
-        *,
-        messages: list[Message] | None = None,
-        extra_body: dict[str, Any] | None = None,
-        **parameters: Unpack[TextParameters],
-    ) -> TextOutput:
-        """Generate text from prompt."""
-        inputs = TextInput(prompt=prompt, messages=messages)
-        return await self._predict(inputs, extra_body=extra_body, **parameters)
-
-    async def analyze(
-        self,
-        prompt: str | None = None,
-        *,
-        messages: list[Message] | None = None,
-        image: ImageContent | None = None,
-        video: VideoContent | None = None,
-        extra_body: dict[str, Any] | None = None,
-        **parameters: Unpack[TextParameters],
-    ) -> TextOutput:
-        """Analyze image(s) or video(s) with prompt or messages."""
-        inputs = TextInput(prompt=prompt, messages=messages, image=image, video=video)
-        return await self._predict(inputs, extra_body=extra_body, **parameters)
 
     def _init_request(self, inputs: TextInput) -> dict[str, Any]:
         """Initialize request with input content."""

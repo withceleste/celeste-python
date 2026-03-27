@@ -1,6 +1,6 @@
 """Images modality client."""
 
-from typing import Any, Unpack
+from typing import Any, ClassVar, Unpack
 
 from asgiref.sync import async_to_sync
 
@@ -17,16 +17,46 @@ from .streaming import ImagesStream
 class ImagesClient(
     ModalityClient[ImageInput, ImageOutput, ImageParameters, ImageContent, ImageChunk]
 ):
-    """Base images client. Providers implement generate/edit methods."""
+    """Base images client.
+
+    Provides default ``generate()`` and ``edit()`` operations.
+    """
 
     modality: Modality = Modality.IMAGES
     _usage_class = ImageUsage
     _finish_reason_class = ImageFinishReason
 
+    _generate_endpoint: ClassVar[str | None] = None
+    _edit_endpoint: ClassVar[str | None] = None
+
     @classmethod
     def _output_class(cls) -> type[ImageOutput]:
         """Return the Output class for images modality."""
         return ImageOutput
+
+    async def generate(
+        self,
+        prompt: str,
+        **parameters: Unpack[ImageParameters],
+    ) -> ImageOutput:
+        """Generate images from prompt."""
+        inputs = ImageInput(prompt=prompt)
+        return await self._predict(
+            inputs, endpoint=self._generate_endpoint, **parameters
+        )
+
+    async def edit(
+        self,
+        image: ImageArtifact,
+        prompt: str,
+        **parameters: Unpack[ImageParameters],
+    ) -> ImageOutput:
+        """Edit an image with text instructions."""
+        if self._edit_endpoint is None:
+            msg = f"Model {self.model.id} does not support image editing"
+            raise NotImplementedError(msg)
+        inputs = ImageInput(prompt=prompt, image=image)
+        return await self._predict(inputs, endpoint=self._edit_endpoint, **parameters)
 
     @property
     def stream(self) -> "ImagesStreamNamespace":

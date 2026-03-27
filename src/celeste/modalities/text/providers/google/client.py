@@ -1,24 +1,19 @@
 """Google text client (modality)."""
 
-from typing import Any, Unpack
+from typing import Any
 from uuid import uuid4
 
 from celeste.parameters import ParameterMapper
-from celeste.providers.google.generate_content import config as google_config
 from celeste.providers.google.generate_content.client import GoogleGenerateContentClient
 from celeste.providers.google.generate_content.streaming import (
     GoogleGenerateContentStream as _GoogleGenerateContentStream,
 )
 from celeste.providers.google.utils import build_media_part
 from celeste.tools import ToolCall, ToolResult
-from celeste.types import AudioContent, ImageContent, Message, TextContent, VideoContent
+from celeste.types import TextContent
 
 from ...client import TextClient
-from ...io import (
-    TextInput,
-    TextOutput,
-)
-from ...parameters import TextParameters
+from ...io import TextInput
 from ...streaming import TextStream
 from .parameters import GOOGLE_PARAMETER_MAPPERS
 
@@ -55,45 +50,6 @@ class GoogleTextClient(GoogleGenerateContentClient, TextClient):
     @classmethod
     def parameter_mappers(cls) -> list[ParameterMapper[TextContent]]:
         return GOOGLE_PARAMETER_MAPPERS
-
-    async def generate(
-        self,
-        prompt: str | None = None,
-        *,
-        messages: list[Message] | None = None,
-        **parameters: Unpack[TextParameters],
-    ) -> TextOutput:
-        """Generate text from prompt."""
-        inputs = TextInput(prompt=prompt, messages=messages)
-        return await self._predict(
-            inputs,
-            endpoint=google_config.GoogleGenerateContentEndpoint.GENERATE_CONTENT,
-            **parameters,
-        )
-
-    async def analyze(
-        self,
-        prompt: str | None = None,
-        *,
-        messages: list[Message] | None = None,
-        image: ImageContent | None = None,
-        video: VideoContent | None = None,
-        audio: AudioContent | None = None,
-        **parameters: Unpack[TextParameters],
-    ) -> TextOutput:
-        """Analyze image(s), video(s), or audio with prompt or messages."""
-        inputs = TextInput(
-            prompt=prompt,
-            messages=messages,
-            image=image,
-            video=video,
-            audio=audio,
-        )
-        return await self._predict(
-            inputs,
-            endpoint=google_config.GoogleGenerateContentEndpoint.GENERATE_CONTENT,
-            **parameters,
-        )
 
     def _init_request(self, inputs: TextInput) -> dict[str, Any]:
         """Initialize request from Google contents array format."""

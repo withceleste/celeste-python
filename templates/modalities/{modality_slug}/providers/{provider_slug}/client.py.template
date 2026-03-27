@@ -1,6 +1,6 @@
 """{Provider} {modality} client."""
 
-from typing import Any, Unpack
+from typing import Any
 
 from celeste.artifacts import {Artifact}Artifact
 from celeste.parameters import ParameterMapper
@@ -14,9 +14,7 @@ from ...io import (
     {Modality}Chunk,
     {Modality}FinishReason,
     {Modality}Input,
-    {Modality}Output,
 )
-from ...parameters import {Modality}Parameters
 from ...streaming import {Modality}Stream
 from .parameters import {PROVIDER}_PARAMETER_MAPPERS
 
@@ -39,6 +37,8 @@ class {Provider}{Modality}Stream(_{Provider}{Api}Stream, {Modality}Stream):
 class {Provider}{Modality}Client({Provider}{Api}Mixin, {Modality}Client):
     """{Provider} {modality} client."""
 
+    _generate_endpoint = config.{Provider}{Api}Endpoint.{ENDPOINT}
+
     @classmethod
     def parameter_mappers(cls) -> list[ParameterMapper[{Content}]]:
         return {PROVIDER}_PARAMETER_MAPPERS
@@ -46,19 +46,6 @@ class {Provider}{Modality}Client({Provider}{Api}Mixin, {Modality}Client):
     def _stream_class(self) -> type[{Modality}Stream]:
         """Return the Stream class for this provider."""
         return {Provider}{Modality}Stream
-
-    async def generate(
-        self,
-        prompt: str,
-        **parameters: Unpack[{Modality}Parameters],
-    ) -> {Modality}Output:
-        """Generate {modality} from prompt."""
-        inputs = {Modality}Input(prompt=prompt)
-        return await self._predict(
-            inputs,
-            endpoint=config.{Provider}{Api}Endpoint.{ENDPOINT},
-            **parameters,
-        )
 
     def _parse_content(
         self,

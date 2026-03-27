@@ -1,6 +1,6 @@
 """xAI videos client."""
 
-from typing import Any, Unpack
+from typing import Any
 
 from celeste.artifacts import VideoArtifact
 from celeste.parameters import ParameterMapper
@@ -9,13 +9,15 @@ from celeste.providers.xai.videos.client import XAIVideosClient as XAIVideosMixi
 from celeste.types import VideoContent
 
 from ...client import VideosClient
-from ...io import VideoInput, VideoOutput
-from ...parameters import VideoParameters
+from ...io import VideoInput
 from .parameters import XAI_PARAMETER_MAPPERS
 
 
 class XAIVideosClient(XAIVideosMixin, VideosClient):
     """xAI client for video generation."""
+
+    _generate_endpoint = config.XAIVideosEndpoint.CREATE_VIDEO
+    _edit_endpoint = config.XAIVideosEndpoint.CREATE_EDIT
 
     @classmethod
     def parameter_mappers(cls) -> list[ParameterMapper[VideoContent]]:
@@ -27,33 +29,6 @@ class XAIVideosClient(XAIVideosMixin, VideosClient):
         if inputs.video is not None:
             request["video"] = {"url": inputs.video.url}
         return request
-
-    async def generate(
-        self,
-        prompt: str,
-        **parameters: Unpack[VideoParameters],
-    ) -> VideoOutput:
-        """Generate videos from prompt."""
-        inputs = VideoInput(prompt=prompt)
-        return await self._predict(
-            inputs,
-            endpoint=config.XAIVideosEndpoint.CREATE_VIDEO,
-            **parameters,
-        )
-
-    async def edit(
-        self,
-        video: VideoArtifact,
-        prompt: str,
-        **parameters: Unpack[VideoParameters],
-    ) -> VideoOutput:
-        """Edit a video with text instructions."""
-        inputs = VideoInput(prompt=prompt, video=video)
-        return await self._predict(
-            inputs,
-            endpoint=config.XAIVideosEndpoint.CREATE_EDIT,
-            **parameters,
-        )
 
     def _parse_content(
         self,

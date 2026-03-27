@@ -27,7 +27,10 @@ class EmbeddingsClient(
         EmbeddingsChunk,
     ]
 ):
-    """Base embeddings client. Providers implement operation methods."""
+    """Base embeddings client.
+
+    Provides default ``embed()`` operation.
+    """
 
     modality: Modality = Modality.EMBEDDINGS
     _usage_class = EmbeddingsUsage

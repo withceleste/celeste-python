@@ -1,6 +1,6 @@
 """Audio modality client."""
 
-from typing import Any, Unpack
+from typing import Any, ClassVar, Unpack
 
 from asgiref.sync import async_to_sync
 
@@ -16,16 +16,30 @@ from .streaming import AudioStream
 class AudioClient(
     ModalityClient[AudioInput, AudioOutput, AudioParameters, AudioContent, AudioChunk]
 ):
-    """Base audio client. Providers implement speak() method."""
+    """Base audio client.
+
+    Provides default ``speak()`` operation.
+    """
 
     modality: Modality = Modality.AUDIO
     _usage_class = AudioUsage
     _finish_reason_class = AudioFinishReason
 
+    _speak_endpoint: ClassVar[str | None] = None
+
     @classmethod
     def _output_class(cls) -> type[AudioOutput]:
         """Return the Output class for audio modality."""
         return AudioOutput
+
+    async def speak(
+        self,
+        text: str,
+        **parameters: Unpack[AudioParameters],
+    ) -> AudioOutput:
+        """Convert text to speech audio."""
+        inputs = AudioInput(text=text)
+        return await self._predict(inputs, endpoint=self._speak_endpoint, **parameters)
 
     @property
     def stream(self) -> "AudioStreamNamespace":

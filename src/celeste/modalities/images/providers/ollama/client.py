@@ -1,6 +1,6 @@
 """Ollama images client."""
 
-from typing import Any, Unpack
+from typing import Any
 
 from celeste.artifacts import ImageArtifact
 from celeste.parameters import ParameterMapper
@@ -15,9 +15,7 @@ from ...client import ImagesClient
 from ...io import (
     ImageChunk,
     ImageInput,
-    ImageOutput,
 )
-from ...parameters import ImageParameters
 from ...streaming import ImagesStream
 from .parameters import OLLAMA_PARAMETER_MAPPERS
 
@@ -54,22 +52,11 @@ class OllamaImagesStream(_OllamaGenerateStream, ImagesStream):
 class OllamaImagesClient(OllamaGenerateClient, ImagesClient):
     """Ollama images client (generate only, no edit support yet)."""
 
+    _generate_endpoint = config.OllamaGenerateEndpoint.GENERATE
+
     @classmethod
     def parameter_mappers(cls) -> list[ParameterMapper[ImageContent]]:
         return OLLAMA_PARAMETER_MAPPERS
-
-    async def generate(
-        self,
-        prompt: str,
-        **parameters: Unpack[ImageParameters],
-    ) -> ImageOutput:
-        """Generate images from prompt."""
-        inputs = ImageInput(prompt=prompt)
-        return await self._predict(
-            inputs,
-            endpoint=config.OllamaGenerateEndpoint.GENERATE,
-            **parameters,
-        )
 
     def _init_request(self, inputs: ImageInput) -> dict[str, Any]:
         """Build request with prompt."""
