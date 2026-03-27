@@ -247,6 +247,9 @@ def create_client(
         protocol=resolved_protocol,
     )
 
+    if resolved_provider is None and resolved_protocol is None:
+        resolved_provider = resolved_model.provider
+
     # Client lookup: protocol takes precedence for compatible API path
     target = (
         resolved_protocol if resolved_protocol is not None else resolved_model.provider
