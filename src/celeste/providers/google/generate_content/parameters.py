@@ -1,16 +1,15 @@
 """Google GenerateContent API parameter mappers."""
 
-import base64
 import json
 from typing import Any, get_args, get_origin
 
 from pydantic import BaseModel, TypeAdapter
 
-from celeste.artifacts import ImageArtifact
 from celeste.exceptions import InvalidToolError
 from celeste.mime_types import ApplicationMimeType
 from celeste.models import Model
 from celeste.parameters import ParameterMapper
+from celeste.providers.google.utils import build_media_part
 from celeste.tools import Tool
 from celeste.types import TextContent
 
@@ -136,27 +135,6 @@ class ImageSizeMapper[Content](ParameterMapper[Content]):
 class MediaContentMapper[Content](ParameterMapper[Content]):
     """Map reference_images to Google contents.parts field."""
 
-    def _build_image_part(self, image: ImageArtifact) -> dict[str, Any]:
-        """Build a Gemini part from an ImageArtifact."""
-        if image.url:
-            return {"file_data": {"file_uri": image.url}}
-
-        if image.data:
-            b64 = (
-                base64.b64encode(image.data).decode("utf-8")
-                if isinstance(image.data, bytes)
-                else image.data
-            )
-            return {"inline_data": {"mime_type": str(image.mime_type), "data": b64}}
-
-        if image.path:
-            with open(image.path, "rb") as f:
-                b64 = base64.b64encode(f.read()).decode("utf-8")
-            return {"inline_data": {"mime_type": str(image.mime_type), "data": b64}}
-
-        msg = "ImageArtifact must have url, data, or path"
-        raise ValueError(msg)
-
     def map(
         self,
         request: dict[str, Any],
@@ -169,7 +147,7 @@ class MediaContentMapper[Content](ParameterMapper[Content]):
             return request
 
         # Convert list of ImageArtifact to list of image parts
-        image_parts = [self._build_image_part(img) for img in validated_value]
+        image_parts = [build_media_part(img) for img in validated_value]
 
         # Add image parts before text in contents[0].parts
         if "contents" in request and len(request["contents"]) > 0:

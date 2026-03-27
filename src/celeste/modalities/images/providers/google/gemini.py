@@ -1,6 +1,5 @@
 """Gemini client for Google images modality."""
 
-import base64
 from typing import Any, Unpack
 
 from celeste.artifacts import ImageArtifact
@@ -9,35 +8,13 @@ from celeste.mime_types import ImageMimeType
 from celeste.parameters import ParameterMapper
 from celeste.providers.google.generate_content import config as google_config
 from celeste.providers.google.generate_content.client import GoogleGenerateContentClient
+from celeste.providers.google.utils import build_media_part
 from celeste.types import ImageContent
 
 from ...client import ImagesClient
 from ...io import ImageFinishReason, ImageInput, ImageOutput
 from ...parameters import ImageParameters
 from .parameters import GEMINI_PARAMETER_MAPPERS
-
-
-def _build_image_part(image: ImageArtifact) -> dict[str, Any]:
-    """Build a Gemini image part from an ImageArtifact (snake_case, provider-style)."""
-    if image.url:
-        return {"file_data": {"file_uri": image.url}}
-
-    if image.data is not None:
-        image_bytes = image.data
-    elif image.path:
-        with open(image.path, "rb") as f:
-            image_bytes = f.read()
-    else:
-        msg = "ImageArtifact must have url, data, or path"
-        raise ValueError(msg)
-
-    base64_data = base64.b64encode(image_bytes).decode("utf-8")
-    return {
-        "inline_data": {
-            "mime_type": image.mime_type,
-            "data": base64_data,
-        }
-    }
 
 
 class GeminiImagesClient(GoogleGenerateContentClient, ImagesClient):
@@ -78,7 +55,7 @@ class GeminiImagesClient(GoogleGenerateContentClient, ImagesClient):
 
         # Edit uses an input image (generation omits it)
         if inputs.image is not None:
-            parts.append(_build_image_part(inputs.image))
+            parts.append(build_media_part(inputs.image))
 
         parts.append({"text": inputs.prompt})
 

@@ -1,15 +1,13 @@
 """Google embeddings client."""
 
-import base64
 from typing import Any
 
-from celeste.artifacts import AudioArtifact, ImageArtifact, VideoArtifact
 from celeste.parameters import ParameterMapper
 from celeste.providers.google.embeddings.client import (
     GoogleEmbeddingsClient as GoogleEmbeddingsMixin,
 )
+from celeste.providers.google.utils import build_media_part
 from celeste.types import EmbeddingsContent
-from celeste.utils import detect_mime_type
 
 from ...client import EmbeddingsClient
 from ...io import EmbeddingsInput
@@ -24,89 +22,33 @@ class GoogleEmbeddingsClient(GoogleEmbeddingsMixin, EmbeddingsClient):
         """Return parameter mappers for Google embeddings."""
         return GOOGLE_PARAMETER_MAPPERS
 
-    def _build_image_part(self, image: ImageArtifact) -> dict[str, Any]:
-        """Build a Gemini part from an ImageArtifact."""
-        if image.url:
-            return {"file_data": {"file_uri": image.url}}
-        image_bytes = image.get_bytes()
-        b64 = base64.b64encode(image_bytes).decode("utf-8")
-        mime = image.mime_type or detect_mime_type(image_bytes)
-        mime_str = mime.value if mime else None
-        return {"inline_data": {"mime_type": mime_str, "data": b64}}
-
-    def _build_video_part(self, video: VideoArtifact) -> dict[str, Any]:
-        """Build a Gemini part from a VideoArtifact."""
-        if video.url:
-            return {"file_data": {"file_uri": video.url}}
-        video_bytes = video.get_bytes()
-        b64 = base64.b64encode(video_bytes).decode("utf-8")
-        mime = video.mime_type or detect_mime_type(video_bytes)
-        mime_str = mime.value if mime else None
-        return {"inline_data": {"mime_type": mime_str, "data": b64}}
-
-    def _build_audio_part(self, audio: AudioArtifact) -> dict[str, Any]:
-        """Build a Gemini part from an AudioArtifact."""
-        if audio.url:
-            return {"file_data": {"file_uri": audio.url}}
-        audio_bytes = audio.get_bytes()
-        b64 = base64.b64encode(audio_bytes).decode("utf-8")
-        mime = audio.mime_type or detect_mime_type(audio_bytes)
-        mime_str = mime.value if mime else None
-        return {"inline_data": {"mime_type": mime_str, "data": b64}}
-
     def _init_request(self, inputs: EmbeddingsInput) -> dict[str, Any]:
         """Build Google embeddings request from inputs."""
-        # Batch images → separate embeddings via batchEmbedContents
-        if isinstance(inputs.images, list):
-            return {
-                "requests": [
-                    {
-                        "model": f"models/{self.model.id}",
-                        "content": {"parts": [self._build_image_part(img)]},
-                    }
-                    for img in inputs.images
-                ]
-            }
-
-        # Batch videos → separate embeddings via batchEmbedContents
-        if isinstance(inputs.videos, list):
-            return {
-                "requests": [
-                    {
-                        "model": f"models/{self.model.id}",
-                        "content": {"parts": [self._build_video_part(vid)]},
-                    }
-                    for vid in inputs.videos
-                ]
-            }
-
-        # Batch audio → separate embeddings via batchEmbedContents
-        if isinstance(inputs.audio, list):
-            return {
-                "requests": [
-                    {
-                        "model": f"models/{self.model.id}",
-                        "content": {"parts": [self._build_audio_part(aud)]},
-                    }
-                    for aud in inputs.audio
-                ]
-            }
+        # Batch media → separate embeddings via batchEmbedContents
+        for field in (inputs.images, inputs.videos, inputs.audio):
+            if isinstance(field, list):
+                return {
+                    "requests": [
+                        {
+                            "model": f"models/{self.model.id}",
+                            "content": {"parts": [build_media_part(item)]},
+                        }
+                        for item in field
+                    ]
+                }
 
         # Single/combined multimodal → one aggregated embedding
-        if (
-            inputs.images is not None
-            or inputs.videos is not None
-            or inputs.audio is not None
-        ):
+        media = [
+            f
+            for f in (inputs.images, inputs.videos, inputs.audio)
+            if f is not None and not isinstance(f, list)
+        ]
+        if media:
             parts: list[dict[str, Any]] = []
             if inputs.text is not None:
                 parts.append({"text": inputs.text})
-            if inputs.images is not None:
-                parts.append(self._build_image_part(inputs.images))
-            if inputs.videos is not None:
-                parts.append(self._build_video_part(inputs.videos))
-            if inputs.audio is not None:
-                parts.append(self._build_audio_part(inputs.audio))
+            for artifact in media:
+                parts.append(build_media_part(artifact))
             return {"content": {"parts": parts}}
 
         # Text-only (existing behavior)
