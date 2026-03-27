@@ -2,7 +2,6 @@
 
 from celeste.constraints import (
     Choice,
-    ImagesConstraint,
     Range,
     Schema,
     ToolSupport,
@@ -117,19 +116,6 @@ MODELS: list[Model] = [
             TextParameter.THINKING_BUDGET: Choice(options=["low", "high"]),
             TextParameter.TOOLS: ToolSupport(tools=[]),
             TextParameter.OUTPUT_SCHEMA: Schema(),
-        },
-    ),
-    Model(
-        id="grok-2-vision-1212",
-        provider=Provider.XAI,
-        display_name="Grok 2 Vision",
-        operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
-        streaming=True,
-        parameter_constraints={
-            Parameter.TEMPERATURE: Range(min=0.0, max=2.0),
-            Parameter.MAX_TOKENS: Range(min=1, max=32768),
-            TextParameter.TOOLS: ToolSupport(tools=[]),
-            TextParameter.IMAGE: ImagesConstraint(),
         },
     ),
 ]

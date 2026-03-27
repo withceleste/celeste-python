@@ -88,20 +88,6 @@ MODELS: list[Model] = [
         },
     ),
     Model(
-        id="meta-llama/llama-4-maverick-17b-128e-instruct",
-        provider=Provider.GROQ,
-        display_name="Llama 4 Maverick 17B",
-        operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
-        streaming=True,
-        parameter_constraints={
-            Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
-            Parameter.MAX_TOKENS: Range(min=1, max=8192, step=1),
-            TextParameter.OUTPUT_SCHEMA: Schema(),
-            TextParameter.IMAGE: ImagesConstraint(),
-            TextParameter.TOOLS: ToolSupport(tools=[]),
-        },
-    ),
-    Model(
         id="openai/gpt-oss-20b",
         provider=Provider.GROQ,
         display_name="GPT OSS 20B",
