@@ -79,6 +79,21 @@ class GoogleEmbeddingsClient(APIMixin):
         """Make HTTP request to embeddings endpoint."""
         # Vertex :predict expects {"instances": [{"content": "..."}]} format
         if isinstance(self.auth, GoogleADC):
+            # Check for multimodal parts (inline_data / file_data)
+            parts_to_check: list[dict[str, Any]] = []
+            if "requests" in request_body:
+                for req in request_body["requests"]:
+                    parts_to_check.extend(req["content"]["parts"])
+            else:
+                parts_to_check = request_body["content"]["parts"]
+
+            if any("inline_data" in p or "file_data" in p for p in parts_to_check):
+                msg = (
+                    "Multimodal embeddings (images/videos) are not yet supported "
+                    "via Vertex AI (GoogleADC). Use a Gemini API key instead."
+                )
+                raise ValueError(msg)
+
             if "requests" in request_body:
                 texts = [
                     req["content"]["parts"][0]["text"]

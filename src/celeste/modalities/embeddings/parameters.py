@@ -9,6 +9,9 @@ class EmbeddingsParameter(StrEnum):
     """Parameter names for embeddings."""
 
     DIMENSIONS = "dimensions"
+    IMAGE = "image"
+    VIDEO = "video"
+    AUDIO = "audio"
 
 
 class EmbeddingsParameters(Parameters):

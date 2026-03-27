@@ -6,7 +6,7 @@ from asgiref.sync import async_to_sync
 
 from celeste.client import ModalityClient
 from celeste.core import Modality
-from celeste.types import EmbeddingsContent
+from celeste.types import AudioContent, EmbeddingsContent, ImageContent, VideoContent
 
 from .io import (
     EmbeddingsChunk,
@@ -40,33 +40,45 @@ class EmbeddingsClient(
 
     async def embed(
         self,
-        text: str | list[str],
+        text: str | list[str] | None = None,
         *,
+        images: ImageContent | None = None,
+        videos: VideoContent | None = None,
+        audio: AudioContent | None = None,
         extra_body: dict[str, Any] | None = None,
         extra_headers: dict[str, str] | None = None,
         **parameters: Unpack[EmbeddingsParameters],
     ) -> EmbeddingsOutput:
-        """Generate embeddings from text.
+        """Generate embeddings from text, images, video, or audio.
 
         Args:
             text: Text to embed. Single string or list of strings.
+            images: Image(s) to embed. Single ImageArtifact or list.
+            videos: Video(s) to embed. Single VideoArtifact or list.
+            audio: Audio file(s) to embed. Single AudioArtifact or list.
             extra_body: Additional provider-specific fields to merge into request.
             extra_headers: Additional HTTP headers to include in the request.
             **parameters: Embedding parameters (e.g., dimensions).
 
         Returns:
-            EmbeddingsOutput with content as:
-            - list[float] if text was a string
-            - list[list[float]] if text was a list
+            EmbeddingsOutput with content as EmbeddingsContent:
+            - Single vector for single inputs (str, ImageArtifact, etc.)
+            - List of vectors for batch inputs (list[str], list[ImageArtifact], etc.)
         """
-        inputs = EmbeddingsInput(text=text)
+        inputs = EmbeddingsInput(text=text, images=images, videos=videos, audio=audio)
         output = await self._predict(
             inputs, extra_body=extra_body, extra_headers=extra_headers, **parameters
         )
 
-        # If single text input, unwrap from batch format to single embedding
+        # Unwrap single-item results from batch format
+        is_batch = (
+            isinstance(text, list)
+            or isinstance(images, list)
+            or isinstance(videos, list)
+            or isinstance(audio, list)
+        )
         if (
-            isinstance(text, str)
+            not is_batch
             and isinstance(output.content, list)
             and output.content
             and isinstance(output.content[0], list)
@@ -89,15 +101,24 @@ class EmbeddingsSyncNamespace:
 
     def embed(
         self,
-        text: str | list[str],
+        text: str | list[str] | None = None,
         *,
+        images: ImageContent | None = None,
+        videos: VideoContent | None = None,
+        audio: AudioContent | None = None,
         extra_body: dict[str, Any] | None = None,
         extra_headers: dict[str, str] | None = None,
         **parameters: Unpack[EmbeddingsParameters],
     ) -> EmbeddingsOutput:
         """Blocking embeddings generation."""
         return async_to_sync(self._client.embed)(
-            text, extra_body=extra_body, extra_headers=extra_headers, **parameters
+            text,
+            images=images,
+            videos=videos,
+            audio=audio,
+            extra_body=extra_body,
+            extra_headers=extra_headers,
+            **parameters,
         )
 
 

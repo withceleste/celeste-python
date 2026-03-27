@@ -1,19 +1,17 @@
 """Google text client (modality)."""
 
-import base64
 from typing import Any, Unpack
 from uuid import uuid4
 
-from celeste.artifacts import AudioArtifact, ImageArtifact, VideoArtifact
 from celeste.parameters import ParameterMapper
 from celeste.providers.google.generate_content import config as google_config
 from celeste.providers.google.generate_content.client import GoogleGenerateContentClient
 from celeste.providers.google.generate_content.streaming import (
     GoogleGenerateContentStream as _GoogleGenerateContentStream,
 )
+from celeste.providers.google.utils import build_media_part
 from celeste.tools import ToolCall, ToolResult
 from celeste.types import AudioContent, ImageContent, Message, TextContent, VideoContent
-from celeste.utils import detect_mime_type
 
 from ...client import TextClient
 from ...io import (
@@ -166,57 +164,21 @@ class GoogleTextClient(GoogleGenerateContentClient, TextClient):
         if inputs.image is not None:
             images = inputs.image if isinstance(inputs.image, list) else [inputs.image]
             for img in images:
-                parts.append(self._build_image_part(img))
+                parts.append(build_media_part(img))
 
         if inputs.video is not None:
             videos = inputs.video if isinstance(inputs.video, list) else [inputs.video]
             for vid in videos:
-                parts.append(self._build_video_part(vid))
+                parts.append(build_media_part(vid))
 
         if inputs.audio is not None:
             audios = inputs.audio if isinstance(inputs.audio, list) else [inputs.audio]
             for aud in audios:
-                parts.append(self._build_audio_part(aud))
+                parts.append(build_media_part(aud))
 
         parts.append({"text": inputs.prompt or ""})
 
         return {"contents": [{"role": "user", "parts": parts}]}
-
-    def _build_image_part(self, image: ImageArtifact) -> dict[str, Any]:
-        """Build a Gemini part from an ImageArtifact."""
-        if image.url:
-            return {"file_data": {"file_uri": image.url}}
-
-        image_bytes = image.get_bytes()
-        b64 = base64.b64encode(image_bytes).decode("utf-8")
-        mime = image.mime_type or detect_mime_type(image_bytes)
-        mime_str = mime.value if mime else None
-
-        return {"inline_data": {"mime_type": mime_str, "data": b64}}
-
-    def _build_video_part(self, video: VideoArtifact) -> dict[str, Any]:
-        """Build a Gemini part from a VideoArtifact."""
-        if video.url:
-            return {"file_data": {"file_uri": video.url}}
-
-        video_bytes = video.get_bytes()
-        b64 = base64.b64encode(video_bytes).decode("utf-8")
-        mime = video.mime_type or detect_mime_type(video_bytes)
-        mime_str = mime.value if mime else None
-
-        return {"inline_data": {"mime_type": mime_str, "data": b64}}
-
-    def _build_audio_part(self, audio: AudioArtifact) -> dict[str, Any]:
-        """Build a Gemini part from an AudioArtifact."""
-        if audio.url:
-            return {"file_data": {"file_uri": audio.url}}
-
-        audio_bytes = audio.get_bytes()
-        b64 = base64.b64encode(audio_bytes).decode("utf-8")
-        mime = audio.mime_type or detect_mime_type(audio_bytes)
-        mime_str = mime.value if mime else None
-
-        return {"inline_data": {"mime_type": mime_str, "data": b64}}
 
     def _parse_content(
         self,

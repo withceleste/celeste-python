@@ -1,6 +1,11 @@
 """Google models for embeddings modality."""
 
-from celeste.constraints import Choice
+from celeste.constraints import (
+    AudiosConstraint,
+    Choice,
+    ImagesConstraint,
+    VideosConstraint,
+)
 from celeste.core import Modality, Operation, Provider
 from celeste.models import Model
 
@@ -14,6 +19,18 @@ MODELS: list[Model] = [
         operations={Modality.EMBEDDINGS: {Operation.EMBED}},
         parameter_constraints={
             EmbeddingsParameter.DIMENSIONS: Choice(options=[768, 1536, 3072]),
+        },
+    ),
+    Model(
+        id="gemini-embedding-2-preview",
+        provider=Provider.GOOGLE,
+        display_name="Gemini Embedding 2 Preview",
+        operations={Modality.EMBEDDINGS: {Operation.EMBED}},
+        parameter_constraints={
+            EmbeddingsParameter.DIMENSIONS: Choice(options=[768, 1536, 3072]),
+            EmbeddingsParameter.IMAGE: ImagesConstraint(),
+            EmbeddingsParameter.VIDEO: VideosConstraint(),
+            EmbeddingsParameter.AUDIO: AudiosConstraint(),
         },
     ),
 ]
