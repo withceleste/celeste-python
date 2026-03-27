@@ -140,6 +140,7 @@ class SyncTextNamespace:
         *,
         images: ImageContent | None = None,
         videos: VideoContent | None = None,
+        audio: AudioContent | None = None,
         model: str,
         provider: Provider | None = None,
         api_key: str | SecretStr | None = None,
@@ -155,7 +156,9 @@ class SyncTextNamespace:
             api_key=api_key,
             auth=auth,
         )
-        return client.sync.embed(text, images=images, videos=videos, **params)
+        return client.sync.embed(
+            text, images=images, videos=videos, audio=audio, **params
+        )
 
     @property
     def stream(self) -> SyncStreamTextNamespace:
@@ -220,18 +223,20 @@ class TextNamespace:
         *,
         images: ImageContent | None = None,
         videos: VideoContent | None = None,
+        audio: AudioContent | None = None,
         model: str,
         provider: Provider | None = None,
         api_key: str | SecretStr | None = None,
         auth: Authentication | None = None,
         **parameters: Unpack[EmbeddingsParameters],
     ) -> EmbeddingsOutput:
-        """Generate embeddings from text, images, or video.
+        """Generate embeddings from text, images, video, or audio.
 
         Args:
             text: Text to embed. Single string or list of strings.
             images: Image(s) to embed. Single ImageArtifact or list.
             videos: Video(s) to embed. Single VideoArtifact or list.
+            audio: Audio file(s) to embed. Single AudioArtifact or list.
             model: Model ID to use (required).
             provider: Optional provider override.
             api_key: Optional API key override.
@@ -249,7 +254,9 @@ class TextNamespace:
             api_key=api_key,
             auth=auth,
         )
-        return await client.embed(text, images=images, videos=videos, **parameters)
+        return await client.embed(
+            text, images=images, videos=videos, audio=audio, **parameters
+        )
 
     @property
     def sync(self) -> SyncTextNamespace:
