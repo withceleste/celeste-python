@@ -18,10 +18,7 @@ from .streaming import TextStream
 class TextClient(
     ModalityClient[TextInput, TextOutput, TextParameters, TextContent, TextChunk]
 ):
-    """Base text client.
-
-    Provides default ``generate()`` and ``analyze()`` operations.
-    """
+    """Base text client with generate/analyze operations."""
 
     modality: Modality = Modality.TEXT
     _usage_class = TextUsage

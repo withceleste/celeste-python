@@ -16,10 +16,7 @@ from .parameters import VideoParameters
 class VideosClient(
     ModalityClient[VideoInput, VideoOutput, VideoParameters, VideoContent, VideoChunk]
 ):
-    """Base videos client.
-
-    Provides default ``generate()`` and ``edit()`` operations.
-    """
+    """Base videos client with generate/edit operations."""
 
     modality: Modality = Modality.VIDEOS
     _usage_class = VideoUsage

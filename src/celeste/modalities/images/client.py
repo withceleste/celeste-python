@@ -17,10 +17,7 @@ from .streaming import ImagesStream
 class ImagesClient(
     ModalityClient[ImageInput, ImageOutput, ImageParameters, ImageContent, ImageChunk]
 ):
-    """Base images client.
-
-    Provides default ``generate()`` and ``edit()`` operations.
-    """
+    """Base images client with generate/edit operations."""
 
     modality: Modality = Modality.IMAGES
     _usage_class = ImageUsage

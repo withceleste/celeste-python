@@ -16,10 +16,7 @@ from .streaming import AudioStream
 class AudioClient(
     ModalityClient[AudioInput, AudioOutput, AudioParameters, AudioContent, AudioChunk]
 ):
-    """Base audio client.
-
-    Provides default ``speak()`` operation.
-    """
+    """Base audio client with speak operation."""
 
     modality: Modality = Modality.AUDIO
     _usage_class = AudioUsage
