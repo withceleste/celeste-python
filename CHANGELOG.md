@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 55+ PRs merged, 400+ files changed.
 
-## 1. Tool Calling (v0.11.0 — headline)
+### 1. Tool Calling (v0.11.0 — headline)
 
 Unified tool calling across all providers — the bridge between LLM reasoning and real-world action.
 
@@ -31,7 +31,7 @@ Unified tool calling across all providers — the bridge between LLM reasoning a
 - PRs: #199, #228, #229, #232, #234, #235
 - Files: `src/celeste/tools.py` (new), provider `tools.py` files (6 new), `tests/integration_tests/text/test_tools.py` (new)
 
-## 2. Protocol Layer (v0.10.0)
+### 2. Protocol Layer (v0.10.0)
 
 Extracted shared protocol implementations from provider-specific code. Providers now inherit protocol base classes and override only what differs.
 
@@ -43,7 +43,7 @@ Extracted shared protocol implementations from provider-specific code. Providers
 - PRs: #153, #154, #241
 - Files: `src/celeste/protocols/` (new directory)
 
-## 3. Vertex AI (v0.10.0)
+### 3. Vertex AI (v0.10.0)
 
 Route requests through Google Vertex AI for any supported provider.
 
@@ -56,7 +56,7 @@ Route requests through Google Vertex AI for any supported provider.
 - PR: #135
 - Files: `src/celeste/auth.py`, all provider clients
 
-## 4. New Providers
+### 4. New Providers
 
 - **HuggingFace** (v0.10.2, #183) — OpenAI-compatible inference router (`router.huggingface.co`), 127+ models across 15 inference providers. Uses ChatCompletions protocol. Credential: `HF_TOKEN`.
 - **xAI Grok Imagine** (v0.9.6, #128) — Image generation (`grok-imagine-image`) and video generation (`grok-imagine-video`) with aspect ratios, num_images, duration, resolution. Async polling for video.
@@ -64,7 +64,7 @@ Route requests through Google Vertex AI for any supported provider.
 - **OpenResponses + Ollama Text** (v0.9.4, #111) — `Provider.OPENRESPONSES` for Responses-compatible APIs, `Provider.OLLAMA` for local inference. `NoAuth` for local providers, `base_url=` for custom gateways.
 - Files: `src/celeste/providers/huggingface/`, `src/celeste/providers/xai/images/`, `src/celeste/providers/xai/videos/`, `src/celeste/providers/ollama/`
 
-## 5. New Models
+### 5. New Models
 
 **Anthropic:**
 - Claude Opus 4.6 (#130) — 64K max tokens, 32K thinking budget
@@ -91,7 +91,7 @@ Route requests through Google Vertex AI for any supported provider.
 - xAI: Grok 2 Vision 1212
 - Groq: Llama 4 Maverick 17B 128E
 
-## 6. Multi-turn Conversations (v0.9.4)
+### 6. Multi-turn Conversations (v0.9.4)
 
 First-class support for multi-turn conversations across all text providers.
 
@@ -101,7 +101,7 @@ First-class support for multi-turn conversations across all text providers.
 - PR: #111
 - Files: `src/celeste/types.py`, all text provider clients
 
-## 7. Breaking Changes
+### 7. Breaking Changes
 
 - **`web_search=`/`x_search=`/`code_execution=` deprecated** — replaced by `tools=[WebSearch()]`. Old boolean params work via shims with `DeprecationWarning` until 2026-06-07.
 - **`google-auth` moved to optional extra** (#133) — `pip install "celeste-ai[gcp]"` required for Vertex AI. Raises `MissingDependencyError` with install instructions if missing.
@@ -111,7 +111,7 @@ First-class support for multi-turn conversations across all text providers.
 - **`FieldMapper.name` type change** (#161) — from `StrEnum` to `ClassVar[StrEnum]`. Affects custom `ParameterMapper` subclasses.
 - **`ModalityClient` constructor** (#241) — gained `protocol=` and `base_url=`; `provider` became `Provider | None`.
 
-## 8. Bug Fixes
+### 8. Bug Fixes
 
 - **BlockingPortal thread leak** (#239) — sync stream iteration leaked portal thread on exception, `break`, or abandonment. Rewrote `__iter__` as generator with `try/finally` for guaranteed cleanup. Fixed CI hanging 19 minutes after tests.
 - **SSE stream error detection** (#192) — mid-stream errors (Anthropic `overloaded_error`, OpenAI `server_error`) now raise `StreamEventError` instead of being silently discarded.
@@ -125,7 +125,7 @@ First-class support for multi-turn conversations across all text providers.
 - **Null `tool_calls` in ChatCompletions streaming** — DeepSeek sends `"tool_calls": null` instead of omitting the key. `.get("tool_calls", [])` returns `None` when key exists with null value. Fixed with `or []`.
 - **Pydantic V2.11 deprecation** — `tool.model_fields` on instance changed to `type(tool).model_fields` (class access) in 4 tool mapper files.
 
-## 9. DX Improvements
+### 9. DX Improvements
 
 - **`extra_body=` on all modalities** (#126) — pass provider-specific fields into the request body on images, audio, videos, embeddings.
 - **`extra_headers=` on all client methods** (#193) — `generate`, `stream`, `analyze`, `speak`, `embed`, `edit` all accept `extra_headers: dict[str, str] | None`.
@@ -137,7 +137,7 @@ First-class support for multi-turn conversations across all text providers.
 - **Colab quickstart notebook** (#115) — `notebooks/celeste-colab-quickstart.ipynb`.
 - **CONTRIBUTING.md rewrite** (#131) — accurate workflow documentation.
 
-## 10. Architecture (Internal)
+### 10. Architecture (Internal)
 
 - **FieldMapper base class** (#161) — replaces repeated validate-then-set pattern across 45 mapper classes with 2-line declarations.
 - **`_content_fields` ClassVar** (#160) — replaces 20 identical `_build_metadata()` overrides with one-line declarations. -215 lines.
@@ -150,7 +150,7 @@ First-class support for multi-turn conversations across all text providers.
 - **ChatCompletionsTextClient protocol base** (#199) — modality-level protocol class that DeepSeek, Groq, HuggingFace, Mistral, Moonshot inherit from.
 - **Provider-level OpenResponses removed** (#229) — OpenAI/xAI/Ollama now use protocol-level `OpenResponsesTextClient`. -396 lines.
 
-## 11. Testing
+### 11. Testing
 
 - **+882 lines of new tests** across unit and integration suites.
 - Integration tests for tools: 17 parametrized runs across 4 providers (Anthropic, OpenAI, Google, xAI) — WebSearch, streaming, function tools, XSearch, multi-turn ToolResult round-trip.
@@ -162,7 +162,7 @@ First-class support for multi-turn conversations across all text providers.
 - Constraint tests: `ToolSupport` validation (5 tests).
 - Test count: ~478 → 527+.
 
-## Contributors
+### Contributors
 
 - @Leo-le-jeune — HuggingFace text generation provider (#183)
 - @Seluj78 and @Olaiwonismail — CONTRIBUTING.md rewrite (#131)
@@ -174,7 +174,7 @@ First-class support for multi-turn conversations across all text providers.
 
 279 files changed. Monolith rewrite — single package, modality-first architecture.
 
-## Packaging Rationale (Monolith)
+### Packaging Rationale (Monolith)
 - DX first: pip install celeste-ai is the only thing most users want to remember. Requiring extras like celeste-ai[text] adds cognitive load and drops adoption.
 - Lightweight anyway: importing modalities/providers doesn’t add “weight” in practice. The package stays tiny (under ~2 MB), and 90% of the code is core no matter what.
 - No heavyweight vendor SDKs: Celeste uses lightweight HTTP clients, so “bundling providers” doesn’t drag in massive dependencies.
@@ -183,7 +183,7 @@ First-class support for multi-turn conversations across all text providers.
 - Predictable behavior: providers are always available; no hidden runtime failures because a plugin wasn’t installed.
 - Better UX in docs: one install step + one API surface; examples “just work.”
 
-## Packaging Changes
+### Packaging Changes
 - Removed the legacy multi-package workspace and extras-only install paths.
 - Now ships as a single PyPI package (`celeste-ai`).
 - Updated dependency and tooling configuration to the monolith layout (tests/coverage/mypy/ruff paths now target `src` and `tests` only).
@@ -191,7 +191,7 @@ First-class support for multi-turn conversations across all text providers.
 - File updated: `Makefile`.
 - Files deleted: `packages/` (all legacy capability/provider packages and their tests).
 
-## Tests
+### Tests
 - Added modality-first integration tests (`tests/integration_tests/**`) covering generate/edit/analyze/speak and streaming flows per modality.
 - Added media fixtures for image/audio/video analysis in integration tests.
 - Expanded unit tests for namespace routing, modality inference, stream metadata, auth/credentials registry, artifact handling, and IO validation.
@@ -200,19 +200,19 @@ First-class support for multi-turn conversations across all text providers.
 - Files updated: `tests/unit_tests/*.py`.
 - Files removed: legacy package-specific test suites under `packages/**`.
 
-## CI/CD
+### CI/CD
 - CI workflow now targets monolith paths only (`src/celeste`, `tests`) for ruff, mypy, and bandit.
 - Publish workflow runs required integration tests from `tests/integration_tests` and no longer uses package-based change detection.
 - Build step produces a single package (`uv build`) before TestPyPI → PyPI → GitHub release.
 - Files updated: `.github/workflows/ci.yml`, `.github/workflows/publish.yml`.
 
-## Feature Highlight: `extra_body` passthrough
+### Feature Highlight: `extra_body` passthrough
 - New `extra_body` parameter lets you pass provider-specific fields or arbitrary JSON into the request body.
 - This unblocks new provider capabilities before Celeste adds first-class parameter mapping.
 - Implemented via deep-merge into the built request payload.
 - File updated: `src/celeste/client.py`.
 
-## Architecture Shift: Modalities
+### Architecture Shift: Modalities
 - v1 moves from capability-centric clients (one method) to modality-centric clients (one output type). Modality = output type (text/images/audio/video/embeddings), operations become methods (`generate`, `edit`, `analyze`, `embed`).
 - Domain is the resource you work with (e.g., videos), regardless of whether the input is text or media; modality is what comes out (output type). This clarifies why one client can expose multiple operations while still being type-safe.
 - Namespaces are domain-first (the resource you work with); `create_client` is modality-first (the output type you want). Routing uses (domain, operation) → modality.
@@ -220,7 +220,7 @@ First-class support for multi-turn conversations across all text providers.
 - Operations exposed: text `generate`/`embed`, images `generate`/`edit`/`analyze`, audio `speak`/`analyze`, videos `generate`/`analyze`.
 - Files added: `src/celeste/modalities/` (text/images/audio/videos/embeddings submodules).
 
-## Namespace API
+### Namespace API
 - Domain namespaces (`celeste.text`, `celeste.images`, `celeste.audio`, `celeste.videos`) provide one-line calls that route to the correct modality/operation under the hood.
 - Domain indicates the resource you work with, even if the input is different (e.g., video generation can take text input but stays in the videos domain). Modality indicates the output type (e.g., `celeste.images.analyze(...)` routes to the text modality because analysis returns text).
 - The namespace pattern is more discoverable (IDE autocomplete) and matches how people think: start from the domain, then pick the action.
@@ -228,14 +228,14 @@ First-class support for multi-turn conversations across all text providers.
 - The factory pattern remains available for explicit configuration and client reuse when you want full control.
 - Files added: `src/celeste/namespaces/__init__.py`, `src/celeste/namespaces/domains.py`.
 
-## Providers
+### Providers
 - Added monolith provider layer under `src/celeste/providers/` with per-provider config/parameters/streaming modules.
 - Provider modules include: OpenAI (responses/images/audio/videos), Google (generate_content/imagen/veo/cloud_tts/embeddings/interactions), Anthropic (messages), Cohere/Mistral/DeepSeek/Groq/Moonshot (chat), xAI (responses), ElevenLabs/Gradium (text_to_speech), BFL/BytePlus (images + videos).
 - Central provider exports in `providers/__init__.py` for import/discovery.
 - Added provider API references doc at `src/celeste/providers/api_references.md`.
 - Files added: `src/celeste/providers/**` and `src/celeste/providers/__init__.py`.
 
-## Contributor Templates
+### Contributor Templates
 - Added code generation templates for contributors to easily add new modalities, providers, or parameters.
 - Templates follow the monolithic architecture with proper relative imports and type patterns.
 - **Modality templates** (`templates/modalities/`): Full scaffolding for new output types including client, IO types, parameters, streaming, provider implementations, and integration tests.
@@ -244,14 +244,14 @@ First-class support for multi-turn conversations across all text providers.
 - Placeholder conventions: `{Modality}` (PascalCase), `{modality}` (lowercase), `{Provider}`, `{provider}`, `{Api}`, `{api}`, `{Content}`.
 - Files added: `templates/modalities/**`, `templates/providers/**`.
 
-## API Wiring
+### API Wiring
 - Updated public exports to v1 surface, including modalities, operations, clients, structured outputs, and namespace singletons.
 - Added modality/provider client map and auto-registered modality models at import time.
 - Added capability-to-(modality, operation) translation layer to keep `capability` supported with a deprecation warning.
 - `create_client` now supports modality + operation arguments, infers operations when possible, and resolves models with better modality-aware errors.
 - File updated: `src/celeste/__init__.py`.
 
-## Docs
+### Docs
 - Updated Quick Start and multimodal examples to the namespace‑first v1 API.
 - Added a Namespace API section and an “Advanced: create_client” section.
 - Added “Behavior changes since v0.3.9”.
@@ -259,14 +259,14 @@ First-class support for multi-turn conversations across all text providers.
 - Updated the PyPI badge and added the v1 beta callout banner.
 - File updated: `README.md`.
 
-## Release Prep
+### Release Prep
 - Set package version to `0.9.1` for the public v1 beta.
 - Updated development status classifier to Beta.
 - Removed notebook/scraping-only runtime deps from install requirements (ipykernel, matplotlib, beautifulsoup4).
 - File updated: `pyproject.toml`.
 
 
-## Client Core / Modality Architecture (`src/celeste/client.py`)
+### Client Core / Modality Architecture (`src/celeste/client.py`)
 - Replaced the capability-specific `Client` with a unified `ModalityClient` base class.
 - Removed the capability/provider client registry and related lookup helpers.
 - Added `modality` as a first-class field and use it for HTTP client selection.
@@ -279,7 +279,7 @@ First-class support for multi-turn conversations across all text providers.
 - Metadata now includes `modality` and the raw response payload.
 - File updated: `src/celeste/client.py`.
 
-## Auth + Credentials (`src/celeste/auth.py`, `src/celeste/credentials.py`)
+### Auth + Credentials (`src/celeste/auth.py`, `src/celeste/credentials.py`)
 - Renamed `APIKey` to `AuthHeader` (with `secret`, `header`, `prefix`), keeping `APIKey` as a backwards-compatible alias.
 - `get_auth_class` no longer auto-loads providers from entry points; auth types must be registered explicitly.
 - Replaced static provider maps with dynamic auth registry (`register_auth`, `get_auth_config`).
@@ -288,7 +288,7 @@ First-class support for multi-turn conversations across all text providers.
 - `has_credential` returns true for auth-class providers; `list_available_providers` now filters by registry + credentials.
 - Files updated: `src/celeste/auth.py`, `src/celeste/credentials.py`.
 
-## Artifacts + MIME (`src/celeste/artifacts.py`, `src/celeste/mime_types.py`)
+### Artifacts + MIME (`src/celeste/artifacts.py`, `src/celeste/mime_types.py`)
 - Added `get_bytes()` and `get_base64()` primitives for content access.
 - Removed `_default_mime_type` and `to_data_url()` (moved to utilities).
 - Added `src/celeste/utils/mime.py` with `detect_mime_type()` and `build_image_data_url()`.
@@ -297,12 +297,12 @@ First-class support for multi-turn conversations across all text providers.
 - Files updated: `src/celeste/artifacts.py`, `src/celeste/mime_types.py`.
 - Files added: `src/celeste/utils/`.
 
-## HTTP + WebSocket (`src/celeste/http.py`, `src/celeste/websocket.py`)
+### HTTP + WebSocket (`src/celeste/http.py`, `src/celeste/websocket.py`)
 - Switched shared client registries to use `Modality` instead of `Capability`.
 - HTTP client now recreates the `httpx.AsyncClient` if the event loop changes to avoid "Event loop is closed" errors.
 - Files updated: `src/celeste/http.py`, `src/celeste/websocket.py`.
 
-## Streaming (`src/celeste/streaming.py`)
+### Streaming (`src/celeste/streaming.py`)
 - Added sync iteration support via anyio blocking portals (`__iter__`, `__next__`).
 - Added sync context manager support (`__enter__`, `__exit__`) with portal cleanup.
 - Added `_build_stream_metadata` hook (default: raw events).
@@ -310,13 +310,13 @@ First-class support for multi-turn conversations across all text providers.
 - Improved cleanup: guard `aclose` during active iteration and suppress close-time runtime errors.
 - File updated: `src/celeste/streaming.py`.
 
-## Exceptions (`src/celeste/exceptions.py`)
+### Exceptions (`src/celeste/exceptions.py`)
 - `ModelNotFoundError` now supports modality-based messages.
 - `ClientNotFoundError` expanded to include modality + operation.
 - Added `ModalityNotFoundError`.
 - File updated: `src/celeste/exceptions.py`.
 
-## Behavior Changes / Notes
+### Behavior Changes / Notes
 - Provider `_make_request` now returns a response data dict; error handling is expected inside provider implementations.
 - Empty streams no longer raise `StreamEmptyError` on exhaustion.
 - Auth types are no longer auto-loaded from entry points; they must be registered explicitly.
