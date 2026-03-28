@@ -2,8 +2,14 @@
 
 import filetype
 
-from celeste.artifacts import ImageArtifact
-from celeste.mime_types import AudioMimeType, ImageMimeType, MimeType, VideoMimeType
+from celeste.artifacts import DocumentArtifact, ImageArtifact
+from celeste.mime_types import (
+    AudioMimeType,
+    DocumentMimeType,
+    ImageMimeType,
+    MimeType,
+    VideoMimeType,
+)
 
 
 def detect_mime_type(data: bytes) -> MimeType | None:
@@ -30,7 +36,7 @@ def detect_mime_type(data: bytes) -> MimeType | None:
     mime_str = result.mime
 
     # Try to match against our known MIME type enums
-    for mime_enum in (ImageMimeType, VideoMimeType, AudioMimeType):
+    for mime_enum in (ImageMimeType, VideoMimeType, AudioMimeType, DocumentMimeType):
         try:
             return mime_enum(mime_str)
         except ValueError:
@@ -56,7 +62,7 @@ def detect_mime_type_from_path(path: str) -> MimeType | None:
 
     mime_str = result.mime
 
-    for mime_enum in (ImageMimeType, VideoMimeType, AudioMimeType):
+    for mime_enum in (ImageMimeType, VideoMimeType, AudioMimeType, DocumentMimeType):
         try:
             return mime_enum(mime_str)
         except ValueError:
@@ -82,4 +88,25 @@ def build_image_data_url(img: ImageArtifact) -> str:
     return f"data:{mime_str};base64,{img.get_base64()}"
 
 
-__all__ = ["build_image_data_url", "detect_mime_type", "detect_mime_type_from_path"]
+def build_document_data_url(doc: DocumentArtifact) -> str:
+    """Build a data URL from a DocumentArtifact.
+
+    For documents with only a URL (no data or path), returns the URL directly.
+    For documents with data or path, builds a data URL with MIME type detection.
+    """
+    if doc.url and not doc.data and not doc.path:
+        return doc.url
+
+    doc_bytes = doc.get_bytes()
+    mime = doc.mime_type or detect_mime_type(doc_bytes)
+    mime_str = mime.value if mime else "application/pdf"
+
+    return f"data:{mime_str};base64,{doc.get_base64()}"
+
+
+__all__ = [
+    "build_document_data_url",
+    "build_image_data_url",
+    "detect_mime_type",
+    "detect_mime_type_from_path",
+]

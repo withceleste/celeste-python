@@ -4,9 +4,9 @@ import pytest
 from pydantic import SecretStr
 
 from celeste import Model
-from celeste.artifacts import ImageArtifact, VideoArtifact
+from celeste.artifacts import DocumentArtifact, ImageArtifact, VideoArtifact
 from celeste.auth import AuthHeader
-from celeste.constraints import ImagesConstraint, VideosConstraint
+from celeste.constraints import DocumentsConstraint, ImagesConstraint, VideosConstraint
 from celeste.core import InputType, Modality, Operation, Provider
 from celeste.modalities.text.parameters import TextParameter
 from celeste.modalities.text.providers.google.client import GoogleTextClient
@@ -38,6 +38,21 @@ def model_with_video_support() -> Model:
         streaming=True,
         parameter_constraints={
             TextParameter.VIDEO: VideosConstraint(),
+        },
+    )
+
+
+@pytest.fixture
+def model_with_document_support() -> Model:
+    """Model that declares document support."""
+    return Model(
+        id="test-document",
+        provider=Provider.GOOGLE,
+        display_name="Test Document",
+        operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
+        streaming=True,
+        parameter_constraints={
+            TextParameter.DOCUMENT: DocumentsConstraint(),
         },
     )
 
@@ -169,6 +184,46 @@ def test_check_media_support_rejects_video_on_image_only_model(
             image=None,
             video=VideoArtifact(data=b"test"),
             audio=None,
+        )
+
+
+def test_check_media_support_allows_document_when_declared(
+    model_with_document_support: Model,
+    google_auth: AuthHeader,
+) -> None:
+    """Document input should be allowed when model declares DocumentsConstraint."""
+    client = GoogleTextClient(
+        model=model_with_document_support,
+        provider=Provider.GOOGLE,
+        auth=google_auth,
+    )
+
+    # Should not raise
+    client._check_media_support(
+        image=None,
+        video=None,
+        audio=None,
+        document=DocumentArtifact(data=b"test"),
+    )
+
+
+def test_check_media_support_rejects_document_when_not_declared(
+    model_without_media_support: Model,
+    google_auth: AuthHeader,
+) -> None:
+    """Document input should raise NotImplementedError when model doesn't declare support."""
+    client = GoogleTextClient(
+        model=model_without_media_support,
+        provider=Provider.GOOGLE,
+        auth=google_auth,
+    )
+
+    with pytest.raises(NotImplementedError, match="does not support document input"):
+        client._check_media_support(
+            image=None,
+            video=None,
+            audio=None,
+            document=DocumentArtifact(data=b"test"),
         )
 
 

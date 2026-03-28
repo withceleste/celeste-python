@@ -7,9 +7,20 @@ from typing import Any, ClassVar, get_args, get_origin
 
 from pydantic import BaseModel, Field, computed_field, field_serializer
 
-from celeste.artifacts import AudioArtifact, ImageArtifact, VideoArtifact
+from celeste.artifacts import (
+    AudioArtifact,
+    DocumentArtifact,
+    ImageArtifact,
+    VideoArtifact,
+)
 from celeste.exceptions import ConstraintViolationError
-from celeste.mime_types import AudioMimeType, ImageMimeType, MimeType, VideoMimeType
+from celeste.mime_types import (
+    AudioMimeType,
+    DocumentMimeType,
+    ImageMimeType,
+    MimeType,
+    VideoMimeType,
+)
 from celeste.tools import Tool
 
 
@@ -368,6 +379,20 @@ class AudiosConstraint(_MediaListConstraint[AudioMimeType]):
     _media_label = "audio"
 
 
+class DocumentConstraint(_MediaConstraint[DocumentMimeType]):
+    """Constraint for validating a single document artifact - validates mime_type."""
+
+    _artifact_type = DocumentArtifact
+    _media_label = "document"
+
+
+class DocumentsConstraint(_MediaListConstraint[DocumentMimeType]):
+    """Constraint for validating document artifacts list - validates mime_type and count limits."""
+
+    _artifact_type = DocumentArtifact
+    _media_label = "document"
+
+
 class ToolSupport(Constraint):
     """Tool support constraint - validates Tool instances are supported by the model."""
 
@@ -398,6 +423,8 @@ __all__ = [
     "Choice",
     "Constraint",
     "Dimensions",
+    "DocumentConstraint",
+    "DocumentsConstraint",
     "Float",
     "ImageConstraint",
     "ImagesConstraint",

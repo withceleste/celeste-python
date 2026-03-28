@@ -15,7 +15,7 @@ from celeste.protocols.chatcompletions.tools import (
 )
 from celeste.tools import ToolCall
 from celeste.types import TextContent
-from celeste.utils import build_image_data_url
+from celeste.utils import build_document_data_url, build_image_data_url
 
 from ...client import TextClient
 from ...io import (
@@ -41,14 +41,34 @@ class ChatCompletionsTextClient(ChatCompletionsMixin, TextClient):
         if inputs.messages is not None:
             return {"messages": serialize_messages(inputs.messages)}
 
-        if inputs.image is None:
+        if inputs.image is None and inputs.document is None:
             content: str | list[dict[str, Any]] = inputs.prompt or ""
         else:
-            images = inputs.image if isinstance(inputs.image, list) else [inputs.image]
-            content = [
-                {"type": "image_url", "image_url": {"url": build_image_data_url(img)}}
-                for img in images
-            ]
+            content = []
+            if inputs.image is not None:
+                images = (
+                    inputs.image if isinstance(inputs.image, list) else [inputs.image]
+                )
+                for img in images:
+                    content.append(
+                        {
+                            "type": "image_url",
+                            "image_url": {"url": build_image_data_url(img)},
+                        }
+                    )
+            if inputs.document is not None:
+                docs = (
+                    inputs.document
+                    if isinstance(inputs.document, list)
+                    else [inputs.document]
+                )
+                for doc in docs:
+                    content.append(
+                        {
+                            "type": "document_url",
+                            "document_url": build_document_data_url(doc),
+                        }
+                    )
             content.append({"type": "text", "text": inputs.prompt or ""})
 
         return {"messages": [{"role": "user", "content": content}]}

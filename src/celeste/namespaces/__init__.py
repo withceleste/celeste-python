@@ -21,6 +21,7 @@ Provides domain-first interface for AI operations:
 
 from celeste.namespaces.domains import (
     AudioNamespace,
+    DocumentsNamespace,
     ImagesNamespace,
     TextNamespace,
     VideosNamespace,
@@ -31,13 +32,16 @@ text = TextNamespace()
 images = ImagesNamespace()
 audio = AudioNamespace()
 videos = VideosNamespace()
+documents = DocumentsNamespace()
 
 __all__ = [
     "AudioNamespace",
+    "DocumentsNamespace",
     "ImagesNamespace",
     "TextNamespace",
     "VideosNamespace",
     "audio",
+    "documents",
     "images",
     "text",
     "videos",

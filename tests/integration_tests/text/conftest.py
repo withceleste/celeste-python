@@ -4,8 +4,18 @@ from pathlib import Path
 
 import pytest
 
-from celeste.artifacts import AudioArtifact, ImageArtifact, VideoArtifact
-from celeste.mime_types import AudioMimeType, ImageMimeType, VideoMimeType
+from celeste.artifacts import (
+    AudioArtifact,
+    DocumentArtifact,
+    ImageArtifact,
+    VideoArtifact,
+)
+from celeste.mime_types import (
+    AudioMimeType,
+    DocumentMimeType,
+    ImageMimeType,
+    VideoMimeType,
+)
 
 ASSETS_DIR = Path(__file__).parent / "assets"
 
@@ -31,4 +41,12 @@ def test_audio() -> AudioArtifact:
     """Provide a minimal test audio (2s 440Hz sine wave)."""
     return AudioArtifact(
         path=str(ASSETS_DIR / "test_audio.mp3"), mime_type=AudioMimeType.MP3
+    )
+
+
+@pytest.fixture
+def test_document() -> DocumentArtifact:
+    """Provide a minimal test PDF document."""
+    return DocumentArtifact(
+        path=str(ASSETS_DIR / "test_document.pdf"), mime_type=DocumentMimeType.PDF
     )

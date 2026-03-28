@@ -48,9 +48,23 @@ class AudioMimeType(MimeType):
     PCM = "audio/pcm"
 
 
+class DocumentMimeType(MimeType):
+    """Standard MIME types for documents."""
+
+    PDF = "application/pdf"
+    DOCX = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    XLSX = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    PPTX = "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+    CSV = "text/csv"
+    TXT = "text/plain"
+    HTML = "text/html"
+    MD = "text/markdown"
+
+
 __all__ = [
     "ApplicationMimeType",
     "AudioMimeType",
+    "DocumentMimeType",
     "ImageMimeType",
     "MimeType",
     "VideoMimeType",

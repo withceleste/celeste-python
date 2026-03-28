@@ -5,7 +5,12 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict
 
-from celeste.artifacts import AudioArtifact, ImageArtifact, VideoArtifact
+from celeste.artifacts import (
+    AudioArtifact,
+    DocumentArtifact,
+    ImageArtifact,
+    VideoArtifact,
+)
 
 type JsonValue = (
     str | int | float | bool | None | dict[str, JsonValue] | list[JsonValue]
@@ -13,11 +18,14 @@ type JsonValue = (
 
 type TextContent = str | JsonValue | BaseModel | list[BaseModel]
 type AudioContent = AudioArtifact | list[AudioArtifact]
+type DocumentContent = DocumentArtifact | list[DocumentArtifact]
 type ImageContent = ImageArtifact | list[ImageArtifact]
 type VideoContent = VideoArtifact | list[VideoArtifact]
 type EmbeddingsContent = list[float] | list[list[float]]
 
-type Content = TextContent | ImageContent | VideoContent | AudioContent
+type Content = (
+    TextContent | ImageContent | VideoContent | AudioContent | DocumentContent
+)
 
 type RawUsage = dict[str, int | float | None]
 
@@ -54,6 +62,7 @@ class Message(BaseModel):
 __all__ = [
     "AudioContent",
     "Content",
+    "DocumentContent",
     "EmbeddingsContent",
     "ImageContent",
     "JsonValue",

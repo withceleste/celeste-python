@@ -99,6 +99,7 @@ class InputType(StrEnum):
     IMAGE = "image"
     VIDEO = "video"
     AUDIO = "audio"
+    DOCUMENT = "document"
 
 
 class Parameter(StrEnum):
@@ -140,6 +141,7 @@ class Domain(StrEnum):
     IMAGES = "images"
     AUDIO = "audio"
     VIDEOS = "videos"
+    DOCUMENTS = "documents"
 
 
 # (Domain, Operation) → Modality inference
@@ -156,6 +158,7 @@ DOMAIN_OPERATION_TO_MODALITY: dict[tuple[Domain, Operation], Modality] = {
     (Domain.VIDEOS, Operation.GENERATE): Modality.VIDEOS,
     (Domain.VIDEOS, Operation.ANALYZE): Modality.TEXT,
     (Domain.VIDEOS, Operation.EMBED): Modality.EMBEDDINGS,
+    (Domain.DOCUMENTS, Operation.ANALYZE): Modality.TEXT,
 }
 
 
