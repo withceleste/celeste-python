@@ -1,6 +1,12 @@
 """Mistral models for text modality."""
 
-from celeste.constraints import ImagesConstraint, Range, Schema, ToolSupport
+from celeste.constraints import (
+    DocumentsConstraint,
+    ImagesConstraint,
+    Range,
+    Schema,
+    ToolSupport,
+)
 from celeste.core import Modality, Operation, Parameter, Provider
 from celeste.models import Model
 
@@ -31,6 +37,7 @@ MODELS: list[Model] = [
             Parameter.MAX_TOKENS: Range(min=1, max=32768, step=1),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.IMAGE: ImagesConstraint(),
+            TextParameter.DOCUMENT: DocumentsConstraint(),
             TextParameter.TOOLS: ToolSupport(tools=[]),
         },
     ),
@@ -45,6 +52,7 @@ MODELS: list[Model] = [
             Parameter.MAX_TOKENS: Range(min=1, max=32768, step=1),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.IMAGE: ImagesConstraint(),
+            TextParameter.DOCUMENT: DocumentsConstraint(),
             TextParameter.TOOLS: ToolSupport(tools=[]),
         },
     ),
@@ -137,6 +145,7 @@ MODELS: list[Model] = [
             Parameter.MAX_TOKENS: Range(min=1, max=32768, step=1),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.IMAGE: ImagesConstraint(),
+            TextParameter.DOCUMENT: DocumentsConstraint(),
             TextParameter.TOOLS: ToolSupport(tools=[]),
         },
     ),
@@ -151,6 +160,7 @@ MODELS: list[Model] = [
             Parameter.MAX_TOKENS: Range(min=1, max=32768, step=1),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.IMAGE: ImagesConstraint(),
+            TextParameter.DOCUMENT: DocumentsConstraint(),
             TextParameter.TOOLS: ToolSupport(tools=[]),
         },
     ),
@@ -165,6 +175,7 @@ MODELS: list[Model] = [
             Parameter.MAX_TOKENS: Range(min=1, max=32768, step=1),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.IMAGE: ImagesConstraint(),
+            TextParameter.DOCUMENT: DocumentsConstraint(),
             TextParameter.TOOLS: ToolSupport(tools=[]),
         },
     ),
@@ -232,6 +243,7 @@ MODELS: list[Model] = [
             TextParameter.THINKING_BUDGET: Range(min=-1, max=32768, step=1),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.IMAGE: ImagesConstraint(),
+            TextParameter.DOCUMENT: DocumentsConstraint(),
             TextParameter.TOOLS: ToolSupport(tools=[]),
         },
     ),
@@ -247,6 +259,7 @@ MODELS: list[Model] = [
             TextParameter.THINKING_BUDGET: Range(min=-1, max=32768, step=1),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.IMAGE: ImagesConstraint(),
+            TextParameter.DOCUMENT: DocumentsConstraint(),
             TextParameter.TOOLS: ToolSupport(tools=[]),
         },
     ),

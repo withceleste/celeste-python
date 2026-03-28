@@ -132,6 +132,15 @@ class GoogleTextClient(GoogleGenerateContentClient, TextClient):
             for aud in audios:
                 parts.append(build_media_part(aud))
 
+        if inputs.document is not None:
+            docs = (
+                inputs.document
+                if isinstance(inputs.document, list)
+                else [inputs.document]
+            )
+            for doc in docs:
+                parts.append(build_media_part(doc))
+
         parts.append({"text": inputs.prompt or ""})
 
         return {"contents": [{"role": "user", "parts": parts}]}

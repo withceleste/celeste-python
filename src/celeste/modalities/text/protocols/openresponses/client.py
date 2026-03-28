@@ -16,7 +16,7 @@ from celeste.protocols.openresponses.tools import (
 )
 from celeste.tools import ToolCall
 from celeste.types import TextContent
-from celeste.utils import build_image_data_url
+from celeste.utils import build_document_data_url, build_image_data_url
 
 from ...client import TextClient
 from ...io import (
@@ -78,6 +78,24 @@ class OpenResponsesTextClient(OpenResponsesMixin, TextClient):
             for img in images:
                 content.append(
                     {"type": "input_image", "image_url": build_image_data_url(img)}
+                )
+
+        if inputs.document is not None:
+            docs = (
+                inputs.document
+                if isinstance(inputs.document, list)
+                else [inputs.document]
+            )
+            for doc in docs:
+                file_data = build_document_data_url(doc)
+                content.append(
+                    {
+                        "type": "input_file",
+                        "filename": doc.path.rsplit("/", 1)[-1]
+                        if doc.path
+                        else "document",
+                        "file_data": file_data,
+                    }
                 )
 
         content.append({"type": "input_text", "text": inputs.prompt or ""})

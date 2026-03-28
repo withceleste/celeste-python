@@ -24,7 +24,13 @@ from celeste.modalities.text.parameters import TextParameters
 from celeste.modalities.text.streaming import TextStream
 from celeste.modalities.videos.io import VideoOutput
 from celeste.modalities.videos.parameters import VideoParameters
-from celeste.types import AudioContent, ImageContent, Message, VideoContent
+from celeste.types import (
+    AudioContent,
+    DocumentContent,
+    ImageContent,
+    Message,
+    VideoContent,
+)
 
 
 class SyncStreamTextNamespace:
@@ -1210,8 +1216,175 @@ class VideosNamespace:
         return StreamVideosNamespace()
 
 
+class SyncStreamDocumentsNamespace:
+    """celeste.documents.sync.stream.* namespace."""
+
+    def analyze(
+        self,
+        document: DocumentContent,
+        prompt: str | None = None,
+        *,
+        messages: list[Message] | None = None,
+        model: str,
+        provider: Provider | None = None,
+        protocol: Protocol | None = None,
+        api_key: str | SecretStr | None = None,
+        auth: Authentication | None = None,
+        base_url: str | None = None,
+        **params: Unpack[TextParameters],
+    ) -> TextStream:
+        """Sync streaming document analysis."""
+        client = create_client(
+            modality=Modality.TEXT,
+            operation=Operation.ANALYZE,
+            model=model,
+            provider=provider,
+            protocol=protocol,
+            api_key=api_key,
+            auth=auth,
+            base_url=base_url,
+        )
+        return client.sync.stream.analyze(
+            prompt, messages=messages, document=document, **params
+        )
+
+
+class StreamDocumentsNamespace:
+    """celeste.documents.stream.* namespace."""
+
+    def analyze(
+        self,
+        document: DocumentContent,
+        prompt: str | None = None,
+        *,
+        messages: list[Message] | None = None,
+        model: str,
+        provider: Provider | None = None,
+        protocol: Protocol | None = None,
+        api_key: str | SecretStr | None = None,
+        auth: Authentication | None = None,
+        base_url: str | None = None,
+        **params: Unpack[TextParameters],
+    ) -> TextStream:
+        """Async streaming document analysis."""
+        client = create_client(
+            modality=Modality.TEXT,
+            operation=Operation.ANALYZE,
+            model=model,
+            provider=provider,
+            protocol=protocol,
+            api_key=api_key,
+            auth=auth,
+            base_url=base_url,
+        )
+        return client.stream.analyze(
+            prompt, messages=messages, document=document, **params
+        )
+
+
+class SyncDocumentsNamespace:
+    """celeste.documents.sync.* namespace."""
+
+    def analyze(
+        self,
+        document: DocumentContent,
+        prompt: str | None = None,
+        *,
+        messages: list[Message] | None = None,
+        model: str,
+        provider: Provider | None = None,
+        protocol: Protocol | None = None,
+        api_key: str | SecretStr | None = None,
+        auth: Authentication | None = None,
+        base_url: str | None = None,
+        **params: Unpack[TextParameters],
+    ) -> TextOutput:
+        """Blocking document analysis."""
+        client = create_client(
+            modality=Modality.TEXT,
+            operation=Operation.ANALYZE,
+            model=model,
+            provider=provider,
+            protocol=protocol,
+            api_key=api_key,
+            auth=auth,
+            base_url=base_url,
+        )
+        return client.sync.analyze(
+            prompt, messages=messages, document=document, **params
+        )
+
+    @property
+    def stream(self) -> SyncStreamDocumentsNamespace:
+        """Access sync streaming document operations."""
+        return SyncStreamDocumentsNamespace()
+
+
+class DocumentsNamespace:
+    """celeste.documents.* namespace.
+
+    Provides document analysis operations.
+    """
+
+    async def analyze(
+        self,
+        document: DocumentContent,
+        prompt: str | None = None,
+        *,
+        messages: list[Message] | None = None,
+        model: str,
+        provider: Provider | None = None,
+        protocol: Protocol | None = None,
+        api_key: str | SecretStr | None = None,
+        auth: Authentication | None = None,
+        base_url: str | None = None,
+        **parameters: Unpack[TextParameters],
+    ) -> TextOutput:
+        """Analyze document(s) and return text description.
+
+        Args:
+            document: Document or list of documents to analyze.
+            prompt: Question or instruction about the document.
+            messages: List of messages for multi-turn conversations.
+            model: Model ID to use (required).
+            provider: Optional provider override.
+            protocol: Wire format protocol for compatible APIs.
+            api_key: Optional API key override.
+            auth: Optional Authentication object (e.g., GoogleADC for Vertex AI).
+            base_url: Custom base URL for compatible APIs or proxy endpoints.
+            **parameters: Additional model parameters.
+
+        Returns:
+            TextOutput with analysis result.
+        """
+        client = create_client(
+            modality=Modality.TEXT,
+            operation=Operation.ANALYZE,
+            model=model,
+            provider=provider,
+            protocol=protocol,
+            api_key=api_key,
+            auth=auth,
+            base_url=base_url,
+        )
+        return await client.analyze(
+            prompt, messages=messages, document=document, **parameters
+        )
+
+    @property
+    def sync(self) -> SyncDocumentsNamespace:
+        """Access synchronous document operations."""
+        return SyncDocumentsNamespace()
+
+    @property
+    def stream(self) -> StreamDocumentsNamespace:
+        """Access streaming document operations."""
+        return StreamDocumentsNamespace()
+
+
 __all__ = [
     "AudioNamespace",
+    "DocumentsNamespace",
     "ImagesNamespace",
     "TextNamespace",
     "VideosNamespace",
