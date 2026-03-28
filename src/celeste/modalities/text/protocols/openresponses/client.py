@@ -87,16 +87,18 @@ class OpenResponsesTextClient(OpenResponsesMixin, TextClient):
                 else [inputs.document]
             )
             for doc in docs:
-                file_data = build_document_data_url(doc)
-                content.append(
-                    {
-                        "type": "input_file",
-                        "filename": doc.path.rsplit("/", 1)[-1]
-                        if doc.path
-                        else "document",
-                        "file_data": file_data,
-                    }
-                )
+                if doc.url and not doc.data and not doc.path:
+                    content.append({"type": "input_file", "file_url": doc.url})
+                else:
+                    content.append(
+                        {
+                            "type": "input_file",
+                            "filename": doc.path.rsplit("/", 1)[-1]
+                            if doc.path
+                            else "document",
+                            "file_data": build_document_data_url(doc),
+                        }
+                    )
 
         content.append({"type": "input_text", "text": inputs.prompt or ""})
         return {"input": [{"role": "user", "content": content}]}
