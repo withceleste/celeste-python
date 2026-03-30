@@ -26,9 +26,7 @@ MODELS: list[Model] = [
             TextParameter.THINKING_BUDGET: Range(min=-1, max=64000),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
-            TextParameter.TOOL_CHOICE: ToolChoiceSupport(
-                modes=["auto", "required", "none"]
-            ),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
             TextParameter.IMAGE: ImagesConstraint(),
             TextParameter.DOCUMENT: DocumentsConstraint(),
         },
@@ -44,9 +42,7 @@ MODELS: list[Model] = [
             TextParameter.THINKING_BUDGET: Range(min=-1, max=32000),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
-            TextParameter.TOOL_CHOICE: ToolChoiceSupport(
-                modes=["auto", "required", "none"]
-            ),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
             TextParameter.IMAGE: ImagesConstraint(),
             TextParameter.DOCUMENT: DocumentsConstraint(),
         },
@@ -62,9 +58,7 @@ MODELS: list[Model] = [
             TextParameter.THINKING_BUDGET: Range(min=-1, max=32000),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
-            TextParameter.TOOL_CHOICE: ToolChoiceSupport(
-                modes=["auto", "required", "none"]
-            ),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
             TextParameter.IMAGE: ImagesConstraint(),
             TextParameter.DOCUMENT: DocumentsConstraint(),
         },
@@ -80,9 +74,7 @@ MODELS: list[Model] = [
             TextParameter.THINKING_BUDGET: Range(min=-1, max=32000),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
-            TextParameter.TOOL_CHOICE: ToolChoiceSupport(
-                modes=["auto", "required", "none"]
-            ),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
             TextParameter.IMAGE: ImagesConstraint(),
             TextParameter.DOCUMENT: DocumentsConstraint(),
         },
@@ -98,9 +90,7 @@ MODELS: list[Model] = [
             TextParameter.THINKING_BUDGET: Range(min=-1, max=32000),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
-            TextParameter.TOOL_CHOICE: ToolChoiceSupport(
-                modes=["auto", "required", "none"]
-            ),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
             TextParameter.IMAGE: ImagesConstraint(),
             TextParameter.DOCUMENT: DocumentsConstraint(),
         },
@@ -116,9 +106,7 @@ MODELS: list[Model] = [
             TextParameter.THINKING_BUDGET: Range(min=-1, max=64000),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
-            TextParameter.TOOL_CHOICE: ToolChoiceSupport(
-                modes=["auto", "required", "none"]
-            ),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
             TextParameter.IMAGE: ImagesConstraint(),
             TextParameter.DOCUMENT: DocumentsConstraint(),
         },
@@ -133,9 +121,7 @@ MODELS: list[Model] = [
             Parameter.MAX_TOKENS: Range(min=1, max=64000),
             TextParameter.THINKING_BUDGET: Range(min=-1, max=64000),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
-            TextParameter.TOOL_CHOICE: ToolChoiceSupport(
-                modes=["auto", "required", "none"]
-            ),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
             TextParameter.IMAGE: ImagesConstraint(),
             TextParameter.DOCUMENT: DocumentsConstraint(),
         },
@@ -150,9 +136,7 @@ MODELS: list[Model] = [
             Parameter.MAX_TOKENS: Range(min=1, max=32000),
             TextParameter.THINKING_BUDGET: Range(min=-1, max=32000),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
-            TextParameter.TOOL_CHOICE: ToolChoiceSupport(
-                modes=["auto", "required", "none"]
-            ),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
             TextParameter.IMAGE: ImagesConstraint(),
             TextParameter.DOCUMENT: DocumentsConstraint(),
         },

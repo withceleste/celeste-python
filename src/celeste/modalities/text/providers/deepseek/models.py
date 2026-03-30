@@ -18,9 +18,7 @@ MODELS: list[Model] = [
             Parameter.MAX_TOKENS: Range(min=1, max=8192, step=1),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.TOOLS: ToolSupport(tools=[]),
-            TextParameter.TOOL_CHOICE: ToolChoiceSupport(
-                modes=["auto", "required", "none"]
-            ),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
         },
     ),
     Model(

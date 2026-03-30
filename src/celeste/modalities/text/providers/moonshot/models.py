@@ -40,9 +40,7 @@ MODELS: list[Model] = [
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.IMAGE: ImagesConstraint(),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
-            TextParameter.TOOL_CHOICE: ToolChoiceSupport(
-                modes=["auto", "required", "none"]
-            ),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
         },
     ),
     Model(
@@ -56,9 +54,7 @@ MODELS: list[Model] = [
             Parameter.MAX_TOKENS: Range(min=1, max=32768, step=1),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
-            TextParameter.TOOL_CHOICE: ToolChoiceSupport(
-                modes=["auto", "required", "none"]
-            ),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
         },
     ),
     Model(
@@ -72,9 +68,7 @@ MODELS: list[Model] = [
             Parameter.MAX_TOKENS: Range(min=1, max=32768, step=1),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
-            TextParameter.TOOL_CHOICE: ToolChoiceSupport(
-                modes=["auto", "required", "none"]
-            ),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
         },
     ),
     Model(
@@ -88,9 +82,7 @@ MODELS: list[Model] = [
             Parameter.MAX_TOKENS: Range(min=1, max=32768, step=1),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
-            TextParameter.TOOL_CHOICE: ToolChoiceSupport(
-                modes=["auto", "required", "none"]
-            ),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
         },
     ),
     Model(
@@ -104,9 +96,7 @@ MODELS: list[Model] = [
             Parameter.MAX_TOKENS: Range(min=1, max=32768, step=1),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
-            TextParameter.TOOL_CHOICE: ToolChoiceSupport(
-                modes=["auto", "required", "none"]
-            ),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
         },
     ),
     Model(
@@ -120,9 +110,7 @@ MODELS: list[Model] = [
             Parameter.MAX_TOKENS: Range(min=1, max=32768, step=1),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
-            TextParameter.TOOL_CHOICE: ToolChoiceSupport(
-                modes=["auto", "required", "none"]
-            ),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
         },
     ),
 ]
