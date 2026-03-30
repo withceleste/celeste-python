@@ -6,7 +6,12 @@ from typing import Any, get_args, get_origin
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from celeste.artifacts import AudioArtifact, ImageArtifact, VideoArtifact
+from celeste.artifacts import (
+    AudioArtifact,
+    DocumentArtifact,
+    ImageArtifact,
+    VideoArtifact,
+)
 from celeste.constraints import Constraint
 from celeste.core import InputType
 from celeste.tools import ToolCall
@@ -59,6 +64,7 @@ INPUT_TYPE_MAPPING: dict[type, InputType] = {
     ImageArtifact: InputType.IMAGE,
     VideoArtifact: InputType.VIDEO,
     AudioArtifact: InputType.AUDIO,
+    DocumentArtifact: InputType.DOCUMENT,
 }
 
 

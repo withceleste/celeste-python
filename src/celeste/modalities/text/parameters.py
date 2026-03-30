@@ -38,6 +38,7 @@ class TextParameter(StrEnum):
     IMAGE = "image"
     VIDEO = "video"
     AUDIO = "audio"
+    DOCUMENT = "document"
 
 
 class TextParameters(Parameters):

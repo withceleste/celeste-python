@@ -298,6 +298,7 @@ __all__ = [
     "XSearch",
     "audio",
     "create_client",
+    "documents",
     "get_model",
     "images",
     "list_models",
@@ -307,4 +308,4 @@ __all__ = [
 ]
 
 # Domain namespace API (imported last to avoid circular imports)
-from celeste.namespaces import audio, images, text, videos  # noqa: E402
+from celeste.namespaces import audio, documents, images, text, videos  # noqa: E402

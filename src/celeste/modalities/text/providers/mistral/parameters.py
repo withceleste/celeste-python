@@ -4,36 +4,20 @@ from typing import Any
 
 from celeste.models import Model
 from celeste.parameters import ParameterMapper
-from celeste.protocols.chatcompletions.parameters import (
-    MaxTokensMapper as _MaxTokensMapper,
-)
-from celeste.protocols.chatcompletions.parameters import (
-    TemperatureMapper as _TemperatureMapper,
-)
-from celeste.protocols.chatcompletions.parameters import (
-    ToolChoiceMapper as _ToolChoiceMapper,
-)
-from celeste.protocols.chatcompletions.parameters import (
-    ToolsMapper as _ToolsMapper,
-)
 from celeste.providers.mistral.chat.parameters import (
     ResponseFormatMapper as _ResponseFormatMapper,
 )
 from celeste.types import TextContent
 
 from ...parameters import TextParameter
-
-
-class TemperatureMapper(_TemperatureMapper):
-    """Map temperature to Mistral's temperature parameter."""
-
-    name = TextParameter.TEMPERATURE
-
-
-class MaxTokensMapper(_MaxTokensMapper):
-    """Map max_tokens to Mistral's max_tokens parameter."""
-
-    name = TextParameter.MAX_TOKENS
+from ...protocols.chatcompletions.parameters import (
+    MaxTokensMapper,
+    TemperatureMapper,
+    ToolsMapper,
+)
+from ...protocols.chatcompletions.parameters import (
+    ToolChoiceMapper as _ToolChoiceMapper,
+)
 
 
 class ThinkingBudgetMapper(ParameterMapper[TextContent]):
@@ -52,7 +36,6 @@ class ThinkingBudgetMapper(ParameterMapper[TextContent]):
         if validated_value is None:
             return request
 
-        # Map unified values to Mistral's prompt_mode
         if validated_value == -1:
             request["prompt_mode"] = "reasoning"
         elif validated_value == 0:
@@ -67,12 +50,6 @@ class OutputSchemaMapper(_ResponseFormatMapper):
     """Map output_schema to Mistral's response_format parameter."""
 
     name = TextParameter.OUTPUT_SCHEMA
-
-
-class ToolsMapper(_ToolsMapper):
-    """Map tools to Mistral's tools parameter."""
-
-    name = TextParameter.TOOLS
 
 
 class ToolChoiceMapper(_ToolChoiceMapper):

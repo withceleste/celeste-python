@@ -8,7 +8,14 @@ from asgiref.sync import async_to_sync
 from celeste.client import ModalityClient
 from celeste.core import InputType, Modality
 from celeste.tools import CodeExecution, WebSearch, XSearch
-from celeste.types import AudioContent, ImageContent, Message, TextContent, VideoContent
+from celeste.types import (
+    AudioContent,
+    DocumentContent,
+    ImageContent,
+    Message,
+    TextContent,
+    VideoContent,
+)
 
 from .io import TextChunk, TextFinishReason, TextInput, TextOutput, TextUsage
 from .parameters import TextParameters
@@ -60,15 +67,23 @@ class TextClient(
         image: ImageContent | None = None,
         video: VideoContent | None = None,
         audio: AudioContent | None = None,
+        document: DocumentContent | None = None,
         extra_body: dict[str, Any] | None = None,
         extra_headers: dict[str, str] | None = None,
         **parameters: Unpack[TextParameters],
     ) -> TextOutput:
-        """Analyze image(s), video(s), or audio with prompt or messages."""
+        """Analyze image(s), video(s), audio, or document(s) with prompt or messages."""
         if messages is None:
-            self._check_media_support(image=image, video=video, audio=audio)
+            self._check_media_support(
+                image=image, video=video, audio=audio, document=document
+            )
         inputs = TextInput(
-            prompt=prompt, messages=messages, image=image, video=video, audio=audio
+            prompt=prompt,
+            messages=messages,
+            image=image,
+            video=video,
+            audio=audio,
+            document=document,
         )
         return await self._predict(
             inputs, extra_body=extra_body, extra_headers=extra_headers, **parameters
@@ -105,6 +120,7 @@ class TextClient(
         image: ImageContent | None,
         video: VideoContent | None,
         audio: AudioContent | None,
+        document: DocumentContent | None = None,
     ) -> None:
         """Check model supports the provided media types.
 
@@ -119,6 +135,12 @@ class TextClient(
             raise NotImplementedError(msg)
         if audio is not None and InputType.AUDIO not in self.model.optional_input_types:
             msg = f"Model {self.model.id} does not support audio input"
+            raise NotImplementedError(msg)
+        if (
+            document is not None
+            and InputType.DOCUMENT not in self.model.optional_input_types
+        ):
+            msg = f"Model {self.model.id} does not support document input"
             raise NotImplementedError(msg)
 
     @property
@@ -173,26 +195,31 @@ class TextStreamNamespace:
         image: ImageContent | None = None,
         video: VideoContent | None = None,
         audio: AudioContent | None = None,
+        document: DocumentContent | None = None,
         extra_body: dict[str, Any] | None = None,
         extra_headers: dict[str, str] | None = None,
         **parameters: Unpack[TextParameters],
     ) -> TextStream:
-        """Stream media analysis (image, video, or audio).
+        """Stream media analysis (image, video, audio, or document).
 
         Usage:
             async for chunk in client.stream.analyze("Describe", image=img):
                 print(chunk.content)
 
-            async for chunk in client.stream.analyze("Describe", video=vid):
-                print(chunk.content)
-
-            async for chunk in client.stream.analyze("Transcribe", audio=aud):
+            async for chunk in client.stream.analyze("Summarize", document=doc):
                 print(chunk.content)
         """
         if messages is None:
-            self._client._check_media_support(image=image, video=video, audio=audio)
+            self._client._check_media_support(
+                image=image, video=video, audio=audio, document=document
+            )
         inputs = TextInput(
-            prompt=prompt, messages=messages, image=image, video=video, audio=audio
+            prompt=prompt,
+            messages=messages,
+            image=image,
+            video=video,
+            audio=audio,
+            document=document,
         )
         return self._client._stream(
             inputs,
@@ -243,26 +270,31 @@ class TextSyncNamespace:
         image: ImageContent | None = None,
         video: VideoContent | None = None,
         audio: AudioContent | None = None,
+        document: DocumentContent | None = None,
         extra_body: dict[str, Any] | None = None,
         extra_headers: dict[str, str] | None = None,
         **parameters: Unpack[TextParameters],
     ) -> TextOutput:
-        """Blocking media analysis (image, video, or audio).
+        """Blocking media analysis (image, video, audio, or document).
 
         Usage:
             result = client.sync.analyze("Describe", image=img)
             print(result.content)
 
-            result = client.sync.analyze("Describe", video=vid)
-            print(result.content)
-
-            result = client.sync.analyze("Transcribe", audio=aud)
+            result = client.sync.analyze("Summarize", document=doc)
             print(result.content)
         """
         if messages is None:
-            self._client._check_media_support(image=image, video=video, audio=audio)
+            self._client._check_media_support(
+                image=image, video=video, audio=audio, document=document
+            )
         inputs = TextInput(
-            prompt=prompt, messages=messages, image=image, video=video, audio=audio
+            prompt=prompt,
+            messages=messages,
+            image=image,
+            video=video,
+            audio=audio,
+            document=document,
         )
         return async_to_sync(self._client._predict)(
             inputs,
@@ -319,37 +351,31 @@ class TextSyncStreamNamespace:
         image: ImageContent | None = None,
         video: VideoContent | None = None,
         audio: AudioContent | None = None,
+        document: DocumentContent | None = None,
         extra_body: dict[str, Any] | None = None,
         extra_headers: dict[str, str] | None = None,
         **parameters: Unpack[TextParameters],
     ) -> TextStream:
-        """Sync streaming media analysis (image, video, or audio).
+        """Sync streaming media analysis (image, video, audio, or document).
 
         Returns Stream instance that supports both async and sync iteration.
 
         Usage:
             stream = client.sync.stream.analyze("Describe", image=img)
-            for chunk in stream:  # Sync iteration (bridges async internally)
-                print(chunk.content, end="")
-            print(stream.output.usage)
-
-            stream = client.sync.stream.analyze("Describe", video=vid)
             for chunk in stream:
                 print(chunk.content, end="")
-            print(stream.output.usage)
 
-            stream = client.sync.stream.analyze("Transcribe", audio=aud)
+            stream = client.sync.stream.analyze("Summarize", document=doc)
             for chunk in stream:
                 print(chunk.content, end="")
-            print(stream.output.usage)
         """
-        # Return same stream as async version - __iter__/__next__ handle sync iteration
         return self._client.stream.analyze(
             prompt,
             messages=messages,
             image=image,
             video=video,
             audio=audio,
+            document=document,
             extra_body=extra_body,
             extra_headers=extra_headers,
             **parameters,

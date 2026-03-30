@@ -2,15 +2,6 @@
 
 from celeste.parameters import ParameterMapper
 from celeste.protocols.chatcompletions.parameters import (
-    MaxTokensMapper as _MaxTokensMapper,
-)
-from celeste.protocols.chatcompletions.parameters import (
-    TemperatureMapper as _TemperatureMapper,
-)
-from celeste.protocols.chatcompletions.parameters import (
-    ToolChoiceMapper as _ToolChoiceMapper,
-)
-from celeste.protocols.chatcompletions.parameters import (
     ToolsMapper as _ToolsMapper,
 )
 from celeste.providers.groq.chat.parameters import (
@@ -20,18 +11,11 @@ from celeste.providers.groq.chat.tools import TOOL_MAPPERS as GROQ_TOOL_MAPPERS
 from celeste.types import TextContent
 
 from ...parameters import TextParameter
-
-
-class TemperatureMapper(_TemperatureMapper):
-    """Map temperature to Groq's temperature parameter."""
-
-    name = TextParameter.TEMPERATURE
-
-
-class MaxTokensMapper(_MaxTokensMapper):
-    """Map max_tokens to Groq's max_tokens parameter."""
-
-    name = TextParameter.MAX_TOKENS
+from ...protocols.chatcompletions.parameters import (
+    MaxTokensMapper,
+    TemperatureMapper,
+    ToolChoiceMapper,
+)
 
 
 class OutputSchemaMapper(_ResponseFormatMapper):
@@ -45,10 +29,6 @@ class ToolsMapper(_ToolsMapper):
 
     name = TextParameter.TOOLS
     _tool_mappers = GROQ_TOOL_MAPPERS
-
-
-class ToolChoiceMapper(_ToolChoiceMapper):
-    name = TextParameter.TOOL_CHOICE
 
 
 GROQ_PARAMETER_MAPPERS: list[ParameterMapper[TextContent]] = [

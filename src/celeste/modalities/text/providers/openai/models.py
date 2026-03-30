@@ -2,6 +2,7 @@
 
 from celeste.constraints import (
     Choice,
+    DocumentsConstraint,
     ImagesConstraint,
     Range,
     Schema,
@@ -30,6 +31,7 @@ MODELS: list[Model] = [
             ),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.IMAGE: ImagesConstraint(),
+            TextParameter.DOCUMENT: DocumentsConstraint(),
         },
     ),
     Model(
@@ -46,6 +48,7 @@ MODELS: list[Model] = [
                 modes=["auto", "required", "none"]
             ),
             TextParameter.IMAGE: ImagesConstraint(),
+            TextParameter.DOCUMENT: DocumentsConstraint(),
         },
     ),
     Model(
@@ -62,6 +65,7 @@ MODELS: list[Model] = [
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.IMAGE: ImagesConstraint(),
+            TextParameter.DOCUMENT: DocumentsConstraint(),
         },
     ),
     Model(
@@ -81,6 +85,7 @@ MODELS: list[Model] = [
             ),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.IMAGE: ImagesConstraint(),
+            TextParameter.DOCUMENT: DocumentsConstraint(),
         },
     ),
     Model(
@@ -101,6 +106,7 @@ MODELS: list[Model] = [
             ),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.IMAGE: ImagesConstraint(),
+            TextParameter.DOCUMENT: DocumentsConstraint(),
         },
     ),
     Model(
@@ -120,6 +126,7 @@ MODELS: list[Model] = [
             ),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.IMAGE: ImagesConstraint(),
+            TextParameter.DOCUMENT: DocumentsConstraint(),
         },
     ),
     Model(
@@ -136,6 +143,7 @@ MODELS: list[Model] = [
                 modes=["auto", "required", "none"]
             ),
             TextParameter.IMAGE: ImagesConstraint(),
+            TextParameter.DOCUMENT: DocumentsConstraint(),
         },
     ),
     Model(
@@ -156,6 +164,7 @@ MODELS: list[Model] = [
             ),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.IMAGE: ImagesConstraint(),
+            TextParameter.DOCUMENT: DocumentsConstraint(),
         },
     ),
     Model(
@@ -176,6 +185,7 @@ MODELS: list[Model] = [
             ),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.IMAGE: ImagesConstraint(),
+            TextParameter.DOCUMENT: DocumentsConstraint(),
         },
     ),
     Model(
@@ -195,6 +205,7 @@ MODELS: list[Model] = [
             ),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.IMAGE: ImagesConstraint(),
+            TextParameter.DOCUMENT: DocumentsConstraint(),
         },
     ),
     Model(
@@ -211,6 +222,7 @@ MODELS: list[Model] = [
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.IMAGE: ImagesConstraint(),
+            TextParameter.DOCUMENT: DocumentsConstraint(),
         },
     ),
     Model(
@@ -231,6 +243,7 @@ MODELS: list[Model] = [
             ),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.IMAGE: ImagesConstraint(),
+            TextParameter.DOCUMENT: DocumentsConstraint(),
         },
     ),
     Model(
@@ -251,6 +264,7 @@ MODELS: list[Model] = [
             ),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.IMAGE: ImagesConstraint(),
+            TextParameter.DOCUMENT: DocumentsConstraint(),
         },
     ),
     Model(
@@ -268,6 +282,7 @@ MODELS: list[Model] = [
             ),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.IMAGE: ImagesConstraint(),
+            TextParameter.DOCUMENT: DocumentsConstraint(),
         },
     ),
 ]

@@ -13,6 +13,7 @@ from celeste.io import Chunk, FinishReason, Input, Output, Usage
 from celeste.tools import ToolResult
 from celeste.types import (
     AudioContent,
+    DocumentContent,
     ImageContent,
     Message,
     Role,
@@ -30,6 +31,7 @@ class TextInput(Input):
     image: ImageContent | None = None
     video: VideoContent | None = None
     audio: AudioContent | None = None
+    document: DocumentContent | None = None
 
 
 class TextFinishReason(FinishReason):

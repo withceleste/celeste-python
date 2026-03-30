@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field, field_serializer, field_validator
 
 from celeste.mime_types import (
     AudioMimeType,
+    DocumentMimeType,
     ImageMimeType,
     MimeType,
     VideoMimeType,
@@ -91,9 +92,16 @@ class AudioArtifact(Artifact):
     mime_type: AudioMimeType | None = None
 
 
+class DocumentArtifact(Artifact):
+    """Document artifact for analysis operations (PDF, DOCX, XLSX, etc.)."""
+
+    mime_type: DocumentMimeType | None = None
+
+
 __all__ = [
     "Artifact",
     "AudioArtifact",
+    "DocumentArtifact",
     "ImageArtifact",
     "VideoArtifact",
 ]

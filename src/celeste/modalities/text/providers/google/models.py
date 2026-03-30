@@ -3,6 +3,7 @@
 from celeste.constraints import (
     AudioConstraint,
     Choice,
+    DocumentsConstraint,
     ImagesConstraint,
     Range,
     Schema,
@@ -37,6 +38,7 @@ MODELS: list[Model] = [
             TextParameter.IMAGE: ImagesConstraint(),
             TextParameter.VIDEO: VideosConstraint(),
             TextParameter.AUDIO: AudioConstraint(),
+            TextParameter.DOCUMENT: DocumentsConstraint(),
         },
     ),
     Model(
@@ -61,6 +63,7 @@ MODELS: list[Model] = [
             TextParameter.IMAGE: ImagesConstraint(),
             TextParameter.VIDEO: VideosConstraint(),
             TextParameter.AUDIO: AudioConstraint(),
+            TextParameter.DOCUMENT: DocumentsConstraint(),
         },
     ),
     Model(
@@ -85,6 +88,7 @@ MODELS: list[Model] = [
             TextParameter.IMAGE: ImagesConstraint(),
             TextParameter.VIDEO: VideosConstraint(),
             TextParameter.AUDIO: AudioConstraint(),
+            TextParameter.DOCUMENT: DocumentsConstraint(),
         },
     ),
     Model(
@@ -106,6 +110,7 @@ MODELS: list[Model] = [
             TextParameter.IMAGE: ImagesConstraint(),
             TextParameter.VIDEO: VideosConstraint(),
             TextParameter.AUDIO: AudioConstraint(),
+            TextParameter.DOCUMENT: DocumentsConstraint(),
         },
     ),
     Model(
@@ -127,6 +132,7 @@ MODELS: list[Model] = [
             TextParameter.IMAGE: ImagesConstraint(),
             TextParameter.VIDEO: VideosConstraint(),
             TextParameter.AUDIO: AudioConstraint(),
+            TextParameter.DOCUMENT: DocumentsConstraint(),
         },
     ),
     Model(
@@ -148,6 +154,7 @@ MODELS: list[Model] = [
             TextParameter.IMAGE: ImagesConstraint(),
             TextParameter.VIDEO: VideosConstraint(),
             TextParameter.AUDIO: AudioConstraint(),
+            TextParameter.DOCUMENT: DocumentsConstraint(),
         },
     ),
     Model(
@@ -169,6 +176,7 @@ MODELS: list[Model] = [
             TextParameter.IMAGE: ImagesConstraint(),
             TextParameter.VIDEO: VideosConstraint(),
             TextParameter.AUDIO: AudioConstraint(),
+            TextParameter.DOCUMENT: DocumentsConstraint(),
         },
     ),
 ]

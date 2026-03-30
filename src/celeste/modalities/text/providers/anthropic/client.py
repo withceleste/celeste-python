@@ -4,7 +4,7 @@ import base64
 import contextlib
 from typing import Any
 
-from celeste.artifacts import ImageArtifact
+from celeste.artifacts import DocumentArtifact, ImageArtifact
 from celeste.mime_types import ImageMimeType
 from celeste.parameters import ParameterMapper
 from celeste.providers.anthropic.messages.client import AnthropicMessagesClient
@@ -155,17 +155,45 @@ class AnthropicTextClient(AnthropicMessagesClient, TextClient):
                 request["system"] = system_blocks
             return request
 
-        if inputs.image is None:
+        if inputs.image is None and inputs.document is None:
             prompt_content: str | list[dict[str, Any]] = inputs.prompt or ""
         else:
-            images = inputs.image if isinstance(inputs.image, list) else [inputs.image]
             prompt_content = []
-            for img in images:
-                source = self._build_image_source(img)
-                prompt_content.append({"type": "image", "source": source})
+            if inputs.image is not None:
+                images = (
+                    inputs.image if isinstance(inputs.image, list) else [inputs.image]
+                )
+                for img in images:
+                    source = self._build_image_source(img)
+                    prompt_content.append({"type": "image", "source": source})
+            if inputs.document is not None:
+                docs = (
+                    inputs.document
+                    if isinstance(inputs.document, list)
+                    else [inputs.document]
+                )
+                for doc in docs:
+                    source = self._build_document_source(doc)
+                    prompt_content.append({"type": "document", "source": source})
             prompt_content.append({"type": "text", "text": inputs.prompt or ""})
 
         return {"messages": [{"role": "user", "content": prompt_content}]}
+
+    def _build_document_source(self, doc: DocumentArtifact) -> dict[str, Any]:
+        """Build Anthropic document source dict from DocumentArtifact."""
+        if doc.url:
+            return {"type": "url", "url": doc.url}
+
+        doc_bytes = doc.get_bytes()
+        mime = doc.mime_type or detect_mime_type(doc_bytes)
+        mime_str = str(mime) if mime else "application/pdf"
+
+        base64_data = base64.b64encode(doc_bytes).decode("utf-8")
+        return {
+            "type": "base64",
+            "media_type": mime_str,
+            "data": base64_data,
+        }
 
     def _build_image_source(self, img: ImageArtifact) -> dict[str, Any]:
         """Build Anthropic image source dict from ImageArtifact."""

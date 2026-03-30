@@ -1,60 +1,7 @@
 """DeepSeek parameter mappers for text."""
 
-from celeste.parameters import ParameterMapper
-from celeste.protocols.chatcompletions.parameters import (
-    MaxTokensMapper as _MaxTokensMapper,
-)
-from celeste.protocols.chatcompletions.parameters import (
-    ResponseFormatMapper as _ResponseFormatMapper,
-)
-from celeste.protocols.chatcompletions.parameters import (
-    TemperatureMapper as _TemperatureMapper,
-)
-from celeste.protocols.chatcompletions.parameters import (
-    ToolChoiceMapper as _ToolChoiceMapper,
-)
-from celeste.protocols.chatcompletions.parameters import (
-    ToolsMapper as _ToolsMapper,
-)
-from celeste.types import TextContent
+from ...protocols.chatcompletions.parameters import CHATCOMPLETIONS_PARAMETER_MAPPERS
 
-from ...parameters import TextParameter
-
-
-class TemperatureMapper(_TemperatureMapper):
-    """Map temperature to DeepSeek's temperature parameter."""
-
-    name = TextParameter.TEMPERATURE
-
-
-class MaxTokensMapper(_MaxTokensMapper):
-    """Map max_tokens to DeepSeek's max_tokens parameter."""
-
-    name = TextParameter.MAX_TOKENS
-
-
-class OutputSchemaMapper(_ResponseFormatMapper):
-    """Map output_schema to DeepSeek's response_format parameter."""
-
-    name = TextParameter.OUTPUT_SCHEMA
-
-
-class ToolsMapper(_ToolsMapper):
-    """Map tools to DeepSeek's tools parameter (user-defined only)."""
-
-    name = TextParameter.TOOLS
-
-
-class ToolChoiceMapper(_ToolChoiceMapper):
-    name = TextParameter.TOOL_CHOICE
-
-
-DEEPSEEK_PARAMETER_MAPPERS: list[ParameterMapper[TextContent]] = [
-    TemperatureMapper(),
-    MaxTokensMapper(),
-    OutputSchemaMapper(),
-    ToolsMapper(),
-    ToolChoiceMapper(),
-]
+DEEPSEEK_PARAMETER_MAPPERS = CHATCOMPLETIONS_PARAMETER_MAPPERS
 
 __all__ = ["DEEPSEEK_PARAMETER_MAPPERS"]

@@ -1,6 +1,7 @@
 """Anthropic models for text modality."""
 
 from celeste.constraints import (
+    DocumentsConstraint,
     ImagesConstraint,
     Range,
     Schema,
@@ -29,6 +30,7 @@ MODELS: list[Model] = [
                 modes=["auto", "required", "none"]
             ),
             TextParameter.IMAGE: ImagesConstraint(),
+            TextParameter.DOCUMENT: DocumentsConstraint(),
         },
     ),
     Model(
@@ -46,6 +48,7 @@ MODELS: list[Model] = [
                 modes=["auto", "required", "none"]
             ),
             TextParameter.IMAGE: ImagesConstraint(),
+            TextParameter.DOCUMENT: DocumentsConstraint(),
         },
     ),
     Model(
@@ -63,6 +66,7 @@ MODELS: list[Model] = [
                 modes=["auto", "required", "none"]
             ),
             TextParameter.IMAGE: ImagesConstraint(),
+            TextParameter.DOCUMENT: DocumentsConstraint(),
         },
     ),
     Model(
@@ -80,6 +84,7 @@ MODELS: list[Model] = [
                 modes=["auto", "required", "none"]
             ),
             TextParameter.IMAGE: ImagesConstraint(),
+            TextParameter.DOCUMENT: DocumentsConstraint(),
         },
     ),
     Model(
@@ -97,6 +102,7 @@ MODELS: list[Model] = [
                 modes=["auto", "required", "none"]
             ),
             TextParameter.IMAGE: ImagesConstraint(),
+            TextParameter.DOCUMENT: DocumentsConstraint(),
         },
     ),
     Model(
@@ -114,6 +120,7 @@ MODELS: list[Model] = [
                 modes=["auto", "required", "none"]
             ),
             TextParameter.IMAGE: ImagesConstraint(),
+            TextParameter.DOCUMENT: DocumentsConstraint(),
         },
     ),
     Model(
@@ -130,6 +137,7 @@ MODELS: list[Model] = [
                 modes=["auto", "required", "none"]
             ),
             TextParameter.IMAGE: ImagesConstraint(),
+            TextParameter.DOCUMENT: DocumentsConstraint(),
         },
     ),
     Model(
@@ -146,6 +154,7 @@ MODELS: list[Model] = [
                 modes=["auto", "required", "none"]
             ),
             TextParameter.IMAGE: ImagesConstraint(),
+            TextParameter.DOCUMENT: DocumentsConstraint(),
         },
     ),
 ]
