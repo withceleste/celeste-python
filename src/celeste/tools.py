@@ -1,6 +1,7 @@
 """Tool calling types for Celeste."""
 
 from abc import ABC, abstractmethod
+from enum import StrEnum
 from typing import Any, ClassVar
 
 from pydantic import BaseModel, ConfigDict
@@ -54,6 +55,17 @@ class ToolMapper(ABC):
 type ToolDefinition = Tool | dict[str, Any]
 
 
+class ToolChoice(StrEnum):
+    """Controls whether the model must use tools."""
+
+    AUTO = "auto"
+    REQUIRED = "required"
+    NONE = "none"
+
+
+type ToolChoiceOption = ToolChoice | ToolDefinition
+
+
 class ToolResult(Message):
     """A tool result for multi-turn tool use."""
 
@@ -66,6 +78,8 @@ __all__ = [
     "CodeExecution",
     "Tool",
     "ToolCall",
+    "ToolChoice",
+    "ToolChoiceOption",
     "ToolDefinition",
     "ToolMapper",
     "ToolResult",

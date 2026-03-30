@@ -13,6 +13,9 @@ from ...protocols.chatcompletions.parameters import (
     OutputSchemaMapper,
     TemperatureMapper,
 )
+from ...protocols.chatcompletions.parameters import (
+    ToolChoiceMapper as _ToolChoiceMapper,
+)
 
 
 class ToolsMapper(_ToolsMapper):
@@ -22,11 +25,16 @@ class ToolsMapper(_ToolsMapper):
     _tool_mappers = MOONSHOT_TOOL_MAPPERS
 
 
+class ToolChoiceMapper(_ToolChoiceMapper):
+    name = TextParameter.TOOL_CHOICE
+
+
 MOONSHOT_PARAMETER_MAPPERS: list[ParameterMapper[TextContent]] = [
     TemperatureMapper(),
     MaxTokensMapper(),
     OutputSchemaMapper(),
     ToolsMapper(),
+    ToolChoiceMapper(),
 ]
 
 __all__ = ["MOONSHOT_PARAMETER_MAPPERS"]

@@ -5,6 +5,7 @@ from celeste.constraints import (
     ImagesConstraint,
     Range,
     Schema,
+    ToolChoiceSupport,
     ToolSupport,
 )
 from celeste.core import Modality, Operation, Parameter, Provider
@@ -24,6 +25,7 @@ MODELS: list[Model] = [
             Parameter.MAX_TOKENS: Range(min=1, max=32768, step=1),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.TOOLS: ToolSupport(tools=[]),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
         },
     ),
     Model(
@@ -39,6 +41,7 @@ MODELS: list[Model] = [
             TextParameter.IMAGE: ImagesConstraint(),
             TextParameter.DOCUMENT: DocumentsConstraint(),
             TextParameter.TOOLS: ToolSupport(tools=[]),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
         },
     ),
     Model(
@@ -67,6 +70,7 @@ MODELS: list[Model] = [
             Parameter.MAX_TOKENS: Range(min=1, max=32768, step=1),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.TOOLS: ToolSupport(tools=[]),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
         },
     ),
     Model(
@@ -80,6 +84,7 @@ MODELS: list[Model] = [
             Parameter.MAX_TOKENS: Range(min=1, max=32768, step=1),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.TOOLS: ToolSupport(tools=[]),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
         },
     ),
     Model(
@@ -93,6 +98,7 @@ MODELS: list[Model] = [
             Parameter.MAX_TOKENS: Range(min=1, max=32768, step=1),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.TOOLS: ToolSupport(tools=[]),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
         },
     ),
     Model(
@@ -106,6 +112,7 @@ MODELS: list[Model] = [
             Parameter.MAX_TOKENS: Range(min=1, max=32768, step=1),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.TOOLS: ToolSupport(tools=[]),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
         },
     ),
     Model(
@@ -119,6 +126,7 @@ MODELS: list[Model] = [
             Parameter.MAX_TOKENS: Range(min=1, max=32768, step=1),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.TOOLS: ToolSupport(tools=[]),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
         },
     ),
     Model(
@@ -132,6 +140,7 @@ MODELS: list[Model] = [
             Parameter.MAX_TOKENS: Range(min=1, max=32768, step=1),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.TOOLS: ToolSupport(tools=[]),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
         },
     ),
     Model(
@@ -147,6 +156,7 @@ MODELS: list[Model] = [
             TextParameter.IMAGE: ImagesConstraint(),
             TextParameter.DOCUMENT: DocumentsConstraint(),
             TextParameter.TOOLS: ToolSupport(tools=[]),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
         },
     ),
     Model(
@@ -162,6 +172,7 @@ MODELS: list[Model] = [
             TextParameter.IMAGE: ImagesConstraint(),
             TextParameter.DOCUMENT: DocumentsConstraint(),
             TextParameter.TOOLS: ToolSupport(tools=[]),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
         },
     ),
     Model(
@@ -177,6 +188,7 @@ MODELS: list[Model] = [
             TextParameter.IMAGE: ImagesConstraint(),
             TextParameter.DOCUMENT: DocumentsConstraint(),
             TextParameter.TOOLS: ToolSupport(tools=[]),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
         },
     ),
     Model(
@@ -190,6 +202,7 @@ MODELS: list[Model] = [
             Parameter.MAX_TOKENS: Range(min=1, max=32768, step=1),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.TOOLS: ToolSupport(tools=[]),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
         },
     ),
     Model(
@@ -203,6 +216,7 @@ MODELS: list[Model] = [
             Parameter.MAX_TOKENS: Range(min=1, max=32768, step=1),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.TOOLS: ToolSupport(tools=[]),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
         },
     ),
     Model(
@@ -216,6 +230,7 @@ MODELS: list[Model] = [
             Parameter.MAX_TOKENS: Range(min=1, max=32768, step=1),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.TOOLS: ToolSupport(tools=[]),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
         },
     ),
     Model(
@@ -228,7 +243,6 @@ MODELS: list[Model] = [
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
             Parameter.MAX_TOKENS: Range(min=1, max=32768, step=1),
             TextParameter.OUTPUT_SCHEMA: Schema(),
-            TextParameter.TOOLS: ToolSupport(tools=[]),
         },
     ),
     Model(

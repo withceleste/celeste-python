@@ -136,7 +136,6 @@ MODELS: list[Model] = [
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
             Parameter.MAX_TOKENS: Range(min=1, max=8192, step=1),
             TextParameter.OUTPUT_SCHEMA: Schema(),
-            TextParameter.TOOLS: ToolSupport(tools=[]),
         },
     ),
     Model(
@@ -149,7 +148,6 @@ MODELS: list[Model] = [
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
             Parameter.MAX_TOKENS: Range(min=1, max=8192, step=1),
             TextParameter.OUTPUT_SCHEMA: Schema(),
-            TextParameter.TOOLS: ToolSupport(tools=[]),
         },
     ),
     Model(
@@ -162,7 +160,6 @@ MODELS: list[Model] = [
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
             Parameter.MAX_TOKENS: Range(min=1, max=4096, step=1),
             TextParameter.OUTPUT_SCHEMA: Schema(),
-            TextParameter.TOOLS: ToolSupport(tools=[]),
         },
     ),
 ]

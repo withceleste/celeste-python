@@ -35,7 +35,15 @@ from celeste.modalities.text.providers import PROVIDERS as _text_providers
 from celeste.modalities.videos.models import MODELS as _videos_models
 from celeste.modalities.videos.providers import PROVIDERS as _videos_providers
 from celeste.models import Model, _models, get_model, list_models, register_models
-from celeste.tools import CodeExecution, Tool, ToolCall, ToolResult, WebSearch, XSearch
+from celeste.tools import (
+    CodeExecution,
+    Tool,
+    ToolCall,
+    ToolChoice,
+    ToolResult,
+    WebSearch,
+    XSearch,
+)
 from celeste.types import Content, Message, Role
 
 logger = logging.getLogger(__name__)
@@ -283,6 +291,7 @@ __all__ = [
     "Role",
     "Tool",
     "ToolCall",
+    "ToolChoice",
     "ToolResult",
     "Usage",
     "WebSearch",

@@ -10,6 +10,7 @@ from ...parameters import TextParameter
 from ...protocols.chatcompletions.parameters import (
     MaxTokensMapper,
     TemperatureMapper,
+    ToolChoiceMapper,
     ToolsMapper,
 )
 
@@ -25,6 +26,7 @@ HUGGINGFACE_PARAMETER_MAPPERS: list[ParameterMapper[TextContent]] = [
     MaxTokensMapper(),
     OutputSchemaMapper(),
     ToolsMapper(),
+    ToolChoiceMapper(),
 ]
 
 __all__ = ["HUGGINGFACE_PARAMETER_MAPPERS"]

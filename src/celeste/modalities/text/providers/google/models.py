@@ -7,6 +7,7 @@ from celeste.constraints import (
     ImagesConstraint,
     Range,
     Schema,
+    ToolChoiceSupport,
     ToolSupport,
     VideosConstraint,
 )
@@ -29,6 +30,7 @@ MODELS: list[Model] = [
             # Flash: allows -1 (dynamic), 0 (disable), or >= 0
             TextParameter.THINKING_BUDGET: Range(min=-1, max=24576),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch, CodeExecution]),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             # Media input support
             TextParameter.IMAGE: ImagesConstraint(),
@@ -51,6 +53,7 @@ MODELS: list[Model] = [
                 min=512, max=24576, special_values=[-1, 0]
             ),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch, CodeExecution]),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             # Media input support
             TextParameter.IMAGE: ImagesConstraint(),
@@ -73,6 +76,7 @@ MODELS: list[Model] = [
                 min=128, max=32768, special_values=[-1]
             ),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch, CodeExecution]),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             # Media input support
             TextParameter.IMAGE: ImagesConstraint(),
@@ -92,6 +96,7 @@ MODELS: list[Model] = [
             Parameter.MAX_TOKENS: Range(min=1, max=65536),
             TextParameter.THINKING_LEVEL: Choice(options=["low", "high"]),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch, CodeExecution]),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             # Media input support
             TextParameter.IMAGE: ImagesConstraint(),
@@ -111,6 +116,7 @@ MODELS: list[Model] = [
             Parameter.MAX_TOKENS: Range(min=1, max=65536),
             TextParameter.THINKING_LEVEL: Choice(options=["low", "high"]),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch, CodeExecution]),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             # Media input support
             TextParameter.IMAGE: ImagesConstraint(),
@@ -130,6 +136,7 @@ MODELS: list[Model] = [
             Parameter.MAX_TOKENS: Range(min=1, max=65536),
             TextParameter.THINKING_LEVEL: Choice(options=["low", "medium", "high"]),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch, CodeExecution]),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             # Media input support
             TextParameter.IMAGE: ImagesConstraint(),
@@ -149,6 +156,7 @@ MODELS: list[Model] = [
             Parameter.MAX_TOKENS: Range(min=1, max=65536),
             TextParameter.THINKING_LEVEL: Choice(options=["low", "high"]),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch, CodeExecution]),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             # Media input support
             TextParameter.IMAGE: ImagesConstraint(),

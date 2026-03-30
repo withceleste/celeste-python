@@ -9,7 +9,7 @@ from enum import StrEnum
 from pydantic import BaseModel
 
 from celeste.parameters import Parameters
-from celeste.tools import ToolDefinition
+from celeste.tools import ToolChoiceOption, ToolDefinition
 
 
 class TextParameter(StrEnum):
@@ -25,6 +25,7 @@ class TextParameter(StrEnum):
     THINKING_LEVEL = "thinking_level"
     OUTPUT_SCHEMA = "output_schema"
     TOOLS = "tools"
+    TOOL_CHOICE = "tool_choice"
     VERBOSITY = "verbosity"
 
     # Deprecated: use tools=[WebSearch()], tools=[XSearch()], tools=[CodeExecution()] instead.
@@ -53,6 +54,7 @@ class TextParameters(Parameters):
     thinking_level: str
     output_schema: type[BaseModel]
     tools: list[ToolDefinition]
+    tool_choice: ToolChoiceOption
     verbosity: str
 
     # Deprecated: use tools=[WebSearch()], tools=[XSearch()], tools=[CodeExecution()] instead.

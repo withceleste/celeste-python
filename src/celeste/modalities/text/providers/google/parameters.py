@@ -17,6 +17,9 @@ from celeste.providers.google.generate_content.parameters import (
     ThinkingLevelMapper as _ThinkingLevelMapper,
 )
 from celeste.providers.google.generate_content.parameters import (
+    ToolChoiceMapper as _ToolChoiceMapper,
+)
+from celeste.providers.google.generate_content.parameters import (
     ToolsMapper as _ToolsMapper,
 )
 from celeste.types import TextContent
@@ -60,6 +63,12 @@ class ToolsMapper(_ToolsMapper[TextContent]):
     name = TextParameter.TOOLS
 
 
+class ToolChoiceMapper(_ToolChoiceMapper[TextContent]):
+    """Map tool_choice to Google's tool_choice parameter."""
+
+    name = TextParameter.TOOL_CHOICE
+
+
 GOOGLE_PARAMETER_MAPPERS: list[ParameterMapper[TextContent]] = [
     TemperatureMapper(),
     MaxTokensMapper(),
@@ -67,6 +76,7 @@ GOOGLE_PARAMETER_MAPPERS: list[ParameterMapper[TextContent]] = [
     ThinkingLevelMapper(),
     OutputSchemaMapper(),
     ToolsMapper(),
+    ToolChoiceMapper(),
 ]
 
 __all__ = ["GOOGLE_PARAMETER_MAPPERS"]

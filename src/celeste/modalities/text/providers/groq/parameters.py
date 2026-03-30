@@ -14,6 +14,7 @@ from ...parameters import TextParameter
 from ...protocols.chatcompletions.parameters import (
     MaxTokensMapper,
     TemperatureMapper,
+    ToolChoiceMapper,
 )
 
 
@@ -35,6 +36,7 @@ GROQ_PARAMETER_MAPPERS: list[ParameterMapper[TextContent]] = [
     MaxTokensMapper(),
     OutputSchemaMapper(),
     ToolsMapper(),
+    ToolChoiceMapper(),
 ]
 
 __all__ = ["GROQ_PARAMETER_MAPPERS"]

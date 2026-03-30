@@ -1,7 +1,7 @@
 """Responses API protocol parameter mappers."""
 
 import json
-from typing import Any, get_args, get_origin
+from typing import Any, ClassVar, get_args, get_origin
 
 from pydantic import BaseModel, TypeAdapter
 
@@ -9,7 +9,7 @@ from celeste.exceptions import InvalidToolError
 from celeste.models import Model
 from celeste.parameters import FieldMapper, ParameterMapper
 from celeste.structured_outputs import StrictJsonSchemaGenerator
-from celeste.tools import Tool
+from celeste.tools import Tool, ToolMapper
 from celeste.types import TextContent
 
 from .tools import TOOL_MAPPERS
@@ -185,11 +185,46 @@ class ToolsMapper(ParameterMapper[TextContent]):
         return result
 
 
+class ToolChoiceMapper(ParameterMapper[TextContent]):
+    """Map tool_choice to OpenResponses tool_choice field."""
+
+    _tool_mappers: ClassVar[list[ToolMapper]] = TOOL_MAPPERS
+
+    def map(
+        self,
+        request: dict[str, Any],
+        value: object,
+        model: Model,
+    ) -> dict[str, Any]:
+        """Transform tool_choice into provider request."""
+        validated_value = self._validate_value(value, model)
+        if validated_value is None:
+            return request
+
+        if isinstance(validated_value, Tool):
+            dispatch = {m.tool_type: m for m in self._tool_mappers}
+            mapper = dispatch.get(type(validated_value))
+            if mapper is None:
+                msg = f"Tool '{type(validated_value).__name__}' cannot be used as tool_choice in OpenResponses"
+                raise ValueError(msg)
+            wire = mapper.map_tool(validated_value)
+            request["tool_choice"] = {"type": "function", "name": wire.get("name")}
+        elif isinstance(validated_value, dict) and "name" in validated_value:
+            request["tool_choice"] = {
+                "type": "function",
+                "name": validated_value["name"],
+            }
+        else:
+            request["tool_choice"] = validated_value
+        return request
+
+
 __all__ = [
     "MaxOutputTokensMapper",
     "ReasoningEffortMapper",
     "TemperatureMapper",
     "TextFormatMapper",
+    "ToolChoiceMapper",
     "ToolsMapper",
     "VerbosityMapper",
 ]

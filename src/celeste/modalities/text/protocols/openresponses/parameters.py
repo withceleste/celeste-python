@@ -11,6 +11,9 @@ from celeste.protocols.openresponses.parameters import (
     TextFormatMapper as _TextFormatMapper,
 )
 from celeste.protocols.openresponses.parameters import (
+    ToolChoiceMapper as _ToolChoiceMapper,
+)
+from celeste.protocols.openresponses.parameters import (
     ToolsMapper as _ToolsMapper,
 )
 from celeste.types import TextContent
@@ -42,11 +45,18 @@ class ToolsMapper(_ToolsMapper):
     name = TextParameter.TOOLS
 
 
+class ToolChoiceMapper(_ToolChoiceMapper):
+    """Map tool_choice to Responses tool_choice parameter."""
+
+    name = TextParameter.TOOL_CHOICE
+
+
 OPENRESPONSES_PARAMETER_MAPPERS: list[ParameterMapper[TextContent]] = [
     TemperatureMapper(),
     MaxTokensMapper(),
     OutputSchemaMapper(),
     ToolsMapper(),
+    ToolChoiceMapper(),
 ]
 
 __all__ = ["OPENRESPONSES_PARAMETER_MAPPERS"]

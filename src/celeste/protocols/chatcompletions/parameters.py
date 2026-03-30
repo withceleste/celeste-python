@@ -132,9 +132,48 @@ class ToolsMapper(ParameterMapper[TextContent]):
         return {"type": "function", "function": function}
 
 
+class ToolChoiceMapper(ParameterMapper[TextContent]):
+    """Map tool_choice to Chat Completions tool_choice field."""
+
+    _tool_mappers: ClassVar[list[ToolMapper]] = TOOL_MAPPERS
+
+    def map(
+        self,
+        request: dict[str, Any],
+        value: object,
+        model: Model,
+    ) -> dict[str, Any]:
+        """Transform tool_choice into provider request."""
+        validated_value = self._validate_value(value, model)
+        if validated_value is None:
+            return request
+
+        if isinstance(validated_value, Tool):
+            dispatch = {m.tool_type: m for m in self._tool_mappers}
+            mapper = dispatch.get(type(validated_value))
+            if mapper is None:
+                msg = f"Tool '{type(validated_value).__name__}' cannot be used as tool_choice in Chat Completions"
+                raise ValueError(msg)
+            wire = mapper.map_tool(validated_value)
+            name = wire.get("name") or wire.get("function", {}).get("name")
+            request["tool_choice"] = {
+                "type": "function",
+                "function": {"name": name},
+            }
+        elif isinstance(validated_value, dict) and "name" in validated_value:
+            request["tool_choice"] = {
+                "type": "function",
+                "function": {"name": validated_value["name"]},
+            }
+        else:
+            request["tool_choice"] = validated_value
+        return request
+
+
 __all__ = [
     "MaxTokensMapper",
     "ResponseFormatMapper",
     "TemperatureMapper",
+    "ToolChoiceMapper",
     "ToolsMapper",
 ]
