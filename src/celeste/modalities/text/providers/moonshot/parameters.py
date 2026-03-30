@@ -11,6 +11,9 @@ from celeste.protocols.chatcompletions.parameters import (
     TemperatureMapper as _TemperatureMapper,
 )
 from celeste.protocols.chatcompletions.parameters import (
+    ToolChoiceMapper as _ToolChoiceMapper,
+)
+from celeste.protocols.chatcompletions.parameters import (
     ToolsMapper as _ToolsMapper,
 )
 from celeste.providers.moonshot.chat.tools import TOOL_MAPPERS as MOONSHOT_TOOL_MAPPERS
@@ -44,11 +47,16 @@ class ToolsMapper(_ToolsMapper):
     _tool_mappers = MOONSHOT_TOOL_MAPPERS
 
 
+class ToolChoiceMapper(_ToolChoiceMapper):
+    name = TextParameter.TOOL_CHOICE
+
+
 MOONSHOT_PARAMETER_MAPPERS: list[ParameterMapper[TextContent]] = [
     TemperatureMapper(),
     MaxTokensMapper(),
     OutputSchemaMapper(),
     ToolsMapper(),
+    ToolChoiceMapper(),
 ]
 
 __all__ = ["MOONSHOT_PARAMETER_MAPPERS"]

@@ -11,6 +11,9 @@ from celeste.protocols.chatcompletions.parameters import (
     TemperatureMapper as _TemperatureMapper,
 )
 from celeste.protocols.chatcompletions.parameters import (
+    ToolChoiceMapper as _ToolChoiceMapper,
+)
+from celeste.protocols.chatcompletions.parameters import (
     ToolsMapper as _ToolsMapper,
 )
 from celeste.providers.mistral.chat.parameters import (
@@ -72,12 +75,37 @@ class ToolsMapper(_ToolsMapper):
     name = TextParameter.TOOLS
 
 
+class ToolChoiceMapper(_ToolChoiceMapper):
+    """Map tool_choice to Mistral's tool_choice parameter.
+
+    Mistral uses "any" instead of "required".
+    """
+
+    name = TextParameter.TOOL_CHOICE
+
+    def map(
+        self,
+        request: dict[str, Any],
+        value: object,
+        model: Model,
+    ) -> dict[str, Any]:
+        """Transform tool_choice, translating 'required' to 'any'."""
+        validated_value = self._validate_value(value, model)
+        if validated_value is None:
+            return request
+        if validated_value == "required":
+            request["tool_choice"] = "any"
+            return request
+        return super().map(request, validated_value, model)
+
+
 MISTRAL_PARAMETER_MAPPERS: list[ParameterMapper[TextContent]] = [
     TemperatureMapper(),
     MaxTokensMapper(),
     ThinkingBudgetMapper(),
     OutputSchemaMapper(),
     ToolsMapper(),
+    ToolChoiceMapper(),
 ]
 
 __all__ = ["MISTRAL_PARAMETER_MAPPERS"]

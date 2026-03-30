@@ -391,6 +391,19 @@ class ToolSupport(Constraint):
         return value
 
 
+class ToolChoiceSupport(Constraint):
+    """Tool choice mode constraint - validates string modes are supported by the model."""
+
+    modes: list[str]
+
+    def __call__(self, value: Any) -> Any:  # noqa: ANN401
+        """Validate tool_choice value against supported modes."""
+        if isinstance(value, str) and value not in self.modes:
+            msg = f"tool_choice mode '{value}' not supported. Supported: {self.modes}"
+            raise ConstraintViolationError(msg)
+        return value
+
+
 __all__ = [
     "AudioConstraint",
     "AudiosConstraint",
@@ -406,6 +419,7 @@ __all__ = [
     "Range",
     "Schema",
     "Str",
+    "ToolChoiceSupport",
     "ToolSupport",
     "VideoConstraint",
     "VideosConstraint",

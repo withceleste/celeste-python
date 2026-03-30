@@ -4,6 +4,7 @@ from celeste.constraints import (
     Choice,
     Range,
     Schema,
+    ToolChoiceSupport,
     ToolSupport,
 )
 from celeste.core import Modality, Operation, Parameter, Provider
@@ -23,6 +24,9 @@ MODELS: list[Model] = [
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0),
             Parameter.MAX_TOKENS: Range(min=1, max=30000),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch, XSearch, CodeExecution]),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(
+                modes=["auto", "required", "none"]
+            ),
             TextParameter.OUTPUT_SCHEMA: Schema(),
         },
     ),
@@ -36,6 +40,9 @@ MODELS: list[Model] = [
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0),
             Parameter.MAX_TOKENS: Range(min=1, max=30000),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch, XSearch, CodeExecution]),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(
+                modes=["auto", "required", "none"]
+            ),
             TextParameter.OUTPUT_SCHEMA: Schema(),
         },
     ),
@@ -49,6 +56,9 @@ MODELS: list[Model] = [
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0),
             Parameter.MAX_TOKENS: Range(min=1, max=30000),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch, XSearch, CodeExecution]),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(
+                modes=["auto", "required", "none"]
+            ),
             TextParameter.OUTPUT_SCHEMA: Schema(),
         },
     ),
@@ -62,6 +72,9 @@ MODELS: list[Model] = [
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0),
             Parameter.MAX_TOKENS: Range(min=1, max=30000),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch, XSearch, CodeExecution]),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(
+                modes=["auto", "required", "none"]
+            ),
             TextParameter.OUTPUT_SCHEMA: Schema(),
         },
     ),
@@ -75,6 +88,9 @@ MODELS: list[Model] = [
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0),
             Parameter.MAX_TOKENS: Range(min=1, max=64000),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch, XSearch, CodeExecution]),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(
+                modes=["auto", "required", "none"]
+            ),
             TextParameter.OUTPUT_SCHEMA: Schema(),
         },
     ),
@@ -88,6 +104,9 @@ MODELS: list[Model] = [
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0),
             Parameter.MAX_TOKENS: Range(min=1, max=30000),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch, XSearch, CodeExecution]),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(
+                modes=["auto", "required", "none"]
+            ),
             TextParameter.OUTPUT_SCHEMA: Schema(),
         },
     ),
@@ -101,6 +120,9 @@ MODELS: list[Model] = [
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0),
             Parameter.MAX_TOKENS: Range(min=1, max=30000),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch, XSearch, CodeExecution]),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(
+                modes=["auto", "required", "none"]
+            ),
             TextParameter.OUTPUT_SCHEMA: Schema(),
         },
     ),

@@ -5,6 +5,7 @@ from celeste.constraints import (
     ImagesConstraint,
     Range,
     Schema,
+    ToolChoiceSupport,
     ToolSupport,
 )
 from celeste.core import Modality, Operation, Parameter, Provider
@@ -24,6 +25,9 @@ MODELS: list[Model] = [
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0),
             Parameter.MAX_TOKENS: Range(min=1, max=16384),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(
+                modes=["auto", "required", "none"]
+            ),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.IMAGE: ImagesConstraint(),
         },
@@ -38,6 +42,9 @@ MODELS: list[Model] = [
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0),
             Parameter.MAX_TOKENS: Range(min=1, max=16384),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(
+                modes=["auto", "required", "none"]
+            ),
             TextParameter.IMAGE: ImagesConstraint(),
         },
     ),
@@ -69,6 +76,9 @@ MODELS: list[Model] = [
                 options=["minimal", "low", "medium", "high", "xhigh"]
             ),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(
+                modes=["auto", "required", "none"]
+            ),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.IMAGE: ImagesConstraint(),
         },
@@ -86,6 +96,9 @@ MODELS: list[Model] = [
             ),
             TextParameter.VERBOSITY: Choice(options=["low", "medium", "high"]),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(
+                modes=["auto", "required", "none"]
+            ),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.IMAGE: ImagesConstraint(),
         },
@@ -102,6 +115,9 @@ MODELS: list[Model] = [
                 options=["low", "medium", "high", "xhigh"]
             ),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(
+                modes=["auto", "required", "none"]
+            ),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.IMAGE: ImagesConstraint(),
         },
@@ -116,6 +132,9 @@ MODELS: list[Model] = [
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0),
             Parameter.MAX_TOKENS: Range(min=1, max=128000),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(
+                modes=["auto", "required", "none"]
+            ),
             TextParameter.IMAGE: ImagesConstraint(),
         },
     ),
@@ -132,6 +151,9 @@ MODELS: list[Model] = [
             ),
             TextParameter.VERBOSITY: Choice(options=["low", "medium", "high"]),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(
+                modes=["auto", "required", "none"]
+            ),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.IMAGE: ImagesConstraint(),
         },
@@ -149,6 +171,9 @@ MODELS: list[Model] = [
             ),
             TextParameter.VERBOSITY: Choice(options=["low", "medium", "high"]),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(
+                modes=["auto", "required", "none"]
+            ),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.IMAGE: ImagesConstraint(),
         },
@@ -165,6 +190,9 @@ MODELS: list[Model] = [
                 options=["minimal", "low", "medium", "high"]
             ),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(
+                modes=["auto", "required", "none"]
+            ),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.IMAGE: ImagesConstraint(),
         },
@@ -198,6 +226,9 @@ MODELS: list[Model] = [
             ),
             TextParameter.VERBOSITY: Choice(options=["low", "medium", "high"]),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(
+                modes=["auto", "required", "none"]
+            ),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.IMAGE: ImagesConstraint(),
         },
@@ -215,6 +246,9 @@ MODELS: list[Model] = [
             ),
             TextParameter.VERBOSITY: Choice(options=["low", "medium", "high"]),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(
+                modes=["auto", "required", "none"]
+            ),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.IMAGE: ImagesConstraint(),
         },
@@ -229,6 +263,9 @@ MODELS: list[Model] = [
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0),
             Parameter.MAX_TOKENS: Range(min=1, max=32768),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(
+                modes=["auto", "required", "none"]
+            ),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.IMAGE: ImagesConstraint(),
         },

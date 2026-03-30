@@ -14,6 +14,9 @@ from celeste.protocols.openresponses.parameters import (
     TextFormatMapper as _TextFormatMapper,
 )
 from celeste.protocols.openresponses.parameters import (
+    ToolChoiceMapper as _ToolChoiceMapper,
+)
+from celeste.protocols.openresponses.parameters import (
     ToolsMapper as _ToolsMapper,
 )
 from celeste.protocols.openresponses.parameters import (
@@ -48,6 +51,12 @@ class ToolsMapper(_ToolsMapper):
     name = TextParameter.TOOLS
 
 
+class ToolChoiceMapper(_ToolChoiceMapper):
+    """Map tool_choice to OpenAI's tool_choice parameter."""
+
+    name = TextParameter.TOOL_CHOICE
+
+
 class VerbosityMapper(_VerbosityMapper):
     """Map verbosity to OpenAI's text.verbosity parameter."""
 
@@ -65,6 +74,7 @@ OPENAI_PARAMETER_MAPPERS: list[ParameterMapper[TextContent]] = [
     MaxTokensMapper(),
     OutputSchemaMapper(),
     ToolsMapper(),
+    ToolChoiceMapper(),
     VerbosityMapper(),
     ThinkingBudgetMapper(),
 ]

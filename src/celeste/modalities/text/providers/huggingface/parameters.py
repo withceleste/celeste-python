@@ -8,6 +8,9 @@ from celeste.protocols.chatcompletions.parameters import (
     TemperatureMapper as _TemperatureMapper,
 )
 from celeste.protocols.chatcompletions.parameters import (
+    ToolChoiceMapper as _ToolChoiceMapper,
+)
+from celeste.protocols.chatcompletions.parameters import (
     ToolsMapper as _ToolsMapper,
 )
 from celeste.providers.huggingface.chat.parameters import (
@@ -42,11 +45,16 @@ class ToolsMapper(_ToolsMapper):
     name = TextParameter.TOOLS
 
 
+class ToolChoiceMapper(_ToolChoiceMapper):
+    name = TextParameter.TOOL_CHOICE
+
+
 HUGGINGFACE_PARAMETER_MAPPERS: list[ParameterMapper[TextContent]] = [
     TemperatureMapper(),
     MaxTokensMapper(),
     OutputSchemaMapper(),
     ToolsMapper(),
+    ToolChoiceMapper(),
 ]
 
 __all__ = ["HUGGINGFACE_PARAMETER_MAPPERS"]

@@ -1,6 +1,12 @@
 """Anthropic models for text modality."""
 
-from celeste.constraints import ImagesConstraint, Range, Schema, ToolSupport
+from celeste.constraints import (
+    ImagesConstraint,
+    Range,
+    Schema,
+    ToolChoiceSupport,
+    ToolSupport,
+)
 from celeste.core import Modality, Operation, Parameter, Provider
 from celeste.models import Model
 from celeste.tools import WebSearch
@@ -19,6 +25,9 @@ MODELS: list[Model] = [
             TextParameter.THINKING_BUDGET: Range(min=-1, max=64000),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(
+                modes=["auto", "required", "none"]
+            ),
             TextParameter.IMAGE: ImagesConstraint(),
         },
     ),
@@ -33,6 +42,9 @@ MODELS: list[Model] = [
             TextParameter.THINKING_BUDGET: Range(min=-1, max=32000),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(
+                modes=["auto", "required", "none"]
+            ),
             TextParameter.IMAGE: ImagesConstraint(),
         },
     ),
@@ -47,6 +59,9 @@ MODELS: list[Model] = [
             TextParameter.THINKING_BUDGET: Range(min=-1, max=32000),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(
+                modes=["auto", "required", "none"]
+            ),
             TextParameter.IMAGE: ImagesConstraint(),
         },
     ),
@@ -61,6 +76,9 @@ MODELS: list[Model] = [
             TextParameter.THINKING_BUDGET: Range(min=-1, max=32000),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(
+                modes=["auto", "required", "none"]
+            ),
             TextParameter.IMAGE: ImagesConstraint(),
         },
     ),
@@ -75,6 +93,9 @@ MODELS: list[Model] = [
             TextParameter.THINKING_BUDGET: Range(min=-1, max=32000),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(
+                modes=["auto", "required", "none"]
+            ),
             TextParameter.IMAGE: ImagesConstraint(),
         },
     ),
@@ -89,6 +110,9 @@ MODELS: list[Model] = [
             TextParameter.THINKING_BUDGET: Range(min=-1, max=64000),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(
+                modes=["auto", "required", "none"]
+            ),
             TextParameter.IMAGE: ImagesConstraint(),
         },
     ),
@@ -102,6 +126,9 @@ MODELS: list[Model] = [
             Parameter.MAX_TOKENS: Range(min=1, max=64000),
             TextParameter.THINKING_BUDGET: Range(min=-1, max=64000),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(
+                modes=["auto", "required", "none"]
+            ),
             TextParameter.IMAGE: ImagesConstraint(),
         },
     ),
@@ -115,6 +142,9 @@ MODELS: list[Model] = [
             Parameter.MAX_TOKENS: Range(min=1, max=32000),
             TextParameter.THINKING_BUDGET: Range(min=-1, max=32000),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(
+                modes=["auto", "required", "none"]
+            ),
             TextParameter.IMAGE: ImagesConstraint(),
         },
     ),

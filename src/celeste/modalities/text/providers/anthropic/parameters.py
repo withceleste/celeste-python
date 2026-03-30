@@ -17,6 +17,9 @@ from celeste.providers.anthropic.messages.parameters import (
     ThinkingMapper as _ThinkingMapper,
 )
 from celeste.providers.anthropic.messages.parameters import (
+    ToolChoiceMapper as _ToolChoiceMapper,
+)
+from celeste.providers.anthropic.messages.parameters import (
     ToolsMapper as _ToolsMapper,
 )
 from celeste.types import TextContent
@@ -73,12 +76,19 @@ class ToolsMapper(_ToolsMapper):
     name = TextParameter.TOOLS
 
 
+class ToolChoiceMapper(_ToolChoiceMapper):
+    """Map tool_choice to Anthropic's tool_choice parameter."""
+
+    name = TextParameter.TOOL_CHOICE
+
+
 ANTHROPIC_PARAMETER_MAPPERS: list[ParameterMapper[TextContent]] = [
     TemperatureMapper(),
     MaxTokensMapper(),
     ThinkingBudgetMapper(),
     OutputSchemaMapper(),
     ToolsMapper(),
+    ToolChoiceMapper(),
 ]
 
 __all__ = ["ANTHROPIC_PARAMETER_MAPPERS"]
