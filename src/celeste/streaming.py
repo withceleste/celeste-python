@@ -109,6 +109,10 @@ class Stream[Out: Output, Params: Parameters, Chunk: ChunkBase](ABC):
         """Parse content from chunk event. Override in provider mixin."""
         return None
 
+    def _parse_chunk_reasoning(self, event_data: dict[str, Any]) -> str | None:
+        """Parse reasoning delta from chunk event. Override in providers with reasoning."""
+        return None
+
     def _wrap_chunk_content(self, raw_content: Any) -> Any:  # noqa: ANN401
         """Wrap raw content into chunk content type. Override for type transformation."""
         return raw_content
@@ -124,19 +128,30 @@ class Stream[Out: Output, Params: Parameters, Chunk: ChunkBase](ABC):
                 provider=self._stream_metadata.get("provider"),
             )
         content = self._parse_chunk_content(event)
+        reasoning = self._parse_chunk_reasoning(event)
         usage = self._get_chunk_usage(event)
         finish_reason = self._get_chunk_finish_reason(event)
-        if content is None:
-            if usage is None and finish_reason is None:
-                return None
-            content = self._empty_content
-        else:
-            content = self._wrap_chunk_content(content)
+        if (
+            content is None
+            and reasoning is None
+            and usage is None
+            and finish_reason is None
+        ):
+            return None
+        content = (
+            self._wrap_chunk_content(content)
+            if content is not None
+            else self._empty_content
+        )
+        kwargs: dict[str, Any] = {}
+        if reasoning is not None:
+            kwargs["reasoning"] = reasoning
         return self._chunk_class(  # type: ignore[return-value]
             content=content,
             finish_reason=finish_reason,
             usage=usage,
             metadata={"event_data": event},
+            **kwargs,
         )
 
     @abstractmethod
@@ -153,18 +168,37 @@ class Stream[Out: Output, Params: Parameters, Chunk: ChunkBase](ABC):
             else raw_content
         )
         raw_events = self._aggregate_event_data(chunks)
-        return self._output_class(  # type: ignore[return-value]
+        reasoning = self._aggregate_reasoning(chunks)
+        signature = self._aggregate_signature(chunks, raw_events)
+        kwargs: dict[str, Any] = {}
+        if reasoning is not None:
+            kwargs["reasoning"] = reasoning
+        if signature:
+            kwargs["signature"] = signature
+        output = self._output_class(
             content=content,
             usage=self._aggregate_usage(chunks),
             finish_reason=self._aggregate_finish_reason(chunks),
             metadata=self._build_stream_metadata(raw_events),
             tool_calls=self._aggregate_tool_calls(chunks, raw_events),
+            **kwargs,
         )
+        return output  # type: ignore[return-value]
 
     def _aggregate_tool_calls(
         self, chunks: list[Chunk], raw_events: list[dict[str, Any]]
     ) -> list[ToolCall]:
         """Aggregate tool calls from stream events. Override in providers that support tools."""
+        return []
+
+    def _aggregate_reasoning(self, chunks: list[Chunk]) -> str | None:
+        """Aggregate reasoning from chunks. Override in modality streams."""
+        return None
+
+    def _aggregate_signature(
+        self, chunks: list[Chunk], raw_events: list[dict[str, Any]]
+    ) -> list[dict[str, Any]]:
+        """Aggregate signature blocks from stream. Override in provider streams."""
         return []
 
     def _parse_chunk_usage(self, event_data: dict[str, Any]) -> RawUsage | None:

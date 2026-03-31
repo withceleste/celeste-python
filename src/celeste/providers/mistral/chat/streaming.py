@@ -6,6 +6,19 @@ from celeste.io import FinishReason
 from celeste.protocols.chatcompletions import ChatCompletionsStream
 
 
+def _extract_thinking_text(content_blocks: list[Any]) -> list[str]:
+    """Extract thinking text from Mistral Magistral list content."""
+    parts: list[str] = []
+    for block in content_blocks:
+        if isinstance(block, dict) and block.get("type") == "thinking":
+            for part in block.get("thinking", []):
+                if isinstance(part, dict) and part.get("type") == "text":
+                    text = part.get("text", "")
+                    if text:
+                        parts.append(text)
+    return parts
+
+
 class MistralChatStream(ChatCompletionsStream):
     """Mixin for Chat API SSE parsing.
 
@@ -39,6 +52,23 @@ class MistralChatStream(ChatCompletionsStream):
             return "".join(text_parts) if text_parts else None
 
         return content_delta or None
+
+    def _parse_chunk_reasoning(self, event_data: dict[str, Any]) -> str | None:
+        """Extract thinking content from Mistral SSE event."""
+        choices = event_data.get("choices", [])
+        if not choices or not isinstance(choices[0], dict):
+            return None
+
+        delta = choices[0].get("delta", {})
+        if not isinstance(delta, dict):
+            return None
+
+        content_delta = delta.get("content")
+        if not isinstance(content_delta, list):
+            return None
+
+        parts = _extract_thinking_text(content_delta)
+        return "".join(parts) if parts else None
 
     def _parse_chunk_finish_reason(
         self, event_data: dict[str, Any]

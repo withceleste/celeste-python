@@ -58,6 +58,8 @@ def serialize_messages(
             )
         elif msg.role == "assistant" and msg.tool_calls:
             msg_dict = msg.model_dump(exclude_none=True)
+            msg_dict.pop("reasoning", None)
+            msg_dict.pop("signature", None)
             msg_dict["tool_calls"] = [
                 {
                     "id": tc.id,
@@ -73,6 +75,8 @@ def serialize_messages(
         else:
             msg_dict = msg.model_dump(exclude_none=True)
             msg_dict.pop("tool_calls", None)
+            msg_dict.pop("reasoning", None)
+            msg_dict.pop("signature", None)
             items.append(msg_dict)
     return items
 

@@ -98,6 +98,29 @@ def parse_content(output: list[dict[str, Any]]) -> str:
     return ""
 
 
+def parse_reasoning(
+    output: list[dict[str, Any]],
+) -> tuple[str | None, list[dict[str, Any]]]:
+    """Extract reasoning from Responses API output items."""
+    reasoning_parts: list[str] = []
+    signature_blocks: list[dict[str, Any]] = []
+    for item in output:
+        if item.get("type") == "reasoning":
+            signature_blocks.append(item)
+            for s in item.get("summary", []):
+                if s.get("type") == "summary_text":
+                    text = s.get("text", "")
+                    if text:
+                        reasoning_parts.append(text)
+            for c in item.get("content", []):
+                if c.get("type") == "reasoning_text":
+                    text = c.get("text", "")
+                    if text:
+                        reasoning_parts.append(text)
+    text = "\n".join(reasoning_parts) if reasoning_parts else None
+    return text, signature_blocks
+
+
 def serialize_messages(messages: list[Message]) -> list[dict[str, Any]]:
     """Serialize messages to Responses API input format."""
     items: list[dict[str, Any]] = []
@@ -110,19 +133,25 @@ def serialize_messages(messages: list[Message]) -> list[dict[str, Any]]:
                     "output": str(msg.content),
                 }
             )
-        elif msg.role == "assistant" and msg.tool_calls:
-            for tc in msg.tool_calls:
-                items.append(
-                    {
-                        "type": "function_call",
-                        "name": tc.name,
-                        "arguments": json.dumps(tc.arguments),
-                        "call_id": tc.id,
-                    }
-                )
+        elif msg.role == "assistant" and (msg.tool_calls or msg.signature):
+            sig_blocks = msg.signature
+            if sig_blocks:
+                items.extend(sig_blocks)
+            if msg.tool_calls:
+                for tc in msg.tool_calls:
+                    items.append(
+                        {
+                            "type": "function_call",
+                            "name": tc.name,
+                            "arguments": json.dumps(tc.arguments),
+                            "call_id": tc.id,
+                        }
+                    )
         else:
             msg_dict = msg.model_dump(exclude_none=True)
             msg_dict.pop("tool_calls", None)
+            msg_dict.pop("reasoning", None)
+            msg_dict.pop("signature", None)
             items.append(msg_dict)
     return items
 
@@ -133,6 +162,7 @@ __all__ = [
     "WebSearchMapper",
     "XSearchMapper",
     "parse_content",
+    "parse_reasoning",
     "parse_tool_calls",
     "serialize_messages",
 ]

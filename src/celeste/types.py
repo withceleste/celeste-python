@@ -57,6 +57,8 @@ class Message(BaseModel):
     role: Role
     content: Content
     tool_calls: list[ToolCall] | None = None
+    reasoning: str | None = None
+    signature: list[dict[str, Any]] | None = None
 
 
 __all__ = [

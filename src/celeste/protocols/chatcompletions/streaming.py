@@ -31,25 +31,29 @@ class ChatCompletionsStream:
         super().__init__(*args, **kwargs)
         self._tool_call_deltas: dict[int, dict[str, Any]] = {}
 
+    def _get_chunk_delta(self, event_data: dict[str, Any]) -> dict[str, Any] | None:
+        """Extract delta dict from a chat.completion.chunk event."""
+        if event_data.get("object") != "chat.completion.chunk":
+            return None
+        choices = event_data.get("choices", [])
+        if not choices or not isinstance(choices[0], dict):
+            return None
+        delta = choices[0].get("delta", {})
+        return delta if isinstance(delta, dict) else None
+
     def _parse_chunk_content(self, event_data: dict[str, Any]) -> str | None:
         """Extract content from SSE event."""
-        object_type = event_data.get("object")
-        if object_type != "chat.completion.chunk":
+        delta = self._get_chunk_delta(event_data)
+        if delta is None:
             return None
-
-        choices = event_data.get("choices", [])
-        if not choices:
-            return None
-
-        first_choice = choices[0]
-        if not isinstance(first_choice, dict):
-            return None
-
-        delta = first_choice.get("delta", {})
-        if not isinstance(delta, dict):
-            return None
-
         return delta.get("content") or None
+
+    def _parse_chunk_reasoning(self, event_data: dict[str, Any]) -> str | None:
+        """Extract reasoning_content from SSE event (DeepSeek R1, etc.)."""
+        delta = self._get_chunk_delta(event_data)
+        if delta is None:
+            return None
+        return delta.get("reasoning_content") or None
 
     def _parse_chunk_usage(
         self, event_data: dict[str, Any]

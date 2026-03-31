@@ -110,7 +110,9 @@ class ReasoningEffortMapper(ParameterMapper[TextContent]):
         if validated_value is None:
             return request
 
-        request.setdefault("reasoning", {})["effort"] = validated_value
+        reasoning = request.setdefault("reasoning", {})
+        reasoning["effort"] = validated_value
+        reasoning.setdefault("summary", "auto")
         return request
 
 

@@ -66,9 +66,11 @@ class ThinkingBudgetMapper[Content](ParameterMapper[Content]):
         if validated_value is None:
             return request
 
-        request.setdefault("generationConfig", {}).setdefault("thinkingConfig", {})[
-            "thinkingBudget"
-        ] = validated_value
+        thinking_config = request.setdefault("generationConfig", {}).setdefault(
+            "thinkingConfig", {}
+        )
+        thinking_config["thinkingBudget"] = validated_value
+        thinking_config.setdefault("includeThoughts", True)
         return request
 
 
@@ -86,9 +88,11 @@ class ThinkingLevelMapper[Content](ParameterMapper[Content]):
         if validated_value is None:
             return request
 
-        request.setdefault("generationConfig", {}).setdefault("thinkingConfig", {})[
-            "thinkingLevel"
-        ] = validated_value
+        thinking_config = request.setdefault("generationConfig", {}).setdefault(
+            "thinkingConfig", {}
+        )
+        thinking_config["thinkingLevel"] = validated_value
+        thinking_config.setdefault("includeThoughts", True)
         return request
 
 

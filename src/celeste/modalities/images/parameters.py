@@ -23,6 +23,7 @@ class ImageParameter(StrEnum):
     STEPS = "steps"
     GUIDANCE = "guidance"
     MASK = "mask"
+    THINKING_LEVEL = "thinking_level"
 
 
 class ImageParameters(Parameters):
@@ -42,6 +43,7 @@ class ImageParameters(Parameters):
     steps: int
     guidance: float
     mask: ImageArtifact
+    thinking_level: str
 
 
 __all__ = [

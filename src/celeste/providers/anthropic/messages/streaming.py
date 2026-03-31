@@ -32,6 +32,14 @@ class AnthropicMessagesStream:
 
         return None
 
+    def _parse_chunk_reasoning(self, event_data: dict[str, Any]) -> str | None:
+        """Extract thinking content from SSE event."""
+        if event_data.get("type") == "content_block_delta":
+            delta = event_data.get("delta", {})
+            if delta.get("type") == "thinking_delta":
+                return delta.get("thinking") or None
+        return None
+
     def _parse_chunk_usage(
         self, event_data: dict[str, Any]
     ) -> dict[str, int | float | None] | None:
