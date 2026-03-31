@@ -97,6 +97,7 @@ GEMINI_MODELS: list[Model] = [
             ),
             ImageParameter.QUALITY: Choice(options=["1K", "2K", "4K"]),
             ImageParameter.REFERENCE_IMAGES: ImagesConstraint(max_count=14),
+            ImageParameter.THINKING_LEVEL: Choice(options=["minimal", "High"]),
         },
     ),
     Model(
@@ -121,6 +122,7 @@ GEMINI_MODELS: list[Model] = [
             ),
             ImageParameter.QUALITY: Choice(options=["1K", "2K", "4K"]),
             ImageParameter.REFERENCE_IMAGES: ImagesConstraint(max_count=14),
+            ImageParameter.THINKING_LEVEL: Choice(options=["minimal", "High"]),
         },
     ),
 ]

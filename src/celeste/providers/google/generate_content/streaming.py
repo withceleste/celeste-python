@@ -39,6 +39,19 @@ class GoogleGenerateContentStream:
 
         return None
 
+    def _parse_chunk_reasoning(self, event_data: dict[str, Any]) -> str | None:
+        """Extract thought content from SSE event."""
+        candidates = event_data.get("candidates", [])
+        if not candidates:
+            return None
+
+        parts = candidates[0].get("content", {}).get("parts", [])
+        for p in parts:
+            if p.get("thought") and "text" in p:
+                return p["text"]
+
+        return None
+
     def _parse_chunk_usage(
         self, event_data: dict[str, Any]
     ) -> dict[str, int | float | None] | None:

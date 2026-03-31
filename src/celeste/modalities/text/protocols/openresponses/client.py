@@ -11,6 +11,7 @@ from celeste.protocols.openresponses.streaming import (
 )
 from celeste.protocols.openresponses.tools import (
     parse_content,
+    parse_reasoning,
     parse_tool_calls,
     serialize_messages,
 )
@@ -58,6 +59,15 @@ class OpenResponsesTextStream(_OpenResponsesStream, TextStream):
         if self._response_data is None:
             return []
         return parse_tool_calls(self._response_data)
+
+    def _aggregate_signature(
+        self, chunks: list[TextChunk], raw_events: list[dict[str, Any]]
+    ) -> list[dict[str, Any]]:
+        """Extract reasoning items from response.completed data."""
+        if self._response_data is None:
+            return []
+        _, signature_blocks = parse_reasoning(self._response_data.get("output", []))
+        return signature_blocks
 
 
 class OpenResponsesTextClient(OpenResponsesMixin, TextClient):
@@ -110,6 +120,13 @@ class OpenResponsesTextClient(OpenResponsesMixin, TextClient):
         """Parse text content from response."""
         output = super()._parse_content(response_data)
         return parse_content(output)
+
+    def _parse_reasoning(
+        self, response_data: dict[str, Any]
+    ) -> tuple[str | None, list[dict[str, Any]]]:
+        """Parse reasoning from Responses API output."""
+        output = response_data.get("output", [])
+        return parse_reasoning(output)
 
     def _parse_tool_calls(self, response_data: dict[str, Any]) -> list[ToolCall]:
         """Parse tool calls from OpenResponses response."""

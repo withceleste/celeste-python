@@ -10,6 +10,9 @@ from celeste.providers.google.generate_content.parameters import (
 from celeste.providers.google.generate_content.parameters import (
     MediaContentMapper as _GeminiMediaContentMapper,
 )
+from celeste.providers.google.generate_content.parameters import (
+    ThinkingLevelMapper as _GeminiThinkingLevelMapper,
+)
 from celeste.providers.google.imagen.parameters import (
     AspectRatioMapper as _ImagenAspectRatioMapper,
 )
@@ -67,10 +70,17 @@ class GeminiReferenceImagesMapper(_GeminiMediaContentMapper[ImageContent]):
     name = ImageParameter.REFERENCE_IMAGES
 
 
+class GeminiThinkingLevelMapper(_GeminiThinkingLevelMapper[ImageContent]):
+    """Map thinking_level to Gemini generationConfig.thinkingConfig.thinkingLevel."""
+
+    name = ImageParameter.THINKING_LEVEL
+
+
 GEMINI_PARAMETER_MAPPERS: list[ParameterMapper[ImageContent]] = [
     GeminiAspectRatioMapper(),
     GeminiQualityMapper(),
     GeminiReferenceImagesMapper(),
+    GeminiThinkingLevelMapper(),
 ]
 
 

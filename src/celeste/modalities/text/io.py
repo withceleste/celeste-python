@@ -7,6 +7,8 @@ Text modality handles:
 Types are unified per-modality since generate and analyze produce identical outputs.
 """
 
+from typing import Any
+
 from pydantic import Field
 
 from celeste.io import Chunk, FinishReason, Input, Output, Usage
@@ -55,6 +57,8 @@ class TextOutput(Output[TextContent]):
 
     usage: TextUsage = Field(default_factory=TextUsage)
     finish_reason: TextFinishReason | None = None
+    reasoning: str | None = None
+    signature: list[dict[str, Any]] | None = None
 
     @property
     def message(self) -> Message:
@@ -63,12 +67,15 @@ class TextOutput(Output[TextContent]):
             role=Role.ASSISTANT,
             content=self.content,
             tool_calls=self.tool_calls if self.tool_calls else None,
+            reasoning=self.reasoning,
+            signature=self.signature,
         )
 
 
 class TextChunk(Chunk[str]):
     """Chunk for text streaming."""
 
+    reasoning: str | None = None
     finish_reason: TextFinishReason | None = None
     usage: TextUsage | None = None
 

@@ -220,17 +220,31 @@ class ModalityClient[
         content = self._parse_content(response_data)
         content = self._transform_output(content, **parameters)
         tool_calls = self._parse_tool_calls(response_data)
-        return self._output_class()(
+        reasoning, signature = self._parse_reasoning(response_data)
+        kwargs: dict[str, Any] = {}
+        if reasoning is not None:
+            kwargs["reasoning"] = reasoning
+        if signature:
+            kwargs["signature"] = signature
+        output = self._output_class()(
             content=content,
             usage=self._get_usage(response_data),
             finish_reason=self._get_finish_reason(response_data),
             metadata=self._build_metadata(response_data),
             tool_calls=tool_calls,
+            **kwargs,
         )
+        return output
 
     def _parse_tool_calls(self, response_data: dict[str, Any]) -> list[ToolCall]:
         """Parse tool calls from response. Override in providers that support tools."""
         return []
+
+    def _parse_reasoning(
+        self, response_data: dict[str, Any]
+    ) -> tuple[str | None, list[dict[str, Any]]]:
+        """Parse reasoning from response. Returns (text, signature_blocks)."""
+        return None, []
 
     def _stream(
         self,

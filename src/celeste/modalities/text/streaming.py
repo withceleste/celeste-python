@@ -19,5 +19,10 @@ class TextStream(Stream[TextOutput, TextParameters, TextChunk]):
         """Aggregate content from chunks into raw text."""
         return "".join(chunk.content for chunk in chunks)
 
+    def _aggregate_reasoning(self, chunks: list[TextChunk]) -> str | None:
+        """Aggregate reasoning from chunks into text."""
+        parts = [c.reasoning for c in chunks if c.reasoning]
+        return "".join(parts) if parts else None
+
 
 __all__ = ["TextStream"]

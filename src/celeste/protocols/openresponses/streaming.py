@@ -37,6 +37,16 @@ class OpenResponsesStream:
             return event_data.get("delta") or None
         return None
 
+    def _parse_chunk_reasoning(self, event_data: dict[str, Any]) -> str | None:
+        """Extract reasoning delta from SSE event."""
+        event_type = event_data.get("type")
+        if event_type in (
+            "response.reasoning_summary_text.delta",
+            "response.reasoning_text.delta",
+        ):
+            return event_data.get("delta") or None
+        return None
+
     def _parse_chunk_usage(
         self, event_data: dict[str, Any]
     ) -> dict[str, int | float | None] | None:

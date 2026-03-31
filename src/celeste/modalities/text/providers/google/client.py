@@ -43,6 +43,18 @@ class GoogleTextStream(_GoogleGenerateContentStream, TextStream):
                         )
         return tool_calls
 
+    def _aggregate_signature(
+        self, chunks: list, raw_events: list[dict[str, Any]]
+    ) -> list[dict[str, Any]]:
+        """Extract thought parts with signatures from Google streaming events."""
+        thought_parts: list[dict[str, Any]] = []
+        for event in raw_events:
+            for candidate in event.get("candidates", []):
+                for part in candidate.get("content", {}).get("parts", []):
+                    if part.get("thought") and "thoughtSignature" in part:
+                        thought_parts.append(part)
+        return thought_parts
+
 
 class GoogleTextClient(GoogleGenerateContentClient, TextClient):
     """Google text client."""
@@ -94,7 +106,9 @@ class GoogleTextClient(GoogleGenerateContentClient, TextClient):
                     )
                 else:
                     role = "model" if msg.role == "assistant" else msg.role
-                    msg_parts = content_to_parts(msg.content)
+                    sig_blocks = msg.signature
+                    msg_parts = list(sig_blocks) if sig_blocks else []
+                    msg_parts.extend(content_to_parts(msg.content))
                     if msg.tool_calls:
                         for tc in msg.tool_calls:
                             part: dict[str, Any] = {
@@ -159,6 +173,25 @@ class GoogleTextClient(GoogleGenerateContentClient, TextClient):
             if text is not None:
                 return text
         return ""
+
+    def _parse_reasoning(
+        self, response_data: dict[str, Any]
+    ) -> tuple[str | None, list[dict[str, Any]]]:
+        """Parse thought parts from Google response."""
+        candidates = response_data.get("candidates", [])
+        if not candidates:
+            return None, []
+        parts = candidates[0].get("content", {}).get("parts", [])
+        reasoning_parts: list[str] = []
+        signature_blocks: list[dict[str, Any]] = []
+        for p in parts:
+            if p.get("thought"):
+                text = p.get("text", "")
+                if text:
+                    reasoning_parts.append(text)
+                signature_blocks.append(p)
+        text = "\n".join(reasoning_parts) if reasoning_parts else None
+        return text, signature_blocks
 
     def _parse_tool_calls(self, response_data: dict[str, Any]) -> list[ToolCall]:
         """Parse tool calls from Google response."""

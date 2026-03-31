@@ -63,6 +63,8 @@ class GeminiImagesClient(GoogleGenerateContentClient, ImagesClient):
             content = candidate.get("content", {})
             parts = content.get("parts", [])
             for part in parts:
+                if part.get("thought"):
+                    continue
                 inline_data = part.get("inlineData", {})
                 base64_data = inline_data.get("data")
                 if not base64_data:

@@ -7,6 +7,9 @@ from celeste.providers.mistral.chat.client import MistralChatClient
 from celeste.providers.mistral.chat.streaming import (
     MistralChatStream as _MistralChatStream,
 )
+from celeste.providers.mistral.chat.streaming import (
+    _extract_thinking_text,
+)
 from celeste.types import TextContent
 
 from ...protocols.chatcompletions.client import (
@@ -46,6 +49,21 @@ class MistralTextClient(MistralChatClient, ChatCompletionsTextClient):
             content = "".join(text_parts)
 
         return content
+
+    def _parse_reasoning(
+        self, response_data: dict[str, Any]
+    ) -> tuple[str | None, list[dict[str, Any]]]:
+        """Parse thinking blocks from Mistral Magistral response."""
+        choices = response_data.get("choices", [])
+        if not choices:
+            return None, []
+        message = choices[0].get("message", {})
+        content = message.get("content")
+        if not isinstance(content, list):
+            return None, []
+        reasoning_parts = _extract_thinking_text(content)
+        text = "\n".join(reasoning_parts) if reasoning_parts else None
+        return text, []  # Mistral has no signature for round-trip
 
     def _stream_class(self) -> type[TextStream]:
         """Return the Stream class for this provider."""
