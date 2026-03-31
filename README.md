@@ -186,6 +186,147 @@ response = await client.generate("Extract user info: John is 30", output_schema=
 
 > `capability` is still supported but deprecated. Prefer `modality` + `operation`.
 
+### Using Google Vertex AI
+
+Celeste supports Google's Vertex AI platform for enterprise-scale AI deployments. Vertex AI requires authentication via Google Cloud credentials.
+
+📓 **[See full example notebook](notebooks/vertexai-example.ipynb)**
+
+**Setup:**
+
+1. Configure your Google Cloud project in `.env`:
+
+```bash
+# .env file
+GOOGLE_CLOUD_PROJECT=your-gcp-project-id
+GOOGLE_CLOUD_LOCATION=global  # or us-central1, europe-west4, etc.
+```
+
+2. Authenticate using one of these methods:
+   - **Application Default Credentials (recommended)**: Run `gcloud auth application-default login`
+   - **Service Account**: Set `GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account.json`
+
+**Usage:**
+
+```python
+import os
+from celeste import create_client, Modality, Operation, Provider
+from celeste.providers.google.auth import GoogleADC
+from dotenv import load_dotenv
+
+load_dotenv()
+
+client = create_client(
+    modality=Modality.TEXT,
+    operation=Operation.GENERATE,
+    provider=Provider.GOOGLE,
+    model="gemini-3.1-pro-preview",
+    auth=GoogleADC(
+        project_id=os.getenv("GOOGLE_CLOUD_PROJECT"),
+        location=os.getenv("GOOGLE_CLOUD_LOCATION")
+    )
+)
+
+# Use built-in web search (grounded generation)
+response = await client.generate(
+    "Explain quantum computing with citation links",
+    web_search=True
+)
+print(response.content)
+```
+
+See [.env.example](.env.example) for complete Vertex AI configuration options.
+
+### Using OpenAI/Anthropic-Compatible APIs
+
+Celeste cannot cover every AI provider in existence. However, many providers offer OpenAI-compatible or Anthropic-compatible APIs without releasing their own SDKs. Example: **[MiniMax](https://platform.minimax.io/docs/guides/text-generation)**.
+
+📓 **[See full example notebook](notebooks/anthropic_compat.ipynb)**
+
+> ⚠️ **Warning:** Always check the provider's documentation first to confirm whether they are compatible with OpenAI or Anthropic APIs. Not all providers support the same endpoints or features.
+
+For Anthropic-compatible providers, you can configure a custom base URL using the `ANTHROPIC_BASE_URL` environment variable:
+
+```bash
+# .env file
+ANTHROPIC_API_KEY=your-minimax-api-key-here
+ANTHROPIC_BASE_URL=https://api.minimax.io/anthropic
+```
+
+Then use it like any Anthropic model:
+
+```python
+import os
+from celeste import create_client, Modality, Operation, Provider
+from dotenv import load_dotenv
+
+load_dotenv()
+
+client = create_client(
+    modality=Modality.TEXT,
+    operation=Operation.GENERATE,
+    provider=Provider.ANTHROPIC,
+    model="MiniMax-M2.5",  # Custom model ID
+    api_key=os.getenv("ANTHROPIC_API_KEY")
+)
+
+response = await client.generate("Explain quantum computing")
+print(response.content)
+```
+
+> **Note:** You may see a warning like `Model 'MiniMax-M2.5' not registered in Celeste`. This is expected—parameter validation is disabled, but the API call works normally.
+
+**Optional: Register Custom Models**
+
+To eliminate the warning and enable parameter validation, you can register custom models:
+
+```python
+from celeste.models import Model, register_models
+from celeste.constraints import Range
+from celeste import Modality, Operation, Provider
+
+minimax_model = Model(
+    id="MiniMax-M2.5",
+    provider=Provider.ANTHROPIC,
+    display_name="MiniMax M2.5",
+    operations={Modality.TEXT: {Operation.GENERATE}},
+    streaming=True,
+    parameter_constraints={
+        "temperature": Range(min=0.0, max=1.0),
+        "max_tokens": Range(min=1, max=4096),
+    }
+)
+
+register_models([minimax_model])
+```
+
+After registration, parameter validation will be enabled for the custom model.
+
+Similarly, for OpenAI-compatible providers, use the `OPENAI_BASE_URL` environment variable:
+
+```bash
+# .env file
+OPENAI_API_KEY=your-api-key-here
+OPENAI_BASE_URL=https://your-openai-compatible-endpoint.com
+```
+
+Then use it with the OpenAI provider:
+
+```python
+from celeste import create_client, Modality, Operation, Provider
+
+client = create_client(
+    modality=Modality.TEXT,
+    operation=Operation.GENERATE,
+    provider=Provider.OPENAI,
+    model="your-custom-model-id"
+)
+
+response = await client.generate("Your prompt here")
+```
+
+See [.env.example](.env.example) for all available `*_BASE_URL` configuration options.
+
 ---
 ## 🪶 Install
 ```bash
