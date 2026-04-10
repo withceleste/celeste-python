@@ -41,7 +41,7 @@ class TextParameter(StrEnum):
     DOCUMENT = "document"
 
 
-class TextParameters(Parameters):
+class TextParameters(Parameters, total=False):
     """Parameters for text operations."""
 
     # Common parameters

@@ -17,7 +17,7 @@ class VideoParameter(StrEnum):
     LAST_FRAME = "last_frame"
 
 
-class VideoParameters(Parameters):
+class VideoParameters(Parameters, total=False):
     """Parameters for video generation operations."""
 
     aspect_ratio: str

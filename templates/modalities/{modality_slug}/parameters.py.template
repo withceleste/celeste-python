@@ -32,7 +32,7 @@ class {Modality}Parameter(StrEnum):
     # AUDIO = "audio"
 
 
-class {Modality}Parameters(Parameters):
+class {Modality}Parameters(Parameters, total=False):
     """Parameters for {modality} operations."""
 
     # Common parameters

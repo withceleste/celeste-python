@@ -15,7 +15,7 @@ class AudioParameter(StrEnum):
     LANGUAGE = "language"
 
 
-class AudioParameters(Parameters):
+class AudioParameters(Parameters, total=False):
     """Parameters for audio operations."""
 
     voice: str

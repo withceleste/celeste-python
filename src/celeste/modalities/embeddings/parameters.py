@@ -14,7 +14,7 @@ class EmbeddingsParameter(StrEnum):
     AUDIO = "audio"
 
 
-class EmbeddingsParameters(Parameters):
+class EmbeddingsParameters(Parameters, total=False):
     """Parameters for embeddings operations."""
 
     dimensions: int | None
