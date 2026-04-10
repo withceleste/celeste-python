@@ -26,7 +26,7 @@ class ImageParameter(StrEnum):
     THINKING_LEVEL = "thinking_level"
 
 
-class ImageParameters(Parameters):
+class ImageParameters(Parameters, total=False):
     """Parameters for images operations."""
 
     aspect_ratio: str
