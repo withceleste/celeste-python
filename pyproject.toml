@@ -182,7 +182,7 @@ module = [
     "celeste.providers.*.*",
     "celeste.namespaces.domains",
 ]
-disable_error_code = ["override", "return-value", "arg-type", "call-arg", "assignment", "no-any-return", "attr-defined"]
+disable_error_code = ["override", "return-value", "arg-type", "assignment", "no-any-return", "attr-defined"]
 
 [tool.bandit]
 exclude_dirs = [".venv", "__pycache__"]

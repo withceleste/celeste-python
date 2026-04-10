@@ -39,6 +39,7 @@ class GoogleImagesClient(ImagesClient):
             model=self.model,
             provider=self.provider,
             auth=self.auth,
+            base_url=self.base_url,
         )
         object.__setattr__(self, "_strategy", strategy)
 
