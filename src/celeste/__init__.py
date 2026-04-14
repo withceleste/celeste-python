@@ -6,9 +6,12 @@ import warnings
 from pydantic import SecretStr
 
 from celeste import providers as _providers  # noqa: F401
-from celeste.auth import APIKey, Authentication, AuthHeader, NoAuth
-from celeste.authentication_context import (
+from celeste.auth import (
+    APIKey,
+    Authentication,
     AuthenticationContext,
+    AuthHeader,
+    NoAuth,
     authentication_scope,
     resolve_authentication,
 )

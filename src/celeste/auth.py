@@ -1,8 +1,14 @@
 """Authentication methods for Celeste providers."""
 
 from abc import ABC, abstractmethod
+from collections.abc import Iterator, Mapping
+from contextlib import contextmanager
+from contextvars import ContextVar
 
-from pydantic import BaseModel, SecretStr, field_validator
+from pydantic import BaseModel, ConfigDict, SecretStr, field_validator
+
+from celeste.core import Modality, Operation
+from celeste.exceptions import MissingAuthenticationError
 
 # Module-level registry (same pattern as _clients and _models)
 _auth_classes: dict[str, type["Authentication"]] = {}
@@ -86,11 +92,65 @@ def get_auth_class(auth_type: str) -> type[Authentication]:
     return _auth_classes[auth_type]
 
 
+class AuthenticationContext(BaseModel):
+    """Per-(modality, operation) authentication bound to an async scope."""
+
+    # Frozen: asyncio.gather siblings share the context snapshot by reference,
+    # so mutability would cause silent cross-task credential bleed.
+    model_config = ConfigDict(frozen=True, arbitrary_types_allowed=True)
+
+    entries: Mapping[tuple[Modality, Operation], Authentication | None]
+
+
+_current_context: ContextVar[AuthenticationContext | None] = ContextVar(
+    "celeste.auth.current_context",
+    default=None,
+)
+
+
+@contextmanager
+def authentication_scope(
+    context: AuthenticationContext | None,
+) -> Iterator[None]:
+    """Bind an authentication context for the current async scope.
+
+    Within the ``with`` block, calls to ``celeste.<modality>.<method>(...)``
+    that don't pass an explicit ``auth=`` or ``api_key=`` resolve their
+    authentication from the bound context.
+    """
+    token = _current_context.set(context)
+    try:
+        yield
+    finally:
+        _current_context.reset(token)
+
+
+def resolve_authentication(
+    modality: Modality, operation: Operation
+) -> Authentication | None:
+    """Look up (modality, operation) in the current ambient context.
+
+    Raises:
+        MissingAuthenticationError: A scope is bound but has no authentication
+            for the requested (modality, operation).
+    """
+    context = _current_context.get()
+    if context is None:
+        return None
+    auth = context.entries.get((modality, operation))
+    if auth is None:
+        raise MissingAuthenticationError(modality=modality, operation=operation)
+    return auth
+
+
 __all__ = [
     "APIKey",
     "AuthHeader",
     "Authentication",
+    "AuthenticationContext",
     "NoAuth",
+    "authentication_scope",
     "get_auth_class",
     "register_auth",
+    "resolve_authentication",
 ]
