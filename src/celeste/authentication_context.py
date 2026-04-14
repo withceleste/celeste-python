@@ -20,12 +20,6 @@ class AuthenticationContext(BaseModel):
 
     entries: Mapping[tuple[Modality, Operation], Authentication | None]
 
-    def get_for(
-        self, modality: Modality, operation: Operation
-    ) -> Authentication | None:
-        """Return the authentication for a given (modality, operation)."""
-        return self.entries.get((modality, operation))
-
 
 _current_context: ContextVar[AuthenticationContext | None] = ContextVar(
     "celeste.authentication_context.current",
@@ -55,15 +49,14 @@ def resolve_authentication(
 ) -> Authentication | None:
     """Look up (modality, operation) in the current ambient context.
 
-    Returns ``None`` when no scope is bound (caller may fall back to env).
-    Raises ``MissingAuthenticationError`` when a scope is bound but has no
-    authentication for the requested (modality, operation) — the caller
-    explicitly scoped auth and this slot is uncovered.
+    Raises:
+        MissingAuthenticationError: A scope is bound but has no authentication
+            for the requested (modality, operation).
     """
     context = _current_context.get()
     if context is None:
         return None
-    auth = context.get_for(modality, operation)
+    auth = context.entries.get((modality, operation))
     if auth is None:
         raise MissingAuthenticationError(modality=modality, operation=operation)
     return auth

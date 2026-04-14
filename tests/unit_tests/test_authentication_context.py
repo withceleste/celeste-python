@@ -10,7 +10,6 @@ from pydantic import SecretStr, ValidationError
 from celeste.auth import AuthHeader, NoAuth
 from celeste.authentication_context import (
     AuthenticationContext,
-    _current_context,
     authentication_scope,
     resolve_authentication,
 )
@@ -53,16 +52,6 @@ class TestAuthenticationContextModel:
         with pytest.raises(ValidationError):
             full_context.entries = {}  # type: ignore[misc]
 
-    def test_get_for_returns_bound_entry(
-        self, full_context: AuthenticationContext, text_auth: AuthHeader
-    ) -> None:
-        assert full_context.get_for(Modality.TEXT, Operation.GENERATE) is text_auth
-
-    def test_get_for_missing_entry_returns_none(
-        self, full_context: AuthenticationContext
-    ) -> None:
-        assert full_context.get_for(Modality.VIDEOS, Operation.GENERATE) is None
-
 
 class TestAuthenticationScope:
     def test_outside_scope_resolves_none(self) -> None:
@@ -77,12 +66,14 @@ class TestAuthenticationScope:
             )
 
     def test_exit_restores_previous_state(
-        self, full_context: AuthenticationContext
+        self, full_context: AuthenticationContext, text_auth: AuthHeader
     ) -> None:
-        assert _current_context.get() is None
+        assert resolve_authentication(Modality.TEXT, Operation.GENERATE) is None
         with authentication_scope(full_context):
-            assert _current_context.get() is full_context
-        assert _current_context.get() is None
+            assert (
+                resolve_authentication(Modality.TEXT, Operation.GENERATE) is text_auth
+            )
+        assert resolve_authentication(Modality.TEXT, Operation.GENERATE) is None
 
     def test_nested_scopes_inner_wins_outer_restored(
         self,
@@ -108,12 +99,17 @@ class TestAuthenticationScope:
             )
 
     def test_scope_with_none_clears_binding(
-        self, full_context: AuthenticationContext
+        self, full_context: AuthenticationContext, text_auth: AuthHeader
     ) -> None:
         with authentication_scope(full_context):
+            assert (
+                resolve_authentication(Modality.TEXT, Operation.GENERATE) is text_auth
+            )
             with authentication_scope(None):
                 assert resolve_authentication(Modality.TEXT, Operation.GENERATE) is None
-            assert _current_context.get() is full_context
+            assert (
+                resolve_authentication(Modality.TEXT, Operation.GENERATE) is text_auth
+            )
 
 
 class TestResolveAuthentication:
