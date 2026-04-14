@@ -1,7 +1,5 @@
 """Ambient authentication scope keyed by (modality, operation)."""
 
-from __future__ import annotations
-
 from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
 from contextvars import ContextVar
