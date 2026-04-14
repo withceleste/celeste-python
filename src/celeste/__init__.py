@@ -7,6 +7,11 @@ from pydantic import SecretStr
 
 from celeste import providers as _providers  # noqa: F401
 from celeste.auth import APIKey, Authentication, AuthHeader, NoAuth
+from celeste.authentication_context import (
+    AuthenticationContext,
+    authentication_scope,
+    resolve_authentication,
+)
 from celeste.client import ModalityClient
 from celeste.core import (
     Capability,
@@ -19,6 +24,7 @@ from celeste.credentials import credentials
 from celeste.exceptions import (
     ClientNotFoundError,
     Error,
+    MissingAuthenticationError,
     ModelNotFoundError,
 )
 from celeste.io import Input, Output, Usage
@@ -248,6 +254,11 @@ def create_client(
         raise ClientNotFoundError(modality=resolved_modality, provider=target)
     modality_client_class = _CLIENT_MAP[(resolved_modality, target)]
 
+    # Ambient fallback: only when neither auth nor api_key was passed and the
+    # operation is known. Explicit kwargs always win.
+    if auth is None and api_key is None and resolved_operation is not None:
+        auth = resolve_authentication(resolved_modality, resolved_operation)
+
     # Auth resolution: BYOA for protocol path, credentials for provider path
     if resolved_protocol is not None and resolved_provider is None:
         if auth is not None:
@@ -276,12 +287,14 @@ def create_client(
 __all__ = [
     "APIKey",
     "Authentication",
+    "AuthenticationContext",
     "Capability",
     "CodeExecution",
     "Content",
     "Error",
     "Input",
     "Message",
+    "MissingAuthenticationError",
     "Modality",
     "Model",
     "Operation",
@@ -297,6 +310,7 @@ __all__ = [
     "WebSearch",
     "XSearch",
     "audio",
+    "authentication_scope",
     "create_client",
     "documents",
     "get_model",

@@ -2,6 +2,8 @@
 
 from typing import Any
 
+from celeste.core import Modality, Operation
+
 
 class Error(Exception):
     """Base exception for all Celeste errors."""
@@ -233,6 +235,17 @@ class UnsupportedProviderError(CredentialsError):
         )
 
 
+class MissingAuthenticationError(CredentialsError):
+    """Raised when authentication cannot be resolved for a (modality, operation)."""
+
+    def __init__(self, *, modality: Modality, operation: Operation) -> None:
+        self.modality = modality
+        self.operation = operation
+        super().__init__(
+            f"No authentication configured for {modality.value}/{operation.value}"
+        )
+
+
 class InvalidToolError(ValidationError):
     """Raised when a tool item is not a Tool instance or dict."""
 
@@ -263,6 +276,7 @@ __all__ = [
     "ConstraintViolationError",
     "Error",
     "InvalidToolError",
+    "MissingAuthenticationError",
     "MissingCredentialsError",
     "MissingDependencyError",
     "ModalityNotFoundError",
