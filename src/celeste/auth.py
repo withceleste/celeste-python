@@ -7,7 +7,7 @@ from contextvars import ContextVar
 
 from pydantic import BaseModel, ConfigDict, SecretStr, field_validator
 
-from celeste.core import Modality, Operation
+from celeste.core import Provider
 from celeste.exceptions import MissingAuthenticationError
 
 # Module-level registry (same pattern as _clients and _models)
@@ -93,13 +93,13 @@ def get_auth_class(auth_type: str) -> type[Authentication]:
 
 
 class AuthenticationContext(BaseModel):
-    """Per-(modality, operation) authentication bound to an async scope."""
+    """Per-provider authentication bound to an async scope."""
 
     # Frozen: asyncio.gather siblings share the context snapshot by reference,
     # so mutability would cause silent cross-task credential bleed.
     model_config = ConfigDict(frozen=True, arbitrary_types_allowed=True)
 
-    entries: Mapping[tuple[Modality, Operation], Authentication | None]
+    entries: Mapping[Provider, Authentication]
 
 
 _current_context: ContextVar[AuthenticationContext | None] = ContextVar(
@@ -116,7 +116,7 @@ def authentication_scope(
 
     Within the ``with`` block, calls to ``celeste.<modality>.<method>(...)``
     that don't pass an explicit ``auth=`` or ``api_key=`` resolve their
-    authentication from the bound context.
+    authentication from the bound context using the resolved model's provider.
 
     Args:
         context: The AuthenticationContext to bind, or None to clear any
@@ -129,28 +129,25 @@ def authentication_scope(
         _current_context.reset(token)
 
 
-def resolve_authentication(
-    modality: Modality, operation: Operation
-) -> Authentication | None:
-    """Look up (modality, operation) in the current ambient context.
+def resolve_authentication(provider: Provider) -> Authentication | None:
+    """Look up the provider in the current ambient context.
 
     Args:
-        modality: The modality to look up.
-        operation: The operation to look up.
+        provider: The provider to look up.
 
     Returns:
         The bound Authentication, or None if no ambient context is active.
 
     Raises:
         MissingAuthenticationError: A scope is bound but has no authentication
-            for the requested (modality, operation).
+            for the requested provider.
     """
     context = _current_context.get()
     if context is None:
         return None
-    auth = context.entries.get((modality, operation))
+    auth = context.entries.get(provider)
     if auth is None:
-        raise MissingAuthenticationError(modality=modality, operation=operation)
+        raise MissingAuthenticationError(provider)
     return auth
 
 

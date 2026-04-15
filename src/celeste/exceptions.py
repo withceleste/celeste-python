@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from celeste.core import Modality, Operation
+from celeste.core import Provider
 
 
 class Error(Exception):
@@ -236,14 +236,11 @@ class UnsupportedProviderError(CredentialsError):
 
 
 class MissingAuthenticationError(CredentialsError):
-    """Raised when authentication cannot be resolved for a (modality, operation)."""
+    """Raised when authentication cannot be resolved for a provider."""
 
-    def __init__(self, *, modality: Modality, operation: Operation) -> None:
-        self.modality = modality
-        self.operation = operation
-        super().__init__(
-            f"No authentication configured for {modality.value}/{operation.value}"
-        )
+    def __init__(self, provider: Provider) -> None:
+        self.provider = provider
+        super().__init__(f"No authentication configured for provider {provider.value}")
 
 
 class InvalidToolError(ValidationError):

@@ -19,7 +19,7 @@ from celeste.auth import (
     register_auth,
     resolve_authentication,
 )
-from celeste.core import Modality, Operation
+from celeste.core import Provider
 from celeste.exceptions import MissingAuthenticationError
 
 
@@ -112,31 +112,31 @@ class TestAuthRegistry:
 
 
 @pytest.fixture
-def text_auth() -> AuthHeader:
-    return AuthHeader(secret=SecretStr("text-key"))
+def openai_auth() -> AuthHeader:
+    return AuthHeader(secret=SecretStr("openai-key"))
 
 
 @pytest.fixture
-def images_auth() -> AuthHeader:
-    return AuthHeader(secret=SecretStr("images-key"))
+def anthropic_auth() -> AuthHeader:
+    return AuthHeader(secret=SecretStr("anthropic-key"))
 
 
 @pytest.fixture
-def audio_auth() -> NoAuth:
+def elevenlabs_auth() -> NoAuth:
     return NoAuth()
 
 
 @pytest.fixture
 def full_context(
-    text_auth: AuthHeader,
-    images_auth: AuthHeader,
-    audio_auth: NoAuth,
+    openai_auth: AuthHeader,
+    anthropic_auth: AuthHeader,
+    elevenlabs_auth: NoAuth,
 ) -> AuthenticationContext:
     return AuthenticationContext(
         entries={
-            (Modality.TEXT, Operation.GENERATE): text_auth,
-            (Modality.IMAGES, Operation.GENERATE): images_auth,
-            (Modality.AUDIO, Operation.SPEAK): audio_auth,
+            Provider.OPENAI: openai_auth,
+            Provider.ANTHROPIC: anthropic_auth,
+            Provider.ELEVENLABS: elevenlabs_auth,
         }
     )
 
@@ -153,88 +153,60 @@ class TestAuthenticationScope:
     """Test authentication_scope context manager."""
 
     def test_outside_scope_resolves_none(self) -> None:
-        assert resolve_authentication(Modality.TEXT, Operation.GENERATE) is None
+        assert resolve_authentication(Provider.OPENAI) is None
 
     def test_inside_scope_resolves_bound_auth(
-        self, full_context: AuthenticationContext, text_auth: AuthHeader
+        self, full_context: AuthenticationContext, openai_auth: AuthHeader
     ) -> None:
         with authentication_scope(full_context):
-            assert (
-                resolve_authentication(Modality.TEXT, Operation.GENERATE) is text_auth
-            )
+            assert resolve_authentication(Provider.OPENAI) is openai_auth
 
     def test_exit_restores_previous_state(
-        self, full_context: AuthenticationContext, text_auth: AuthHeader
+        self, full_context: AuthenticationContext, openai_auth: AuthHeader
     ) -> None:
-        assert resolve_authentication(Modality.TEXT, Operation.GENERATE) is None
+        assert resolve_authentication(Provider.OPENAI) is None
         with authentication_scope(full_context):
-            assert (
-                resolve_authentication(Modality.TEXT, Operation.GENERATE) is text_auth
-            )
-        assert resolve_authentication(Modality.TEXT, Operation.GENERATE) is None
+            assert resolve_authentication(Provider.OPENAI) is openai_auth
+        assert resolve_authentication(Provider.OPENAI) is None
 
     def test_nested_scopes_inner_wins_outer_restored(
         self,
         full_context: AuthenticationContext,
-        text_auth: AuthHeader,
+        openai_auth: AuthHeader,
     ) -> None:
         inner_auth = AuthHeader(secret=SecretStr("inner-key"))
-        inner_context = AuthenticationContext(
-            entries={(Modality.TEXT, Operation.GENERATE): inner_auth}
-        )
+        inner_context = AuthenticationContext(entries={Provider.OPENAI: inner_auth})
 
         with authentication_scope(full_context):
-            assert (
-                resolve_authentication(Modality.TEXT, Operation.GENERATE) is text_auth
-            )
+            assert resolve_authentication(Provider.OPENAI) is openai_auth
             with authentication_scope(inner_context):
-                assert (
-                    resolve_authentication(Modality.TEXT, Operation.GENERATE)
-                    is inner_auth
-                )
-            assert (
-                resolve_authentication(Modality.TEXT, Operation.GENERATE) is text_auth
-            )
+                assert resolve_authentication(Provider.OPENAI) is inner_auth
+            assert resolve_authentication(Provider.OPENAI) is openai_auth
 
     def test_scope_with_none_clears_binding(
-        self, full_context: AuthenticationContext, text_auth: AuthHeader
+        self, full_context: AuthenticationContext, openai_auth: AuthHeader
     ) -> None:
         with authentication_scope(full_context):
-            assert (
-                resolve_authentication(Modality.TEXT, Operation.GENERATE) is text_auth
-            )
+            assert resolve_authentication(Provider.OPENAI) is openai_auth
             with authentication_scope(None):
-                assert resolve_authentication(Modality.TEXT, Operation.GENERATE) is None
-            assert (
-                resolve_authentication(Modality.TEXT, Operation.GENERATE) is text_auth
-            )
+                assert resolve_authentication(Provider.OPENAI) is None
+            assert resolve_authentication(Provider.OPENAI) is openai_auth
 
 
 class TestResolveAuthentication:
     """Test resolve_authentication lookup helper."""
 
-    def test_scope_bound_but_entry_missing_raises(
+    def test_scope_bound_but_provider_missing_raises(
         self, full_context: AuthenticationContext
     ) -> None:
         with (
             authentication_scope(full_context),
             pytest.raises(MissingAuthenticationError) as exc_info,
         ):
-            resolve_authentication(Modality.VIDEOS, Operation.GENERATE)
+            resolve_authentication(Provider.GOOGLE)
         err = exc_info.value
-        assert err.modality is Modality.VIDEOS
-        assert err.operation is Operation.GENERATE
-        assert "videos/generate" in str(err)
-
-    def test_scope_bound_with_explicit_none_raises(self) -> None:
-        context = AuthenticationContext(
-            entries={(Modality.TEXT, Operation.GENERATE): None}
-        )
-        with (
-            authentication_scope(context),
-            pytest.raises(MissingAuthenticationError),
-        ):
-            resolve_authentication(Modality.TEXT, Operation.GENERATE)
+        assert err.provider is Provider.GOOGLE
+        assert "google" in str(err)
 
 
 class TestAsyncPropagation:
@@ -242,46 +214,46 @@ class TestAsyncPropagation:
 
     @pytest.mark.asyncio
     async def test_create_task_propagates(
-        self, full_context: AuthenticationContext, images_auth: AuthHeader
+        self, full_context: AuthenticationContext, anthropic_auth: AuthHeader
     ) -> None:
         async def child() -> object:
-            return resolve_authentication(Modality.IMAGES, Operation.GENERATE)
+            return resolve_authentication(Provider.ANTHROPIC)
 
         with authentication_scope(full_context):
             task = asyncio.create_task(child())
             result = await task
 
-        assert result is images_auth
+        assert result is anthropic_auth
 
     @pytest.mark.asyncio
     async def test_gather_siblings_share_snapshot(
-        self, full_context: AuthenticationContext, images_auth: AuthHeader
+        self, full_context: AuthenticationContext, anthropic_auth: AuthHeader
     ) -> None:
         async def child() -> object:
-            return resolve_authentication(Modality.IMAGES, Operation.GENERATE)
+            return resolve_authentication(Provider.ANTHROPIC)
 
         with authentication_scope(full_context):
             results = await asyncio.gather(child(), child(), child())
 
-        assert all(r is images_auth for r in results)
+        assert all(r is anthropic_auth for r in results)
 
     @pytest.mark.asyncio
     async def test_to_thread_propagates(
-        self, full_context: AuthenticationContext, text_auth: AuthHeader
+        self, full_context: AuthenticationContext, openai_auth: AuthHeader
     ) -> None:
         def sync_worker() -> object:
-            return resolve_authentication(Modality.TEXT, Operation.GENERATE)
+            return resolve_authentication(Provider.OPENAI)
 
         with authentication_scope(full_context):
             result = await asyncio.to_thread(sync_worker)
 
-        assert result is text_auth
+        assert result is openai_auth
 
     def test_raw_thread_pool_does_not_propagate(
         self, full_context: AuthenticationContext
     ) -> None:
         def sync_worker() -> object:
-            return resolve_authentication(Modality.TEXT, Operation.GENERATE)
+            return resolve_authentication(Provider.OPENAI)
 
         with (
             ThreadPoolExecutor(max_workers=1) as pool,
@@ -293,10 +265,10 @@ class TestAsyncPropagation:
         assert result is None
 
     def test_raw_thread_pool_with_copy_context_propagates(
-        self, full_context: AuthenticationContext, text_auth: AuthHeader
+        self, full_context: AuthenticationContext, openai_auth: AuthHeader
     ) -> None:
         def sync_worker() -> object:
-            return resolve_authentication(Modality.TEXT, Operation.GENERATE)
+            return resolve_authentication(Provider.OPENAI)
 
         with (
             ThreadPoolExecutor(max_workers=1) as pool,
@@ -306,4 +278,4 @@ class TestAsyncPropagation:
             future = pool.submit(ctx_snapshot.run, sync_worker)
             result = future.result()
 
-        assert result is text_auth
+        assert result is openai_auth

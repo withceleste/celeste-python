@@ -198,7 +198,7 @@ def create_client(
         auth: Optional Authentication object for custom auth (e.g., GoogleADC).
             When None and api_key is also None, falls back to the ambient
             AuthenticationContext bound by ``authentication_scope(...)`` for
-            the (modality, operation) pair, before the env-credential path.
+            the resolved model's provider, before the env-credential path.
         protocol: Wire format protocol for compatible APIs (e.g., "openresponses",
                   "chatcompletions"). Use with base_url for third-party compatible APIs.
         base_url: Custom base URL override. Use with protocol for compatible APIs,
@@ -212,7 +212,7 @@ def create_client(
         ClientNotFoundError: If no client registered for capability/provider/protocol.
         MissingCredentialsError: If required credentials are not configured.
         MissingAuthenticationError: If an ambient AuthenticationContext is bound
-            but has no entry for the requested (modality, operation).
+            but has no entry for the resolved model's provider.
         ValueError: If capability/operation cannot be inferred from model.
     """
     # Translation layer: convert deprecated capability to modality/operation
@@ -263,9 +263,9 @@ def create_client(
     modality_client_class = _CLIENT_MAP[(resolved_modality, target)]
 
     # Ambient fallback: only when neither auth nor api_key was passed and the
-    # operation is known. Explicit kwargs always win.
-    if auth is None and api_key is None and resolved_operation is not None:
-        auth = resolve_authentication(resolved_modality, resolved_operation)
+    # provider is known. Explicit kwargs always win.
+    if auth is None and api_key is None and resolved_provider is not None:
+        auth = resolve_authentication(resolved_provider)
 
     # Auth resolution: BYOA for protocol path, credentials for provider path
     if resolved_protocol is not None and resolved_provider is None:
