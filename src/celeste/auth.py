@@ -1,8 +1,14 @@
 """Authentication methods for Celeste providers."""
 
 from abc import ABC, abstractmethod
+from collections.abc import Iterator, Mapping
+from contextlib import contextmanager
+from contextvars import ContextVar
 
-from pydantic import BaseModel, SecretStr, field_validator
+from pydantic import BaseModel, ConfigDict, SecretStr, field_validator
+
+from celeste.core import Provider
+from celeste.exceptions import MissingAuthenticationError
 
 # Module-level registry (same pattern as _clients and _models)
 _auth_classes: dict[str, type["Authentication"]] = {}
@@ -86,11 +92,73 @@ def get_auth_class(auth_type: str) -> type[Authentication]:
     return _auth_classes[auth_type]
 
 
+class AuthenticationContext(BaseModel):
+    """Per-provider authentication bound to an async scope."""
+
+    # Frozen: asyncio.gather siblings share the context snapshot by reference,
+    # so mutability would cause silent cross-task credential bleed.
+    model_config = ConfigDict(frozen=True, arbitrary_types_allowed=True)
+
+    entries: Mapping[Provider, Authentication]
+
+
+_current_context: ContextVar[AuthenticationContext | None] = ContextVar(
+    "celeste.auth.current_context",
+    default=None,
+)
+
+
+@contextmanager
+def authentication_scope(
+    context: AuthenticationContext | None,
+) -> Iterator[None]:
+    """Bind an authentication context for the current async scope.
+
+    Within the ``with`` block, calls to ``celeste.<modality>.<method>(...)``
+    that don't pass an explicit ``auth=`` or ``api_key=`` resolve their
+    authentication from the bound context using the resolved model's provider.
+
+    Args:
+        context: The AuthenticationContext to bind, or None to clear any
+            outer binding for the duration of the block.
+    """
+    token = _current_context.set(context)
+    try:
+        yield
+    finally:
+        _current_context.reset(token)
+
+
+def resolve_authentication(provider: Provider) -> Authentication | None:
+    """Look up the provider in the current ambient context.
+
+    Args:
+        provider: The provider to look up.
+
+    Returns:
+        The bound Authentication, or None if no ambient context is active.
+
+    Raises:
+        MissingAuthenticationError: A scope is bound but has no authentication
+            for the requested provider.
+    """
+    context = _current_context.get()
+    if context is None:
+        return None
+    auth = context.entries.get(provider)
+    if auth is None:
+        raise MissingAuthenticationError(provider)
+    return auth
+
+
 __all__ = [
     "APIKey",
     "AuthHeader",
     "Authentication",
+    "AuthenticationContext",
     "NoAuth",
+    "authentication_scope",
     "get_auth_class",
     "register_auth",
+    "resolve_authentication",
 ]
