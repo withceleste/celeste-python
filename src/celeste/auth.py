@@ -117,6 +117,10 @@ def authentication_scope(
     Within the ``with`` block, calls to ``celeste.<modality>.<method>(...)``
     that don't pass an explicit ``auth=`` or ``api_key=`` resolve their
     authentication from the bound context.
+
+    Args:
+        context: The AuthenticationContext to bind, or None to clear any
+            outer binding for the duration of the block.
     """
     token = _current_context.set(context)
     try:
@@ -129,6 +133,13 @@ def resolve_authentication(
     modality: Modality, operation: Operation
 ) -> Authentication | None:
     """Look up (modality, operation) in the current ambient context.
+
+    Args:
+        modality: The modality to look up.
+        operation: The operation to look up.
+
+    Returns:
+        The bound Authentication, or None if no ambient context is active.
 
     Raises:
         MissingAuthenticationError: A scope is bound but has no authentication

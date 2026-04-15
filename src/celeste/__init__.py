@@ -196,6 +196,9 @@ def create_client(
         model: Model object, string model ID, or None for auto-selection.
         api_key: Optional API key override (string or SecretStr).
         auth: Optional Authentication object for custom auth (e.g., GoogleADC).
+            When None and api_key is also None, falls back to the ambient
+            AuthenticationContext bound by ``authentication_scope(...)`` for
+            the (modality, operation) pair, before the env-credential path.
         protocol: Wire format protocol for compatible APIs (e.g., "openresponses",
                   "chatcompletions"). Use with base_url for third-party compatible APIs.
         base_url: Custom base URL override. Use with protocol for compatible APIs,
@@ -208,6 +211,8 @@ def create_client(
         ModelNotFoundError: If no model found for the specified capability/provider.
         ClientNotFoundError: If no client registered for capability/provider/protocol.
         MissingCredentialsError: If required credentials are not configured.
+        MissingAuthenticationError: If an ambient AuthenticationContext is bound
+            but has no entry for the requested (modality, operation).
         ValueError: If capability/operation cannot be inferred from model.
     """
     # Translation layer: convert deprecated capability to modality/operation
