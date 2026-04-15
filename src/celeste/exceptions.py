@@ -2,8 +2,6 @@
 
 from typing import Any
 
-from celeste.core import Provider
-
 
 class Error(Exception):
     """Base exception for all Celeste errors."""
@@ -235,14 +233,6 @@ class UnsupportedProviderError(CredentialsError):
         )
 
 
-class MissingAuthenticationError(CredentialsError):
-    """Raised when authentication cannot be resolved for a provider."""
-
-    def __init__(self, provider: Provider) -> None:
-        self.provider = provider
-        super().__init__(f"No authentication configured for provider {provider.value}")
-
-
 class InvalidToolError(ValidationError):
     """Raised when a tool item is not a Tool instance or dict."""
 
@@ -273,7 +263,6 @@ __all__ = [
     "ConstraintViolationError",
     "Error",
     "InvalidToolError",
-    "MissingAuthenticationError",
     "MissingCredentialsError",
     "MissingDependencyError",
     "ModalityNotFoundError",
