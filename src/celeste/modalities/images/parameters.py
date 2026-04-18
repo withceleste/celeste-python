@@ -1,6 +1,9 @@
 """Parameters for images modality."""
 
 from enum import StrEnum
+from typing import Annotated
+
+from pydantic import Field
 
 from celeste.artifacts import ImageArtifact
 from celeste.parameters import Parameters
@@ -29,21 +32,34 @@ class ImageParameter(StrEnum):
 class ImageParameters(Parameters, total=False):
     """Parameters for images operations."""
 
-    aspect_ratio: str
-    num_images: int
-    partial_images: int
-    quality: str
-    watermark: bool
-    reference_images: list[ImageArtifact]
-    prompt_upsampling: bool
-    negative_prompt: str
-    seed: int
-    safety_tolerance: int
-    output_format: str
-    steps: int
-    guidance: float
-    mask: ImageArtifact
-    thinking_level: str
+    aspect_ratio: Annotated[
+        str, Field(description="Output image dimensions or aspect ratio.")
+    ]
+    num_images: Annotated[int, Field(description="How many images to return.")]
+    partial_images: Annotated[
+        int, Field(description="Number of progressive partial outputs to stream.")
+    ]
+    quality: Annotated[str, Field(description="Output quality tier.")]
+    watermark: Annotated[bool, Field(description="Embed a watermark in the output.")]
+    reference_images: Annotated[
+        list[ImageArtifact],
+        Field(description="Additional images for composition or style reference."),
+    ]
+    prompt_upsampling: Annotated[
+        bool, Field(description="Let the model rewrite the prompt for better results.")
+    ]
+    negative_prompt: Annotated[
+        str, Field(description="Concepts to avoid in the output.")
+    ]
+    seed: Annotated[int, Field(description="Seed for deterministic output.")]
+    safety_tolerance: Annotated[int, Field(description="Safety filter threshold.")]
+    output_format: Annotated[str, Field(description="Output file format.")]
+    steps: Annotated[int, Field(description="Number of denoising steps.")]
+    guidance: Annotated[float, Field(description="Prompt-adherence strength.")]
+    mask: Annotated[
+        ImageArtifact, Field(description="Mask image for inpainting a region.")
+    ]
+    thinking_level: Annotated[str, Field(description="Model reasoning depth.")]
 
 
 __all__ = [

@@ -5,8 +5,9 @@ Model `parameter_constraints` validates parameter values when defined; unconstra
 """
 
 from enum import StrEnum
+from typing import Annotated
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from celeste.parameters import Parameters
 from celeste.tools import ToolChoiceOption, ToolDefinition
@@ -45,23 +46,43 @@ class TextParameters(Parameters, total=False):
     """Parameters for text operations."""
 
     # Common parameters
-    temperature: float
-    max_tokens: int
-    seed: int
+    temperature: Annotated[
+        float, Field(description="Sampling randomness; 0.0 is deterministic.")
+    ]
+    max_tokens: Annotated[int, Field(description="Maximum tokens to generate.")]
+    seed: Annotated[int, Field(description="Seed for deterministic output.")]
 
     # Text-specific parameters
-    thinking_budget: int | str
-    thinking_level: str
-    output_schema: type[BaseModel]
-    tools: list[ToolDefinition]
-    tool_choice: ToolChoiceOption
-    verbosity: str
+    thinking_budget: Annotated[
+        int | str,
+        Field(
+            description="Reasoning budget — integer token count, or a preset tier for models that accept one."
+        ),
+    ]
+    thinking_level: Annotated[str, Field(description="Model reasoning depth.")]
+    output_schema: Annotated[
+        type[BaseModel],
+        Field(description="Pydantic model constraining the output shape."),
+    ]
+    tools: Annotated[
+        list[ToolDefinition],
+        Field(description="Tools the model may call during generation."),
+    ]
+    tool_choice: Annotated[
+        ToolChoiceOption,
+        Field(description="Controls whether and which tool the model must call."),
+    ]
+    verbosity: Annotated[str, Field(description="Output verbosity level.")]
 
     # Deprecated: use tools=[WebSearch()], tools=[XSearch()], tools=[CodeExecution()] instead.
     # TODO(deprecation): Remove on 2026-06-07.
-    web_search: bool
-    x_search: bool
-    code_execution: bool
+    web_search: Annotated[
+        bool, Field(description="Deprecated. Use tools=[WebSearch()].")
+    ]
+    x_search: Annotated[bool, Field(description="Deprecated. Use tools=[XSearch()].")]
+    code_execution: Annotated[
+        bool, Field(description="Deprecated. Use tools=[CodeExecution()].")
+    ]
 
 
 __all__ = [

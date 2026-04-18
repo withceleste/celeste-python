@@ -27,6 +27,8 @@ from celeste.tools import Tool, ToolChoice
 class Constraint(BaseModel, ABC):
     """Base constraint for parameter validation."""
 
+    description: str | None = None
+
     @computed_field  # type: ignore[prop-decorator]
     @property
     def type(self) -> str:
