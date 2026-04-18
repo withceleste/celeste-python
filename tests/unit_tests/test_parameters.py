@@ -1,15 +1,86 @@
 """High-value tests for celeste.parameters module."""
 
 from enum import StrEnum
-from typing import Any
+from typing import Any, get_type_hints
 
 import pytest
+from pydantic.fields import FieldInfo
 
 from celeste.constraints import Range, Str
 from celeste.core import Parameter, Provider
 from celeste.exceptions import ConstraintViolationError
+from celeste.modalities.audio.parameters import AudioParameters
+from celeste.modalities.images.parameters import ImageParameters
+from celeste.modalities.text.parameters import TextParameters
+from celeste.modalities.videos.parameters import VideoParameters
 from celeste.models import Model
 from celeste.types import TextContent
+
+
+def _field_description(params_type: type, field_name: str) -> str | None:
+    hints = get_type_hints(params_type, include_extras=True)
+    hint = hints[field_name]
+    for meta in getattr(hint, "__metadata__", ()):
+        if isinstance(meta, FieldInfo):
+            return meta.description
+    return None
+
+
+class TestParameterTypedDictAnnotations:
+    """Each modality's Parameters TypedDict must carry per-field Field descriptions."""
+
+    def test_image_parameters_describe_every_field(self) -> None:
+        hints = get_type_hints(ImageParameters, include_extras=True)
+        for name in hints:
+            assert _field_description(ImageParameters, name), (
+                f"ImageParameters.{name} missing Field(description=...)"
+            )
+
+    def test_audio_parameters_describe_every_field(self) -> None:
+        hints = get_type_hints(AudioParameters, include_extras=True)
+        for name in hints:
+            assert _field_description(AudioParameters, name), (
+                f"AudioParameters.{name} missing Field(description=...)"
+            )
+
+    def test_video_parameters_describe_every_field(self) -> None:
+        hints = get_type_hints(VideoParameters, include_extras=True)
+        for name in hints:
+            assert _field_description(VideoParameters, name), (
+                f"VideoParameters.{name} missing Field(description=...)"
+            )
+
+    def test_text_parameters_describe_every_field(self) -> None:
+        hints = get_type_hints(TextParameters, include_extras=True)
+        for name in hints:
+            assert _field_description(TextParameters, name), (
+                f"TextParameters.{name} missing Field(description=...)"
+            )
+
+    def test_base_type_is_preserved_under_annotated(self) -> None:
+        hints = get_type_hints(ImageParameters, include_extras=True)
+        assert hints["aspect_ratio"].__origin__ is str
+        assert hints["num_images"].__origin__ is int
+        assert hints["guidance"].__origin__ is float
+
+
+class TestConstraintDescription:
+    """Constraint carries optional per-model description metadata."""
+
+    def test_description_defaults_to_none(self) -> None:
+        assert Range(min=0, max=1).description is None
+
+    def test_description_is_settable(self) -> None:
+        constraint = Range(
+            min=0, max=1, description="Temperature bounds for this model."
+        )
+        assert constraint.description == "Temperature bounds for this model."
+
+    def test_str_constraint_inherits_description(self) -> None:
+        constraint = Str(
+            max_length=500, description="Prompt length capped by provider."
+        )
+        assert constraint.description == "Prompt length capped by provider."
 
 
 class DefaultParseOutputMapper:

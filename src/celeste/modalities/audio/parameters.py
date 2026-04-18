@@ -1,6 +1,9 @@
 """Parameters for audio modality."""
 
 from enum import StrEnum
+from typing import Annotated
+
+from pydantic import Field
 
 from celeste.parameters import Parameters
 
@@ -18,11 +21,17 @@ class AudioParameter(StrEnum):
 class AudioParameters(Parameters, total=False):
     """Parameters for audio operations."""
 
-    voice: str
-    speed: float
-    output_format: str
-    prompt: str
-    language: str
+    voice: Annotated[
+        str, Field(description="Voice identifier for text-to-speech output.")
+    ]
+    speed: Annotated[
+        float, Field(description="Playback speed multiplier (1.0 = normal).")
+    ]
+    output_format: Annotated[str, Field(description="Audio file format.")]
+    prompt: Annotated[
+        str, Field(description="Style or delivery instruction for the voice.")
+    ]
+    language: Annotated[str, Field(description="BCP-47 language tag, e.g. 'en-US'.")]
 
 
 __all__ = [

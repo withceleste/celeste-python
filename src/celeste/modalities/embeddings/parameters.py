@@ -1,6 +1,9 @@
 """Parameters for embeddings modality."""
 
 from enum import StrEnum
+from typing import Annotated
+
+from pydantic import Field
 
 from celeste.parameters import Parameters
 
@@ -17,7 +20,7 @@ class EmbeddingsParameter(StrEnum):
 class EmbeddingsParameters(Parameters, total=False):
     """Parameters for embeddings operations."""
 
-    dimensions: int | None
+    dimensions: Annotated[int | None, Field(description="Embedding vector length.")]
 
 
 __all__ = [
