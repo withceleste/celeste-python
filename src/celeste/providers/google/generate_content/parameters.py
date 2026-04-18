@@ -210,8 +210,6 @@ class ToolsMapper[Content](ParameterMapper[Content]):
         params = tool.get("parameters", {})
         if isinstance(params, type) and issubclass(params, BaseModel):
             schema = params.model_json_schema()
-            # Remove unsupported 'title' fields
-            schema = ToolsMapper._remove_titles(schema)
         else:
             schema = params
 
@@ -219,25 +217,7 @@ class ToolsMapper[Content](ParameterMapper[Content]):
         if "description" in tool:
             result["description"] = tool["description"]
         if schema:
-            result["parameters"] = schema
-        return result
-
-    @staticmethod
-    def _remove_titles(schema: dict[str, Any]) -> dict[str, Any]:
-        """Remove unsupported 'title' fields from schema for Google."""
-        result: dict[str, Any] = {}
-        for key, value in schema.items():
-            if key == "title":
-                continue
-            if isinstance(value, dict):
-                result[key] = ToolsMapper._remove_titles(value)
-            elif isinstance(value, list):
-                result[key] = [
-                    ToolsMapper._remove_titles(item) if isinstance(item, dict) else item
-                    for item in value
-                ]
-            else:
-                result[key] = value
+            result["parametersJsonSchema"] = schema
         return result
 
 
