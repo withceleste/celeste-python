@@ -1,5 +1,6 @@
 """Configuration for Anthropic Messages API."""
 
+import os
 from enum import StrEnum
 
 
@@ -19,7 +20,8 @@ class VertexAnthropicEndpoint(StrEnum):
     STREAM_MESSAGE = "/v1/projects/{project_id}/locations/{location}/publishers/anthropic/models/{model_id}:streamRawPredict"
 
 
-BASE_URL = "https://api.anthropic.com"
+# Support custom base URL via environment variable (for Anthropic-compatible APIs like MiniMax)
+BASE_URL = os.getenv("ANTHROPIC_BASE_URL", "https://api.anthropic.com")
 
 # Required
 ANTHROPIC_VERSION = "2023-06-01"
