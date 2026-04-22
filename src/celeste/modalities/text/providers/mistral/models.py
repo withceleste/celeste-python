@@ -45,6 +45,22 @@ MODELS: list[Model] = [
         },
     ),
     Model(
+        id="mistral-medium-3-5",
+        provider=Provider.MISTRAL,
+        display_name="Mistral Medium 3.5",
+        operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
+        streaming=True,
+        parameter_constraints={
+            Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
+            Parameter.MAX_TOKENS: Range(min=1, max=32768, step=1),
+            TextParameter.OUTPUT_SCHEMA: Schema(),
+            TextParameter.IMAGE: ImagesConstraint(),
+            TextParameter.DOCUMENT: DocumentsConstraint(),
+            TextParameter.TOOLS: ToolSupport(tools=[]),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
+        },
+    ),
+    Model(
         id="mistral-small-latest",
         provider=Provider.MISTRAL,
         display_name="Mistral Small",

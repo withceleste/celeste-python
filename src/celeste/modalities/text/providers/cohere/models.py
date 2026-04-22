@@ -46,4 +46,28 @@ MODELS: list[Model] = [
             # thinking_budget: Support unclear, omit constraint for now
         },
     ),
+    Model(
+        id="command-a-translate-08-2025",
+        provider=Provider.COHERE,
+        display_name="Command A Translate 08-2025",
+        operations={Modality.TEXT: {Operation.GENERATE}},
+        streaming=True,
+        parameter_constraints={
+            Parameter.TEMPERATURE: Range(min=0.0, max=1.0, step=0.01),
+            Parameter.MAX_TOKENS: Range(min=1, max=8000, step=1),
+            TextParameter.OUTPUT_SCHEMA: Schema(),
+        },
+    ),
+    Model(
+        id="command-r-plus-08-2024",
+        provider=Provider.COHERE,
+        display_name="Command R+ 08-2024",
+        operations={Modality.TEXT: {Operation.GENERATE}},
+        streaming=True,
+        parameter_constraints={
+            Parameter.TEMPERATURE: Range(min=0.0, max=1.0, step=0.01),
+            Parameter.MAX_TOKENS: Range(min=1, max=4000, step=1),
+            TextParameter.OUTPUT_SCHEMA: Schema(),
+        },
+    ),
 ]

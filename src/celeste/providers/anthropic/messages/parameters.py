@@ -71,6 +71,27 @@ class ThinkingMapper(ParameterMapper[TextContent]):
         return request
 
 
+class ThinkingLevelMapper(ParameterMapper[TextContent]):
+    """Map thinking_level to Anthropic thinking field (adaptive mode).
+
+    Emits {"type": "adaptive", "effort": <value>} where <value> is one of
+    "low" | "medium" | "high" | "xhigh" | "max".
+    """
+
+    def map(
+        self,
+        request: dict[str, Any],
+        value: object,
+        model: Model,
+    ) -> dict[str, Any]:
+        """Transform thinking_level into provider request."""
+        validated_value = self._validate_value(value, model)
+        if validated_value is None:
+            return request
+        request["thinking"] = {"type": "adaptive", "effort": validated_value}
+        return request
+
+
 class ToolsMapper(ParameterMapper[TextContent]):
     """Map tools list to Anthropic tools field."""
 
@@ -223,6 +244,7 @@ __all__ = [
     "OutputFormatMapper",
     "StopSequencesMapper",
     "TemperatureMapper",
+    "ThinkingLevelMapper",
     "ThinkingMapper",
     "ToolChoiceMapper",
     "ToolsMapper",

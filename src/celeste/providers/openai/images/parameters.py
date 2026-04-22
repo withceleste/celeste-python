@@ -52,9 +52,16 @@ class OutputCompressionMapper(FieldMapper[ImageContent]):
     field = "output_compression"
 
 
+class NumImagesMapper(FieldMapper[ImageContent]):
+    """Map num_images to OpenAI n field."""
+
+    field = "n"
+
+
 __all__ = [
     "BackgroundMapper",
     "ModerationMapper",
+    "NumImagesMapper",
     "OutputCompressionMapper",
     "OutputFormatMapper",
     "PartialImagesMapper",

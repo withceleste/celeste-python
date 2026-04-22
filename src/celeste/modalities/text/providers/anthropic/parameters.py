@@ -14,6 +14,9 @@ from celeste.providers.anthropic.messages.parameters import (
     TemperatureMapper as _TemperatureMapper,
 )
 from celeste.providers.anthropic.messages.parameters import (
+    ThinkingLevelMapper as _ThinkingLevelMapper,
+)
+from celeste.providers.anthropic.messages.parameters import (
     ThinkingMapper as _ThinkingMapper,
 )
 from celeste.providers.anthropic.messages.parameters import (
@@ -64,6 +67,12 @@ class ThinkingBudgetMapper(_ThinkingMapper):
         return super().map(request, provider_value, model)
 
 
+class ThinkingLevelMapper(_ThinkingLevelMapper):
+    """Map thinking_level to Anthropic's thinking.effort parameter (adaptive)."""
+
+    name = TextParameter.THINKING_LEVEL
+
+
 class OutputSchemaMapper(_OutputFormatMapper):
     """Map output_schema to Anthropic's output_format parameter."""
 
@@ -86,6 +95,7 @@ ANTHROPIC_PARAMETER_MAPPERS: list[ParameterMapper[TextContent]] = [
     TemperatureMapper(),
     MaxTokensMapper(),
     ThinkingBudgetMapper(),
+    ThinkingLevelMapper(),
     OutputSchemaMapper(),
     ToolsMapper(),
     ToolChoiceMapper(),
