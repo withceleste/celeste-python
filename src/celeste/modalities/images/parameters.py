@@ -27,6 +27,9 @@ class ImageParameter(StrEnum):
     GUIDANCE = "guidance"
     MASK = "mask"
     THINKING_LEVEL = "thinking_level"
+    BACKGROUND = "background"
+    MODERATION = "moderation"
+    OUTPUT_COMPRESSION = "output_compression"
 
 
 class ImageParameters(Parameters, total=False):
@@ -60,6 +63,13 @@ class ImageParameters(Parameters, total=False):
         ImageArtifact, Field(description="Mask image for inpainting a region.")
     ]
     thinking_level: Annotated[str, Field(description="Model reasoning depth.")]
+    background: Annotated[
+        str, Field(description="Background handling (e.g. transparent, opaque, auto).")
+    ]
+    moderation: Annotated[str, Field(description="Content moderation strength tier.")]
+    output_compression: Annotated[
+        int, Field(description="Output compression level (0-100) for jpeg/webp.")
+    ]
 
 
 __all__ = [
