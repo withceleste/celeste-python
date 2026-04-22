@@ -66,10 +66,10 @@ class BackgroundMapper(_BackgroundMapper):
     name = ImageParameter.BACKGROUND
 
 
-class ModerationMapper(_ModerationMapper):
-    """Map moderation to OpenAI's moderation parameter."""
+class SafetyToleranceMapper(_ModerationMapper):
+    """Map safety_tolerance to OpenAI's moderation parameter."""
 
-    name = ImageParameter.MODERATION
+    name = ImageParameter.SAFETY_TOLERANCE
 
 
 class OutputCompressionMapper(_OutputCompressionMapper):
@@ -85,7 +85,7 @@ OPENAI_PARAMETER_MAPPERS: list[ParameterMapper[ImageContent]] = [
     NumImagesMapper(),
     OutputFormatMapper(),
     BackgroundMapper(),
-    ModerationMapper(),
+    SafetyToleranceMapper(),
     OutputCompressionMapper(),
 ]
 

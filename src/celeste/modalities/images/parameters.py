@@ -28,7 +28,6 @@ class ImageParameter(StrEnum):
     MASK = "mask"
     THINKING_LEVEL = "thinking_level"
     BACKGROUND = "background"
-    MODERATION = "moderation"
     OUTPUT_COMPRESSION = "output_compression"
 
 
@@ -55,7 +54,12 @@ class ImageParameters(Parameters, total=False):
         str, Field(description="Concepts to avoid in the output.")
     ]
     seed: Annotated[int, Field(description="Seed for deterministic output.")]
-    safety_tolerance: Annotated[int, Field(description="Safety filter threshold.")]
+    safety_tolerance: Annotated[
+        int | str,
+        Field(
+            description="Safety filter threshold — integer tier (BFL) or preset name (OpenAI 'auto'/'low')."
+        ),
+    ]
     output_format: Annotated[str, Field(description="Output file format.")]
     steps: Annotated[int, Field(description="Number of denoising steps.")]
     guidance: Annotated[float, Field(description="Prompt-adherence strength.")]
@@ -66,7 +70,6 @@ class ImageParameters(Parameters, total=False):
     background: Annotated[
         str, Field(description="Background handling (e.g. transparent, opaque, auto).")
     ]
-    moderation: Annotated[str, Field(description="Content moderation strength tier.")]
     output_compression: Annotated[
         int, Field(description="Output compression level (0-100) for jpeg/webp.")
     ]

@@ -1,6 +1,7 @@
 """Anthropic models for text modality."""
 
 from celeste.constraints import (
+    Choice,
     DocumentsConstraint,
     ImagesConstraint,
     Range,
@@ -103,7 +104,9 @@ MODELS: list[Model] = [
         streaming=True,
         parameter_constraints={
             Parameter.MAX_TOKENS: Range(min=1, max=128000),
-            TextParameter.THINKING_BUDGET: Range(min=-1, max=32000),
+            TextParameter.THINKING_LEVEL: Choice(
+                options=["low", "medium", "high", "xhigh", "max"]
+            ),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
             TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
