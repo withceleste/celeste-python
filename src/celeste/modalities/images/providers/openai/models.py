@@ -71,4 +71,18 @@ MODELS: list[Model] = [
             ImageParameter.QUALITY: Choice(options=["low", "medium", "high", "auto"]),
         },
     ),
+    Model(
+        id="gpt-image-2",
+        provider=Provider.OPENAI,
+        display_name="GPT Image 2",
+        operations={Modality.IMAGES: {Operation.GENERATE, Operation.EDIT}},
+        streaming=True,
+        parameter_constraints={
+            ImageParameter.PARTIAL_IMAGES: Range(min=0, max=3),
+            ImageParameter.ASPECT_RATIO: Choice(
+                options=["1024x1024", "1536x1024", "1024x1536", "2048x2048", "auto"]
+            ),
+            ImageParameter.QUALITY: Choice(options=["low", "medium", "high", "auto"]),
+        },
+    ),
 ]

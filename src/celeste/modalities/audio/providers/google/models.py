@@ -67,4 +67,16 @@ MODELS: list[Model] = [
             AudioParameter.OUTPUT_FORMAT: Choice(options=GOOGLE_SUPPORTED_FORMATS),
         },
     ),
+    Model(
+        id="gemini-3.1-flash-tts-preview",
+        provider=Provider.GOOGLE,
+        display_name="Google TTS Gemini 3.1 Flash (Preview)",
+        streaming=False,
+        operations={Modality.AUDIO: {Operation.SPEAK}},
+        parameter_constraints={
+            AudioParameter.VOICE: VoiceConstraint(voices=GOOGLE_VOICES),
+            AudioParameter.LANGUAGE: Choice(options=GOOGLE_SUPPORTED_LANGUAGES),
+            AudioParameter.OUTPUT_FORMAT: Choice(options=GOOGLE_SUPPORTED_FORMATS),
+        },
+    ),
 ]
