@@ -1,6 +1,6 @@
 """DeepSeek models for text modality."""
 
-from celeste.constraints import Range, Schema, ToolChoiceSupport, ToolSupport
+from celeste.constraints import Choice, Range, Schema, ToolChoiceSupport, ToolSupport
 from celeste.core import Modality, Operation, Parameter, Provider
 from celeste.models import Model
 
@@ -31,6 +31,36 @@ MODELS: list[Model] = [
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
             Parameter.MAX_TOKENS: Range(min=1, max=65536, step=1),
             TextParameter.OUTPUT_SCHEMA: Schema(),
+        },
+    ),
+    Model(
+        id="deepseek-v4-flash",
+        provider=Provider.DEEPSEEK,
+        display_name="DeepSeek V4 Flash",
+        operations={Modality.TEXT: {Operation.GENERATE}},
+        streaming=True,
+        parameter_constraints={
+            Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
+            Parameter.MAX_TOKENS: Range(min=1, max=384_000, step=1),
+            TextParameter.THINKING_LEVEL: Choice(options=["disabled", "high", "max"]),
+            TextParameter.OUTPUT_SCHEMA: Schema(),
+            TextParameter.TOOLS: ToolSupport(tools=[]),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
+        },
+    ),
+    Model(
+        id="deepseek-v4-pro",
+        provider=Provider.DEEPSEEK,
+        display_name="DeepSeek V4 Pro",
+        operations={Modality.TEXT: {Operation.GENERATE}},
+        streaming=True,
+        parameter_constraints={
+            Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
+            Parameter.MAX_TOKENS: Range(min=1, max=384_000, step=1),
+            TextParameter.THINKING_LEVEL: Choice(options=["disabled", "high", "max"]),
+            TextParameter.OUTPUT_SCHEMA: Schema(),
+            TextParameter.TOOLS: ToolSupport(tools=[]),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
         },
     ),
 ]
