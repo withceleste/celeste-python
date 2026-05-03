@@ -2,7 +2,10 @@
 
 import base64
 import contextlib
+import json
 from typing import Any
+
+from pydantic import BaseModel
 
 from celeste.artifacts import DocumentArtifact, ImageArtifact
 from celeste.mime_types import ImageMimeType
@@ -141,11 +144,15 @@ class AnthropicTextClient(AnthropicMessagesClient, TextClient):
                     continue
 
                 if isinstance(message, ToolResult):
+                    if isinstance(content, BaseModel):
+                        content = content.model_dump_json()
+                    elif not isinstance(content, str):
+                        content = json.dumps(content, default=str)
                     pending_tool_results.append(
                         {
                             "type": "tool_result",
                             "tool_use_id": message.tool_call_id,
-                            "content": str(content),
+                            "content": content,
                         }
                     )
                     continue

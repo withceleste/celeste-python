@@ -3,6 +3,8 @@
 from typing import Any
 from uuid import uuid4
 
+from pydantic import BaseModel
+
 from celeste.parameters import ParameterMapper
 from celeste.providers.google.generate_content.client import GoogleGenerateContentClient
 from celeste.providers.google.generate_content.streaming import (
@@ -91,6 +93,9 @@ class GoogleTextClient(GoogleGenerateContentClient, TextClient):
                 if msg.role in ("system", "developer"):
                     system_parts.extend(content_to_parts(msg.content))
                 elif isinstance(msg, ToolResult):
+                    content = msg.content
+                    if isinstance(content, BaseModel):
+                        content = content.model_dump(mode="json")
                     contents.append(
                         {
                             "role": "user",
@@ -98,7 +103,7 @@ class GoogleTextClient(GoogleGenerateContentClient, TextClient):
                                 {
                                     "functionResponse": {
                                         "name": msg.name,
-                                        "response": {"result": msg.content},
+                                        "response": {"result": content},
                                     }
                                 }
                             ],

@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from enum import StrEnum
 from typing import Any, ClassVar
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 from celeste.types import Message, Role, ToolCall
 
@@ -74,6 +74,21 @@ class ToolResult(Message):
     name: str | None = None
 
 
+class ToolOutput[Content](BaseModel):
+    """Structured output returned by executable tools."""
+
+    content: Content
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+
+class ToolError[Content](BaseModel):
+    """Structured error returned by executable tools."""
+
+    content: Content
+    code: str | None = None
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+
 __all__ = [
     "CodeExecution",
     "Tool",
@@ -81,7 +96,9 @@ __all__ = [
     "ToolChoice",
     "ToolChoiceOption",
     "ToolDefinition",
+    "ToolError",
     "ToolMapper",
+    "ToolOutput",
     "ToolResult",
     "WebSearch",
     "XSearch",

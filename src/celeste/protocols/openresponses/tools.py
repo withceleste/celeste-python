@@ -10,11 +10,9 @@ from celeste.tools import (
     Tool,
     ToolCall,
     ToolMapper,
-    ToolResult,
     WebSearch,
     XSearch,
 )
-from celeste.types import Message
 
 
 class WebSearchMapper(ToolMapper):
@@ -121,41 +119,6 @@ def parse_reasoning(
     return text, signature_blocks
 
 
-def serialize_messages(messages: list[Message]) -> list[dict[str, Any]]:
-    """Serialize messages to Responses API input format."""
-    items: list[dict[str, Any]] = []
-    for msg in messages:
-        if isinstance(msg, ToolResult):
-            items.append(
-                {
-                    "type": "function_call_output",
-                    "call_id": msg.tool_call_id,
-                    "output": str(msg.content),
-                }
-            )
-        elif msg.role == "assistant" and (msg.tool_calls or msg.signature):
-            sig_blocks = msg.signature
-            if sig_blocks:
-                items.extend(sig_blocks)
-            if msg.tool_calls:
-                for tc in msg.tool_calls:
-                    items.append(
-                        {
-                            "type": "function_call",
-                            "name": tc.name,
-                            "arguments": json.dumps(tc.arguments),
-                            "call_id": tc.id,
-                        }
-                    )
-        else:
-            msg_dict = msg.model_dump(exclude_none=True)
-            msg_dict.pop("tool_calls", None)
-            msg_dict.pop("reasoning", None)
-            msg_dict.pop("signature", None)
-            items.append(msg_dict)
-    return items
-
-
 __all__ = [
     "TOOL_MAPPERS",
     "CodeExecutionMapper",
@@ -164,5 +127,4 @@ __all__ = [
     "parse_content",
     "parse_reasoning",
     "parse_tool_calls",
-    "serialize_messages",
 ]

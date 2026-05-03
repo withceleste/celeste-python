@@ -1,6 +1,9 @@
 """OpenResponses text client."""
 
+import json
 from typing import Any
+
+from pydantic import BaseModel
 
 from celeste.parameters import ParameterMapper
 from celeste.protocols.openresponses.client import (
@@ -13,10 +16,9 @@ from celeste.protocols.openresponses.tools import (
     parse_content,
     parse_reasoning,
     parse_tool_calls,
-    serialize_messages,
 )
-from celeste.tools import ToolCall
-from celeste.types import TextContent
+from celeste.tools import ToolCall, ToolResult
+from celeste.types import Message, TextContent
 from celeste.utils import build_document_data_url, build_image_data_url
 
 from ...client import TextClient
@@ -26,6 +28,51 @@ from ...io import (
 )
 from ...streaming import TextStream
 from .parameters import OPENRESPONSES_PARAMETER_MAPPERS
+
+
+def _openresponses_text_input_messages(
+    messages: list[Message],
+) -> list[dict[str, Any]]:
+    items: list[dict[str, Any]] = []
+    for msg in messages:
+        if isinstance(msg, ToolResult):
+            content = msg.content
+            if isinstance(content, BaseModel):
+                content = content.model_dump_json()
+            elif not isinstance(content, str):
+                content = json.dumps(content, default=str)
+            items.append(
+                {
+                    "type": "function_call_output",
+                    "call_id": msg.tool_call_id,
+                    "output": content,
+                }
+            )
+        elif msg.role == "assistant" and (msg.tool_calls or msg.signature):
+            sig_blocks = msg.signature
+            if sig_blocks:
+                items.extend(sig_blocks)
+            if msg.tool_calls:
+                for tc in msg.tool_calls:
+                    items.append(
+                        {
+                            "type": "function_call",
+                            "name": tc.name,
+                            "arguments": json.dumps(tc.arguments),
+                            "call_id": tc.id,
+                        }
+                    )
+        else:
+            msg_dict = msg.model_dump(
+                exclude_none=True,
+                mode="json",
+                serialize_as_any=True,
+            )
+            msg_dict.pop("tool_calls", None)
+            msg_dict.pop("reasoning", None)
+            msg_dict.pop("signature", None)
+            items.append(msg_dict)
+    return items
 
 
 class OpenResponsesTextStream(_OpenResponsesStream, TextStream):
@@ -80,7 +127,7 @@ class OpenResponsesTextClient(OpenResponsesMixin, TextClient):
     def _init_request(self, inputs: TextInput) -> dict[str, Any]:
         """Initialize request with input content."""
         if inputs.messages is not None:
-            return {"input": serialize_messages(inputs.messages)}
+            return {"input": _openresponses_text_input_messages(inputs.messages)}
 
         content: list[dict[str, Any]] = []
         if inputs.image is not None:

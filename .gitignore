@@ -160,3 +160,13 @@ bandit-report.json
 
 scripts/
 assets/
+
+# openspec — local-only authoring scratchpad
+openspec/
+
+# Agent / IDE tooling
+.agents/
+.claude/
+.codex/
+.cursor/
+.worktrees/

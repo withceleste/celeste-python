@@ -1,6 +1,9 @@
 """Chat Completions text client."""
 
+import json
 from typing import Any
+
+from pydantic import BaseModel
 
 from celeste.parameters import ParameterMapper
 from celeste.protocols.chatcompletions.client import (
@@ -9,12 +12,9 @@ from celeste.protocols.chatcompletions.client import (
 from celeste.protocols.chatcompletions.streaming import (
     ChatCompletionsStream as _ChatCompletionsStream,
 )
-from celeste.protocols.chatcompletions.tools import (
-    parse_tool_calls,
-    serialize_messages,
-)
-from celeste.tools import ToolCall
-from celeste.types import TextContent
+from celeste.protocols.chatcompletions.tools import parse_tool_calls
+from celeste.tools import ToolCall, ToolResult
+from celeste.types import Message, TextContent
 from celeste.utils import build_document_data_url, build_image_data_url
 
 from ...client import TextClient
@@ -23,6 +23,57 @@ from ...io import (
 )
 from ...streaming import TextStream
 from .parameters import CHATCOMPLETIONS_PARAMETER_MAPPERS
+
+
+def _chat_completions_text_messages(
+    messages: list[Message],
+) -> list[dict[str, Any]]:
+    items: list[dict[str, Any]] = []
+    for msg in messages:
+        if isinstance(msg, ToolResult):
+            content = msg.content
+            if isinstance(content, BaseModel):
+                content = content.model_dump_json()
+            elif not isinstance(content, str):
+                content = json.dumps(content, default=str)
+            items.append(
+                {
+                    "role": "tool",
+                    "tool_call_id": msg.tool_call_id,
+                    "content": content,
+                }
+            )
+        elif msg.role == "assistant" and msg.tool_calls:
+            msg_dict = msg.model_dump(
+                exclude_none=True,
+                mode="json",
+                serialize_as_any=True,
+            )
+            msg_dict.pop("reasoning", None)
+            msg_dict.pop("signature", None)
+            msg_dict["tool_calls"] = [
+                {
+                    "id": tc.id,
+                    "type": "function",
+                    "function": {
+                        "name": tc.name,
+                        "arguments": json.dumps(tc.arguments),
+                    },
+                }
+                for tc in msg.tool_calls
+            ]
+            items.append(msg_dict)
+        else:
+            msg_dict = msg.model_dump(
+                exclude_none=True,
+                mode="json",
+                serialize_as_any=True,
+            )
+            msg_dict.pop("tool_calls", None)
+            msg_dict.pop("reasoning", None)
+            msg_dict.pop("signature", None)
+            items.append(msg_dict)
+    return items
 
 
 class ChatCompletionsTextStream(_ChatCompletionsStream, TextStream):
@@ -39,7 +90,7 @@ class ChatCompletionsTextClient(ChatCompletionsMixin, TextClient):
     def _init_request(self, inputs: TextInput) -> dict[str, Any]:
         """Initialize request with Chat Completions message format."""
         if inputs.messages is not None:
-            return {"messages": serialize_messages(inputs.messages)}
+            return {"messages": _chat_completions_text_messages(inputs.messages)}
 
         if inputs.image is None and inputs.document is None:
             content: str | list[dict[str, Any]] = inputs.prompt or ""

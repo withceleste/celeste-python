@@ -35,7 +35,12 @@ class CohereTextClient(CohereChatClient, TextClient):
         if inputs.messages is not None:
             return {
                 "messages": [
-                    message.model_dump(exclude_none=True) for message in inputs.messages
+                    message.model_dump(
+                        exclude_none=True,
+                        mode="json",
+                        serialize_as_any=True,
+                    )
+                    for message in inputs.messages
                 ]
             }
 

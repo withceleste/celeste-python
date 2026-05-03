@@ -3,8 +3,7 @@
 import json
 from typing import Any
 
-from celeste.tools import ToolCall, ToolMapper, ToolResult
-from celeste.types import Message
+from celeste.tools import ToolCall, ToolMapper
 
 TOOL_MAPPERS: list[ToolMapper] = []
 
@@ -42,47 +41,7 @@ def parse_tool_calls(
     return tool_calls
 
 
-def serialize_messages(
-    messages: list[Message],
-) -> list[dict[str, Any]]:
-    """Serialize messages to Chat Completions API format."""
-    items: list[dict[str, Any]] = []
-    for msg in messages:
-        if isinstance(msg, ToolResult):
-            items.append(
-                {
-                    "role": "tool",
-                    "tool_call_id": msg.tool_call_id,
-                    "content": str(msg.content),
-                }
-            )
-        elif msg.role == "assistant" and msg.tool_calls:
-            msg_dict = msg.model_dump(exclude_none=True)
-            msg_dict.pop("reasoning", None)
-            msg_dict.pop("signature", None)
-            msg_dict["tool_calls"] = [
-                {
-                    "id": tc.id,
-                    "type": "function",
-                    "function": {
-                        "name": tc.name,
-                        "arguments": json.dumps(tc.arguments),
-                    },
-                }
-                for tc in msg.tool_calls
-            ]
-            items.append(msg_dict)
-        else:
-            msg_dict = msg.model_dump(exclude_none=True)
-            msg_dict.pop("tool_calls", None)
-            msg_dict.pop("reasoning", None)
-            msg_dict.pop("signature", None)
-            items.append(msg_dict)
-    return items
-
-
 __all__ = [
     "TOOL_MAPPERS",
     "parse_tool_calls",
-    "serialize_messages",
 ]
