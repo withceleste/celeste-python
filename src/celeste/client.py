@@ -9,6 +9,7 @@ from typing import Any, ClassVar, Unpack
 import httpx
 from pydantic import BaseModel, ConfigDict, Field
 
+from celeste import telemetry
 from celeste.auth import Authentication
 from celeste.core import Modality, Protocol, Provider
 from celeste.exceptions import (
@@ -212,29 +213,44 @@ class ModalityClient[
         Returns:
             Output of the parameterized type.
         """
-        inputs, parameters = self._validate_artifacts(inputs, **parameters)
-        request_body = self._build_request(inputs, extra_body=extra_body, **parameters)
-        response_data = await self._make_request(
-            request_body, endpoint=endpoint, extra_headers=extra_headers, **parameters
-        )
-        content = self._parse_content(response_data)
-        content = self._transform_output(content, **parameters)
-        tool_calls = self._parse_tool_calls(response_data)
-        reasoning, signature = self._parse_reasoning(response_data)
-        kwargs: dict[str, Any] = {}
-        if reasoning is not None:
-            kwargs["reasoning"] = reasoning
-        if signature:
-            kwargs["signature"] = signature
-        output = self._output_class()(
-            content=content,
-            usage=self._get_usage(response_data),
-            finish_reason=self._get_finish_reason(response_data),
-            metadata=self._build_metadata(response_data),
-            tool_calls=tool_calls,
-            **kwargs,
-        )
-        return output
+        with telemetry.tracer.start_as_current_span(
+            telemetry.span_name(self.modality, self.model),
+            attributes=telemetry.request_attributes(
+                model=self.model,
+                provider=self.provider,
+                protocol=self.protocol,
+                modality=self.modality,
+            ),
+        ) as span:
+            inputs, parameters = self._validate_artifacts(inputs, **parameters)
+            request_body = self._build_request(
+                inputs, extra_body=extra_body, **parameters
+            )
+            response_data = await self._make_request(
+                request_body,
+                endpoint=endpoint,
+                extra_headers=extra_headers,
+                **parameters,
+            )
+            content = self._parse_content(response_data)
+            content = self._transform_output(content, **parameters)
+            tool_calls = self._parse_tool_calls(response_data)
+            reasoning, signature = self._parse_reasoning(response_data)
+            kwargs: dict[str, Any] = {}
+            if reasoning is not None:
+                kwargs["reasoning"] = reasoning
+            if signature:
+                kwargs["signature"] = signature
+            output = self._output_class()(
+                content=content,
+                usage=self._get_usage(response_data),
+                finish_reason=self._get_finish_reason(response_data),
+                metadata=self._build_metadata(response_data),
+                tool_calls=tool_calls,
+                **kwargs,
+            )
+            span.set_attributes(telemetry.output_attributes(output))
+            return output
 
     def _parse_tool_calls(self, response_data: dict[str, Any]) -> list[ToolCall]:
         """Parse tool calls from response. Override in providers that support tools."""
@@ -281,6 +297,18 @@ class ModalityClient[
         request_body = self._build_request(
             inputs, extra_body=extra_body, streaming=True, **parameters
         )
+        span = telemetry.tracer.start_span(
+            telemetry.span_name(self.modality, self.model),
+            attributes={
+                **telemetry.request_attributes(
+                    model=self.model,
+                    provider=self.provider,
+                    protocol=self.protocol,
+                    modality=self.modality,
+                ),
+                "gen_ai.request.stream": True,
+            },
+        )
         sse_iterator = self._make_stream_request(
             request_body,
             endpoint=endpoint,
@@ -288,6 +316,7 @@ class ModalityClient[
             **parameters,
         )
         sse_iterator = enrich_stream_errors(sse_iterator, self._handle_error_response)
+        sse_iterator = telemetry.trace_stream(sse_iterator, span)
         return stream_class(
             sse_iterator,
             transform_output=self._transform_output,
