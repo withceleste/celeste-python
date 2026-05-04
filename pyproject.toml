@@ -50,6 +50,7 @@ dev = [
     "bandit[toml]>=1.7.5",
     "pre-commit>=3.5.0",
     "pytest-rerunfailures>=16.1",
+    "opentelemetry-api>=1.30",
 ]
 
 [build-system]
@@ -163,10 +164,6 @@ ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 module = "google.*"
-ignore_missing_imports = true
-
-[[tool.mypy.overrides]]
-module = "opentelemetry.*"
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
