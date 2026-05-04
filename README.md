@@ -218,6 +218,38 @@ Catch errors **before** production.
 
 ---
 
+## 🔭 Tracing with OpenTelemetry
+
+Celeste emits [GenAI semantic-convention](https://opentelemetry.io/docs/specs/semconv/gen-ai/) spans on every modality call when a `TracerProvider` is configured. Spans are zero-cost when no provider is set.
+
+```bash
+uv add 'celeste-ai[otel]'
+```
+
+Configure a provider once at startup (SDK setup is the consumer's responsibility):
+
+```python
+from opentelemetry import trace
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor, ConsoleSpanExporter
+
+provider = TracerProvider()
+provider.add_span_processor(BatchSpanProcessor(ConsoleSpanExporter()))
+trace.set_tracer_provider(provider)
+```
+
+Every `celeste.text.generate(...)` and `celeste.text.stream.generate(...)` call (and the equivalents on other modalities) emits a span named `chat <model>` (or `embeddings <model>` for embeddings; `celeste.<modality> <model>` for image/video/audio operations the spec doesn't yet cover). Attributes follow GenAI v1.41.0: `gen_ai.provider.name`, `gen_ai.request.model`, `gen_ai.operation.name`, `gen_ai.usage.input_tokens`, `gen_ai.usage.output_tokens`, `gen_ai.response.finish_reasons`, plus `gen_ai.request.stream` and `gen_ai.response.time_to_first_chunk` on streaming spans.
+
+The GenAI semconv is currently `Status: Development`. Pin attribute shapes via the standard opt-in:
+
+```bash
+export OTEL_SEMCONV_STABILITY_OPT_IN=gen_ai_latest_experimental
+```
+
+Attribute names may drift between celeste-ai minor versions until the spec stabilizes.
+
+---
+
 ## 🤝 Contributing
 
 We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md).
