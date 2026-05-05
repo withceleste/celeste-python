@@ -117,10 +117,12 @@ class ChatCompletionsClient(APIMixin):
 
         Shared by client and streaming across all capabilities.
         """
+        prompt_tokens_details = usage_data.get("prompt_tokens_details") or {}
         return {
             UsageField.INPUT_TOKENS: usage_data.get("prompt_tokens"),
             UsageField.OUTPUT_TOKENS: usage_data.get("completion_tokens"),
             UsageField.TOTAL_TOKENS: usage_data.get("total_tokens"),
+            UsageField.CACHED_TOKENS: prompt_tokens_details.get("cached_tokens"),
         }
 
     def _parse_usage(

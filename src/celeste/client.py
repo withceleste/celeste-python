@@ -213,16 +213,14 @@ class ModalityClient[
         Returns:
             Output of the parameterized type.
         """
-        with telemetry.tracer.start_as_current_span(
-            telemetry.span_name(self.modality, self.model),
-            attributes=telemetry.request_attributes(
-                model=self.model,
-                provider=self.provider,
-                protocol=self.protocol,
-                modality=self.modality,
-            ),
-        ) as span:
+        with telemetry.gen_ai_span(
+            model=self.model,
+            provider=self.provider,
+            protocol=self.protocol,
+            modality=self.modality,
+        ) as (span, request_attrs):
             inputs, parameters = self._validate_artifacts(inputs, **parameters)
+            telemetry.add_input_event(span, inputs)
             request_body = self._build_request(
                 inputs, extra_body=extra_body, **parameters
             )
@@ -249,7 +247,7 @@ class ModalityClient[
                 tool_calls=tool_calls,
                 **kwargs,
             )
-            span.set_attributes(telemetry.output_attributes(output))
+            telemetry.record_output(span, output, request_attrs)
             return output
 
     def _parse_tool_calls(self, response_data: dict[str, Any]) -> list[ToolCall]:
@@ -297,18 +295,17 @@ class ModalityClient[
         request_body = self._build_request(
             inputs, extra_body=extra_body, streaming=True, **parameters
         )
+        request_attrs = telemetry.request_attributes(
+            model=self.model,
+            provider=self.provider,
+            protocol=self.protocol,
+            modality=self.modality,
+        )
         span = telemetry.tracer.start_span(
             telemetry.span_name(self.modality, self.model),
-            attributes={
-                **telemetry.request_attributes(
-                    model=self.model,
-                    provider=self.provider,
-                    protocol=self.protocol,
-                    modality=self.modality,
-                ),
-                "gen_ai.request.stream": True,
-            },
+            attributes={**request_attrs, "gen_ai.request.stream": True},
         )
+        telemetry.add_input_event(span, inputs)
         sse_iterator = self._make_stream_request(
             request_body,
             endpoint=endpoint,
@@ -326,7 +323,7 @@ class ModalityClient[
             },
             **parameters,
         )
-        return telemetry.trace_stream(stream, span)  # type: ignore[return-value]
+        return telemetry.trace_stream(stream, span, metric_attributes=request_attrs)  # type: ignore[return-value]
 
     @classmethod
     @abstractmethod
