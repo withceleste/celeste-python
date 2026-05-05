@@ -227,9 +227,7 @@ class ModalityClient[
         ) as span:
             try:
                 inputs, parameters = self._validate_artifacts(inputs, **parameters)
-                input_event = telemetry._input_messages_event(inputs)
-                if input_event is not None:
-                    span.add_event("gen_ai.input.messages", attributes=input_event)
+                telemetry.add_input_event(span, inputs)
                 request_body = self._build_request(
                     inputs, extra_body=extra_body, **parameters
                 )
@@ -256,13 +254,8 @@ class ModalityClient[
                     tool_calls=tool_calls,
                     **kwargs,
                 )
-                span.set_attributes(telemetry.output_attributes(output))
-                output_event = telemetry._output_messages_event(output)
-                if output_event is not None:
-                    span.add_event("gen_ai.output.messages", attributes=output_event)
-                telemetry.record_token_usage(output.usage, request_attrs)
-                telemetry.record_operation_duration(
-                    time.monotonic() - started, request_attrs
+                telemetry.record_output(
+                    span, output, request_attrs, time.monotonic() - started
                 )
                 return output
             except BaseException as exc:
@@ -326,9 +319,7 @@ class ModalityClient[
             telemetry.span_name(self.modality, self.model),
             attributes={**request_attrs, "gen_ai.request.stream": True},
         )
-        input_event = telemetry._input_messages_event(inputs)
-        if input_event is not None:
-            span.add_event("gen_ai.input.messages", attributes=input_event)
+        telemetry.add_input_event(span, inputs)
         sse_iterator = self._make_stream_request(
             request_body,
             endpoint=endpoint,

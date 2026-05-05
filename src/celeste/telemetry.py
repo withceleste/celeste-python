@@ -10,7 +10,7 @@ from types import TracebackType
 from typing import Any
 
 from celeste.artifacts import Artifact
-from celeste.core import Modality, Protocol, Provider
+from celeste.core import Modality, Protocol, Provider, UsageField
 from celeste.exceptions import StreamNotExhaustedError
 from celeste.io import Input, Output, Usage
 from celeste.models import Model
@@ -185,38 +185,42 @@ def span_name(modality: Modality, model: Model) -> str:
     return f"celeste.{modality.value} {model.id}"
 
 
-# Maps `Usage` field names to GenAI semconv span attribute keys.
+# Maps `UsageField` enum members to GenAI semconv span attribute keys.
 # Fields not in this map fall through to `celeste.usage.<field>` (off-spec).
 _GEN_AI_USAGE_FIELDS: dict[str, str] = {
-    "input_tokens": "gen_ai.usage.input_tokens",
-    "output_tokens": "gen_ai.usage.output_tokens",
-    "total_tokens": "gen_ai.usage.total_tokens",
-    "reasoning_tokens": "gen_ai.usage.reasoning_tokens",
-    "cached_tokens": "gen_ai.usage.cached_input_tokens",
+    UsageField.INPUT_TOKENS: "gen_ai.usage.input_tokens",
+    UsageField.OUTPUT_TOKENS: "gen_ai.usage.output_tokens",
+    UsageField.TOTAL_TOKENS: "gen_ai.usage.total_tokens",
+    UsageField.REASONING_TOKENS: "gen_ai.usage.reasoning_tokens",
+    UsageField.CACHED_TOKENS: "gen_ai.usage.cached_input_tokens",
 }
 
-# Maps `Usage` field names to `gen_ai.token.type` dimension values for metrics.
+# Maps `UsageField` enum members to `gen_ai.token.type` dimension values for metrics.
 # Only fields representing token *categories* belong here (input/output/cached/reasoning).
 # `total_tokens` is omitted to avoid double-counting in histogram aggregations.
 _GEN_AI_TOKEN_TYPES: dict[str, str] = {
-    "input_tokens": "input",
-    "output_tokens": "output",
-    "reasoning_tokens": "reasoning",
-    "cached_tokens": "cached_input",
+    UsageField.INPUT_TOKENS: "input",
+    UsageField.OUTPUT_TOKENS: "output",
+    UsageField.REASONING_TOKENS: "reasoning",
+    UsageField.CACHED_TOKENS: "cached_input",
 }
+
+
+def _iter_usage_numeric(usage: Usage) -> Iterator[tuple[str, int | float]]:
+    """Yield (field_name, value) for each numeric `Usage` field that is set."""
+    for field_name in type(usage).model_fields:
+        value = getattr(usage, field_name, None)
+        if isinstance(value, bool):
+            continue
+        if not isinstance(value, int | float):
+            continue
+        yield field_name, value
 
 
 def output_attributes(output: Output[Any]) -> dict[str, Any]:
     """Extract GenAI response attributes from a typed Output."""
     attrs: dict[str, Any] = {}
-    usage = output.usage
-    usage_fields = (
-        type(usage).model_fields if hasattr(type(usage), "model_fields") else {}
-    )
-    for field_name in usage_fields:
-        value = getattr(usage, field_name, None)
-        if not isinstance(value, int | float):
-            continue
+    for field_name, value in _iter_usage_numeric(output.usage):
         semconv_key = _GEN_AI_USAGE_FIELDS.get(field_name)
         attrs[semconv_key or f"celeste.usage.{field_name}"] = value
     if output.finish_reason is not None and output.finish_reason.reason is not None:
@@ -226,15 +230,9 @@ def output_attributes(output: Output[Any]) -> dict[str, Any]:
 
 def record_token_usage(usage: Usage, attributes: dict[str, Any]) -> None:
     """Record one ``gen_ai.client.token.usage`` observation per token category."""
-    usage_fields = (
-        type(usage).model_fields if hasattr(type(usage), "model_fields") else {}
-    )
-    for field_name in usage_fields:
+    for field_name, value in _iter_usage_numeric(usage):
         token_type = _GEN_AI_TOKEN_TYPES.get(field_name)
         if token_type is None:
-            continue
-        value = getattr(usage, field_name, None)
-        if not isinstance(value, int | float):
             continue
         _token_usage_histogram.record(
             value,
@@ -364,6 +362,34 @@ def _output_messages_event(output: Output[Any]) -> dict[str, Any] | None:
     }
 
 
+def add_input_event(span: Any, inputs: Input) -> None:
+    """Add the ``gen_ai.input.messages`` event to ``span`` when capture is enabled."""
+    event = _input_messages_event(inputs)
+    if event is not None:
+        span.add_event("gen_ai.input.messages", attributes=event)
+
+
+def add_output_event(span: Any, output: Output[Any]) -> None:
+    """Add the ``gen_ai.output.messages`` event to ``span`` when capture is enabled."""
+    event = _output_messages_event(output)
+    if event is not None:
+        span.add_event("gen_ai.output.messages", attributes=event)
+
+
+def record_output(
+    span: Any,
+    output: Output[Any],
+    metric_attributes: dict[str, Any],
+    duration_seconds: float,
+    error: BaseException | None = None,
+) -> None:
+    """Emit span attrs, content event, and metrics for a successful Output."""
+    span.set_attributes(output_attributes(output))
+    add_output_event(span, output)
+    record_token_usage(output.usage, metric_attributes)
+    record_operation_duration(duration_seconds, metric_attributes, error=error)
+
+
 class _TracedStream:
     """Stream-shaped wrapper that emits GenAI telemetry against an OTel span."""
 
@@ -465,12 +491,13 @@ class _TracedStream:
         except StreamNotExhaustedError:
             output = None
         if output is not None:
-            self._span.set_attributes(output_attributes(output))
-            output_event = _output_messages_event(output)
-            if output_event is not None:
-                self._span.add_event("gen_ai.output.messages", attributes=output_event)
-            record_token_usage(output.usage, self._metric_attributes)
-        record_operation_duration(duration, self._metric_attributes, error=self._error)
+            record_output(
+                self._span, output, self._metric_attributes, duration, error=self._error
+            )
+        else:
+            record_operation_duration(
+                duration, self._metric_attributes, error=self._error
+            )
         self._span.end()
 
 
@@ -486,9 +513,12 @@ def trace_stream(
 __all__ = [
     "Status",
     "StatusCode",
+    "add_input_event",
+    "add_output_event",
     "meter",
     "output_attributes",
     "record_operation_duration",
+    "record_output",
     "record_token_usage",
     "request_attributes",
     "span_name",
