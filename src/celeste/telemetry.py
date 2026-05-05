@@ -1,17 +1,22 @@
 """OpenTelemetry GenAI telemetry for Celeste."""
 
 import asyncio
+import json
+import os
 import time
 from collections.abc import Iterator
 from contextlib import contextmanager
 from types import TracebackType
 from typing import Any
 
+from celeste.artifacts import Artifact
 from celeste.core import Modality, Protocol, Provider
 from celeste.exceptions import StreamNotExhaustedError
-from celeste.io import Output
+from celeste.io import Input, Output, Usage
 from celeste.models import Model
 from celeste.streaming import Stream
+from celeste.tools import ToolCall
+from celeste.types import Message
 
 _PROVIDER_NAME_MAP: dict[Provider, str] = {
     Provider.OPENAI: "openai",
@@ -45,6 +50,9 @@ class _NoOpSpan:
 
     def record_exception(self, *args: Any, **kwargs: Any) -> None:
         """Discard the exception."""
+
+    def add_event(self, *args: Any, **kwargs: Any) -> None:
+        """Discard the span event."""
 
     def end(self) -> None:
         """Discard the end signal."""
@@ -82,7 +90,25 @@ class _NoOpStatusCode:
     ERROR = "ERROR"
 
 
+class _NoOpHistogram:
+    """Histogram stand-in used when ``opentelemetry-api`` is not installed."""
+
+    def record(self, value: float, attributes: dict[str, Any] | None = None) -> None:
+        """Discard the metric record."""
+
+
+class _NoOpMeter:
+    """Meter stand-in used when ``opentelemetry-api`` is not installed."""
+
+    def create_histogram(
+        self, name: str, unit: str = "", description: str = ""
+    ) -> _NoOpHistogram:
+        """Return a no-op histogram."""
+        return _NoOpHistogram()
+
+
 try:
+    from opentelemetry import metrics as _otel_metrics
     from opentelemetry import trace as _otel_trace
     from opentelemetry.trace import Status as _OtelStatus
     from opentelemetry.trace import StatusCode as _OtelStatusCode
@@ -91,11 +117,25 @@ try:
     use_span: Any = _otel_trace.use_span
     Status: Any = _OtelStatus
     StatusCode: Any = _OtelStatusCode
+    meter: Any = _otel_metrics.get_meter("celeste")
 except ImportError:
     tracer = _NoOpTracer()
     use_span = _noop_use_span
     Status = _NoOpStatus
     StatusCode = _NoOpStatusCode
+    meter = _NoOpMeter()
+
+
+_token_usage_histogram: Any = meter.create_histogram(
+    name="gen_ai.client.token.usage",
+    unit="{token}",
+    description="Tokens used per GenAI call, sliced by gen_ai.token.type.",
+)
+_operation_duration_histogram: Any = meter.create_histogram(
+    name="gen_ai.client.operation.duration",
+    unit="s",
+    description="Wall-clock duration of GenAI calls.",
+)
 
 
 def request_attributes(
@@ -145,30 +185,202 @@ def span_name(modality: Modality, model: Model) -> str:
     return f"celeste.{modality.value} {model.id}"
 
 
+# Maps `Usage` field names to GenAI semconv span attribute keys.
+# Fields not in this map fall through to `celeste.usage.<field>` (off-spec).
+_GEN_AI_USAGE_FIELDS: dict[str, str] = {
+    "input_tokens": "gen_ai.usage.input_tokens",
+    "output_tokens": "gen_ai.usage.output_tokens",
+    "total_tokens": "gen_ai.usage.total_tokens",
+    "reasoning_tokens": "gen_ai.usage.reasoning_tokens",
+    "cached_tokens": "gen_ai.usage.cached_input_tokens",
+}
+
+# Maps `Usage` field names to `gen_ai.token.type` dimension values for metrics.
+# Only fields representing token *categories* belong here (input/output/cached/reasoning).
+# `total_tokens` is omitted to avoid double-counting in histogram aggregations.
+_GEN_AI_TOKEN_TYPES: dict[str, str] = {
+    "input_tokens": "input",
+    "output_tokens": "output",
+    "reasoning_tokens": "reasoning",
+    "cached_tokens": "cached_input",
+}
+
+
 def output_attributes(output: Output[Any]) -> dict[str, Any]:
     """Extract GenAI response attributes from a typed Output."""
     attrs: dict[str, Any] = {}
-    input_tokens = getattr(output.usage, "input_tokens", None)
-    output_tokens = getattr(output.usage, "output_tokens", None)
-    if isinstance(input_tokens, int):
-        attrs["gen_ai.usage.input_tokens"] = input_tokens
-    if isinstance(output_tokens, int):
-        attrs["gen_ai.usage.output_tokens"] = output_tokens
+    usage = output.usage
+    usage_fields = (
+        type(usage).model_fields if hasattr(type(usage), "model_fields") else {}
+    )
+    for field_name in usage_fields:
+        value = getattr(usage, field_name, None)
+        if not isinstance(value, int | float):
+            continue
+        semconv_key = _GEN_AI_USAGE_FIELDS.get(field_name)
+        attrs[semconv_key or f"celeste.usage.{field_name}"] = value
     if output.finish_reason is not None and output.finish_reason.reason is not None:
         attrs["gen_ai.response.finish_reasons"] = (output.finish_reason.reason,)
     return attrs
 
 
+def record_token_usage(usage: Usage, attributes: dict[str, Any]) -> None:
+    """Record one ``gen_ai.client.token.usage`` observation per token category."""
+    usage_fields = (
+        type(usage).model_fields if hasattr(type(usage), "model_fields") else {}
+    )
+    for field_name in usage_fields:
+        token_type = _GEN_AI_TOKEN_TYPES.get(field_name)
+        if token_type is None:
+            continue
+        value = getattr(usage, field_name, None)
+        if not isinstance(value, int | float):
+            continue
+        _token_usage_histogram.record(
+            value,
+            attributes={**attributes, "gen_ai.token.type": token_type},
+        )
+
+
+def record_operation_duration(
+    duration_seconds: float,
+    attributes: dict[str, Any],
+    error: BaseException | None = None,
+) -> None:
+    """Record one ``gen_ai.client.operation.duration`` observation."""
+    attrs = {**attributes}
+    if error is not None:
+        attrs["error.type"] = type(error).__name__
+    _operation_duration_histogram.record(duration_seconds, attributes=attrs)
+
+
+# Read the semconv-standard env flag once at import. Per the GenAI spec,
+# content capture is opt-in because prompts/responses often contain user data.
+_CAPTURE_CONTENT: bool = (
+    os.environ.get("OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT", "")
+    .strip()
+    .lower()
+    == "true"
+)
+
+# Maps celeste artifact classes to semconv part type names.
+_ARTIFACT_PART_TYPES: dict[str, str] = {
+    "ImageArtifact": "image",
+    "AudioArtifact": "audio",
+    "VideoArtifact": "video",
+    "DocumentArtifact": "document",
+}
+
+
+def _artifact_part(artifact: Artifact) -> dict[str, Any]:
+    """Convert a celeste artifact to a semconv part by URL reference."""
+    part: dict[str, Any] = {
+        "type": _ARTIFACT_PART_TYPES.get(type(artifact).__name__, "media"),
+    }
+    if artifact.url is not None:
+        part["uri"] = artifact.url
+    if artifact.mime_type is not None:
+        part["mime_type"] = str(artifact.mime_type)
+    return part
+
+
+def _content_to_parts(content: Any) -> list[dict[str, Any]]:
+    """Convert a celeste content value to a list of semconv parts."""
+    if content is None:
+        return []
+    if isinstance(content, list):
+        parts: list[dict[str, Any]] = []
+        for item in content:
+            parts.extend(_content_to_parts(item))
+        return parts
+    if isinstance(content, Artifact):
+        return [_artifact_part(content)]
+    if isinstance(content, str):
+        return [{"type": "text", "content": content}]
+    return [{"type": "text", "content": json.dumps(content, default=str)}]
+
+
+def _tool_call_part(tool_call: ToolCall) -> dict[str, Any]:
+    """Convert a ToolCall into a semconv tool_call part."""
+    return {
+        "type": "tool_call",
+        "id": tool_call.id,
+        "name": tool_call.name,
+        "arguments": json.dumps(tool_call.arguments, default=str),
+    }
+
+
+def _message_to_dict(message: Message) -> dict[str, Any]:
+    """Convert a celeste Message into a semconv ``{role, parts}`` dict."""
+    parts = _content_to_parts(message.content)
+    if message.reasoning is not None:
+        parts.append({"type": "reasoning", "content": message.reasoning})
+    if message.tool_calls:
+        parts.extend(_tool_call_part(call) for call in message.tool_calls)
+    return {"role": message.role.value, "parts": parts}
+
+
+def _input_messages_event(inputs: Input) -> dict[str, Any] | None:
+    """Build the ``gen_ai.input.messages`` event attributes from inputs.
+
+    Returns ``None`` when content capture is disabled.
+    """
+    if not _CAPTURE_CONTENT:
+        return None
+    messages: list[dict[str, Any]] = []
+    for message in getattr(inputs, "messages", None) or []:
+        if isinstance(message, Message):
+            messages.append(_message_to_dict(message))
+    prompt = getattr(inputs, "prompt", None)
+    if prompt is not None:
+        parts: list[dict[str, Any]] = [{"type": "text", "content": str(prompt)}]
+        for media_field in ("image", "video", "audio", "document"):
+            media = getattr(inputs, media_field, None)
+            if media is not None:
+                parts.extend(_content_to_parts(media))
+        messages.append({"role": "user", "parts": parts})
+    if not messages:
+        return None
+    return {"messages": json.dumps(messages, default=str)}
+
+
+def _output_messages_event(output: Output[Any]) -> dict[str, Any] | None:
+    """Build the ``gen_ai.output.messages`` event attributes from an Output.
+
+    Returns ``None`` when content capture is disabled.
+    """
+    if not _CAPTURE_CONTENT:
+        return None
+    parts = _content_to_parts(output.content)
+    reasoning = getattr(output, "reasoning", None)
+    if reasoning is not None:
+        parts.append({"type": "reasoning", "content": reasoning})
+    if output.tool_calls:
+        parts.extend(_tool_call_part(call) for call in output.tool_calls)
+    if not parts:
+        return None
+    return {
+        "messages": json.dumps([{"role": "assistant", "parts": parts}], default=str)
+    }
+
+
 class _TracedStream:
     """Stream-shaped wrapper that emits GenAI telemetry against an OTel span."""
 
-    def __init__(self, inner: Stream[Any, Any, Any], span: Any) -> None:
+    def __init__(
+        self,
+        inner: Stream[Any, Any, Any],
+        span: Any,
+        metric_attributes: dict[str, Any] | None = None,
+    ) -> None:
         """Initialize wrapper around a constructed Stream and a detached span."""
         self._inner = inner
         self._span = span
+        self._metric_attributes = metric_attributes or {}
         self._started = time.monotonic()
         self._seen_first = False
         self._ended = False
+        self._error: BaseException | None = None
 
     def __aiter__(self) -> "_TracedStream":
         """Return self as async iterator."""
@@ -183,6 +395,7 @@ class _TracedStream:
                 self._finalize()
                 raise
             except Exception as exc:
+                self._error = exc
                 self._span.record_exception(exc)
                 self._span.set_status(Status(StatusCode.ERROR, str(exc)))
                 self._finalize()
@@ -242,28 +455,41 @@ class _TracedStream:
         self._finalize()
 
     def _finalize(self) -> None:
-        """End the span exactly once; emit usage attrs if Output is populated."""
+        """End the span exactly once; emit usage, metrics, and output event."""
         if self._ended:
             return
         self._ended = True
+        duration = time.monotonic() - self._started
         try:
             output = self._inner.output
         except StreamNotExhaustedError:
             output = None
         if output is not None:
             self._span.set_attributes(output_attributes(output))
+            output_event = _output_messages_event(output)
+            if output_event is not None:
+                self._span.add_event("gen_ai.output.messages", attributes=output_event)
+            record_token_usage(output.usage, self._metric_attributes)
+        record_operation_duration(duration, self._metric_attributes, error=self._error)
         self._span.end()
 
 
-def trace_stream(stream: Stream[Any, Any, Any], span: Any) -> _TracedStream:
+def trace_stream(
+    stream: Stream[Any, Any, Any],
+    span: Any,
+    metric_attributes: dict[str, Any] | None = None,
+) -> _TracedStream:
     """Wrap a Stream to emit GenAI telemetry against ``span``."""
-    return _TracedStream(stream, span)
+    return _TracedStream(stream, span, metric_attributes)
 
 
 __all__ = [
     "Status",
     "StatusCode",
+    "meter",
     "output_attributes",
+    "record_operation_duration",
+    "record_token_usage",
     "request_attributes",
     "span_name",
     "trace_stream",

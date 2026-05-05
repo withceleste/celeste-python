@@ -110,6 +110,7 @@ class GoogleGenerateContentClient(APIMixin):
             UsageField.OUTPUT_TOKENS: usage_data.get("candidatesTokenCount"),
             UsageField.TOTAL_TOKENS: usage_data.get("totalTokenCount"),
             UsageField.REASONING_TOKENS: usage_data.get("thoughtsTokenCount"),
+            UsageField.CACHED_TOKENS: usage_data.get("cachedContentTokenCount"),
         }
 
     def _parse_usage(

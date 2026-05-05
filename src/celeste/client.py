@@ -1,5 +1,6 @@
 """Base client for modality-specific AI operations."""
 
+import time
 import warnings
 from abc import ABC, abstractmethod
 from collections.abc import AsyncIterator
@@ -213,44 +214,62 @@ class ModalityClient[
         Returns:
             Output of the parameterized type.
         """
+        request_attrs = telemetry.request_attributes(
+            model=self.model,
+            provider=self.provider,
+            protocol=self.protocol,
+            modality=self.modality,
+        )
+        started = time.monotonic()
         with telemetry.tracer.start_as_current_span(
             telemetry.span_name(self.modality, self.model),
-            attributes=telemetry.request_attributes(
-                model=self.model,
-                provider=self.provider,
-                protocol=self.protocol,
-                modality=self.modality,
-            ),
+            attributes=request_attrs,
         ) as span:
-            inputs, parameters = self._validate_artifacts(inputs, **parameters)
-            request_body = self._build_request(
-                inputs, extra_body=extra_body, **parameters
-            )
-            response_data = await self._make_request(
-                request_body,
-                endpoint=endpoint,
-                extra_headers=extra_headers,
-                **parameters,
-            )
-            content = self._parse_content(response_data)
-            content = self._transform_output(content, **parameters)
-            tool_calls = self._parse_tool_calls(response_data)
-            reasoning, signature = self._parse_reasoning(response_data)
-            kwargs: dict[str, Any] = {}
-            if reasoning is not None:
-                kwargs["reasoning"] = reasoning
-            if signature:
-                kwargs["signature"] = signature
-            output = self._output_class()(
-                content=content,
-                usage=self._get_usage(response_data),
-                finish_reason=self._get_finish_reason(response_data),
-                metadata=self._build_metadata(response_data),
-                tool_calls=tool_calls,
-                **kwargs,
-            )
-            span.set_attributes(telemetry.output_attributes(output))
-            return output
+            try:
+                inputs, parameters = self._validate_artifacts(inputs, **parameters)
+                input_event = telemetry._input_messages_event(inputs)
+                if input_event is not None:
+                    span.add_event("gen_ai.input.messages", attributes=input_event)
+                request_body = self._build_request(
+                    inputs, extra_body=extra_body, **parameters
+                )
+                response_data = await self._make_request(
+                    request_body,
+                    endpoint=endpoint,
+                    extra_headers=extra_headers,
+                    **parameters,
+                )
+                content = self._parse_content(response_data)
+                content = self._transform_output(content, **parameters)
+                tool_calls = self._parse_tool_calls(response_data)
+                reasoning, signature = self._parse_reasoning(response_data)
+                kwargs: dict[str, Any] = {}
+                if reasoning is not None:
+                    kwargs["reasoning"] = reasoning
+                if signature:
+                    kwargs["signature"] = signature
+                output = self._output_class()(
+                    content=content,
+                    usage=self._get_usage(response_data),
+                    finish_reason=self._get_finish_reason(response_data),
+                    metadata=self._build_metadata(response_data),
+                    tool_calls=tool_calls,
+                    **kwargs,
+                )
+                span.set_attributes(telemetry.output_attributes(output))
+                output_event = telemetry._output_messages_event(output)
+                if output_event is not None:
+                    span.add_event("gen_ai.output.messages", attributes=output_event)
+                telemetry.record_token_usage(output.usage, request_attrs)
+                telemetry.record_operation_duration(
+                    time.monotonic() - started, request_attrs
+                )
+                return output
+            except BaseException as exc:
+                telemetry.record_operation_duration(
+                    time.monotonic() - started, request_attrs, error=exc
+                )
+                raise
 
     def _parse_tool_calls(self, response_data: dict[str, Any]) -> list[ToolCall]:
         """Parse tool calls from response. Override in providers that support tools."""
@@ -297,18 +316,19 @@ class ModalityClient[
         request_body = self._build_request(
             inputs, extra_body=extra_body, streaming=True, **parameters
         )
+        request_attrs = telemetry.request_attributes(
+            model=self.model,
+            provider=self.provider,
+            protocol=self.protocol,
+            modality=self.modality,
+        )
         span = telemetry.tracer.start_span(
             telemetry.span_name(self.modality, self.model),
-            attributes={
-                **telemetry.request_attributes(
-                    model=self.model,
-                    provider=self.provider,
-                    protocol=self.protocol,
-                    modality=self.modality,
-                ),
-                "gen_ai.request.stream": True,
-            },
+            attributes={**request_attrs, "gen_ai.request.stream": True},
         )
+        input_event = telemetry._input_messages_event(inputs)
+        if input_event is not None:
+            span.add_event("gen_ai.input.messages", attributes=input_event)
         sse_iterator = self._make_stream_request(
             request_body,
             endpoint=endpoint,
@@ -326,7 +346,7 @@ class ModalityClient[
             },
             **parameters,
         )
-        return telemetry.trace_stream(stream, span)  # type: ignore[return-value]
+        return telemetry.trace_stream(stream, span, metric_attributes=request_attrs)  # type: ignore[return-value]
 
     @classmethod
     @abstractmethod

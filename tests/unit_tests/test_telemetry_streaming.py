@@ -19,10 +19,20 @@ from celeste.streaming import Stream
 
 
 class _TestUsage(Usage):
-    """Usage with input/output token fields for telemetry assertions."""
+    """Usage with the full GenAI semconv field set for telemetry assertions."""
 
     input_tokens: int | None = None
     output_tokens: int | None = None
+    total_tokens: int | None = None
+    reasoning_tokens: int | None = None
+    cached_tokens: int | None = None
+
+
+class _OffSpecUsage(Usage):
+    """Modality-specific usage with fields outside the GenAI semconv set."""
+
+    images_generated: int | None = None
+    audio_seconds: float | None = None
 
 
 class _TestOutput(Output[str]):
@@ -234,3 +244,50 @@ class TestIdempotentFinalize:
         attrs = finished[0].attributes or {}
         assert attrs["gen_ai.usage.input_tokens"] == 2
         assert attrs["gen_ai.usage.output_tokens"] == 3
+
+
+class TestExtendedUsageAttributes:
+    """V2 widens `output_attributes` to emit total/reasoning/cached_input tokens."""
+
+    async def test_total_reasoning_cached_tokens_emitted(
+        self, exporter: tuple[InMemorySpanExporter, TracerProvider]
+    ) -> None:
+        """When the typed Usage carries the full set, all attributes appear on the span."""
+        in_memory, provider = exporter
+        events = [
+            {
+                "delta": "ok",
+                "usage": {
+                    "input_tokens": 10,
+                    "output_tokens": 5,
+                    "total_tokens": 15,
+                    "reasoning_tokens": 3,
+                    "cached_tokens": 8,
+                },
+            }
+        ]
+        stream = _TestStream(_async_iter(events))
+        span = _start_span(provider)
+        wrapped = telemetry.trace_stream(stream, span)
+
+        async for _ in wrapped:
+            pass
+
+        finished = in_memory.get_finished_spans()
+        attrs = finished[0].attributes or {}
+        assert attrs["gen_ai.usage.input_tokens"] == 10
+        assert attrs["gen_ai.usage.output_tokens"] == 5
+        assert attrs["gen_ai.usage.total_tokens"] == 15
+        assert attrs["gen_ai.usage.reasoning_tokens"] == 3
+        assert attrs["gen_ai.usage.cached_input_tokens"] == 8
+
+    def test_off_spec_usage_emitted_under_celeste_namespace(self) -> None:
+        """Modality-specific Usage fields fall through to `celeste.usage.<field>`."""
+        usage = _OffSpecUsage(images_generated=4, audio_seconds=1.5)
+        output = _TestOutput(content="", usage=usage)
+
+        attrs = telemetry.output_attributes(output)
+
+        assert attrs["celeste.usage.images_generated"] == 4
+        assert attrs["celeste.usage.audio_seconds"] == 1.5
+        assert "gen_ai.usage.images_generated" not in attrs
