@@ -50,6 +50,7 @@ dev = [
     "bandit[toml]>=1.7.5",
     "pre-commit>=3.5.0",
     "pytest-rerunfailures>=16.1",
+    "opentelemetry-sdk>=1.30",
 ]
 
 [build-system]

@@ -316,8 +316,7 @@ class ModalityClient[
             **parameters,
         )
         sse_iterator = enrich_stream_errors(sse_iterator, self._handle_error_response)
-        sse_iterator = telemetry.trace_stream(sse_iterator, span)
-        return stream_class(
+        stream = stream_class(
             sse_iterator,
             transform_output=self._transform_output,
             stream_metadata={
@@ -327,6 +326,7 @@ class ModalityClient[
             },
             **parameters,
         )
+        return telemetry.trace_stream(stream, span)  # type: ignore[return-value]
 
     @classmethod
     @abstractmethod
