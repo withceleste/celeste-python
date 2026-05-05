@@ -5,9 +5,11 @@ import json
 import os
 import time
 from collections.abc import Iterator
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 from types import TracebackType
 from typing import Any
+
+from anyio.from_thread import start_blocking_portal
 
 from celeste.artifacts import Artifact
 from celeste.core import Modality, Protocol, Provider, UsageField
@@ -449,8 +451,20 @@ class _TracedStream:
         return False
 
     def __iter__(self) -> Iterator[Any]:
-        """Delegate sync iteration to the inner Stream."""
-        return iter(self._inner)
+        """Sync iterator using a blocking portal — drives this wrapper's __anext__."""
+        portal_cm = start_blocking_portal()
+        portal = portal_cm.__enter__()
+        try:
+            while True:
+                try:
+                    yield portal.call(self.__anext__)
+                except StopAsyncIteration:
+                    return
+        finally:
+            if not self._ended:
+                with suppress(RuntimeError):
+                    portal.call(self.aclose)
+            portal_cm.__exit__(None, None, None)
 
     def __enter__(self) -> "_TracedStream":
         """Enter sync context — delegate to inner Stream."""
