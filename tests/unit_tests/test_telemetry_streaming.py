@@ -1,31 +1,24 @@
 """Tests for `_TracedStream` — span lifecycle and GenAI attribute emission."""
 
 from collections.abc import AsyncIterator
-from typing import Any, ClassVar
+from typing import Any
 
 import pytest
 from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import SimpleSpanProcessor
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
     InMemorySpanExporter,
 )
-from opentelemetry.trace import Span, StatusCode
+from opentelemetry.trace import StatusCode
 
 from celeste import telemetry
 from celeste.exceptions import StreamNotExhaustedError
-from celeste.io import Chunk, Output, Usage
-from celeste.parameters import Parameters
-from celeste.streaming import Stream
-
-
-class _TestUsage(Usage):
-    """Usage with the full GenAI semconv field set for telemetry assertions."""
-
-    input_tokens: int | None = None
-    output_tokens: int | None = None
-    total_tokens: int | None = None
-    reasoning_tokens: int | None = None
-    cached_tokens: int | None = None
+from celeste.io import Output, Usage
+from tests.unit_tests._telemetry_helpers import (
+    TelemetryOutput,
+    TelemetryStream,
+    async_iter,
+)
+from tests.unit_tests.conftest import start_test_span
 
 
 class _OffSpecUsage(Usage):
@@ -35,62 +28,13 @@ class _OffSpecUsage(Usage):
     audio_seconds: float | None = None
 
 
-class _TestOutput(Output[str]):
-    """Output for tests."""
-
-    pass
-
-
-class _TestStream(Stream[_TestOutput, Parameters, Chunk]):
-    """Stream that aggregates usage from per-chunk metadata for tests."""
-
-    _usage_class: ClassVar[type[Usage]] = _TestUsage
-    _chunk_class: ClassVar[type[Chunk]] = Chunk
-    _output_class: ClassVar[type[Output]] = _TestOutput
-    _empty_content: ClassVar[str] = ""
-
-    def _aggregate_content(self, chunks: list[Chunk]) -> str:
-        """Concatenate chunk content."""
-        return "".join(chunk.content for chunk in chunks)
-
-    def _parse_chunk(self, event: dict[str, Any]) -> Chunk | None:
-        """Parse delta events; lifecycle events return None."""
-        content = event.get("delta")
-        if not content and "usage" not in event:
-            return None
-        usage = _TestUsage(**event["usage"]) if "usage" in event else None
-        return Chunk(content=content or "", finish_reason=None, usage=usage)
-
-
-async def _async_iter(events: list[dict[str, Any]]) -> AsyncIterator[dict[str, Any]]:
-    """Convert a list of events into an async iterator."""
-    for event in events:
-        yield event
-
-
 async def _failing_iter() -> AsyncIterator[dict[str, Any]]:
     """Async iterator that raises before yielding any event."""
     raise RuntimeError("boom")
     yield  # pragma: no cover — needed to mark this as an async generator
 
 
-@pytest.fixture
-def exporter() -> tuple[InMemorySpanExporter, TracerProvider]:
-    """In-memory span exporter wired into a fresh TracerProvider."""
-    span_exporter = InMemorySpanExporter()
-    provider = TracerProvider()
-    provider.add_span_processor(SimpleSpanProcessor(span_exporter))
-    return span_exporter, provider
-
-
-def _start_span(provider: TracerProvider, name: str = "test") -> Span:
-    """Start a detached span on the given provider's tracer."""
-    return provider.get_tracer("celeste-test").start_span(name)
-
-
 class TestNaturalExhaustion:
-    """Span emits usage attrs from inner._output after natural exhaustion."""
-
     async def test_emits_input_output_tokens_on_natural_exhaustion(
         self, exporter: tuple[InMemorySpanExporter, TracerProvider]
     ) -> None:
@@ -100,9 +44,9 @@ class TestNaturalExhaustion:
             {"delta": "Hello"},
             {"delta": " world", "usage": {"input_tokens": 12, "output_tokens": 34}},
         ]
-        stream = _TestStream(_async_iter(events))
-        span = _start_span(provider)
-        wrapped = telemetry.trace_stream(stream, span)
+        wrapped = telemetry.trace_stream(
+            TelemetryStream(async_iter(events)), start_test_span(provider)
+        )
 
         chunks = [chunk async for chunk in wrapped]
 
@@ -119,12 +63,10 @@ class TestNaturalExhaustion:
     ) -> None:
         """`async with wrapped: async for ...` emits usage and ends the span once."""
         in_memory, provider = exporter
-        events = [
-            {"delta": "Hi", "usage": {"input_tokens": 1, "output_tokens": 2}},
-        ]
-        stream = _TestStream(_async_iter(events))
-        span = _start_span(provider)
-        wrapped = telemetry.trace_stream(stream, span)
+        events = [{"delta": "Hi", "usage": {"input_tokens": 1, "output_tokens": 2}}]
+        wrapped = telemetry.trace_stream(
+            TelemetryStream(async_iter(events)), start_test_span(provider)
+        )
 
         async with wrapped as ctx:
             async for _ in ctx:
@@ -138,20 +80,15 @@ class TestNaturalExhaustion:
 
 
 class TestEarlyAbandonment:
-    """`aclose()` before exhaustion ends the span without usage attrs."""
-
     async def test_aclose_before_output_built_emits_no_usage(
         self, exporter: tuple[InMemorySpanExporter, TracerProvider]
     ) -> None:
         """When _output is None at aclose time, span ends without usage attrs."""
         in_memory, provider = exporter
-        events = [
-            {"delta": "Partial"},
-            {"delta": " result"},
-        ]
-        stream = _TestStream(_async_iter(events))
-        span = _start_span(provider)
-        wrapped = telemetry.trace_stream(stream, span)
+        events = [{"delta": "Partial"}, {"delta": " result"}]
+        wrapped = telemetry.trace_stream(
+            TelemetryStream(async_iter(events)), start_test_span(provider)
+        )
 
         chunk = await wrapped.__anext__()
         assert chunk.content == "Partial"
@@ -166,16 +103,14 @@ class TestEarlyAbandonment:
 
 
 class TestExceptionPath:
-    """Exceptions during iteration are recorded with ERROR status."""
-
     async def test_exception_records_and_sets_error_status(
         self, exporter: tuple[InMemorySpanExporter, TracerProvider]
     ) -> None:
         """Exception during iteration sets ERROR status, ends span, propagates."""
         in_memory, provider = exporter
-        stream = _TestStream(_failing_iter())
-        span = _start_span(provider)
-        wrapped = telemetry.trace_stream(stream, span)
+        wrapped = telemetry.trace_stream(
+            TelemetryStream(_failing_iter()), start_test_span(provider)
+        )
 
         with pytest.raises(RuntimeError, match="boom"):
             async for _ in wrapped:
@@ -184,21 +119,18 @@ class TestExceptionPath:
         finished = in_memory.get_finished_spans()
         assert len(finished) == 1
         assert finished[0].status.status_code == StatusCode.ERROR
-        events = list(finished[0].events)
-        assert any(e.name == "exception" for e in events)
+        assert any(e.name == "exception" for e in finished[0].events)
 
 
 class TestPublicSurface:
-    """Wrapper preserves the public Stream surface used by consumers."""
-
     async def test_output_raises_before_exhaustion(
         self, exporter: tuple[InMemorySpanExporter, TracerProvider]
     ) -> None:
         """Accessing .output mid-stream raises StreamNotExhaustedError."""
         _, provider = exporter
-        stream = _TestStream(_async_iter([{"delta": "x"}]))
-        span = _start_span(provider)
-        wrapped = telemetry.trace_stream(stream, span)
+        wrapped = telemetry.trace_stream(
+            TelemetryStream(async_iter([{"delta": "x"}])), start_test_span(provider)
+        )
 
         with pytest.raises(StreamNotExhaustedError):
             _ = wrapped.output
@@ -209,31 +141,29 @@ class TestPublicSurface:
         """After exhaustion, .output returns the typed Output from inner."""
         _, provider = exporter
         events = [{"delta": "abc", "usage": {"input_tokens": 1, "output_tokens": 1}}]
-        stream = _TestStream(_async_iter(events))
-        span = _start_span(provider)
-        wrapped = telemetry.trace_stream(stream, span)
+        wrapped = telemetry.trace_stream(
+            TelemetryStream(async_iter(events)), start_test_span(provider)
+        )
 
         async for _ in wrapped:
             pass
 
         output = wrapped.output
-        assert isinstance(output, _TestOutput)
+        assert isinstance(output, TelemetryOutput)
         assert output.content == "abc"
         assert output.usage.input_tokens == 1
 
 
 class TestIdempotentFinalize:
-    """Span ends exactly once across natural exhaustion and explicit aclose."""
-
     async def test_natural_exhaustion_then_aclose_ends_span_once(
         self, exporter: tuple[InMemorySpanExporter, TracerProvider]
     ) -> None:
         """`async for` to completion then `aclose()` produces a single span."""
         in_memory, provider = exporter
         events = [{"delta": "x", "usage": {"input_tokens": 2, "output_tokens": 3}}]
-        stream = _TestStream(_async_iter(events))
-        span = _start_span(provider)
-        wrapped = telemetry.trace_stream(stream, span)
+        wrapped = telemetry.trace_stream(
+            TelemetryStream(async_iter(events)), start_test_span(provider)
+        )
 
         async for _ in wrapped:
             pass
@@ -266,15 +196,14 @@ class TestExtendedUsageAttributes:
                 },
             }
         ]
-        stream = _TestStream(_async_iter(events))
-        span = _start_span(provider)
-        wrapped = telemetry.trace_stream(stream, span)
+        wrapped = telemetry.trace_stream(
+            TelemetryStream(async_iter(events)), start_test_span(provider)
+        )
 
         async for _ in wrapped:
             pass
 
-        finished = in_memory.get_finished_spans()
-        attrs = finished[0].attributes or {}
+        attrs = in_memory.get_finished_spans()[0].attributes or {}
         assert attrs["gen_ai.usage.input_tokens"] == 10
         assert attrs["gen_ai.usage.output_tokens"] == 5
         assert attrs["gen_ai.usage.total_tokens"] == 15
@@ -284,7 +213,7 @@ class TestExtendedUsageAttributes:
     def test_off_spec_usage_emitted_under_celeste_namespace(self) -> None:
         """Modality-specific Usage fields fall through to `celeste.usage.<field>`."""
         usage = _OffSpecUsage(images_generated=4, audio_seconds=1.5)
-        output = _TestOutput(content="", usage=usage)
+        output: Output[Any] = TelemetryOutput(content="", usage=usage)
 
         attrs = telemetry.output_attributes(output)
 

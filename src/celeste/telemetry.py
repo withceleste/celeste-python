@@ -187,8 +187,7 @@ def span_name(modality: Modality, model: Model) -> str:
     return f"celeste.{modality.value} {model.id}"
 
 
-# Maps `UsageField` enum members to GenAI semconv span attribute keys.
-# Fields not in this map fall through to `celeste.usage.<field>` (off-spec).
+# `Usage` field → semconv span attribute key. Off-spec fields use `celeste.usage.<field>`.
 _GEN_AI_USAGE_FIELDS: dict[str, str] = {
     UsageField.INPUT_TOKENS: "gen_ai.usage.input_tokens",
     UsageField.OUTPUT_TOKENS: "gen_ai.usage.output_tokens",
@@ -197,9 +196,7 @@ _GEN_AI_USAGE_FIELDS: dict[str, str] = {
     UsageField.CACHED_TOKENS: "gen_ai.usage.cached_input_tokens",
 }
 
-# Maps `UsageField` enum members to `gen_ai.token.type` dimension values for metrics.
-# Only fields representing token *categories* belong here (input/output/cached/reasoning).
-# `total_tokens` is omitted to avoid double-counting in histogram aggregations.
+# `Usage` field → `gen_ai.token.type` metric dimension. `total_tokens` excluded to avoid double-count.
 _GEN_AI_TOKEN_TYPES: dict[str, str] = {
     UsageField.INPUT_TOKENS: "input",
     UsageField.OUTPUT_TOKENS: "output",
@@ -254,8 +251,7 @@ def record_operation_duration(
     _operation_duration_histogram.record(duration_seconds, attributes=attrs)
 
 
-# Read the semconv-standard env flag once at import. Per the GenAI spec,
-# content capture is opt-in because prompts/responses often contain user data.
+# Opt-in flag, read once at import (semconv-standard env name).
 _CAPTURE_CONTENT: bool = (
     os.environ.get("OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT", "")
     .strip()
@@ -321,10 +317,7 @@ def _message_to_dict(message: Message) -> dict[str, Any]:
 
 
 def _input_messages_event(inputs: Input) -> dict[str, Any] | None:
-    """Build the ``gen_ai.input.messages`` event attributes from inputs.
-
-    Returns ``None`` when content capture is disabled.
-    """
+    """Build the ``gen_ai.input.messages`` event attributes, or None when capture is off."""
     if not _CAPTURE_CONTENT:
         return None
     messages: list[dict[str, Any]] = []
@@ -345,10 +338,7 @@ def _input_messages_event(inputs: Input) -> dict[str, Any] | None:
 
 
 def _output_messages_event(output: Output[Any]) -> dict[str, Any] | None:
-    """Build the ``gen_ai.output.messages`` event attributes from an Output.
-
-    Returns ``None`` when content capture is disabled.
-    """
+    """Build the ``gen_ai.output.messages`` event attributes, or None when capture is off."""
     if not _CAPTURE_CONTENT:
         return None
     parts = _content_to_parts(output.content)
@@ -371,13 +361,6 @@ def add_input_event(span: Any, inputs: Input) -> None:
         span.add_event("gen_ai.input.messages", attributes=event)
 
 
-def add_output_event(span: Any, output: Output[Any]) -> None:
-    """Add the ``gen_ai.output.messages`` event to ``span`` when capture is enabled."""
-    event = _output_messages_event(output)
-    if event is not None:
-        span.add_event("gen_ai.output.messages", attributes=event)
-
-
 def record_output(
     span: Any,
     output: Output[Any],
@@ -387,7 +370,9 @@ def record_output(
 ) -> None:
     """Emit span attrs, content event, and metrics for a successful Output."""
     span.set_attributes(output_attributes(output))
-    add_output_event(span, output)
+    output_event = _output_messages_event(output)
+    if output_event is not None:
+        span.add_event("gen_ai.output.messages", attributes=output_event)
     record_token_usage(output.usage, metric_attributes)
     record_operation_duration(duration_seconds, metric_attributes, error=error)
 
@@ -528,7 +513,6 @@ __all__ = [
     "Status",
     "StatusCode",
     "add_input_event",
-    "add_output_event",
     "meter",
     "output_attributes",
     "record_operation_duration",
