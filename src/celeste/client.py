@@ -1,6 +1,5 @@
 """Base client for modality-specific AI operations."""
 
-import time
 import warnings
 from abc import ABC, abstractmethod
 from collections.abc import AsyncIterator
@@ -214,55 +213,42 @@ class ModalityClient[
         Returns:
             Output of the parameterized type.
         """
-        request_attrs = telemetry.request_attributes(
+        with telemetry.gen_ai_span(
             model=self.model,
             provider=self.provider,
             protocol=self.protocol,
             modality=self.modality,
-        )
-        started = time.monotonic()
-        with telemetry.tracer.start_as_current_span(
-            telemetry.span_name(self.modality, self.model),
-            attributes=request_attrs,
-        ) as span:
-            try:
-                inputs, parameters = self._validate_artifacts(inputs, **parameters)
-                telemetry.add_input_event(span, inputs)
-                request_body = self._build_request(
-                    inputs, extra_body=extra_body, **parameters
-                )
-                response_data = await self._make_request(
-                    request_body,
-                    endpoint=endpoint,
-                    extra_headers=extra_headers,
-                    **parameters,
-                )
-                content = self._parse_content(response_data)
-                content = self._transform_output(content, **parameters)
-                tool_calls = self._parse_tool_calls(response_data)
-                reasoning, signature = self._parse_reasoning(response_data)
-                kwargs: dict[str, Any] = {}
-                if reasoning is not None:
-                    kwargs["reasoning"] = reasoning
-                if signature:
-                    kwargs["signature"] = signature
-                output = self._output_class()(
-                    content=content,
-                    usage=self._get_usage(response_data),
-                    finish_reason=self._get_finish_reason(response_data),
-                    metadata=self._build_metadata(response_data),
-                    tool_calls=tool_calls,
-                    **kwargs,
-                )
-                telemetry.record_output(
-                    span, output, request_attrs, time.monotonic() - started
-                )
-                return output
-            except BaseException as exc:
-                telemetry.record_operation_duration(
-                    time.monotonic() - started, request_attrs, error=exc
-                )
-                raise
+        ) as (span, request_attrs):
+            inputs, parameters = self._validate_artifacts(inputs, **parameters)
+            telemetry.add_input_event(span, inputs)
+            request_body = self._build_request(
+                inputs, extra_body=extra_body, **parameters
+            )
+            response_data = await self._make_request(
+                request_body,
+                endpoint=endpoint,
+                extra_headers=extra_headers,
+                **parameters,
+            )
+            content = self._parse_content(response_data)
+            content = self._transform_output(content, **parameters)
+            tool_calls = self._parse_tool_calls(response_data)
+            reasoning, signature = self._parse_reasoning(response_data)
+            kwargs: dict[str, Any] = {}
+            if reasoning is not None:
+                kwargs["reasoning"] = reasoning
+            if signature:
+                kwargs["signature"] = signature
+            output = self._output_class()(
+                content=content,
+                usage=self._get_usage(response_data),
+                finish_reason=self._get_finish_reason(response_data),
+                metadata=self._build_metadata(response_data),
+                tool_calls=tool_calls,
+                **kwargs,
+            )
+            telemetry.record_output(span, output, request_attrs)
+            return output
 
     def _parse_tool_calls(self, response_data: dict[str, Any]) -> list[ToolCall]:
         """Parse tool calls from response. Override in providers that support tools."""

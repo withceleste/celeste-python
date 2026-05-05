@@ -365,16 +365,49 @@ def record_output(
     span: Any,
     output: Output[Any],
     metric_attributes: dict[str, Any],
-    duration_seconds: float,
-    error: BaseException | None = None,
 ) -> None:
-    """Emit span attrs, content event, and metrics for a successful Output."""
+    """Emit span attrs, content event, and token usage for a successful Output."""
     span.set_attributes(output_attributes(output))
     output_event = _output_messages_event(output)
     if output_event is not None:
         span.add_event("gen_ai.output.messages", attributes=output_event)
     record_token_usage(output.usage, metric_attributes)
-    record_operation_duration(duration_seconds, metric_attributes, error=error)
+
+
+@contextmanager
+def gen_ai_span(
+    *,
+    model: Model,
+    provider: Provider | None,
+    protocol: Protocol | None,
+    modality: Modality,
+    extra_attributes: dict[str, Any] | None = None,
+) -> Iterator[tuple[Any, dict[str, Any]]]:
+    """Open a GenAI span and record operation duration on exit.
+
+    Yields ``(span, request_attrs)``. On any exception, the duration is recorded
+    with ``error.type`` set; on success it's recorded plain.
+    """
+    request_attrs = request_attributes(
+        model=model, provider=provider, protocol=protocol, modality=modality
+    )
+    span_attrs = (
+        {**request_attrs, **extra_attributes} if extra_attributes else request_attrs
+    )
+    started = time.monotonic()
+    error: BaseException | None = None
+    with tracer.start_as_current_span(
+        span_name(modality, model), attributes=span_attrs
+    ) as span:
+        try:
+            yield span, request_attrs
+        except BaseException as exc:
+            error = exc
+            raise
+        finally:
+            record_operation_duration(
+                time.monotonic() - started, request_attrs, error=error
+            )
 
 
 class _TracedStream:
@@ -484,19 +517,17 @@ class _TracedStream:
         if self._ended:
             return
         self._ended = True
-        duration = time.monotonic() - self._started
+        record_operation_duration(
+            time.monotonic() - self._started,
+            self._metric_attributes,
+            error=self._error,
+        )
         try:
             output = self._inner.output
         except StreamNotExhaustedError:
             output = None
         if output is not None:
-            record_output(
-                self._span, output, self._metric_attributes, duration, error=self._error
-            )
-        else:
-            record_operation_duration(
-                duration, self._metric_attributes, error=self._error
-            )
+            record_output(self._span, output, self._metric_attributes)
         self._span.end()
 
 
@@ -513,6 +544,7 @@ __all__ = [
     "Status",
     "StatusCode",
     "add_input_event",
+    "gen_ai_span",
     "meter",
     "output_attributes",
     "record_operation_duration",
