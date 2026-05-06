@@ -24,7 +24,7 @@ from celeste.mime_types import ApplicationMimeType
 from celeste.models import Model
 from celeste.parameters import ParameterMapper, Parameters
 from celeste.streaming import Stream, enrich_stream_errors
-from celeste.tools import ToolCall
+from celeste.tools import ToolCall, validate_tool_calls
 from celeste.types import RawUsage
 
 
@@ -232,7 +232,10 @@ class ModalityClient[
             )
             content = self._parse_content(response_data)
             content = self._transform_output(content, **parameters)
-            tool_calls = self._parse_tool_calls(response_data)
+            tool_calls = validate_tool_calls(
+                self._parse_tool_calls(response_data),
+                parameters.get("tools"),
+            )
             reasoning, signature = self._parse_reasoning(response_data)
             kwargs: dict[str, Any] = {}
             if reasoning is not None:
