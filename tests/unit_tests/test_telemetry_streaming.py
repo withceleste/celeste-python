@@ -16,6 +16,7 @@ from celeste.io import Output, Usage
 from tests.unit_tests._telemetry_helpers import (
     TelemetryOutput,
     TelemetryStream,
+    TelemetryUsage,
     async_iter,
 )
 from tests.unit_tests.conftest import start_test_span
@@ -213,10 +214,24 @@ class TestExtendedUsageAttributes:
     def test_off_spec_usage_emitted_under_celeste_namespace(self) -> None:
         """Modality-specific Usage fields fall through to `celeste.usage.<field>`."""
         usage = _OffSpecUsage(images_generated=4, audio_seconds=1.5)
-        output: Output[Any] = TelemetryOutput(content="", usage=usage)
+        output: Output[Any] = TelemetryOutput(
+            content="", usage=usage, metadata={"model": "test-model"}
+        )
 
         attrs = telemetry.output_attributes(output)
 
         assert attrs["celeste.usage.images_generated"] == 4
         assert attrs["celeste.usage.audio_seconds"] == 1.5
         assert "gen_ai.usage.images_generated" not in attrs
+
+    def test_response_model_emitted_from_metadata(self) -> None:
+        """`gen_ai.response.model` reads from `output.metadata["model"]`."""
+        output: Output[Any] = TelemetryOutput(
+            content="",
+            usage=TelemetryUsage(),
+            metadata={"model": "claude-opus-4-1-20250805"},
+        )
+
+        attrs = telemetry.output_attributes(output)
+
+        assert attrs["gen_ai.response.model"] == "claude-opus-4-1-20250805"

@@ -1,7 +1,7 @@
 """Shared fixtures and helpers for telemetry-related unit tests."""
 
 from collections.abc import AsyncIterator
-from typing import Any, ClassVar
+from typing import Any, ClassVar, Unpack
 
 from celeste.io import Chunk, Output, Usage
 from celeste.parameters import Parameters
@@ -29,6 +29,19 @@ class TelemetryStream(Stream[TelemetryOutput, Parameters, Chunk]):
     _chunk_class: ClassVar[type[Chunk]] = Chunk
     _output_class: ClassVar[type[Output]] = TelemetryOutput
     _empty_content: ClassVar[str] = ""
+
+    def __init__(
+        self,
+        sse_iterator: AsyncIterator[dict[str, Any]],
+        stream_metadata: dict[str, Any] | None = None,
+        **parameters: Unpack[Parameters],
+    ) -> None:
+        """Default `stream_metadata={"model": "test-model"}` to mirror production wiring."""
+        super().__init__(
+            sse_iterator,
+            stream_metadata=stream_metadata or {"model": "test-model"},
+            **parameters,
+        )
 
     def _aggregate_content(self, chunks: list[Chunk]) -> str:
         """Concatenate chunk content."""
