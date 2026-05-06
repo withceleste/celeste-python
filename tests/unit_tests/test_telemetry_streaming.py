@@ -1,12 +1,12 @@
 """Tests for `_TracedStream` — span lifecycle and GenAI attribute emission."""
 
 import asyncio
-import contextvars
 from collections.abc import AsyncIterator
 from typing import Any
 from unittest.mock import patch
 
 import pytest
+from opentelemetry import trace as otel_trace
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
     InMemorySpanExporter,
@@ -14,7 +14,6 @@ from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
 from opentelemetry.trace import StatusCode
 
 from celeste import telemetry
-from celeste.client import _prime_with_context
 from celeste.exceptions import StreamNotExhaustedError
 from celeste.io import Output, Usage
 from tests.unit_tests._telemetry_helpers import (
@@ -261,53 +260,72 @@ class TestNoSpanActivationInAnext:
         mock_use_span.assert_not_called()
 
 
-class TestPrimeWithContext:
-    """`_prime_with_context` runs the first pull under ctx and delegates the rest."""
+class TestBindFirstPullToSpan:
+    """`bind_first_pull_to_span` runs the first pull with span active; delegates the rest."""
 
-    async def test_preserves_event_order(self) -> None:
+    async def test_preserves_event_order(
+        self, exporter: tuple[InMemorySpanExporter, TracerProvider]
+    ) -> None:
         """All events from inner are yielded in original order."""
+        _, provider = exporter
         events = [{"i": 0}, {"i": 1}, {"i": 2}]
-        primed = _prime_with_context(async_iter(events), contextvars.copy_context())
+        bound = telemetry.bind_first_pull_to_span(
+            async_iter(events), start_test_span(provider)
+        )
 
-        collected = [event async for event in primed]
+        collected = [event async for event in bound]
 
         assert collected == events
 
-    async def test_empty_stream_yields_nothing(self) -> None:
+    async def test_empty_stream_yields_nothing(
+        self, exporter: tuple[InMemorySpanExporter, TracerProvider]
+    ) -> None:
         """Inner that immediately raises StopAsyncIteration yields no events."""
-        primed = _prime_with_context(async_iter([]), contextvars.copy_context())
+        _, provider = exporter
+        bound = telemetry.bind_first_pull_to_span(
+            async_iter([]), start_test_span(provider)
+        )
 
-        collected = [event async for event in primed]
+        collected = [event async for event in bound]
 
         assert collected == []
 
-    async def test_first_error_propagates(self) -> None:
+    async def test_first_error_propagates(
+        self, exporter: tuple[InMemorySpanExporter, TracerProvider]
+    ) -> None:
         """Exception raised by inner's first pull propagates to the consumer."""
-        primed = _prime_with_context(_failing_iter(), contextvars.copy_context())
+        _, provider = exporter
+        bound = telemetry.bind_first_pull_to_span(
+            _failing_iter(), start_test_span(provider)
+        )
 
         with pytest.raises(RuntimeError, match="boom"):
-            async for _ in primed:
+            async for _ in bound:
                 pass
 
-    async def test_first_pull_runs_under_captured_ctx(self) -> None:
-        """First inner pull executes under captured ctx; subsequent pulls under caller's ctx."""
-        marker: contextvars.ContextVar[str] = contextvars.ContextVar("marker")
-        marker.set("captured")
-        captured_ctx = contextvars.copy_context()
-        marker.set("caller")
+    async def test_first_pull_runs_with_span_active(
+        self, exporter: tuple[InMemorySpanExporter, TracerProvider]
+    ) -> None:
+        """First inner pull sees span as current OTel context; subsequent pulls don't."""
+        _, provider = exporter
+        span = start_test_span(provider)
+        target_id = span.get_span_context().span_id
 
-        async def inner() -> AsyncIterator[dict[str, str]]:
-            yield {"value": marker.get()}
-            yield {"value": marker.get()}
+        async def inner() -> AsyncIterator[dict[str, int]]:
+            yield {"span_id": otel_trace.get_current_span().get_span_context().span_id}
+            yield {"span_id": otel_trace.get_current_span().get_span_context().span_id}
 
-        primed = _prime_with_context(inner(), captured_ctx)
-        collected = [event async for event in primed]
+        bound = telemetry.bind_first_pull_to_span(inner(), span)
+        collected = [event async for event in bound]
 
-        assert collected[0] == {"value": "captured"}
-        assert collected[1] == {"value": "caller"}
+        assert collected[0]["span_id"] == target_id
+        assert collected[1]["span_id"] != target_id
 
-    async def test_cancel_during_first_pull_cancels_inner_task(self) -> None:
+    async def test_cancel_during_first_pull_cancels_inner_task(
+        self, exporter: tuple[InMemorySpanExporter, TracerProvider]
+    ) -> None:
         """Cancellation while awaiting the first pull propagates to the inner task — no leak."""
+        _, provider = exporter
         started = asyncio.Event()
 
         async def slow_inner() -> AsyncIterator[dict[str, str]]:
@@ -315,8 +333,10 @@ class TestPrimeWithContext:
             await asyncio.sleep(60)
             yield {"v": "never"}
 
-        primed = _prime_with_context(slow_inner(), contextvars.copy_context())
-        consumer: asyncio.Task[dict[str, str]] = asyncio.create_task(primed.__anext__())
+        bound = telemetry.bind_first_pull_to_span(
+            slow_inner(), start_test_span(provider)
+        )
+        consumer: asyncio.Task[dict[str, str]] = asyncio.create_task(bound.__anext__())
         await started.wait()
         consumer.cancel()
         with pytest.raises(asyncio.CancelledError):

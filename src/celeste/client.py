@@ -1,7 +1,5 @@
 """Base client for modality-specific AI operations."""
 
-import asyncio
-import contextvars
 import warnings
 from abc import ABC, abstractmethod
 from collections.abc import AsyncIterator
@@ -28,28 +26,6 @@ from celeste.parameters import ParameterMapper, Parameters
 from celeste.streaming import Stream, enrich_stream_errors
 from celeste.tools import ToolCall
 from celeste.types import RawUsage
-
-
-async def _prime_with_context(
-    inner: AsyncIterator[dict[str, Any]],
-    ctx: contextvars.Context,
-) -> AsyncIterator[dict[str, Any]]:
-    """Run inner's first pull under ctx; delegate the rest to the caller's context."""
-
-    async def _first() -> dict[str, Any]:
-        return await inner.__anext__()
-
-    task = asyncio.create_task(_first(), context=ctx)
-    try:
-        first = await task
-    except StopAsyncIteration:
-        return
-    except BaseException:
-        task.cancel()
-        raise
-    yield first
-    async for event in inner:
-        yield event
 
 
 class APIMixin(ABC):
@@ -337,10 +313,7 @@ class ModalityClient[
             **parameters,
         )
         sse_iterator = enrich_stream_errors(sse_iterator, self._handle_error_response)
-        # Capture span-active OTel context so the first SSE pull fires HTTP under it
-        with telemetry.use_span(span):
-            ctx_with_span = contextvars.copy_context()
-        sse_iterator = _prime_with_context(sse_iterator, ctx_with_span)
+        sse_iterator = telemetry.bind_first_pull_to_span(sse_iterator, span)
         stream = stream_class(
             sse_iterator,
             transform_output=self._transform_output,
