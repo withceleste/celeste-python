@@ -1,10 +1,11 @@
 """OpenTelemetry GenAI telemetry for Celeste."""
 
 import asyncio
+import contextvars
 import json
 import os
 import time
-from collections.abc import Iterator
+from collections.abc import AsyncIterator, Iterator
 from contextlib import contextmanager, suppress
 from types import TracebackType
 from typing import Any
@@ -435,18 +436,17 @@ class _TracedStream:
 
     async def __anext__(self) -> Any:
         """Yield next chunk; emit TTFC on first, finalize span on terminal events."""
-        with use_span(self._span, end_on_exit=False):
-            try:
-                chunk = await self._inner.__anext__()
-            except (StopAsyncIteration, asyncio.CancelledError):
-                self._finalize()
-                raise
-            except Exception as exc:
-                self._error = exc
-                self._span.record_exception(exc)
-                self._span.set_status(Status(StatusCode.ERROR, str(exc)))
-                self._finalize()
-                raise
+        try:
+            chunk = await self._inner.__anext__()
+        except (StopAsyncIteration, asyncio.CancelledError):
+            self._finalize()
+            raise
+        except Exception as exc:
+            self._error = exc
+            self._span.record_exception(exc)
+            self._span.set_status(Status(StatusCode.ERROR, str(exc)))
+            self._finalize()
+            raise
         if not self._seen_first:
             self._seen_first = True
             self._span.set_attribute(
@@ -541,10 +541,35 @@ def trace_stream(
     return _TracedStream(stream, span, metric_attributes)
 
 
+async def bind_first_pull_to_span(
+    inner: AsyncIterator[dict[str, Any]],
+    span: Any,
+) -> AsyncIterator[dict[str, Any]]:
+    """Run inner's first pull under a context where span is active; delegate the rest."""
+    with use_span(span):
+        ctx = contextvars.copy_context()
+
+    async def _first() -> dict[str, Any]:
+        return await inner.__anext__()
+
+    task = asyncio.create_task(_first(), context=ctx)
+    try:
+        first = await task
+    except StopAsyncIteration:
+        return
+    except BaseException:
+        task.cancel()
+        raise
+    yield first
+    async for event in inner:
+        yield event
+
+
 __all__ = [
     "Status",
     "StatusCode",
     "add_input_event",
+    "bind_first_pull_to_span",
     "gen_ai_span",
     "meter",
     "output_attributes",

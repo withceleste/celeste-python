@@ -313,6 +313,7 @@ class ModalityClient[
             **parameters,
         )
         sse_iterator = enrich_stream_errors(sse_iterator, self._handle_error_response)
+        sse_iterator = telemetry.bind_first_pull_to_span(sse_iterator, span)
         stream = stream_class(
             sse_iterator,
             transform_output=self._transform_output,

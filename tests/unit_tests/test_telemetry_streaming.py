@@ -1,9 +1,12 @@
 """Tests for `_TracedStream` — span lifecycle and GenAI attribute emission."""
 
+import asyncio
 from collections.abc import AsyncIterator
 from typing import Any
+from unittest.mock import patch
 
 import pytest
+from opentelemetry import trace as otel_trace
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
     InMemorySpanExporter,
@@ -235,3 +238,107 @@ class TestExtendedUsageAttributes:
         attrs = telemetry.output_attributes(output)
 
         assert attrs["gen_ai.response.model"] == "claude-opus-4-1-20250805"
+
+
+class TestNoSpanActivationInAnext:
+    """Regression: `_TracedStream.__anext__` must not activate the span across `await`."""
+
+    async def test_anext_does_not_call_use_span(
+        self, exporter: tuple[InMemorySpanExporter, TracerProvider]
+    ) -> None:
+        """Iterating a `_TracedStream` does NOT invoke `telemetry.use_span`."""
+        _, provider = exporter
+        events = [{"delta": "a"}, {"delta": "b"}]
+        wrapped = telemetry.trace_stream(
+            TelemetryStream(async_iter(events)), start_test_span(provider)
+        )
+
+        with patch("celeste.telemetry.use_span") as mock_use_span:
+            async for _ in wrapped:
+                pass
+
+        mock_use_span.assert_not_called()
+
+
+class TestBindFirstPullToSpan:
+    """`bind_first_pull_to_span` runs the first pull with span active; delegates the rest."""
+
+    async def test_preserves_event_order(
+        self, exporter: tuple[InMemorySpanExporter, TracerProvider]
+    ) -> None:
+        """All events from inner are yielded in original order."""
+        _, provider = exporter
+        events = [{"i": 0}, {"i": 1}, {"i": 2}]
+        bound = telemetry.bind_first_pull_to_span(
+            async_iter(events), start_test_span(provider)
+        )
+
+        collected = [event async for event in bound]
+
+        assert collected == events
+
+    async def test_empty_stream_yields_nothing(
+        self, exporter: tuple[InMemorySpanExporter, TracerProvider]
+    ) -> None:
+        """Inner that immediately raises StopAsyncIteration yields no events."""
+        _, provider = exporter
+        bound = telemetry.bind_first_pull_to_span(
+            async_iter([]), start_test_span(provider)
+        )
+
+        collected = [event async for event in bound]
+
+        assert collected == []
+
+    async def test_first_error_propagates(
+        self, exporter: tuple[InMemorySpanExporter, TracerProvider]
+    ) -> None:
+        """Exception raised by inner's first pull propagates to the consumer."""
+        _, provider = exporter
+        bound = telemetry.bind_first_pull_to_span(
+            _failing_iter(), start_test_span(provider)
+        )
+
+        with pytest.raises(RuntimeError, match="boom"):
+            async for _ in bound:
+                pass
+
+    async def test_first_pull_runs_with_span_active(
+        self, exporter: tuple[InMemorySpanExporter, TracerProvider]
+    ) -> None:
+        """First inner pull sees span as current OTel context; subsequent pulls don't."""
+        _, provider = exporter
+        span = start_test_span(provider)
+        target_id = span.get_span_context().span_id
+
+        async def inner() -> AsyncIterator[dict[str, int]]:
+            yield {"span_id": otel_trace.get_current_span().get_span_context().span_id}
+            yield {"span_id": otel_trace.get_current_span().get_span_context().span_id}
+
+        bound = telemetry.bind_first_pull_to_span(inner(), span)
+        collected = [event async for event in bound]
+
+        assert collected[0]["span_id"] == target_id
+        assert collected[1]["span_id"] != target_id
+
+    async def test_cancel_during_first_pull_cancels_inner_task(
+        self, exporter: tuple[InMemorySpanExporter, TracerProvider]
+    ) -> None:
+        """Cancellation while awaiting the first pull propagates to the inner task — no leak."""
+        _, provider = exporter
+        started = asyncio.Event()
+
+        async def slow_inner() -> AsyncIterator[dict[str, str]]:
+            started.set()
+            await asyncio.sleep(60)
+            yield {"v": "never"}
+
+        bound = telemetry.bind_first_pull_to_span(
+            slow_inner(), start_test_span(provider)
+        )
+        consumer: asyncio.Task[dict[str, str]] = asyncio.create_task(bound.__anext__())
+        await started.wait()
+        consumer.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await consumer
+        await asyncio.sleep(0)
