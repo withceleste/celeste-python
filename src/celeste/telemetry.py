@@ -435,18 +435,17 @@ class _TracedStream:
 
     async def __anext__(self) -> Any:
         """Yield next chunk; emit TTFC on first, finalize span on terminal events."""
-        with use_span(self._span, end_on_exit=False):
-            try:
-                chunk = await self._inner.__anext__()
-            except (StopAsyncIteration, asyncio.CancelledError):
-                self._finalize()
-                raise
-            except Exception as exc:
-                self._error = exc
-                self._span.record_exception(exc)
-                self._span.set_status(Status(StatusCode.ERROR, str(exc)))
-                self._finalize()
-                raise
+        try:
+            chunk = await self._inner.__anext__()
+        except (StopAsyncIteration, asyncio.CancelledError):
+            self._finalize()
+            raise
+        except Exception as exc:
+            self._error = exc
+            self._span.record_exception(exc)
+            self._span.set_status(Status(StatusCode.ERROR, str(exc)))
+            self._finalize()
+            raise
         if not self._seen_first:
             self._seen_first = True
             self._span.set_attribute(

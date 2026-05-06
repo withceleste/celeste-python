@@ -1,7 +1,9 @@
 """Tests for `_TracedStream` — span lifecycle and GenAI attribute emission."""
 
+import contextvars
 from collections.abc import AsyncIterator
 from typing import Any
+from unittest.mock import patch
 
 import pytest
 from opentelemetry.sdk.trace import TracerProvider
@@ -11,6 +13,7 @@ from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
 from opentelemetry.trace import StatusCode
 
 from celeste import telemetry
+from celeste.client import _prime_with_context
 from celeste.exceptions import StreamNotExhaustedError
 from celeste.io import Output, Usage
 from tests.unit_tests._telemetry_helpers import (
@@ -235,3 +238,69 @@ class TestExtendedUsageAttributes:
         attrs = telemetry.output_attributes(output)
 
         assert attrs["gen_ai.response.model"] == "claude-opus-4-1-20250805"
+
+
+class TestNoSpanActivationInAnext:
+    """Regression: `_TracedStream.__anext__` must not activate the span across `await`."""
+
+    async def test_anext_does_not_call_use_span(
+        self, exporter: tuple[InMemorySpanExporter, TracerProvider]
+    ) -> None:
+        """Iterating a `_TracedStream` does NOT invoke `telemetry.use_span`."""
+        _, provider = exporter
+        events = [{"delta": "a"}, {"delta": "b"}]
+        wrapped = telemetry.trace_stream(
+            TelemetryStream(async_iter(events)), start_test_span(provider)
+        )
+
+        with patch("celeste.telemetry.use_span") as mock_use_span:
+            async for _ in wrapped:
+                pass
+
+        mock_use_span.assert_not_called()
+
+
+class TestPrimeWithContext:
+    """`_prime_with_context` runs the first pull under ctx and delegates the rest."""
+
+    async def test_preserves_event_order(self) -> None:
+        """All events from inner are yielded in original order."""
+        events = [{"i": 0}, {"i": 1}, {"i": 2}]
+        primed = _prime_with_context(async_iter(events), contextvars.copy_context())
+
+        collected = [event async for event in primed]
+
+        assert collected == events
+
+    async def test_empty_stream_yields_nothing(self) -> None:
+        """Inner that immediately raises StopAsyncIteration yields no events."""
+        primed = _prime_with_context(async_iter([]), contextvars.copy_context())
+
+        collected = [event async for event in primed]
+
+        assert collected == []
+
+    async def test_first_error_propagates(self) -> None:
+        """Exception raised by inner's first pull propagates to the consumer."""
+        primed = _prime_with_context(_failing_iter(), contextvars.copy_context())
+
+        with pytest.raises(RuntimeError, match="boom"):
+            async for _ in primed:
+                pass
+
+    async def test_first_pull_runs_under_captured_ctx(self) -> None:
+        """First inner pull executes under captured ctx; subsequent pulls under caller's ctx."""
+        marker: contextvars.ContextVar[str] = contextvars.ContextVar("marker")
+        marker.set("captured")
+        captured_ctx = contextvars.copy_context()
+        marker.set("caller")
+
+        async def inner() -> AsyncIterator[dict[str, str]]:
+            yield {"value": marker.get()}
+            yield {"value": marker.get()}
+
+        primed = _prime_with_context(inner(), captured_ctx)
+        collected = [event async for event in primed]
+
+        assert collected[0] == {"value": "captured"}
+        assert collected[1] == {"value": "caller"}
