@@ -224,6 +224,7 @@ def output_attributes(output: Output[Any]) -> dict[str, Any]:
         attrs[semconv_key or f"celeste.usage.{field_name}"] = value
     if output.finish_reason is not None and output.finish_reason.reason is not None:
         attrs["gen_ai.response.finish_reasons"] = (output.finish_reason.reason,)
+    attrs["gen_ai.response.model"] = output.metadata["model"]
     return attrs
 
 
