@@ -1,5 +1,6 @@
 """Configuration for OpenAI Audio API."""
 
+import os
 from enum import StrEnum
 
 
@@ -11,4 +12,5 @@ class OpenAIAudioEndpoint(StrEnum):
     CREATE_TRANSLATION = "/v1/audio/translations"
 
 
-BASE_URL = "https://api.openai.com"
+# Support custom base URL via environment variable (for OpenAI-compatible APIs)
+BASE_URL = os.getenv("OPENAI_BASE_URL", "https://api.openai.com")
