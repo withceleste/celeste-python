@@ -13,7 +13,7 @@ from celeste.exceptions import StreamEventError, StreamNotExhaustedError
 from celeste.io import Chunk as ChunkBase
 from celeste.io import FinishReason, Output, Usage
 from celeste.parameters import Parameters
-from celeste.tools import ToolCall
+from celeste.tools import ToolCall, validate_tool_calls
 from celeste.types import RawUsage
 
 
@@ -175,12 +175,16 @@ class Stream[Out: Output, Params: Parameters, Chunk: ChunkBase](ABC):
             kwargs["reasoning"] = reasoning
         if signature:
             kwargs["signature"] = signature
+        tool_calls = validate_tool_calls(
+            self._aggregate_tool_calls(chunks, raw_events),
+            parameters.get("tools"),
+        )
         output = self._output_class(
             content=content,
             usage=self._aggregate_usage(chunks),
             finish_reason=self._aggregate_finish_reason(chunks),
             metadata=self._build_stream_metadata(raw_events),
-            tool_calls=self._aggregate_tool_calls(chunks, raw_events),
+            tool_calls=tool_calls,
             **kwargs,
         )
         return output  # type: ignore[return-value]

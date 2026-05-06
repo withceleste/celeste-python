@@ -5,7 +5,9 @@ from enum import StrEnum
 from typing import Any, ClassVar
 
 from pydantic import BaseModel, ConfigDict, Field
+from pydantic import ValidationError as PydanticValidationError
 
+from celeste.exceptions import ValidationError
 from celeste.types import Message, Role, ToolCall
 
 
@@ -55,6 +57,61 @@ class ToolMapper(ABC):
 type ToolDefinition = Tool | dict[str, Any]
 
 
+def _tool_parameter_models(tools: object | None) -> dict[str, type[BaseModel]]:
+    if not isinstance(tools, list):
+        return {}
+
+    models: dict[str, type[BaseModel]] = {}
+    for tool in tools:
+        if not isinstance(tool, dict):
+            continue
+        name = tool.get("name")
+        parameters = tool.get("parameters")
+        if (
+            isinstance(name, str)
+            and isinstance(parameters, type)
+            and issubclass(parameters, BaseModel)
+        ):
+            models[name] = parameters
+    return models
+
+
+def validate_tool_calls(
+    tool_calls: list[ToolCall],
+    tools: object | None,
+) -> list[ToolCall]:
+    """Validate returned tool calls against local Pydantic tool parameter models."""
+    parameter_models = _tool_parameter_models(tools)
+    if not parameter_models:
+        return tool_calls
+
+    validated_calls: list[ToolCall] = []
+    for tool_call in tool_calls:
+        parameters_model = parameter_models.get(tool_call.name)
+        if parameters_model is None:
+            validated_calls.append(tool_call)
+            continue
+
+        try:
+            validated_arguments = parameters_model.model_validate(tool_call.arguments)
+        except PydanticValidationError as exc:
+            raise ValidationError(
+                f"Tool call '{tool_call.name}' arguments failed validation: {exc}"
+            ) from exc
+
+        validated_calls.append(
+            tool_call.model_copy(
+                update={
+                    "arguments": validated_arguments.model_dump(
+                        mode="json",
+                        exclude_unset=True,
+                    )
+                }
+            )
+        )
+    return validated_calls
+
+
 class ToolChoice(StrEnum):
     """Controls whether the model must use tools."""
 
@@ -102,4 +159,5 @@ __all__ = [
     "ToolResult",
     "WebSearch",
     "XSearch",
+    "validate_tool_calls",
 ]
