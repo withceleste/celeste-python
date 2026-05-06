@@ -1,5 +1,6 @@
 """Tests for `_TracedStream` — span lifecycle and GenAI attribute emission."""
 
+import asyncio
 import contextvars
 from collections.abc import AsyncIterator
 from typing import Any
@@ -304,3 +305,20 @@ class TestPrimeWithContext:
 
         assert collected[0] == {"value": "captured"}
         assert collected[1] == {"value": "caller"}
+
+    async def test_cancel_during_first_pull_cancels_inner_task(self) -> None:
+        """Cancellation while awaiting the first pull propagates to the inner task — no leak."""
+        started = asyncio.Event()
+
+        async def slow_inner() -> AsyncIterator[dict[str, str]]:
+            started.set()
+            await asyncio.sleep(60)
+            yield {"v": "never"}
+
+        primed = _prime_with_context(slow_inner(), contextvars.copy_context())
+        consumer: asyncio.Task[dict[str, str]] = asyncio.create_task(primed.__anext__())
+        await started.wait()
+        consumer.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await consumer
+        await asyncio.sleep(0)

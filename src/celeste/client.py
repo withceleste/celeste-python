@@ -44,6 +44,9 @@ async def _prime_with_context(
         first = await task
     except StopAsyncIteration:
         return
+    except BaseException:
+        task.cancel()
+        raise
     yield first
     async for event in inner:
         yield event
