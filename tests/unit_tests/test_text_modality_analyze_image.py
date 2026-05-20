@@ -239,7 +239,7 @@ def test_moonshot_init_request_includes_image_url_block() -> None:
 
 def test_xai_init_request_includes_input_image_block() -> None:
     model = Model(
-        id="grok-4-0709",
+        id="grok-4.20-beta-0309-reasoning",
         provider=Provider.XAI,
         display_name="Grok 4",
         operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},

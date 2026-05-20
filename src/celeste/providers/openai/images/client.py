@@ -77,10 +77,6 @@ class OpenAIImagesClient(APIMixin):
         extra_headers: dict[str, str] | None = None,
     ) -> dict[str, Any]:
         """Make JSON request for generate operations."""
-        # DALL-E 2/3 need b64_json response format
-        if self.model.id in ("dall-e-2", "dall-e-3"):
-            request_body.setdefault("response_format", "b64_json")
-
         headers = self._json_headers(extra_headers)
 
         response = await self.http_client.post(
