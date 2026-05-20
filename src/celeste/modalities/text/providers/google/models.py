@@ -126,15 +126,17 @@ MODELS: list[Model] = [
         },
     ),
     Model(
-        id="gemini-3.1-flash-lite-preview",
+        id="gemini-3.1-flash-lite",
         provider=Provider.GOOGLE,
-        display_name="Gemini 3.1 Flash Lite Preview",
+        display_name="Gemini 3.1 Flash Lite",
         operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
         streaming=True,
         parameter_constraints={
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0),
             Parameter.MAX_TOKENS: Range(min=1, max=65536),
-            TextParameter.THINKING_LEVEL: Choice(options=["low", "high"]),
+            TextParameter.THINKING_LEVEL: Choice(
+                options=["minimal", "low", "medium", "high"]
+            ),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch, CodeExecution]),
             TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
             TextParameter.OUTPUT_SCHEMA: Schema(),
