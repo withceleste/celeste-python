@@ -48,32 +48,6 @@ MODELS: list[Model] = [
         },
     ),
     Model(
-        id="moonshotai/kimi-k2-instruct",
-        provider=Provider.GROQ,
-        display_name="Kimi K2 Instruct",
-        operations={Modality.TEXT: {Operation.GENERATE}},
-        streaming=True,
-        parameter_constraints={
-            Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
-            Parameter.MAX_TOKENS: Range(min=1, max=16384, step=1),
-            TextParameter.OUTPUT_SCHEMA: Schema(),
-            TextParameter.TOOLS: ToolSupport(tools=[]),
-        },
-    ),
-    Model(
-        id="moonshotai/kimi-k2-instruct-0905",
-        provider=Provider.GROQ,
-        display_name="Kimi K2 Instruct 0905",
-        operations={Modality.TEXT: {Operation.GENERATE}},
-        streaming=True,
-        parameter_constraints={
-            Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
-            Parameter.MAX_TOKENS: Range(min=1, max=16384, step=1),
-            TextParameter.OUTPUT_SCHEMA: Schema(),
-            TextParameter.TOOLS: ToolSupport(tools=[]),
-        },
-    ),
-    Model(
         id="meta-llama/llama-4-scout-17b-16e-instruct",
         provider=Provider.GROQ,
         display_name="Llama 4 Scout 17B",

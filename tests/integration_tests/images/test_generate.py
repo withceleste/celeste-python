@@ -20,7 +20,7 @@ from celeste.providers.google.auth import GoogleADC  # noqa: E402
 @pytest.mark.parametrize(
     ("provider", "model", "parameters"),
     [
-        (Provider.OPENAI, "dall-e-2", {}),
+        (Provider.OPENAI, "gpt-image-1-mini", {}),
         (Provider.GOOGLE, "imagen-4.0-fast-generate-001", {"num_images": 1}),
         (Provider.BYTEPLUS, "seedream-4-0-250828", {}),
         (Provider.BFL, "flux-2-pro", {}),

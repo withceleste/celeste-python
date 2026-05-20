@@ -27,7 +27,7 @@ from celeste.providers.google.auth import GoogleADC  # noqa: E402
         # BytePlus Seedance: min duration 2s, 480p is cheapest
         (
             Provider.BYTEPLUS,
-            "seedance-1-0-lite-t2v-250428",
+            "seedance-1-0-pro-250528",
             {"duration": 2, "resolution": "480p"},
         ),
         # xAI Grok Imagine: duration 1-15s, 480p/720p
@@ -79,7 +79,7 @@ def test_sync_generate() -> None:
     client = create_client(
         modality=Modality.VIDEOS,
         provider=Provider.BYTEPLUS,
-        model="seedance-1-0-lite-t2v-250428",
+        model="seedance-1-0-pro-250528",
     )
 
     response = client.sync.generate(

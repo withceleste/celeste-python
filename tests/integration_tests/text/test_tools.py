@@ -22,7 +22,7 @@ SERVER_TOOL_MODELS = [
     ("anthropic", "claude-haiku-4-5"),
     ("openai", "gpt-4o-mini"),
     ("google", "gemini-2.5-flash"),
-    ("xai", "grok-4-fast-non-reasoning"),
+    ("xai", "grok-4.20-beta-0309-non-reasoning"),
 ]
 
 # One cheap model per provider for function tools (user-defined)
@@ -133,7 +133,9 @@ async def test_function_tool_call(provider: str, model_id: str) -> None:
 async def test_xai_x_search() -> None:
     """Test XSearch tool (xAI-only) produces a text response."""
     client = create_client(
-        modality=Modality.TEXT, provider="xai", model="grok-4-fast-non-reasoning"
+        modality=Modality.TEXT,
+        provider="xai",
+        model="grok-4.20-beta-0309-non-reasoning",
     )
 
     output = await client.generate(
