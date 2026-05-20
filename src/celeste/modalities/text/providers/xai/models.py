@@ -2,6 +2,7 @@
 
 from celeste.constraints import (
     Choice,
+    ImagesConstraint,
     Range,
     Schema,
     ToolChoiceSupport,
@@ -15,31 +16,48 @@ from ...parameters import TextParameter
 
 MODELS: list[Model] = [
     Model(
-        id="grok-4.20-beta-0309-reasoning",
+        id="grok-4.3",
         provider=Provider.XAI,
-        display_name="Grok 4.20 Beta 0309 Reasoning",
-        operations={Modality.TEXT: {Operation.GENERATE}},
+        display_name="Grok 4.3",
+        operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
         streaming=True,
         parameter_constraints={
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0),
-            Parameter.MAX_TOKENS: Range(min=1, max=30000),
+            Parameter.MAX_TOKENS: Range(min=1, max=131072),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch, XSearch, CodeExecution]),
             TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
             TextParameter.OUTPUT_SCHEMA: Schema(),
+            TextParameter.IMAGE: ImagesConstraint(),
         },
     ),
     Model(
-        id="grok-4.20-beta-0309-non-reasoning",
+        id="grok-4.20-0309-reasoning",
         provider=Provider.XAI,
-        display_name="Grok 4.20 Beta 0309 Non Reasoning",
-        operations={Modality.TEXT: {Operation.GENERATE}},
+        display_name="Grok 4.20 0309 Reasoning",
+        operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
         streaming=True,
         parameter_constraints={
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0),
-            Parameter.MAX_TOKENS: Range(min=1, max=30000),
+            Parameter.MAX_TOKENS: Range(min=1, max=131072),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch, XSearch, CodeExecution]),
             TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
             TextParameter.OUTPUT_SCHEMA: Schema(),
+            TextParameter.IMAGE: ImagesConstraint(),
+        },
+    ),
+    Model(
+        id="grok-4.20-0309-non-reasoning",
+        provider=Provider.XAI,
+        display_name="Grok 4.20 0309 Non Reasoning",
+        operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
+        streaming=True,
+        parameter_constraints={
+            Parameter.TEMPERATURE: Range(min=0.0, max=2.0),
+            Parameter.MAX_TOKENS: Range(min=1, max=131072),
+            TextParameter.TOOLS: ToolSupport(tools=[WebSearch, XSearch, CodeExecution]),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
+            TextParameter.OUTPUT_SCHEMA: Schema(),
+            TextParameter.IMAGE: ImagesConstraint(),
         },
     ),
     Model(

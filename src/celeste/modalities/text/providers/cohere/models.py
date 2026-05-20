@@ -8,6 +8,20 @@ from ...parameters import TextParameter
 
 MODELS: list[Model] = [
     Model(
+        id="command-a-plus-05-2026",
+        provider=Provider.COHERE,
+        display_name="Command A+ 05-2026",
+        operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
+        streaming=True,
+        parameter_constraints={
+            Parameter.TEMPERATURE: Range(min=0.0, max=1.0, step=0.01),
+            Parameter.MAX_TOKENS: Range(min=1, max=65536, step=1),
+            TextParameter.THINKING_BUDGET: Range(min=-1, max=65536),
+            TextParameter.OUTPUT_SCHEMA: Schema(),
+            TextParameter.IMAGE: ImagesConstraint(),
+        },
+    ),
+    Model(
         id="command-a-vision-07-2025",
         provider=Provider.COHERE,
         display_name="Command A Vision 07-2025",

@@ -4,7 +4,7 @@ Model IDs use lowercase format with version suffixes (e.g., seedance-1-0-pro-250
 Console display names differ from API model IDs.
 """
 
-from celeste.constraints import Choice, ImageConstraint, Range
+from celeste.constraints import Choice, ImageConstraint, ImagesConstraint, Range
 from celeste.core import Modality, Operation, Provider
 from celeste.mime_types import ImageMimeType
 from celeste.models import Model
@@ -62,6 +62,46 @@ MODELS: list[Model] = [
         parameter_constraints={
             VideoParameter.DURATION: Range(min=4, max=12),
             VideoParameter.RESOLUTION: Choice(options=["480p", "720p"]),
+            VideoParameter.FIRST_FRAME: ImageConstraint(
+                supported_mime_types=BYTEPLUS_SUPPORTED_MIME_TYPES,
+            ),
+            VideoParameter.LAST_FRAME: ImageConstraint(
+                supported_mime_types=BYTEPLUS_SUPPORTED_MIME_TYPES,
+            ),
+        },
+    ),
+    Model(
+        id="seedance-2-0-260128",
+        provider=Provider.BYTEPLUS,
+        operations={Modality.VIDEOS: {Operation.GENERATE}},
+        display_name="Seedance 2.0",
+        parameter_constraints={
+            VideoParameter.DURATION: Range(min=4, max=15),
+            VideoParameter.RESOLUTION: Choice(options=["480p", "720p"]),
+            VideoParameter.REFERENCE_IMAGES: ImagesConstraint(
+                supported_mime_types=BYTEPLUS_SUPPORTED_MIME_TYPES,
+                max_count=9,
+            ),
+            VideoParameter.FIRST_FRAME: ImageConstraint(
+                supported_mime_types=BYTEPLUS_SUPPORTED_MIME_TYPES,
+            ),
+            VideoParameter.LAST_FRAME: ImageConstraint(
+                supported_mime_types=BYTEPLUS_SUPPORTED_MIME_TYPES,
+            ),
+        },
+    ),
+    Model(
+        id="seedance-2-0-fast-260128",
+        provider=Provider.BYTEPLUS,
+        operations={Modality.VIDEOS: {Operation.GENERATE}},
+        display_name="Seedance 2.0 Fast",
+        parameter_constraints={
+            VideoParameter.DURATION: Range(min=4, max=15),
+            VideoParameter.RESOLUTION: Choice(options=["480p", "720p"]),
+            VideoParameter.REFERENCE_IMAGES: ImagesConstraint(
+                supported_mime_types=BYTEPLUS_SUPPORTED_MIME_TYPES,
+                max_count=9,
+            ),
             VideoParameter.FIRST_FRAME: ImageConstraint(
                 supported_mime_types=BYTEPLUS_SUPPORTED_MIME_TYPES,
             ),
