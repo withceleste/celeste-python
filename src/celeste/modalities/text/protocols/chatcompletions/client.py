@@ -3,8 +3,12 @@
 import json
 from typing import Any
 
-from pydantic import BaseModel
-
+from celeste.messages import (
+    content_to_text,
+    message_parts,
+    request_messages,
+    require_part,
+)
 from celeste.parameters import ParameterMapper
 from celeste.protocols.chatcompletions.client import (
     ChatCompletionsClient as ChatCompletionsMixin,
@@ -14,7 +18,7 @@ from celeste.protocols.chatcompletions.streaming import (
 )
 from celeste.protocols.chatcompletions.tools import parse_tool_calls
 from celeste.tools import ToolCall, ToolResult
-from celeste.types import Message, TextContent
+from celeste.types import DocumentPart, ImagePart, Message, Role, TextContent, TextPart
 from celeste.utils import build_document_data_url, build_image_data_url
 
 from ...client import TextClient
@@ -25,32 +29,56 @@ from ...streaming import TextStream
 from .parameters import CHATCOMPLETIONS_PARAMETER_MAPPERS
 
 
-def _chat_completions_text_messages(
-    messages: list[Message],
+def _serialize_content(content: Any) -> Any:
+    if isinstance(content, str):
+        return content
+    items: list[dict[str, Any]] = []
+    for part in message_parts(content):
+        require_part(
+            "Chat Completions",
+            part,
+            (TextPart, ImagePart, DocumentPart),
+        )
+        if isinstance(part, TextPart):
+            items.append({"type": "text", "text": part.text})
+        elif isinstance(part, ImagePart):
+            items.append(
+                {
+                    "type": "image_url",
+                    "image_url": {"url": build_image_data_url(part.image)},
+                }
+            )
+        elif isinstance(part, DocumentPart):
+            items.append(
+                {
+                    "type": "document_url",
+                    "document_url": build_document_data_url(part.document),
+                }
+            )
+    return items
+
+
+def _serialize_messages(
+    messages: list[Message | ToolResult],
 ) -> list[dict[str, Any]]:
     items: list[dict[str, Any]] = []
     for msg in messages:
         if isinstance(msg, ToolResult):
-            content = msg.content
-            if isinstance(content, BaseModel):
-                content = content.model_dump_json()
-            elif not isinstance(content, str):
-                content = json.dumps(content, default=str)
             items.append(
                 {
                     "role": "tool",
                     "tool_call_id": msg.tool_call_id,
-                    "content": content,
+                    "content": content_to_text(msg.content),
                 }
             )
-        elif msg.role == "assistant" and msg.tool_calls:
+        elif msg.role == Role.ASSISTANT and msg.tool_calls:
             msg_dict = msg.model_dump(
+                exclude={"content", "tool_calls", "reasoning", "signature"},
                 exclude_none=True,
                 mode="json",
                 serialize_as_any=True,
             )
-            msg_dict.pop("reasoning", None)
-            msg_dict.pop("signature", None)
+            msg_dict["content"] = _serialize_content(msg.content)
             msg_dict["tool_calls"] = [
                 {
                     "id": tc.id,
@@ -65,13 +93,12 @@ def _chat_completions_text_messages(
             items.append(msg_dict)
         else:
             msg_dict = msg.model_dump(
+                exclude={"content", "tool_calls", "reasoning", "signature"},
                 exclude_none=True,
                 mode="json",
                 serialize_as_any=True,
             )
-            msg_dict.pop("tool_calls", None)
-            msg_dict.pop("reasoning", None)
-            msg_dict.pop("signature", None)
+            msg_dict["content"] = _serialize_content(msg.content)
             items.append(msg_dict)
     return items
 
@@ -89,40 +116,15 @@ class ChatCompletionsTextClient(ChatCompletionsMixin, TextClient):
 
     def _init_request(self, inputs: TextInput) -> dict[str, Any]:
         """Initialize request with Chat Completions message format."""
-        if inputs.messages is not None:
-            return {"messages": _chat_completions_text_messages(inputs.messages)}
-
-        if inputs.image is None and inputs.document is None:
-            content: str | list[dict[str, Any]] = inputs.prompt or ""
-        else:
-            content = []
-            if inputs.image is not None:
-                images = (
-                    inputs.image if isinstance(inputs.image, list) else [inputs.image]
-                )
-                for img in images:
-                    content.append(
-                        {
-                            "type": "image_url",
-                            "image_url": {"url": build_image_data_url(img)},
-                        }
-                    )
-            if inputs.document is not None:
-                docs = (
-                    inputs.document
-                    if isinstance(inputs.document, list)
-                    else [inputs.document]
-                )
-                for doc in docs:
-                    content.append(
-                        {
-                            "type": "document_url",
-                            "document_url": build_document_data_url(doc),
-                        }
-                    )
-            content.append({"type": "text", "text": inputs.prompt or ""})
-
-        return {"messages": [{"role": "user", "content": content}]}
+        messages = request_messages(
+            prompt=inputs.prompt,
+            messages=inputs.messages,
+            image=inputs.image,
+            video=inputs.video,
+            audio=inputs.audio,
+            document=inputs.document,
+        )
+        return {"messages": _serialize_messages(messages)}
 
     def _parse_content(
         self,

@@ -1,0 +1,40 @@
+"""{Protocol} protocol tool mappers and shared parsing helpers."""
+
+from typing import Any
+
+from celeste.tools import Tool, ToolMapper
+
+
+# Add ToolMapper subclasses for protocol-native tools (web_search, code_execution, etc.).
+# Providers that override the wire format define their own tools.py.
+#
+# class WebSearchMapper(ToolMapper):
+#     tool_type = WebSearch
+#
+#     def map_tool(self, tool: Tool) -> dict[str, Any]:
+#         assert isinstance(tool, WebSearch)
+#         return {"type": "web_search"}
+
+TOOL_MAPPERS: list[ToolMapper] = []
+
+
+# Shared parsing helpers (optional)
+# Add when multiple providers share identical response/message formats.
+# Short names — file path provides context.
+#
+# import json
+# from celeste.tools import ToolCall, ToolResult
+# from celeste.types import Message
+#
+# def parse_tool_calls(response_data: dict[str, Any]) -> list[ToolCall]:
+#     """Parse tool calls from {Protocol} API response."""
+#     ...
+#
+# def serialize_messages(messages: list[Message | ToolResult]) -> list[dict[str, Any]]:
+#     """Serialize text-modality messages to {Protocol} API format."""
+#     ...
+
+
+__all__ = [
+    "TOOL_MAPPERS",
+]

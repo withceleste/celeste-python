@@ -3,8 +3,11 @@
 from typing import Any
 from uuid import uuid4
 
-from pydantic import BaseModel
-
+from celeste.messages import (
+    message_parts,
+    request_messages,
+    tool_result_object,
+)
 from celeste.parameters import ParameterMapper
 from celeste.providers.google.generate_content.client import GoogleGenerateContentClient
 from celeste.providers.google.generate_content.streaming import (
@@ -12,7 +15,15 @@ from celeste.providers.google.generate_content.streaming import (
 )
 from celeste.providers.google.utils import build_media_part
 from celeste.tools import ToolCall, ToolResult
-from celeste.types import TextContent
+from celeste.types import (
+    AudioPart,
+    DocumentPart,
+    ImagePart,
+    Role,
+    TextContent,
+    TextPart,
+    VideoPart,
+)
 
 from ...client import TextClient
 from ...io import TextInput
@@ -67,102 +78,73 @@ class GoogleTextClient(GoogleGenerateContentClient, TextClient):
 
     def _init_request(self, inputs: TextInput) -> dict[str, Any]:
         """Initialize request from Google contents array format."""
-        # If messages provided, use them with special handling for system/developer
-        if inputs.messages is not None:
 
-            def normalize_part(part: Any) -> dict[str, Any]:
-                """Normalize a content part to Google's format."""
-                if isinstance(part, str):
-                    return {"text": part}
-                if isinstance(part, dict):
-                    return part
-                return {"text": str(part)}
+        def content_to_parts(content: Any) -> list[dict[str, Any]]:
+            """Convert message content to Google parts array."""
+            parts: list[dict[str, Any]] = []
+            for part in message_parts(content):
+                if isinstance(part, TextPart):
+                    parts.append({"text": part.text})
+                elif isinstance(part, ImagePart):
+                    parts.append(build_media_part(part.image))
+                elif isinstance(part, VideoPart):
+                    parts.append(build_media_part(part.video))
+                elif isinstance(part, AudioPart):
+                    parts.append(build_media_part(part.audio))
+                elif isinstance(part, DocumentPart):
+                    parts.append(build_media_part(part.document))
+            return parts
 
-            def content_to_parts(content: Any) -> list[dict[str, Any]]:
-                """Convert message content to Google parts array."""
-                if isinstance(content, str):
-                    return [{"text": content}]
-                if isinstance(content, list):
-                    return [normalize_part(p) for p in content]
-                return [normalize_part(content)]
+        system_parts: list[dict[str, Any]] = []
+        contents: list[dict[str, Any]] = []
 
-            system_parts: list[dict[str, Any]] = []
-            contents: list[dict[str, Any]] = []
-
-            for msg in inputs.messages:
-                if msg.role in ("system", "developer"):
-                    system_parts.extend(content_to_parts(msg.content))
-                elif isinstance(msg, ToolResult):
-                    content = msg.content
-                    if isinstance(content, BaseModel):
-                        content = content.model_dump(mode="json")
-                    contents.append(
-                        {
-                            "role": "user",
-                            "parts": [
-                                {
-                                    "functionResponse": {
-                                        "name": msg.name,
-                                        "response": {"result": content},
-                                    }
-                                }
-                            ],
-                        }
-                    )
-                else:
-                    role = "model" if msg.role == "assistant" else msg.role
-                    sig_blocks = msg.signature
-                    msg_parts = list(sig_blocks) if sig_blocks else []
-                    msg_parts.extend(content_to_parts(msg.content))
-                    if msg.tool_calls:
-                        for tc in msg.tool_calls:
-                            part: dict[str, Any] = {
-                                "functionCall": {
-                                    "name": tc.name,
-                                    "args": tc.arguments,
+        for msg in request_messages(
+            prompt=inputs.prompt,
+            messages=inputs.messages,
+            image=inputs.image,
+            video=inputs.video,
+            audio=inputs.audio,
+            document=inputs.document,
+        ):
+            if msg.role in {Role.SYSTEM, Role.DEVELOPER}:
+                system_parts.extend(content_to_parts(msg.content))
+            elif isinstance(msg, ToolResult):
+                contents.append(
+                    {
+                        "role": "user",
+                        "parts": [
+                            {
+                                "functionResponse": {
+                                    "name": msg.name,
+                                    "response": {"result": tool_result_object(msg)},
                                 }
                             }
-                            thought_sig = getattr(tc, "thoughtSignature", None)
-                            if thought_sig:
-                                part["thoughtSignature"] = thought_sig
-                            msg_parts.append(part)
-                    contents.append({"role": role, "parts": msg_parts})
+                        ],
+                    }
+                )
+            else:
+                role = "model" if msg.role == Role.ASSISTANT else msg.role
+                sig_blocks = msg.signature
+                msg_parts = list(sig_blocks) if sig_blocks else []
+                msg_parts.extend(content_to_parts(msg.content))
+                if msg.tool_calls:
+                    for tc in msg.tool_calls:
+                        part: dict[str, Any] = {
+                            "functionCall": {
+                                "name": tc.name,
+                                "args": tc.arguments,
+                            }
+                        }
+                        thought_sig = getattr(tc, "thoughtSignature", None)
+                        if thought_sig:
+                            part["thoughtSignature"] = thought_sig
+                        msg_parts.append(part)
+                contents.append({"role": role, "parts": msg_parts})
 
-            result: dict[str, Any] = {"contents": contents}
-            if system_parts:
-                result["system_instruction"] = {"parts": system_parts}
-            return result
-
-        # Fall back to prompt-based input
-        parts: list[dict[str, Any]] = []
-
-        if inputs.image is not None:
-            images = inputs.image if isinstance(inputs.image, list) else [inputs.image]
-            for img in images:
-                parts.append(build_media_part(img))
-
-        if inputs.video is not None:
-            videos = inputs.video if isinstance(inputs.video, list) else [inputs.video]
-            for vid in videos:
-                parts.append(build_media_part(vid))
-
-        if inputs.audio is not None:
-            audios = inputs.audio if isinstance(inputs.audio, list) else [inputs.audio]
-            for aud in audios:
-                parts.append(build_media_part(aud))
-
-        if inputs.document is not None:
-            docs = (
-                inputs.document
-                if isinstance(inputs.document, list)
-                else [inputs.document]
-            )
-            for doc in docs:
-                parts.append(build_media_part(doc))
-
-        parts.append({"text": inputs.prompt or ""})
-
-        return {"contents": [{"role": "user", "parts": parts}]}
+        result: dict[str, Any] = {"contents": contents}
+        if system_parts:
+            result["system_instruction"] = {"parts": system_parts}
+        return result
 
     def _parse_content(
         self,

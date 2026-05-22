@@ -74,11 +74,38 @@ class TestInputMessagesEvent:
 
         assert result is not None
         parts = json.loads(result["messages"])[0]["parts"]
-        assert parts[0]["type"] == "text"
-        image_parts = [p for p in parts if p["type"] == "image"]
-        assert len(image_parts) == 1
-        assert image_parts[0]["uri"] == "https://example.com/img.png"
-        assert image_parts[0]["mime_type"] == "image/png"
+        assert parts[0]["type"] == "image"
+        assert parts[0]["uri"] == "https://example.com/img.png"
+        assert parts[0]["mime_type"] == "image/png"
+        assert parts[1]["type"] == "text"
+        assert parts[1]["content"] == "describe this"
+
+    def test_media_only_input_emitted_as_user_message(
+        self, capture_enabled: None
+    ) -> None:
+        """Media without a prompt still produces a user message."""
+        result = telemetry._input_messages_event(
+            TextInput(
+                image=ImageArtifact(
+                    url="https://example.com/img.png", mime_type=ImageMimeType.PNG
+                )
+            )
+        )
+
+        assert result is not None
+        messages = json.loads(result["messages"])
+        assert messages == [
+            {
+                "role": "user",
+                "parts": [
+                    {
+                        "type": "image",
+                        "uri": "https://example.com/img.png",
+                        "mime_type": "image/png",
+                    }
+                ],
+            }
+        ]
 
 
 class TestOutputMessagesEvent:

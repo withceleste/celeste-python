@@ -4,7 +4,7 @@ import json
 
 from pydantic import BaseModel, SecretStr
 
-from celeste import Message, Model, Role
+from celeste import Model
 from celeste.auth import AuthHeader
 from celeste.core import InputType, Modality, Operation, Provider
 from celeste.modalities.text.io import TextInput
@@ -122,7 +122,7 @@ def test_google_tool_result_uses_pydantic_json_object() -> None:
     assert result == output.model_dump(mode="json")
 
 
-def test_cohere_message_content_preserves_pydantic_shape() -> None:
+def test_cohere_tool_result_preserves_pydantic_shape() -> None:
     output = _artifact_output()
     client = CohereTextClient(
         model=_text_model(Provider.COHERE),
@@ -130,8 +130,6 @@ def test_cohere_message_content_preserves_pydantic_shape() -> None:
         auth=AuthHeader(secret=SecretStr("test")),
     )
 
-    request = client._init_request(
-        TextInput(messages=[Message(role=Role.USER, content=output)])
-    )
+    request = client._init_request(TextInput(messages=[_tool_result(output)]))
 
     assert request["messages"][0]["content"] == output.model_dump(mode="json")

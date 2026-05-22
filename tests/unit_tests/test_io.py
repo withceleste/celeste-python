@@ -4,7 +4,9 @@ from typing import cast, get_args, get_origin
 
 from celeste.artifacts import AudioArtifact, ImageArtifact, VideoArtifact
 from celeste.constraints import (
+    AudioConstraint,
     Bool,
+    DocumentsConstraint,
     ImageConstraint,
     Str,
     VideoConstraint,
@@ -79,6 +81,18 @@ class TestGetConstraintInputType:
         constraint = VideosConstraint()
         result = get_constraint_input_type(constraint)
         assert result == InputType.VIDEO
+
+    def test_get_constraint_input_type_with_audio_constraint(self) -> None:
+        """Test that get_constraint_input_type extracts InputType from AudioConstraint."""
+        constraint = AudioConstraint()
+        result = get_constraint_input_type(constraint)
+        assert result == InputType.AUDIO
+
+    def test_get_constraint_input_type_with_documents_constraint(self) -> None:
+        """Test that get_constraint_input_type extracts InputType from DocumentsConstraint."""
+        constraint = DocumentsConstraint()
+        result = get_constraint_input_type(constraint)
+        assert result == InputType.DOCUMENT
 
     def test_get_constraint_input_type_with_str_constraint_returns_text(self) -> None:
         """Test that get_constraint_input_type returns TEXT for Str constraint."""

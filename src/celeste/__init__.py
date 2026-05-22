@@ -46,7 +46,18 @@ from celeste.tools import (
     WebSearch,
     XSearch,
 )
-from celeste.types import Content, Message, Role
+from celeste.types import (
+    AudioPart,
+    DocumentPart,
+    ImagePart,
+    Message,
+    MessageContent,
+    MessagePart,
+    Role,
+    TextPart,
+    ToolResultContent,
+    VideoPart,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -277,13 +288,17 @@ def create_client(
 
 __all__ = [
     "APIKey",
+    "AudioPart",
     "Authentication",
     "Capability",
     "CodeExecution",
-    "Content",
+    "DocumentPart",
     "Error",
+    "ImagePart",
     "Input",
     "Message",
+    "MessageContent",
+    "MessagePart",
     "Modality",
     "Model",
     "Operation",
@@ -291,13 +306,16 @@ __all__ = [
     "Protocol",
     "Provider",
     "Role",
+    "TextPart",
     "Tool",
     "ToolCall",
     "ToolChoice",
     "ToolError",
     "ToolOutput",
     "ToolResult",
+    "ToolResultContent",
     "Usage",
+    "VideoPart",
     "WebSearch",
     "XSearch",
     "audio",

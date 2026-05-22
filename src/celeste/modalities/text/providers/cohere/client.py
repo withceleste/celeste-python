@@ -2,12 +2,19 @@
 
 from typing import Any
 
+from celeste.messages import (
+    message_parts,
+    request_messages,
+    require_part,
+    tool_result_object,
+)
 from celeste.parameters import ParameterMapper
 from celeste.providers.cohere.chat.client import CohereChatClient
 from celeste.providers.cohere.chat.streaming import (
     CohereChatStream as _CohereChatStream,
 )
-from celeste.types import TextContent
+from celeste.tools import ToolResult
+from celeste.types import ImagePart, TextContent, TextPart
 from celeste.utils import build_image_data_url
 
 from ...client import TextClient
@@ -31,34 +38,51 @@ class CohereTextClient(CohereChatClient, TextClient):
 
     def _init_request(self, inputs: TextInput) -> dict[str, Any]:
         """Initialize request from Cohere v2 Chat API messages array format."""
-        # If messages provided, use them directly (messages take precedence)
-        if inputs.messages is not None:
-            return {
-                "messages": [
-                    message.model_dump(
-                        exclude_none=True,
-                        mode="json",
-                        serialize_as_any=True,
+
+        def cohere_content(content: Any) -> Any:
+            if isinstance(content, str):
+                return content
+            items: list[dict[str, Any]] = []
+            for part in message_parts(content):
+                require_part("Cohere", part, (TextPart, ImagePart))
+                if isinstance(part, TextPart):
+                    items.append({"type": "text", "text": part.text})
+                elif isinstance(part, ImagePart):
+                    items.append(
+                        {
+                            "type": "image_url",
+                            "image_url": {"url": build_image_data_url(part.image)},
+                        }
                     )
-                    for message in inputs.messages
-                ]
-            }
+            return items
 
-        # Fall back to prompt-based input
-        if inputs.image is None:
-            content: str | list[dict[str, Any]] = inputs.prompt or ""
-        else:
-            images = inputs.image if isinstance(inputs.image, list) else [inputs.image]
-            content = [
-                {
-                    "type": "image_url",
-                    "image_url": {"url": build_image_data_url(img)},
-                }
-                for img in images
-            ]
-            content.append({"type": "text", "text": inputs.prompt or ""})
-
-        return {"messages": [{"role": "user", "content": content}]}
+        messages = []
+        for message in request_messages(
+            prompt=inputs.prompt,
+            messages=inputs.messages,
+            image=inputs.image,
+            video=inputs.video,
+            audio=inputs.audio,
+            document=inputs.document,
+        ):
+            if isinstance(message, ToolResult):
+                msg = message.model_dump(
+                    exclude={"content"},
+                    exclude_none=True,
+                    mode="json",
+                    serialize_as_any=True,
+                )
+                msg["content"] = tool_result_object(message)
+            else:
+                msg = message.model_dump(
+                    exclude={"content", "tool_calls", "reasoning", "signature"},
+                    exclude_none=True,
+                    mode="json",
+                    serialize_as_any=True,
+                )
+                msg["content"] = cohere_content(message.content)
+            messages.append(msg)
+        return {"messages": messages}
 
     def _parse_content(
         self,
