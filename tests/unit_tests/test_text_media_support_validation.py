@@ -4,12 +4,23 @@ import pytest
 from pydantic import SecretStr
 
 from celeste import Model
-from celeste.artifacts import DocumentArtifact, ImageArtifact, VideoArtifact
+from celeste.artifacts import (
+    AudioArtifact,
+    DocumentArtifact,
+    ImageArtifact,
+    VideoArtifact,
+)
 from celeste.auth import AuthHeader
-from celeste.constraints import DocumentsConstraint, ImagesConstraint, VideosConstraint
+from celeste.constraints import (
+    AudioConstraint,
+    DocumentsConstraint,
+    ImagesConstraint,
+    VideosConstraint,
+)
 from celeste.core import InputType, Modality, Operation, Provider
 from celeste.modalities.text.parameters import TextParameter
 from celeste.modalities.text.providers.google.client import GoogleTextClient
+from celeste.types import ImagePart, Message, Role, TextPart
 
 
 @pytest.fixture
@@ -58,6 +69,21 @@ def model_with_document_support() -> Model:
 
 
 @pytest.fixture
+def model_with_audio_support() -> Model:
+    """Model that declares audio support."""
+    return Model(
+        id="test-audio",
+        provider=Provider.GOOGLE,
+        display_name="Test Audio",
+        operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
+        streaming=True,
+        parameter_constraints={
+            TextParameter.AUDIO: AudioConstraint(),
+        },
+    )
+
+
+@pytest.fixture
 def model_without_media_support() -> Model:
     """Model that declares no media support."""
     return Model(
@@ -79,6 +105,7 @@ def google_auth() -> AuthHeader:
 def test_model_optional_input_types_computed_from_constraints(
     model_with_image_support: Model,
     model_with_video_support: Model,
+    model_with_audio_support: Model,
     model_without_media_support: Model,
 ) -> None:
     """Verify optional_input_types is correctly computed from parameter_constraints."""
@@ -87,6 +114,9 @@ def test_model_optional_input_types_computed_from_constraints(
 
     assert InputType.VIDEO in model_with_video_support.optional_input_types
     assert InputType.IMAGE not in model_with_video_support.optional_input_types
+
+    assert InputType.AUDIO in model_with_audio_support.optional_input_types
+    assert InputType.IMAGE not in model_with_audio_support.optional_input_types
 
     assert InputType.IMAGE not in model_without_media_support.optional_input_types
     assert InputType.VIDEO not in model_without_media_support.optional_input_types
@@ -207,6 +237,24 @@ def test_check_media_support_allows_document_when_declared(
     )
 
 
+def test_check_media_support_allows_audio_when_declared(
+    model_with_audio_support: Model,
+    google_auth: AuthHeader,
+) -> None:
+    """Audio input should be allowed when model declares AudioConstraint."""
+    client = GoogleTextClient(
+        model=model_with_audio_support,
+        provider=Provider.GOOGLE,
+        auth=google_auth,
+    )
+
+    client._check_media_support(
+        image=None,
+        video=None,
+        audio=AudioArtifact(data=b"test"),
+    )
+
+
 def test_check_media_support_rejects_document_when_not_declared(
     model_without_media_support: Model,
     google_auth: AuthHeader,
@@ -240,3 +288,40 @@ def test_check_media_support_allows_none_values(
 
     # Should not raise - no media provided
     client._check_media_support(image=None, video=None, audio=None)
+
+
+def test_check_media_support_rejects_message_image_when_not_declared(
+    model_without_media_support: Model,
+    google_auth: AuthHeader,
+) -> None:
+    """Media inside messages should be validated like top-level media."""
+    client = GoogleTextClient(
+        model=model_without_media_support,
+        provider=Provider.GOOGLE,
+        auth=google_auth,
+    )
+    message = Message(
+        role=Role.USER,
+        content=[TextPart(text="look"), ImagePart(image=ImageArtifact(data=b"test"))],
+    )
+
+    with pytest.raises(NotImplementedError, match="does not support image input"):
+        client._check_media_support(messages=[message])
+
+
+def test_check_media_support_allows_message_image_when_declared(
+    model_with_image_support: Model,
+    google_auth: AuthHeader,
+) -> None:
+    """Message media should pass when the model declares support."""
+    client = GoogleTextClient(
+        model=model_with_image_support,
+        provider=Provider.GOOGLE,
+        auth=google_auth,
+    )
+    message = Message(
+        role=Role.USER,
+        content=[TextPart(text="look"), ImagePart(image=ImageArtifact(data=b"test"))],
+    )
+
+    client._check_media_support(messages=[message])

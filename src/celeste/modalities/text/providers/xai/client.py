@@ -33,7 +33,11 @@ class XAITextClient(XAIResponsesClient, OpenResponsesTextClient):
 
     def _init_request(self, inputs: TextInput) -> dict[str, Any]:
         """xAI accepts plain string input for text-only requests."""
-        if inputs.messages is None and inputs.image is None:
+        has_media = any(
+            media is not None
+            for media in (inputs.image, inputs.video, inputs.audio, inputs.document)
+        )
+        if inputs.messages is None and not has_media:
             return {"input": inputs.prompt or ""}
         return super()._init_request(inputs)
 

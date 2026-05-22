@@ -12,6 +12,7 @@ from typing import Any
 from pydantic import Field
 
 from celeste.io import Chunk, FinishReason, Input, Output, Usage
+from celeste.messages import content_to_text
 from celeste.tools import ToolResult
 from celeste.types import (
     AudioContent,
@@ -28,7 +29,7 @@ class TextInput(Input):
     """Input for text operations."""
 
     prompt: str | None = None
-    messages: list[ToolResult | Message] | None = None
+    messages: list[Message | ToolResult] | None = None
     text: str | list[str] | None = None
     image: ImageContent | None = None
     video: VideoContent | None = None
@@ -66,7 +67,7 @@ class TextOutput(Output[TextContent]):
         """The assistant message for multi-turn conversations."""
         return Message(
             role=Role.ASSISTANT,
-            content=self.content,
+            content=content_to_text(self.content),
             tool_calls=self.tool_calls if self.tool_calls else None,
             reasoning=self.reasoning,
             signature=self.signature,

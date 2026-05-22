@@ -1,0 +1,93 @@
+{
+  "skill_name": "celeste-python",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Integrate Celeste into an app endpoint that generates text, analyzes uploaded images, and lists available text generation models. Keep the integration thin and type-safe.",
+      "expected_output": "Uses namespace-first public APIs or create_client only where explicit reuse is needed; imports Celeste public types; uses list_models for discovery; avoids local provider/model/role/MIME registries.",
+      "files": [],
+      "expectations": [
+        "Uses celeste.text or celeste.images namespace APIs for app-side operations unless create_client is justified.",
+        "Uses list_models with Modality and Operation instead of a hard-coded app-side model catalog.",
+        "Uses Celeste artifacts, MIME enums, Message, Role, Provider, Modality, and Operation where those concepts appear.",
+        "Does not patch or mutate Celeste internals from app code."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Add support for a new hypothetical text provider named AcmeAI that exposes an OpenAI-compatible chat completions API. Describe or implement the files and tests needed in celeste-python.",
+      "expected_output": "Follows SDK seams: Provider enum, provider auth registration, provider API or protocol reuse, modality provider client/map, model definitions and aggregation, parameter mappers where needed, and focused tests.",
+      "files": [],
+      "expectations": [
+        "Identifies Provider enum registration in src/celeste/core.py.",
+        "Identifies provider auth registration under src/celeste/providers/acmeai/__init__.py.",
+        "Uses a concrete provider API package or the chat completions protocol seam instead of inventing a flat request stack.",
+        "Updates modality text provider registration and model aggregation.",
+        "Defines models with operations and parameter_constraints.",
+        "Selects focused tests such as test_provider_api_templates.py, test_init.py, test_models.py, and parameter/client tests as relevant."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Review this Celeste integration: it defines local Provider and Role enums as strings, keeps a hard-coded BACKEND_MODELS list, maps file extensions to raw MIME strings, and registers unknown models at runtime before calling Celeste. Identify what is wrong and how to fix it.",
+      "expected_output": "Flags app-side duplication and registry mutation, recommends Celeste public enums/types/model discovery/MIME enums, and scopes warnings so SDK-internal registry work is not incorrectly banned.",
+      "files": [],
+      "expectations": [
+        "Flags local Provider and Role enums as duplicates of Celeste-owned concepts.",
+        "Recommends list_models or existing host discovery instead of a hard-coded model catalog.",
+        "Recommends Celeste MIME enums and artifact types instead of raw MIME string maps where applicable.",
+        "Rejects app-side runtime model registry patching while noting SDK-internal model definitions are legitimate.",
+        "Grounds review claims in current Celeste source or skill references rather than memory alone."
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "A chat app wants to send an uploaded image and user text to a Celeste text model with native multimodal input. Show the Celeste message shape it should build.",
+      "expected_output": "Builds Message(content=[TextPart(...), ImagePart(image=ImageArtifact(...))]) or equivalent ordered MessagePart list; does not pass raw ImageArtifact in content; does not define app-local ImagePart or MessageContent types.",
+      "files": [],
+      "expectations": [
+        "Uses Celeste Message, Role, TextPart, ImagePart, and ImageArtifact.",
+        "Represents media through ordered MessagePart wrappers inside Message.content.",
+        "Does not pass raw artifacts or mixed raw lists as Message.content.",
+        "Does not create app-local duplicate multimodal message models."
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "Implement a multi-turn text conversation that sends a previous tool result back to the model. The tool result contains structured JSON.",
+      "expected_output": "Uses ToolResult as a separate message-list item with structured content in ToolResult.content; does not subclass or wrap it as Message; keeps normal Message.content narrow.",
+      "files": [],
+      "expectations": [
+        "Uses ToolResult directly in the text messages list.",
+        "Keeps structured tool payloads in ToolResult.content.",
+        "Does not treat ToolResult as a Message subclass.",
+        "Does not put structured Pydantic payloads in normal Message.content."
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "Configure Celeste to call a custom OpenAI-compatible text endpoint using base_url and protocol. Explain what modalities this supports today.",
+      "expected_output": "Uses create_client with Modality.TEXT plus protocol/base_url; states protocol-based compatible client support is currently text-only; distinguishes root protocol mixins from text modality protocol clients.",
+      "files": [],
+      "expectations": [
+        "Uses create_client with modality=Modality.TEXT and protocol/base_url.",
+        "States compatible protocol client support is currently text-only.",
+        "Does not imply protocol= works for images, audio, videos, documents, or embeddings.",
+        "Mentions text-specific protocol clients under src/celeste/modalities/text/protocols when discussing SDK internals."
+      ]
+    },
+    {
+      "id": 7,
+      "prompt": "Review a provider/template change that added extra_headers support only in one provider client file. What else should be checked?",
+      "expected_output": "Checks templates, provider API mixins, parameter mappers/constraints if public, focused tests, and streaming/telemetry preservation when relevant.",
+      "files": [],
+      "expectations": [
+        "Points to templates as source of truth for generated provider/module shape.",
+        "Checks provider API mixin and concrete modality provider seams.",
+        "Considers parameter mapper and model constraint updates if extra_headers is public configuration.",
+        "Selects focused tests from references/verification.md instead of guessing from memory.",
+        "Does not run mutating commands unless mutation is intended."
+      ]
+    }
+  ]
+}

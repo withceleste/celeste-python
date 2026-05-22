@@ -3,8 +3,13 @@
 import json
 from typing import Any
 
-from pydantic import BaseModel
-
+from celeste.artifacts import DocumentArtifact
+from celeste.messages import (
+    content_to_text,
+    message_parts,
+    request_messages,
+    require_part,
+)
 from celeste.parameters import ParameterMapper
 from celeste.protocols.openresponses.client import (
     OpenResponsesClient as OpenResponsesMixin,
@@ -18,7 +23,7 @@ from celeste.protocols.openresponses.tools import (
     parse_tool_calls,
 )
 from celeste.tools import ToolCall, ToolResult
-from celeste.types import Message, TextContent
+from celeste.types import DocumentPart, ImagePart, Message, Role, TextContent, TextPart
 from celeste.utils import build_document_data_url, build_image_data_url
 
 from ...client import TextClient
@@ -30,28 +35,61 @@ from ...streaming import TextStream
 from .parameters import OPENRESPONSES_PARAMETER_MAPPERS
 
 
-def _openresponses_text_input_messages(
-    messages: list[Message],
+def _input_file(document: DocumentArtifact) -> dict[str, Any]:
+    if document.url and not document.data and not document.path:
+        return {"type": "input_file", "file_url": document.url}
+    return {
+        "type": "input_file",
+        "filename": document.path.rsplit("/", 1)[-1] if document.path else "document",
+        "file_data": build_document_data_url(document),
+    }
+
+
+def _serialize_content(content: Any) -> Any:
+    if isinstance(content, str):
+        return content
+    items: list[dict[str, Any]] = []
+    for part in message_parts(content):
+        require_part(
+            "OpenResponses",
+            part,
+            (TextPart, ImagePart, DocumentPart),
+        )
+        if isinstance(part, TextPart):
+            items.append({"type": "input_text", "text": part.text})
+        elif isinstance(part, ImagePart):
+            items.append(
+                {"type": "input_image", "image_url": build_image_data_url(part.image)}
+            )
+        elif isinstance(part, DocumentPart):
+            items.append(_input_file(part.document))
+    return items
+
+
+def _serialize_messages(
+    messages: list[Message | ToolResult],
 ) -> list[dict[str, Any]]:
     items: list[dict[str, Any]] = []
     for msg in messages:
         if isinstance(msg, ToolResult):
-            content = msg.content
-            if isinstance(content, BaseModel):
-                content = content.model_dump_json()
-            elif not isinstance(content, str):
-                content = json.dumps(content, default=str)
             items.append(
                 {
                     "type": "function_call_output",
                     "call_id": msg.tool_call_id,
-                    "output": content,
+                    "output": content_to_text(msg.content),
                 }
             )
-        elif msg.role == "assistant" and (msg.tool_calls or msg.signature):
+        elif msg.role == Role.ASSISTANT and (msg.tool_calls or msg.signature):
             sig_blocks = msg.signature
             if sig_blocks:
                 items.extend(sig_blocks)
+            if msg.content:
+                items.append(
+                    {
+                        "role": msg.role,
+                        "content": _serialize_content(msg.content),
+                    }
+                )
             if msg.tool_calls:
                 for tc in msg.tool_calls:
                     items.append(
@@ -64,13 +102,12 @@ def _openresponses_text_input_messages(
                     )
         else:
             msg_dict = msg.model_dump(
+                exclude={"content", "tool_calls", "reasoning", "signature"},
                 exclude_none=True,
                 mode="json",
                 serialize_as_any=True,
             )
-            msg_dict.pop("tool_calls", None)
-            msg_dict.pop("reasoning", None)
-            msg_dict.pop("signature", None)
+            msg_dict["content"] = _serialize_content(msg.content)
             items.append(msg_dict)
     return items
 
@@ -126,39 +163,15 @@ class OpenResponsesTextClient(OpenResponsesMixin, TextClient):
 
     def _init_request(self, inputs: TextInput) -> dict[str, Any]:
         """Initialize request with input content."""
-        if inputs.messages is not None:
-            return {"input": _openresponses_text_input_messages(inputs.messages)}
-
-        content: list[dict[str, Any]] = []
-        if inputs.image is not None:
-            images = inputs.image if isinstance(inputs.image, list) else [inputs.image]
-            for img in images:
-                content.append(
-                    {"type": "input_image", "image_url": build_image_data_url(img)}
-                )
-
-        if inputs.document is not None:
-            docs = (
-                inputs.document
-                if isinstance(inputs.document, list)
-                else [inputs.document]
-            )
-            for doc in docs:
-                if doc.url and not doc.data and not doc.path:
-                    content.append({"type": "input_file", "file_url": doc.url})
-                else:
-                    content.append(
-                        {
-                            "type": "input_file",
-                            "filename": doc.path.rsplit("/", 1)[-1]
-                            if doc.path
-                            else "document",
-                            "file_data": build_document_data_url(doc),
-                        }
-                    )
-
-        content.append({"type": "input_text", "text": inputs.prompt or ""})
-        return {"input": [{"role": "user", "content": content}]}
+        messages = request_messages(
+            prompt=inputs.prompt,
+            messages=inputs.messages,
+            image=inputs.image,
+            video=inputs.video,
+            audio=inputs.audio,
+            document=inputs.document,
+        )
+        return {"input": _serialize_messages(messages)}
 
     def _parse_content(
         self,

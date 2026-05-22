@@ -8,7 +8,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from pydantic import ValidationError as PydanticValidationError
 
 from celeste.exceptions import ValidationError
-from celeste.types import Message, Role, ToolCall
+from celeste.types import Role, ToolCall, ToolResultContent
 
 
 class Tool(BaseModel):
@@ -123,10 +123,13 @@ class ToolChoice(StrEnum):
 type ToolChoiceOption = ToolChoice | ToolDefinition
 
 
-class ToolResult(Message):
+class ToolResult(BaseModel):
     """A tool result for multi-turn tool use."""
 
+    model_config = ConfigDict(extra="allow")
+
     role: Role = Role.USER
+    content: ToolResultContent
     tool_call_id: str
     name: str | None = None
 
@@ -157,6 +160,7 @@ __all__ = [
     "ToolMapper",
     "ToolOutput",
     "ToolResult",
+    "ToolResultContent",
     "WebSearch",
     "XSearch",
     "validate_tool_calls",

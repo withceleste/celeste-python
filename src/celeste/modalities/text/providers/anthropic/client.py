@@ -2,12 +2,15 @@
 
 import base64
 import contextlib
-import json
 from typing import Any
 
-from pydantic import BaseModel
-
 from celeste.artifacts import DocumentArtifact, ImageArtifact
+from celeste.messages import (
+    content_to_text,
+    message_parts,
+    request_messages,
+    require_part,
+)
 from celeste.mime_types import ImageMimeType
 from celeste.parameters import ParameterMapper
 from celeste.providers.anthropic.messages.client import AnthropicMessagesClient
@@ -15,7 +18,7 @@ from celeste.providers.anthropic.messages.streaming import (
     AnthropicMessagesStream as _AnthropicMessagesStream,
 )
 from celeste.tools import ToolCall, ToolResult
-from celeste.types import TextContent
+from celeste.types import DocumentPart, ImagePart, Role, TextContent, TextPart
 from celeste.utils import detect_mime_type
 
 from ...client import TextClient
@@ -119,102 +122,96 @@ class AnthropicTextClient(AnthropicMessagesClient, TextClient):
 
     def _init_request(self, inputs: TextInput) -> dict[str, Any]:
         """Initialize request from Anthropic Messages API format."""
-        if inputs.messages is not None:
-            system_blocks: list[dict[str, Any]] = []
-            messages: list[dict[str, Any]] = []
-            pending_tool_results: list[dict[str, Any]] = []
 
-            for message in inputs.messages:
-                role = message.role
-                content = message.content
-
-                if role in {"system", "developer"}:
-                    if isinstance(content, list):
-                        for block in content:
-                            if isinstance(block, dict):
-                                system_blocks.append(block)
-                            else:
-                                system_blocks.append(
-                                    {"type": "text", "text": str(block)}
-                                )
-                    elif isinstance(content, dict):
-                        system_blocks.append(content)
-                    elif content is not None:
-                        system_blocks.append({"type": "text", "text": str(content)})
-                    continue
-
-                if isinstance(message, ToolResult):
-                    if isinstance(content, BaseModel):
-                        content = content.model_dump_json()
-                    elif not isinstance(content, str):
-                        content = json.dumps(content, default=str)
-                    pending_tool_results.append(
+        def content_to_blocks(content: Any) -> list[dict[str, Any]]:
+            blocks: list[dict[str, Any]] = []
+            for part in message_parts(content):
+                require_part(
+                    "Anthropic",
+                    part,
+                    (TextPart, ImagePart, DocumentPart),
+                )
+                if isinstance(part, TextPart):
+                    blocks.append({"type": "text", "text": part.text})
+                elif isinstance(part, ImagePart):
+                    blocks.append(
                         {
-                            "type": "tool_result",
-                            "tool_use_id": message.tool_call_id,
-                            "content": content,
+                            "type": "image",
+                            "source": self._build_image_source(part.image),
                         }
                     )
-                    continue
+                elif isinstance(part, DocumentPart):
+                    blocks.append(
+                        {
+                            "type": "document",
+                            "source": self._build_document_source(part.document),
+                        }
+                    )
+            return blocks
 
-                # Flush pending tool results as a single user message
-                if pending_tool_results:
-                    messages.append({"role": "user", "content": pending_tool_results})
-                    pending_tool_results = []
+        system_blocks: list[dict[str, Any]] = []
+        messages: list[dict[str, Any]] = []
+        pending_tool_results: list[dict[str, Any]] = []
 
-                if role == "assistant" and (message.tool_calls or message.signature):
-                    content_blocks: list[dict[str, Any]] = []
-                    sig_blocks = message.signature
-                    if sig_blocks:
-                        content_blocks.extend(sig_blocks)
-                    if content:
-                        content_blocks.append({"type": "text", "text": str(content)})
-                    if message.tool_calls:
-                        for tc in message.tool_calls:
-                            content_blocks.append(
-                                {
-                                    "type": "tool_use",
-                                    "id": tc.id,
-                                    "name": tc.name,
-                                    "input": tc.arguments,
-                                }
-                            )
-                    messages.append({"role": "assistant", "content": content_blocks})
-                else:
-                    messages.append({"role": role, "content": content})
+        for message in request_messages(
+            prompt=inputs.prompt,
+            messages=inputs.messages,
+            image=inputs.image,
+            video=inputs.video,
+            audio=inputs.audio,
+            document=inputs.document,
+        ):
+            role = message.role
+            content = message.content
 
-            # Flush remaining tool results
+            if role in {Role.SYSTEM, Role.DEVELOPER}:
+                system_blocks.extend(content_to_blocks(content))
+                continue
+
+            if isinstance(message, ToolResult):
+                pending_tool_results.append(
+                    {
+                        "type": "tool_result",
+                        "tool_use_id": message.tool_call_id,
+                        "content": content_to_text(message.content),
+                    }
+                )
+                continue
+
+            # Flush pending tool results as a single user message
             if pending_tool_results:
                 messages.append({"role": "user", "content": pending_tool_results})
+                pending_tool_results = []
 
-            request: dict[str, Any] = {"messages": messages}
-            if system_blocks:
-                request["system"] = system_blocks
-            return request
+            if role == Role.ASSISTANT and (message.tool_calls or message.signature):
+                content_blocks: list[dict[str, Any]] = []
+                sig_blocks = message.signature
+                if sig_blocks:
+                    content_blocks.extend(sig_blocks)
+                if content:
+                    content_blocks.extend(content_to_blocks(content))
+                if message.tool_calls:
+                    for tc in message.tool_calls:
+                        content_blocks.append(
+                            {
+                                "type": "tool_use",
+                                "id": tc.id,
+                                "name": tc.name,
+                                "input": tc.arguments,
+                            }
+                        )
+                messages.append({"role": "assistant", "content": content_blocks})
+            else:
+                messages.append({"role": role, "content": content_to_blocks(content)})
 
-        if inputs.image is None and inputs.document is None:
-            prompt_content: str | list[dict[str, Any]] = inputs.prompt or ""
-        else:
-            prompt_content = []
-            if inputs.image is not None:
-                images = (
-                    inputs.image if isinstance(inputs.image, list) else [inputs.image]
-                )
-                for img in images:
-                    source = self._build_image_source(img)
-                    prompt_content.append({"type": "image", "source": source})
-            if inputs.document is not None:
-                docs = (
-                    inputs.document
-                    if isinstance(inputs.document, list)
-                    else [inputs.document]
-                )
-                for doc in docs:
-                    source = self._build_document_source(doc)
-                    prompt_content.append({"type": "document", "source": source})
-            prompt_content.append({"type": "text", "text": inputs.prompt or ""})
+        # Flush remaining tool results
+        if pending_tool_results:
+            messages.append({"role": "user", "content": pending_tool_results})
 
-        return {"messages": [{"role": "user", "content": prompt_content}]}
+        request: dict[str, Any] = {"messages": messages}
+        if system_blocks:
+            request["system"] = system_blocks
+        return request
 
     def _build_document_source(self, doc: DocumentArtifact) -> dict[str, Any]:
         """Build Anthropic document source dict from DocumentArtifact."""

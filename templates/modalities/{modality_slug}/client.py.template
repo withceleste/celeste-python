@@ -6,7 +6,7 @@ from asgiref.sync import async_to_sync
 
 from celeste.client import ModalityClient
 from celeste.core import InputType, Modality
-from celeste.types import AudioContent, ImageContent, {Content}, VideoContent
+from celeste.types import AudioContent, DocumentContent, ImageContent, {Content}, VideoContent
 
 from .io import {Modality}Chunk, {Modality}Input, {Modality}Output
 from .parameters import {Modality}Parameters
@@ -31,6 +31,7 @@ class {Modality}Client(ModalityClient[{Modality}Input, {Modality}Output, {Modali
         image: ImageContent | None,
         video: VideoContent | None,
         audio: AudioContent | None,
+        document: DocumentContent | None = None,
     ) -> None:
         """Check model supports the provided media types.
 
@@ -45,6 +46,9 @@ class {Modality}Client(ModalityClient[{Modality}Input, {Modality}Output, {Modali
             raise NotImplementedError(msg)
         if audio is not None and InputType.AUDIO not in self.model.optional_input_types:
             msg = f"Model {self.model.id} does not support audio input"
+            raise NotImplementedError(msg)
+        if document is not None and InputType.DOCUMENT not in self.model.optional_input_types:
+            msg = f"Model {self.model.id} does not support document input"
             raise NotImplementedError(msg)
 
     @property
@@ -97,6 +101,7 @@ class {Modality}StreamNamespace:
         image: ImageContent | None = None,
         video: VideoContent | None = None,
         audio: AudioContent | None = None,
+        document: DocumentContent | None = None,
         extra_body: dict[str, Any] | None = None,
         extra_headers: dict[str, str] | None = None,
         **parameters: Unpack[{Modality}Parameters],
@@ -107,8 +112,8 @@ class {Modality}StreamNamespace:
             async for chunk in client.stream.analyze("Describe", image=img):
                 print(chunk.content)
         """
-        self._client._check_media_support(image=image, video=video, audio=audio)
-        inputs = {Modality}Input(prompt=prompt, image=image, video=video, audio=audio)
+        self._client._check_media_support(image=image, video=video, audio=audio, document=document)
+        inputs = {Modality}Input(prompt=prompt, image=image, video=video, audio=audio, document=document)
         return self._client._stream(
             inputs,
             stream_class=self._client._stream_class(),
@@ -151,6 +156,7 @@ class {Modality}SyncNamespace:
         image: ImageContent | None = None,
         video: VideoContent | None = None,
         audio: AudioContent | None = None,
+        document: DocumentContent | None = None,
         extra_body: dict[str, Any] | None = None,
         extra_headers: dict[str, str] | None = None,
         **parameters: Unpack[{Modality}Parameters],
@@ -161,8 +167,8 @@ class {Modality}SyncNamespace:
             result = client.sync.analyze("Describe", image=img)
             print(result.content)
         """
-        self._client._check_media_support(image=image, video=video, audio=audio)
-        inputs = {Modality}Input(prompt=prompt, image=image, video=video, audio=audio)
+        self._client._check_media_support(image=image, video=video, audio=audio, document=document)
+        inputs = {Modality}Input(prompt=prompt, image=image, video=video, audio=audio, document=document)
         return async_to_sync(self._client._predict)(inputs, extra_body=extra_body, extra_headers=extra_headers, **parameters)
 
     @property
@@ -205,6 +211,7 @@ class {Modality}SyncStreamNamespace:
         image: ImageContent | None = None,
         video: VideoContent | None = None,
         audio: AudioContent | None = None,
+        document: DocumentContent | None = None,
         extra_body: dict[str, Any] | None = None,
         extra_headers: dict[str, str] | None = None,
         **parameters: Unpack[{Modality}Parameters],
@@ -221,7 +228,7 @@ class {Modality}SyncStreamNamespace:
         """
         # Return same stream as async version - __iter__/__next__ handle sync iteration
         return self._client.stream.analyze(
-            prompt, image=image, video=video, audio=audio, extra_body=extra_body, extra_headers=extra_headers, **parameters
+            prompt, image=image, video=video, audio=audio, document=document, extra_body=extra_body, extra_headers=extra_headers, **parameters
         )
 
 

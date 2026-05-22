@@ -16,10 +16,18 @@ from celeste.artifacts import Artifact
 from celeste.core import Modality, Protocol, Provider, UsageField
 from celeste.exceptions import StreamNotExhaustedError
 from celeste.io import Input, Output, Usage
+from celeste.messages import request_messages
 from celeste.models import Model
 from celeste.streaming import Stream
-from celeste.tools import ToolCall
-from celeste.types import Message
+from celeste.tools import ToolCall, ToolResult
+from celeste.types import (
+    AudioPart,
+    DocumentPart,
+    ImagePart,
+    Message,
+    TextPart,
+    VideoPart,
+)
 
 _PROVIDER_NAME_MAP: dict[Provider, str] = {
     Provider.OPENAI: "openai",
@@ -291,6 +299,16 @@ def _content_to_parts(content: Any) -> list[dict[str, Any]]:
         for item in content:
             parts.extend(_content_to_parts(item))
         return parts
+    if isinstance(content, TextPart):
+        return [{"type": "text", "content": content.text}]
+    if isinstance(content, ImagePart):
+        return [_artifact_part(content.image)]
+    if isinstance(content, AudioPart):
+        return [_artifact_part(content.audio)]
+    if isinstance(content, VideoPart):
+        return [_artifact_part(content.video)]
+    if isinstance(content, DocumentPart):
+        return [_artifact_part(content.document)]
     if isinstance(content, Artifact):
         return [_artifact_part(content)]
     if isinstance(content, str):
@@ -318,22 +336,38 @@ def _message_to_dict(message: Message) -> dict[str, Any]:
     return {"role": message.role.value, "parts": parts}
 
 
+def _tool_result_to_dict(result: ToolResult) -> dict[str, Any]:
+    """Convert a celeste ToolResult into a semconv ``{role, parts}`` dict."""
+    message = {"role": "tool", "parts": _content_to_parts(result.content)}
+    if result.tool_call_id:
+        message["tool_call_id"] = result.tool_call_id
+    if result.name:
+        message["name"] = result.name
+    return message
+
+
 def _input_messages_event(inputs: Input) -> dict[str, Any] | None:
     """Build the ``gen_ai.input.messages`` event attributes, or None when capture is off."""
     if not _CAPTURE_CONTENT:
         return None
+    try:
+        input_messages = request_messages(
+            prompt=getattr(inputs, "prompt", None),
+            messages=getattr(inputs, "messages", None),
+            image=getattr(inputs, "image", None),
+            video=getattr(inputs, "video", None),
+            audio=getattr(inputs, "audio", None),
+            document=getattr(inputs, "document", None),
+        )
+    except ValueError:
+        return None
+
     messages: list[dict[str, Any]] = []
-    for message in getattr(inputs, "messages", None) or []:
+    for message in input_messages:
         if isinstance(message, Message):
             messages.append(_message_to_dict(message))
-    prompt = getattr(inputs, "prompt", None)
-    if prompt is not None:
-        parts: list[dict[str, Any]] = [{"type": "text", "content": str(prompt)}]
-        for media_field in ("image", "video", "audio", "document"):
-            media = getattr(inputs, media_field, None)
-            if media is not None:
-                parts.extend(_content_to_parts(media))
-        messages.append({"role": "user", "parts": parts})
+        elif isinstance(message, ToolResult):
+            messages.append(_tool_result_to_dict(message))
     if not messages:
         return None
     return {"messages": json.dumps(messages, default=str)}

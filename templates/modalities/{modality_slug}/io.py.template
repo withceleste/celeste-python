@@ -10,7 +10,7 @@ Types are unified per-modality since generate and analyze produce identical outp
 from pydantic import Field
 
 from celeste.io import Chunk, FinishReason, Input, Output, Usage
-from celeste.types import AudioContent, ImageContent, {Content}, VideoContent
+from celeste.types import AudioContent, DocumentContent, ImageContent, {Content}, VideoContent
 
 
 class {Modality}Input(Input):
@@ -21,6 +21,7 @@ class {Modality}Input(Input):
     image: ImageContent | None = None
     video: VideoContent | None = None
     audio: AudioContent | None = None
+    document: DocumentContent | None = None
 
 
 class {Modality}FinishReason(FinishReason):
