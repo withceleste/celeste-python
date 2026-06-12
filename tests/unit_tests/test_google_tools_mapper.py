@@ -1,12 +1,36 @@
-"""Regression coverage for Gemini ToolsMapper — emits `parametersJsonSchema`."""
+"""Regression coverage for Gemini ToolsMapper."""
 
 from __future__ import annotations
 
+from typing import Any
+
+import pytest
+
+from celeste.core import Provider
+from celeste.modalities.text.parameters import TextParameter
+from celeste.models import Model
 from celeste.providers.google.generate_content.parameters import ToolsMapper
+from celeste.tools import CodeExecution, ToolDefinition, WebSearch
+
+
+class _GoogleToolsMapper(ToolsMapper):
+    name = TextParameter.TOOLS
+
+
+_MAPPER = _GoogleToolsMapper()
+_MODEL = Model(id="test-model", provider=Provider.GOOGLE, display_name="Test Model")
+_FUNCTION_TOOL: dict[str, Any] = {
+    "name": "web_fetch",
+    "parameters": {"type": "object"},
+}
 
 
 def _map(tool: dict) -> dict:
     return ToolsMapper._map_user_tool(tool)
+
+
+def _map_tools(tools: list[ToolDefinition]) -> dict[str, Any]:
+    return _MAPPER.map({}, tools, _MODEL)
 
 
 def test_maps_to_parameters_json_schema_not_legacy_parameters() -> None:
@@ -63,3 +87,26 @@ def test_tool_with_no_parameters_emits_no_schema_field() -> None:
     assert "parameters" not in fn
     assert "parametersJsonSchema" not in fn
     assert fn["description"] == "no-args"
+
+
+@pytest.mark.parametrize(
+    ("tools", "expect_flag"),
+    [
+        ([WebSearch(), _FUNCTION_TOOL], True),
+        ([CodeExecution(), _FUNCTION_TOOL], True),
+        ([{"google_search": {}}, _FUNCTION_TOOL], True),
+        ([_FUNCTION_TOOL], False),
+        ([WebSearch()], False),
+        ([CodeExecution()], False),
+    ],
+)
+def test_include_server_side_tool_invocations(
+    tools: list[ToolDefinition], expect_flag: bool
+) -> None:
+    result = _map_tools(tools)
+    flag = result.get("toolConfig", {}).get("includeServerSideToolInvocations")
+    if expect_flag:
+        assert flag is True
+        assert any("functionDeclarations" in tool for tool in result["tools"])
+    else:
+        assert flag is None

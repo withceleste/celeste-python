@@ -184,9 +184,11 @@ class ToolsMapper[Content](ParameterMapper[Content]):
         dispatch = {m.tool_type: m for m in TOOL_MAPPERS}
         tools = request.setdefault("tools", [])
         fn_declarations: list[dict[str, Any]] = []
+        has_server_side_tool = False
 
         for item in validated_value:
             if isinstance(item, Tool):
+                has_server_side_tool = True
                 mapper = dispatch.get(type(item))
                 if mapper is None:
                     msg = f"Tool '{type(item).__name__}' is not supported by Google"
@@ -195,12 +197,19 @@ class ToolsMapper[Content](ParameterMapper[Content]):
             elif isinstance(item, dict) and "name" in item:
                 fn_declarations.append(self._map_user_tool(item))
             elif isinstance(item, dict):
+                has_server_side_tool = True
                 tools.append(item)
             else:
                 raise InvalidToolError(item)
 
         if fn_declarations:
             tools.append({"functionDeclarations": fn_declarations})
+
+        # Gemini requires this when mixing built-in tools with functionDeclarations.
+        if fn_declarations and has_server_side_tool:
+            request.setdefault("toolConfig", {})["includeServerSideToolInvocations"] = (
+                True
+            )
 
         return request
 
