@@ -13,6 +13,7 @@ from .mistral import MistralTextClient
 from .moonshot import MoonshotTextClient
 from .ollama import OllamaTextClient
 from .openai import OpenAITextClient
+from .openrouter import OpenRouterTextClient
 from .xai import XAITextClient
 
 PROVIDERS: dict[Provider, type[TextClient]] = {
@@ -26,5 +27,6 @@ PROVIDERS: dict[Provider, type[TextClient]] = {
     Provider.MISTRAL: MistralTextClient,
     Provider.MOONSHOT: MoonshotTextClient,
     Provider.OPENAI: OpenAITextClient,
+    Provider.OPENROUTER: OpenRouterTextClient,
     Provider.XAI: XAITextClient,
 }
