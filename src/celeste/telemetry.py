@@ -37,6 +37,7 @@ _PROVIDER_NAME_MAP: dict[Provider, str] = {
     Provider.XAI: "x_ai",
     Provider.GROQ: "groq",
     Provider.DEEPSEEK: "deepseek",
+    Provider.OPENROUTER: "openrouter",
     Provider.PERPLEXITY: "perplexity",
     Provider.COHERE: "cohere",
 }

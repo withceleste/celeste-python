@@ -93,7 +93,7 @@ def _provider_api_client_files() -> list[Path]:
 
     # Wrapper providers that just re-export another provider's client
     # These don't need to match the template contract
-    wrapper_providers = {"ollama"}
+    wrapper_providers = {"ollama", "openrouter"}
 
     out: list[Path] = []
     for provider_dir in sorted([p for p in providers_dir.iterdir() if p.is_dir()]):

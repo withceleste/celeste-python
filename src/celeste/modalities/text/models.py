@@ -12,6 +12,7 @@ from .providers.mistral.models import MODELS as MISTRAL_MODELS
 from .providers.moonshot.models import MODELS as MOONSHOT_MODELS
 from .providers.ollama.models import MODELS as OLLAMA_MODELS
 from .providers.openai.models import MODELS as OPENAI_MODELS
+from .providers.openrouter.models import MODELS as OPENROUTER_MODELS
 from .providers.xai.models import MODELS as XAI_MODELS
 
 MODELS: list[Model] = [
@@ -25,5 +26,6 @@ MODELS: list[Model] = [
     *MISTRAL_MODELS,
     *MOONSHOT_MODELS,
     *OPENAI_MODELS,
+    *OPENROUTER_MODELS,
     *XAI_MODELS,
 ]

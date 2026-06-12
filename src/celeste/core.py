@@ -26,6 +26,7 @@ class Provider(StrEnum):
     GROQ = "groq"
     GRADIUM = "gradium"
     OLLAMA = "ollama"
+    OPENROUTER = "openrouter"
 
 
 class Protocol(StrEnum):
