@@ -48,75 +48,39 @@ _MODALITY_OPERATION: dict[Modality, str] = {
 }
 
 
-class _NoOpSpan:
-    """Span stand-in used when ``opentelemetry-api`` is not installed."""
+class _NoOp:
+    """No-op stand-in for opentelemetry-api objects when it is not installed.
 
-    def set_attribute(self, key: str, value: Any) -> None:
-        """Discard the attribute."""
+    Returns itself for every attribute access and call, so spans, tracers, meters,
+    histograms, Status and StatusCode all degrade to silent no-ops.
+    """
 
-    def set_attributes(self, attributes: dict[str, Any]) -> None:
-        """Discard the attribute mapping."""
+    ERROR = "ERROR"  # satisfies StatusCode.ERROR
 
-    def set_status(self, *args: Any, **kwargs: Any) -> None:
-        """Discard the status update."""
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """Accept and discard any construction arguments."""
 
-    def record_exception(self, *args: Any, **kwargs: Any) -> None:
-        """Discard the exception."""
+    def __call__(self, *args: Any, **kwargs: Any) -> "_NoOp":
+        """Return self for any call (e.g. start_as_current_span, create_histogram)."""
+        return self
 
-    def add_event(self, *args: Any, **kwargs: Any) -> None:
-        """Discard the span event."""
+    def __getattr__(self, name: str) -> "_NoOp":
+        """Return self for any attribute (span/meter/histogram methods)."""
+        return self
 
-    def end(self) -> None:
-        """Discard the end signal."""
+    def __enter__(self) -> "_NoOp":
+        """Enter the no-op span context."""
+        return self
 
-
-class _NoOpTracer:
-    """Tracer stand-in used when ``opentelemetry-api`` is not installed."""
-
-    @contextmanager
-    def start_as_current_span(self, name: str, **kwargs: Any) -> Iterator[_NoOpSpan]:
-        """Yield a no-op span as a context manager."""
-        yield _NoOpSpan()
-
-    def start_span(self, name: str, **kwargs: Any) -> _NoOpSpan:
-        """Return a detached no-op span."""
-        return _NoOpSpan()
+    def __exit__(self, *args: Any) -> None:
+        """Exit the no-op span context."""
+        return None
 
 
 @contextmanager
 def _noop_use_span(span: Any, end_on_exit: bool = False) -> Iterator[Any]:
     """No-op stand-in for ``opentelemetry.trace.use_span``."""
     yield span
-
-
-class _NoOpStatus:
-    """Status stand-in used when ``opentelemetry-api`` is not installed."""
-
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
-        """Discard the status arguments."""
-
-
-class _NoOpStatusCode:
-    """StatusCode stand-in used when ``opentelemetry-api`` is not installed."""
-
-    ERROR = "ERROR"
-
-
-class _NoOpHistogram:
-    """Histogram stand-in used when ``opentelemetry-api`` is not installed."""
-
-    def record(self, value: float, attributes: dict[str, Any] | None = None) -> None:
-        """Discard the metric record."""
-
-
-class _NoOpMeter:
-    """Meter stand-in used when ``opentelemetry-api`` is not installed."""
-
-    def create_histogram(
-        self, name: str, unit: str = "", description: str = ""
-    ) -> _NoOpHistogram:
-        """Return a no-op histogram."""
-        return _NoOpHistogram()
 
 
 try:
@@ -131,11 +95,11 @@ try:
     StatusCode: Any = _OtelStatusCode
     meter: Any = _otel_metrics.get_meter("celeste")
 except ImportError:
-    tracer = _NoOpTracer()
+    tracer = _NoOp()
     use_span = _noop_use_span
-    Status = _NoOpStatus
-    StatusCode = _NoOpStatusCode
-    meter = _NoOpMeter()
+    Status = _NoOp
+    StatusCode = _NoOp
+    meter = _NoOp()
 
 
 _token_usage_histogram: Any = meter.create_histogram(
