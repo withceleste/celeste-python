@@ -347,94 +347,45 @@ class TestHTTPClientRequestMethods:
 class TestHTTPClientRetry:
     """Transient-failure retry behavior (MAX_RETRIES attempts with backoff)."""
 
-    async def test_retries_transient_then_succeeds(
-        self, mock_httpx_client: AsyncMock
+    @pytest.mark.parametrize(
+        ("outcomes", "want_status", "want_calls"),
+        [
+            ([httpx.ReadTimeout("x"), httpx.Response(200)], 200, 2),
+            ([httpx.Response(503), httpx.Response(200)], 200, 2),
+            ([httpx.Response(401)], 401, 1),
+            ([httpx.Response(503)] * (MAX_RETRIES + 1), 503, MAX_RETRIES + 1),
+        ],
+    )
+    async def test_retry_then_return(
+        self,
+        mock_httpx_client: AsyncMock,
+        outcomes: list[object],
+        want_status: int,
+        want_calls: int,
     ) -> None:
-        """A timeout on the first attempt is retried; the next success is returned."""
-        http_client = HTTPClient()
-        mock_httpx_client.post.side_effect = [
-            httpx.ReadTimeout("blip"),
-            httpx.Response(200),
-        ]
-
+        """Transient errors and retryable statuses are retried; others return immediately."""
+        mock_httpx_client.post.side_effect = outcomes
         with (
             patch("celeste.http.httpx.AsyncClient", return_value=mock_httpx_client),
             patch("celeste.http.asyncio.sleep", new=AsyncMock()),
         ):
-            response = await http_client.post(
-                url="https://api.example.com/test", headers={}, json_body={}
+            response = await HTTPClient().post(
+                url="https://x", headers={}, json_body={}
             )
-
-        assert response.status_code == 200
-        assert mock_httpx_client.post.call_count == 2
+        assert response.status_code == want_status
+        assert mock_httpx_client.post.call_count == want_calls
 
     async def test_reraises_after_exhausting_retries(
         self, mock_httpx_client: AsyncMock
     ) -> None:
         """A persistent transient error is re-raised after MAX_RETRIES + 1 attempts."""
-        http_client = HTTPClient()
         mock_httpx_client.post.side_effect = httpx.ConnectError("down")
-
         with (
             patch("celeste.http.httpx.AsyncClient", return_value=mock_httpx_client),
             patch("celeste.http.asyncio.sleep", new=AsyncMock()),
-            pytest.raises(httpx.ConnectError, match="down"),
+            pytest.raises(httpx.ConnectError),
         ):
-            await http_client.post(
-                url="https://api.example.com/test", headers={}, json_body={}
-            )
-
-        assert mock_httpx_client.post.call_count == MAX_RETRIES + 1
-
-    async def test_retries_retryable_status_then_succeeds(
-        self, mock_httpx_client: AsyncMock
-    ) -> None:
-        """A retryable status (503) is retried; the following 200 is returned."""
-        http_client = HTTPClient()
-        mock_httpx_client.post.side_effect = [httpx.Response(503), httpx.Response(200)]
-
-        with (
-            patch("celeste.http.httpx.AsyncClient", return_value=mock_httpx_client),
-            patch("celeste.http.asyncio.sleep", new=AsyncMock()),
-        ):
-            response = await http_client.post(
-                url="https://api.example.com/test", headers={}, json_body={}
-            )
-
-        assert response.status_code == 200
-        assert mock_httpx_client.post.call_count == 2
-
-    async def test_does_not_retry_non_retryable_status(
-        self, mock_httpx_client: AsyncMock
-    ) -> None:
-        """A non-retryable status (401) is returned immediately, with no retry."""
-        http_client = HTTPClient()
-        mock_httpx_client.post.return_value = httpx.Response(401)
-
-        with patch("celeste.http.httpx.AsyncClient", return_value=mock_httpx_client):
-            response = await http_client.post(
-                url="https://api.example.com/test", headers={}, json_body={}
-            )
-
-        assert response.status_code == 401
-        assert mock_httpx_client.post.call_count == 1
-
-    async def test_returns_last_response_after_exhausting_status_retries(
-        self, mock_httpx_client: AsyncMock
-    ) -> None:
-        """A persistent retryable status returns the last response after MAX_RETRIES + 1 attempts."""
-        http_client = HTTPClient()
-        mock_httpx_client.post.return_value = httpx.Response(503)
-
-        with (
-            patch("celeste.http.httpx.AsyncClient", return_value=mock_httpx_client),
-            patch("celeste.http.asyncio.sleep", new=AsyncMock()),
-        ):
-            response = await http_client.post(
-                url="https://api.example.com/test", headers={}, json_body={}
-            )
-
-        assert response.status_code == 503
+            await HTTPClient().post(url="https://x", headers={}, json_body={})
         assert mock_httpx_client.post.call_count == MAX_RETRIES + 1
 
 
