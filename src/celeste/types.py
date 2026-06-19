@@ -89,6 +89,20 @@ class ToolCall(BaseModel):
     arguments: dict[str, Any]
 
 
+class ToolActivityStatus(StrEnum):
+    """Lifecycle of a native (server-side) tool invocation during streaming."""
+
+    STARTED = "started"
+    COMPLETED = "completed"
+
+
+class ToolActivity(BaseModel):
+    """A native tool invocation surfaced live in a streaming chunk."""
+
+    tool_name: str
+    status: ToolActivityStatus
+
+
 class Message(BaseModel):
     """A message in a conversation."""
 
@@ -117,6 +131,8 @@ __all__ = [
     "Role",
     "TextContent",
     "TextPart",
+    "ToolActivity",
+    "ToolActivityStatus",
     "ToolCall",
     "ToolResultContent",
     "VideoContent",

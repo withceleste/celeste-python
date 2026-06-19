@@ -5,6 +5,7 @@ import json
 from typing import Any
 
 from celeste.io import FinishReason
+from celeste.types import ToolActivity, ToolActivityStatus
 
 from .client import AnthropicMessagesClient
 
@@ -108,6 +109,24 @@ class AnthropicMessagesStream:
             delta = event_data.get("delta", {})
             if delta.get("type") == "thinking_delta":
                 return delta.get("thinking") or None
+        return None
+
+    def _parse_chunk_tool_activity(
+        self, event_data: dict[str, Any]
+    ) -> ToolActivity | None:
+        """Extract native web-search activity from content block starts."""
+        if event_data.get("type") != "content_block_start":
+            return None
+        block = event_data.get("content_block", {})
+        block_type = block.get("type")
+        if block_type == "server_tool_use" and block.get("name") == "web_search":
+            return ToolActivity(
+                tool_name="web_search", status=ToolActivityStatus.STARTED
+            )
+        if block_type == "web_search_tool_result":
+            return ToolActivity(
+                tool_name="web_search", status=ToolActivityStatus.COMPLETED
+            )
         return None
 
     def _parse_chunk_usage(
