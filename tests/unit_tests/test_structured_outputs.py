@@ -24,6 +24,19 @@ class TestStrictJsonSchemaGenerator:
 
         assert schema.get("additionalProperties") is False
 
+    def test_forces_all_properties_required(self) -> None:
+        """Strict mode requires every property in `required`, even fields with defaults."""
+
+        class Model(BaseModel):
+            required_field: str
+            defaulted_field: str = "x"
+
+        schema = TypeAdapter(Model).json_schema(
+            schema_generator=StrictJsonSchemaGenerator
+        )
+
+        assert set(schema["required"]) == {"required_field", "defaulted_field"}
+
     def test_preserves_existing_additional_properties(self) -> None:
         """Doesn't override existing additionalProperties when already set."""
         generator = StrictJsonSchemaGenerator(ref_template="{model}")

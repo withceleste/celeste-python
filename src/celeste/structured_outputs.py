@@ -7,7 +7,7 @@ from pydantic_core import CoreSchema
 
 
 class StrictJsonSchemaGenerator(GenerateJsonSchema):
-    """Adds additionalProperties: false to all objects (OpenAI, Anthropic, xAI)."""
+    """Forces additionalProperties: false and all properties required on objects (OpenAI, Anthropic, xAI)."""
 
     def generate(
         self, schema: CoreSchema, mode: JsonSchemaMode = "validation"
@@ -21,6 +21,8 @@ class StrictJsonSchemaGenerator(GenerateJsonSchema):
             return
         if schema.get("type") == "object" and "additionalProperties" not in schema:
             schema["additionalProperties"] = False
+        if "properties" in schema:
+            schema["required"] = list(schema["properties"])
         for key in ("properties", "$defs", "items", "allOf", "anyOf", "oneOf"):
             if key in schema:
                 if isinstance(schema[key], dict):
