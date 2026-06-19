@@ -3,7 +3,7 @@
 import asyncio
 import json
 import logging
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Awaitable, Callable
 from typing import Any
 
 import httpx
@@ -16,6 +16,25 @@ logger = logging.getLogger(__name__)
 MAX_CONNECTIONS = 20
 MAX_KEEPALIVE_CONNECTIONS = 10
 DEFAULT_TIMEOUT = 180.0
+MAX_RETRIES = 2
+RETRY_BASE_DELAY = 0.5
+RETRYABLE_STATUS = frozenset({408, 429, 500, 502, 503, 504})
+
+
+async def _retry_request(
+    send: Callable[[], Awaitable[httpx.Response]],
+) -> httpx.Response:
+    """Retry `send` on transient failures (network errors + retryable status) with backoff, then fail hard."""
+    for attempt in range(MAX_RETRIES):
+        try:
+            response = await send()
+        except (httpx.TimeoutException, httpx.NetworkError):
+            pass  # transient — retry after backoff
+        else:
+            if response.status_code not in RETRYABLE_STATUS:
+                return response
+        await asyncio.sleep(RETRY_BASE_DELAY * 2**attempt)
+    return await send()
 
 
 class HTTPClient:
@@ -81,11 +100,13 @@ class HTTPClient:
             raise ValueError("URL cannot be empty")
 
         client = await self._get_client()
-        return await client.post(
-            url,
-            headers=headers,
-            json=json_body,
-            timeout=timeout,
+        return await _retry_request(
+            lambda: client.post(
+                url,
+                headers=headers,
+                json=json_body,
+                timeout=timeout,
+            )
         )
 
     async def post_multipart(
@@ -116,12 +137,14 @@ class HTTPClient:
             raise ValueError("URL cannot be empty")
 
         client = await self._get_client()
-        return await client.post(
-            url,
-            headers=headers,
-            files=files,
-            data=data,
-            timeout=timeout,
+        return await _retry_request(
+            lambda: client.post(
+                url,
+                headers=headers,
+                files=files,
+                data=data,
+                timeout=timeout,
+            )
         )
 
     async def get(
@@ -150,11 +173,13 @@ class HTTPClient:
             raise ValueError("URL cannot be empty")
 
         client = await self._get_client()
-        return await client.get(
-            url,
-            headers=headers or {},
-            timeout=timeout,
-            follow_redirects=follow_redirects,
+        return await _retry_request(
+            lambda: client.get(
+                url,
+                headers=headers or {},
+                timeout=timeout,
+                follow_redirects=follow_redirects,
+            )
         )
 
     async def stream_post(
@@ -285,6 +310,7 @@ __all__ = [
     "DEFAULT_TIMEOUT",
     "MAX_CONNECTIONS",
     "MAX_KEEPALIVE_CONNECTIONS",
+    "MAX_RETRIES",
     "HTTPClient",
     "clear_http_clients",
     "close_all_http_clients",
