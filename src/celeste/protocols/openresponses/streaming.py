@@ -3,6 +3,7 @@
 from typing import Any, ClassVar
 
 from celeste.io import FinishReason
+from celeste.types import ToolActivity, ToolActivityStatus
 
 from .client import OpenResponsesClient
 
@@ -45,6 +46,21 @@ class OpenResponsesStream:
             "response.reasoning_text.delta",
         ):
             return event_data.get("delta") or None
+        return None
+
+    def _parse_chunk_tool_activity(
+        self, event_data: dict[str, Any]
+    ) -> ToolActivity | None:
+        """Extract native web-search activity from SSE event."""
+        event_type = event_data.get("type")
+        if event_type == "response.web_search_call.in_progress":
+            return ToolActivity(
+                tool_name="web_search", status=ToolActivityStatus.STARTED
+            )
+        if event_type == "response.web_search_call.completed":
+            return ToolActivity(
+                tool_name="web_search", status=ToolActivityStatus.COMPLETED
+            )
         return None
 
     def _parse_chunk_usage(

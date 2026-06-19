@@ -21,6 +21,7 @@ from celeste.types import (
     Message,
     Role,
     TextContent,
+    ToolActivity,
     VideoContent,
 )
 
@@ -78,6 +79,7 @@ class TextChunk(Chunk[str]):
     """Chunk for text streaming."""
 
     reasoning: str | None = None
+    tool_activity: ToolActivity | None = None
     finish_reason: TextFinishReason | None = None
     usage: TextUsage | None = None
 

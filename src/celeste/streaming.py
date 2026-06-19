@@ -15,7 +15,7 @@ from celeste.io import Chunk as ChunkBase
 from celeste.io import FinishReason, Output, Usage
 from celeste.parameters import Parameters
 from celeste.tools import ToolCall, validate_tool_calls
-from celeste.types import RawUsage
+from celeste.types import RawUsage, ToolActivity
 
 
 async def enrich_stream_errors(
@@ -114,6 +114,12 @@ class Stream[Out: Output, Params: Parameters, Chunk: ChunkBase](ABC):
         """Parse reasoning delta from chunk event. Override in providers with reasoning."""
         return None
 
+    def _parse_chunk_tool_activity(
+        self, event_data: dict[str, Any]
+    ) -> ToolActivity | None:
+        """Parse native tool activity from chunk event. Override in providers that emit it."""
+        return None
+
     def _wrap_chunk_content(self, raw_content: Any) -> Any:  # noqa: ANN401
         """Wrap raw content into chunk content type. Override for type transformation."""
         return raw_content
@@ -130,11 +136,13 @@ class Stream[Out: Output, Params: Parameters, Chunk: ChunkBase](ABC):
             )
         content = self._parse_chunk_content(event)
         reasoning = self._parse_chunk_reasoning(event)
+        tool_activity = self._parse_chunk_tool_activity(event)
         usage = self._get_chunk_usage(event)
         finish_reason = self._get_chunk_finish_reason(event)
         if (
             content is None
             and reasoning is None
+            and tool_activity is None
             and usage is None
             and finish_reason is None
         ):
@@ -147,6 +155,8 @@ class Stream[Out: Output, Params: Parameters, Chunk: ChunkBase](ABC):
         kwargs: dict[str, Any] = {}
         if reasoning is not None:
             kwargs["reasoning"] = reasoning
+        if tool_activity is not None:
+            kwargs["tool_activity"] = tool_activity
         return self._chunk_class(  # type: ignore[return-value]
             content=content,
             finish_reason=finish_reason,
