@@ -37,4 +37,35 @@ class CodeExecutionMapper(ToolMapper):
 
 TOOL_MAPPERS: list[ToolMapper] = [WebSearchMapper(), CodeExecutionMapper()]
 
-__all__ = ["TOOL_MAPPERS", "CodeExecutionMapper", "WebSearchMapper"]
+
+def parse_search_results(response_data: dict[str, Any]) -> list[dict[str, Any]]:
+    """Extract Groq Compound native search result rows."""
+    choices = response_data.get("choices", [])
+    if not choices:
+        return []
+
+    message = choices[0].get("message", {})
+    executed_tools = message.get("executed_tools")
+    if not isinstance(executed_tools, list):
+        return []
+
+    results: list[dict[str, Any]] = []
+    for tool in executed_tools:
+        if not isinstance(tool, dict):
+            continue
+        search_results = tool.get("search_results")
+        if not isinstance(search_results, dict):
+            continue
+        rows = search_results.get("results")
+        if not isinstance(rows, list):
+            continue
+        results.extend(row for row in rows if isinstance(row, dict))
+    return results
+
+
+__all__ = [
+    "TOOL_MAPPERS",
+    "CodeExecutionMapper",
+    "WebSearchMapper",
+    "parse_search_results",
+]

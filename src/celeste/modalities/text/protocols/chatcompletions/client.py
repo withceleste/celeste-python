@@ -3,6 +3,7 @@
 import json
 from typing import Any
 
+from celeste.grounding import Grounding
 from celeste.messages import (
     content_to_text,
     message_parts,
@@ -16,13 +17,18 @@ from celeste.protocols.chatcompletions.client import (
 from celeste.protocols.chatcompletions.streaming import (
     ChatCompletionsStream as _ChatCompletionsStream,
 )
-from celeste.protocols.chatcompletions.tools import parse_tool_calls
+from celeste.protocols.chatcompletions.tools import (
+    parse_annotations,
+    parse_tool_calls,
+)
 from celeste.tools import ToolCall, ToolResult
 from celeste.types import DocumentPart, ImagePart, Message, Role, TextContent, TextPart
 from celeste.utils import build_document_data_url, build_image_data_url
 
 from ...client import TextClient
+from ...grounding import map_url_citation_annotations
 from ...io import (
+    TextChunk,
     TextInput,
 )
 from ...streaming import TextStream
@@ -106,6 +112,12 @@ def _serialize_messages(
 class ChatCompletionsTextStream(_ChatCompletionsStream, TextStream):
     """Chat Completions streaming for text modality."""
 
+    def _aggregate_grounding(
+        self, chunks: list[TextChunk], raw_events: list[dict[str, Any]]
+    ) -> Grounding | None:
+        """Aggregate URL citations from streamed Chat Completions annotations."""
+        return map_url_citation_annotations(self._annotations)
+
 
 class ChatCompletionsTextClient(ChatCompletionsMixin, TextClient):
     """Chat Completions text client."""
@@ -149,6 +161,10 @@ class ChatCompletionsTextClient(ChatCompletionsMixin, TextClient):
     def _parse_tool_calls(self, response_data: dict[str, Any]) -> list[ToolCall]:
         """Parse tool calls from Chat Completions response."""
         return parse_tool_calls(response_data)
+
+    def _parse_grounding(self, response_data: dict[str, Any]) -> Grounding | None:
+        """Parse grounding from Chat Completions citation/search extensions."""
+        return map_url_citation_annotations(parse_annotations(response_data))
 
     def _stream_class(self) -> type[TextStream]:
         """Return the Stream class for this provider."""

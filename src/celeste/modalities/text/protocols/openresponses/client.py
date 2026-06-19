@@ -4,6 +4,7 @@ import json
 from typing import Any
 
 from celeste.artifacts import DocumentArtifact
+from celeste.grounding import Grounding
 from celeste.messages import (
     content_to_text,
     message_parts,
@@ -18,6 +19,7 @@ from celeste.protocols.openresponses.streaming import (
     OpenResponsesStream as _OpenResponsesStream,
 )
 from celeste.protocols.openresponses.tools import (
+    parse_annotations,
     parse_content,
     parse_reasoning,
     parse_tool_calls,
@@ -27,6 +29,7 @@ from celeste.types import DocumentPart, ImagePart, Message, Role, TextContent, T
 from celeste.utils import build_document_data_url, build_image_data_url
 
 from ...client import TextClient
+from ...grounding import map_url_citation_annotations
 from ...io import (
     TextChunk,
     TextInput,
@@ -153,6 +156,16 @@ class OpenResponsesTextStream(_OpenResponsesStream, TextStream):
         _, signature_blocks = parse_reasoning(self._response_data.get("output", []))
         return signature_blocks
 
+    def _aggregate_grounding(
+        self, chunks: list[TextChunk], raw_events: list[dict[str, Any]]
+    ) -> Grounding | None:
+        """Extract URL citations from response.completed data."""
+        if self._response_data is None:
+            return None
+        return map_url_citation_annotations(
+            parse_annotations(self._response_data.get("output", []))
+        )
+
 
 class OpenResponsesTextClient(OpenResponsesMixin, TextClient):
     """OpenResponses text client using Responses API."""
@@ -191,6 +204,12 @@ class OpenResponsesTextClient(OpenResponsesMixin, TextClient):
     def _parse_tool_calls(self, response_data: dict[str, Any]) -> list[ToolCall]:
         """Parse tool calls from OpenResponses response."""
         return parse_tool_calls(response_data)
+
+    def _parse_grounding(self, response_data: dict[str, Any]) -> Grounding | None:
+        """Parse URL citations from OpenResponses response."""
+        return map_url_citation_annotations(
+            parse_annotations(response_data.get("output", []))
+        )
 
     def _stream_class(self) -> type[TextStream]:
         """Return the Stream class for this provider."""

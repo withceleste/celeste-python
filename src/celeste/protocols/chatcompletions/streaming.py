@@ -30,6 +30,7 @@ class ChatCompletionsStream:
     def __init__(self, *args: Any, **kwargs: Any) -> None:  # noqa: ANN401
         super().__init__(*args, **kwargs)
         self._tool_call_deltas: dict[int, dict[str, Any]] = {}
+        self._annotations: list[dict[str, Any]] = []
 
     def _get_chunk_delta(self, event_data: dict[str, Any]) -> dict[str, Any] | None:
         """Extract delta dict from a chat.completion.chunk event."""
@@ -88,11 +89,18 @@ class ChatCompletionsStream:
         return None
 
     def _parse_chunk(self, event_data: dict[str, Any]) -> Any:  # noqa: ANN401
-        """Capture tool_call deltas before delegating to base _parse_chunk."""
+        """Capture native delta side data before delegating to base _parse_chunk."""
         choices = event_data.get("choices", [])
         if choices and isinstance(choices[0], dict):
             delta = choices[0].get("delta", {})
             if isinstance(delta, dict):
+                annotations = delta.get("annotations")
+                if isinstance(annotations, list):
+                    self._annotations.extend(
+                        annotation
+                        for annotation in annotations
+                        if isinstance(annotation, dict)
+                    )
                 for tc_delta in delta.get("tool_calls") or []:
                     idx = tc_delta.get("index", 0)
                     if idx not in self._tool_call_deltas:

@@ -3,6 +3,7 @@
 from typing import Any
 from uuid import uuid4
 
+from celeste.grounding import Grounding
 from celeste.messages import (
     message_parts,
     request_messages,
@@ -10,6 +11,10 @@ from celeste.messages import (
 )
 from celeste.parameters import ParameterMapper
 from celeste.providers.google.generate_content.client import GoogleGenerateContentClient
+from celeste.providers.google.generate_content.grounding import (
+    merge_grounding_metadata,
+    parse_grounding_metadata,
+)
 from celeste.providers.google.generate_content.streaming import (
     GoogleGenerateContentStream as _GoogleGenerateContentStream,
 )
@@ -28,11 +33,24 @@ from celeste.types import (
 from ...client import TextClient
 from ...io import TextInput
 from ...streaming import TextStream
+from .grounding import map_grounding
 from .parameters import GOOGLE_PARAMETER_MAPPERS
 
 
 class GoogleTextStream(_GoogleGenerateContentStream, TextStream):
     """Google streaming for text modality."""
+
+    def _aggregate_grounding(
+        self, chunks: list, raw_events: list[dict[str, Any]]
+    ) -> Grounding | None:
+        """Aggregate Google grounding metadata into text grounding."""
+        metadata = getattr(self, "_grounding_metadata", None)
+        if not metadata:
+            return None
+        return map_grounding(
+            merge_grounding_metadata(metadata),
+            self._aggregate_content(chunks),
+        )
 
     def _aggregate_tool_calls(
         self, chunks: list, raw_events: list[dict[str, Any]]
@@ -179,6 +197,13 @@ class GoogleTextClient(GoogleGenerateContentClient, TextClient):
                 signature_blocks.append(p)
         text = "\n".join(reasoning_parts) if reasoning_parts else None
         return text, signature_blocks
+
+    def _parse_grounding(self, response_data: dict[str, Any]) -> Grounding | None:
+        """Extract Google grounding with text character offsets."""
+        meta = parse_grounding_metadata(response_data)
+        if meta is None:
+            return None
+        return map_grounding(meta, self._parse_content(response_data))
 
     def _parse_tool_calls(self, response_data: dict[str, Any]) -> list[ToolCall]:
         """Parse tool calls from Google response."""
