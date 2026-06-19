@@ -119,11 +119,27 @@ def parse_reasoning(
     return text, signature_blocks
 
 
+def parse_annotations(output: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Extract URL citation annotations from Responses API output items."""
+    annotations: list[dict[str, Any]] = []
+    for item in output:
+        if item.get("type") != "message":
+            continue
+        for part in item.get("content", []):
+            if part.get("type") != "output_text":
+                continue
+            for annotation in part.get("annotations", []):
+                if isinstance(annotation, dict):
+                    annotations.append(annotation)
+    return annotations
+
+
 __all__ = [
     "TOOL_MAPPERS",
     "CodeExecutionMapper",
     "WebSearchMapper",
     "XSearchMapper",
+    "parse_annotations",
     "parse_content",
     "parse_reasoning",
     "parse_tool_calls",

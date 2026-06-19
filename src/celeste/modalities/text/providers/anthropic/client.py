@@ -2,9 +2,11 @@
 
 import base64
 import contextlib
+import json
 from typing import Any
 
 from celeste.artifacts import DocumentArtifact, ImageArtifact
+from celeste.grounding import Grounding
 from celeste.messages import (
     content_to_text,
     message_parts,
@@ -27,6 +29,7 @@ from ...io import (
     TextInput,
 )
 from ...streaming import TextStream
+from .grounding import parse_grounding
 from .parameters import ANTHROPIC_PARAMETER_MAPPERS
 
 
@@ -95,14 +98,12 @@ class AnthropicTextStream(_AnthropicMessagesStream, TextStream):
         self, chunks: list[TextChunk], raw_events: list[dict[str, Any]]
     ) -> list[ToolCall]:
         """Reconstruct tool calls from accumulated content_block events."""
-        import json as _json
-
         result: list[ToolCall] = []
         for tc in self._tool_calls.values():
             arguments = {}
             if tc["input_json"]:
                 with contextlib.suppress(ValueError, TypeError):
-                    arguments = _json.loads(tc["input_json"])
+                    arguments = json.loads(tc["input_json"])
             result.append(ToolCall(id=tc["id"], name=tc["name"], arguments=arguments))
         return result
 
@@ -111,6 +112,12 @@ class AnthropicTextStream(_AnthropicMessagesStream, TextStream):
     ) -> list[dict[str, Any]]:
         """Return accumulated thinking blocks for round-trip signature."""
         return self._thinking_blocks
+
+    def _aggregate_grounding(
+        self, chunks: list[TextChunk], raw_events: list[dict[str, Any]]
+    ) -> Grounding | None:
+        """Reconstruct Anthropic web-search grounding from streamed content blocks."""
+        return parse_grounding(self._aggregate_content_blocks())
 
 
 class AnthropicTextClient(AnthropicMessagesClient, TextClient):
@@ -298,6 +305,10 @@ class AnthropicTextClient(AnthropicMessagesClient, TextClient):
             for block in response_data.get("content", [])
             if block.get("type") == "tool_use"
         ]
+
+    def _parse_grounding(self, response_data: dict[str, Any]) -> Grounding | None:
+        """Parse Anthropic web-search grounding from Messages content blocks."""
+        return parse_grounding(super()._parse_content(response_data))
 
     def _stream_class(self) -> type[TextStream]:
         """Return the Stream class for this provider."""

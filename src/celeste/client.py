@@ -17,6 +17,7 @@ from celeste.exceptions import (
     StreamingNotSupportedError,
     UnsupportedParameterWarning,
 )
+from celeste.grounding import Grounding
 from celeste.http import HTTPClient, get_http_client
 from celeste.io import Chunk as ChunkBase
 from celeste.io import FinishReason, Input, Output, Usage
@@ -242,6 +243,9 @@ class ModalityClient[
                 kwargs["reasoning"] = reasoning
             if signature:
                 kwargs["signature"] = signature
+            grounding = self._parse_grounding(response_data)
+            if grounding is not None:
+                kwargs["grounding"] = grounding
             output = self._output_class()(
                 content=content,
                 usage=self._get_usage(response_data),
@@ -262,6 +266,10 @@ class ModalityClient[
     ) -> tuple[str | None, list[dict[str, Any]]]:
         """Parse reasoning from response. Returns (text, signature_blocks)."""
         return None, []
+
+    def _parse_grounding(self, response_data: dict[str, Any]) -> Grounding | None:
+        """Parse web-search grounding from response."""
+        return None
 
     def _stream(
         self,

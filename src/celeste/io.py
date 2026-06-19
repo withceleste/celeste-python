@@ -14,6 +14,7 @@ from celeste.artifacts import (
 )
 from celeste.constraints import Constraint
 from celeste.core import InputType
+from celeste.grounding import Grounding
 from celeste.tools import ToolCall
 
 
@@ -45,6 +46,7 @@ class Output[Content](BaseModel):
     finish_reason: FinishReason | None = None
     metadata: dict[str, Any] = Field(default_factory=dict)
     tool_calls: list[ToolCall] = Field(default_factory=list)
+    grounding: Grounding | None = None
 
 
 class Chunk[Content](BaseModel):

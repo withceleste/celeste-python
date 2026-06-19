@@ -10,6 +10,7 @@ import httpx
 from anyio.from_thread import start_blocking_portal
 
 from celeste.exceptions import StreamEventError, StreamNotExhaustedError
+from celeste.grounding import Grounding
 from celeste.io import Chunk as ChunkBase
 from celeste.io import FinishReason, Output, Usage
 from celeste.parameters import Parameters
@@ -175,6 +176,9 @@ class Stream[Out: Output, Params: Parameters, Chunk: ChunkBase](ABC):
             kwargs["reasoning"] = reasoning
         if signature:
             kwargs["signature"] = signature
+        grounding = self._aggregate_grounding(chunks, raw_events)
+        if grounding is not None:
+            kwargs["grounding"] = grounding
         tool_calls = validate_tool_calls(
             self._aggregate_tool_calls(chunks, raw_events),
             parameters.get("tools"),
@@ -194,6 +198,12 @@ class Stream[Out: Output, Params: Parameters, Chunk: ChunkBase](ABC):
     ) -> list[ToolCall]:
         """Aggregate tool calls from stream events. Override in providers that support tools."""
         return []
+
+    def _aggregate_grounding(
+        self, chunks: list[Chunk], raw_events: list[dict[str, Any]]
+    ) -> Grounding | None:
+        """Aggregate web-search grounding from stream events."""
+        return None
 
     def _aggregate_reasoning(self, chunks: list[Chunk]) -> str | None:
         """Aggregate reasoning from chunks. Override in modality streams."""

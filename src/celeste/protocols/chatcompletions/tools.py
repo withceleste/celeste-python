@@ -41,7 +41,24 @@ def parse_tool_calls(
     return tool_calls
 
 
+def parse_annotations(response_data: dict[str, Any]) -> list[dict[str, Any]]:
+    """Extract citation/search annotations from Chat Completions messages."""
+    annotations: list[dict[str, Any]] = []
+    for choice in response_data.get("choices", []):
+        message = choice.get("message", {})
+        message_annotations = message.get("annotations")
+        if not isinstance(message_annotations, list):
+            continue
+        annotations.extend(
+            annotation
+            for annotation in message_annotations
+            if isinstance(annotation, dict)
+        )
+    return annotations
+
+
 __all__ = [
     "TOOL_MAPPERS",
+    "parse_annotations",
     "parse_tool_calls",
 ]
