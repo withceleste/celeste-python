@@ -156,7 +156,9 @@ MODELS: list[Model] = [
         parameter_constraints={
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0),
             Parameter.MAX_TOKENS: Range(min=1, max=65536),
-            TextParameter.THINKING_LEVEL: Choice(options=["low", "medium", "high"]),
+            TextParameter.THINKING_LEVEL: Choice(
+                options=["minimal", "low", "medium", "high"]
+            ),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch, CodeExecution]),
             TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
             TextParameter.OUTPUT_SCHEMA: Schema(),
