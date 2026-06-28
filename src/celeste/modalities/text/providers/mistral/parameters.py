@@ -21,7 +21,7 @@ from ...protocols.chatcompletions.parameters import (
 
 
 class ThinkingBudgetMapper(ParameterMapper[TextContent]):
-    """Map thinking_budget to Mistral's prompt_mode parameter."""
+    """Map thinking_budget to Mistral reasoning controls."""
 
     name = TextParameter.THINKING_BUDGET
 
@@ -36,12 +36,11 @@ class ThinkingBudgetMapper(ParameterMapper[TextContent]):
         if validated_value is None:
             return request
 
-        if validated_value == -1:
-            request["prompt_mode"] = "reasoning"
-        elif validated_value == 0:
-            request["prompt_mode"] = None
-        else:
-            request["prompt_mode"] = "reasoning"
+        if isinstance(validated_value, str):
+            request["reasoning_effort"] = validated_value
+            return request
+
+        request["prompt_mode"] = None if validated_value == 0 else "reasoning"
 
         return request
 
