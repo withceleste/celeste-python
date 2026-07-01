@@ -125,6 +125,31 @@ GEMINI_MODELS: list[Model] = [
             ImageParameter.THINKING_LEVEL: Choice(options=["minimal", "High"]),
         },
     ),
+    Model(
+        id="gemini-3.1-flash-lite-image",
+        provider=Provider.GOOGLE,
+        display_name="Nano Banana 2 Lite",
+        operations={Modality.IMAGES: {Operation.GENERATE, Operation.EDIT}},
+        parameter_constraints={
+            ImageParameter.ASPECT_RATIO: Choice(
+                options=[
+                    "1:1",
+                    "2:3",
+                    "3:2",
+                    "3:4",
+                    "4:3",
+                    "4:5",
+                    "5:4",
+                    "9:16",
+                    "16:9",
+                    "21:9",
+                ]
+            ),
+            ImageParameter.QUALITY: Choice(options=["1K"]),
+            ImageParameter.REFERENCE_IMAGES: ImagesConstraint(max_count=14),
+            ImageParameter.THINKING_LEVEL: Choice(options=["minimal", "high"]),
+        },
+    ),
 ]
 
 # Unified model list for registration
