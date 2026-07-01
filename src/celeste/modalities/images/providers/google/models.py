@@ -32,7 +32,6 @@ IMAGEN_MODELS: list[Model] = [
             ImageParameter.ASPECT_RATIO: Choice(
                 options=["1:1", "3:4", "4:3", "9:16", "16:9"]
             ),
-            ImageParameter.QUALITY: Choice(options=["1K"]),
         },
     ),
     Model(
@@ -76,9 +75,9 @@ GEMINI_MODELS: list[Model] = [
         },
     ),
     Model(
-        id="gemini-3-pro-image-preview",
+        id="gemini-3-pro-image",
         provider=Provider.GOOGLE,
-        display_name="Gemini 3 Pro Image (Preview)",
+        display_name="Nano Banana Pro",
         operations={Modality.IMAGES: {Operation.GENERATE, Operation.EDIT}},
         parameter_constraints={
             ImageParameter.ASPECT_RATIO: Choice(
@@ -97,11 +96,11 @@ GEMINI_MODELS: list[Model] = [
             ),
             ImageParameter.QUALITY: Choice(options=["1K", "2K", "4K"]),
             ImageParameter.REFERENCE_IMAGES: ImagesConstraint(max_count=14),
-            ImageParameter.THINKING_LEVEL: Choice(options=["minimal", "High"]),
+            ImageParameter.THINKING_LEVEL: Choice(options=["minimal", "high"]),
         },
     ),
     Model(
-        id="gemini-3.1-flash-image-preview",
+        id="gemini-3.1-flash-image",
         provider=Provider.GOOGLE,
         display_name="Nano Banana 2",
         operations={Modality.IMAGES: {Operation.GENERATE, Operation.EDIT}},
@@ -120,9 +119,34 @@ GEMINI_MODELS: list[Model] = [
                     "21:9",
                 ]
             ),
-            ImageParameter.QUALITY: Choice(options=["1K", "2K", "4K"]),
+            ImageParameter.QUALITY: Choice(options=["512px", "1K", "2K", "4K"]),
             ImageParameter.REFERENCE_IMAGES: ImagesConstraint(max_count=14),
-            ImageParameter.THINKING_LEVEL: Choice(options=["minimal", "High"]),
+            ImageParameter.THINKING_LEVEL: Choice(options=["minimal", "high"]),
+        },
+    ),
+    Model(
+        id="gemini-3.1-flash-lite-image",
+        provider=Provider.GOOGLE,
+        display_name="Nano Banana 2 Lite",
+        operations={Modality.IMAGES: {Operation.GENERATE, Operation.EDIT}},
+        parameter_constraints={
+            ImageParameter.ASPECT_RATIO: Choice(
+                options=[
+                    "1:1",
+                    "2:3",
+                    "3:2",
+                    "3:4",
+                    "4:3",
+                    "4:5",
+                    "5:4",
+                    "9:16",
+                    "16:9",
+                    "21:9",
+                ]
+            ),
+            ImageParameter.QUALITY: Choice(options=["1K"]),
+            ImageParameter.REFERENCE_IMAGES: ImagesConstraint(max_count=14),
+            ImageParameter.THINKING_LEVEL: Choice(options=["minimal", "high"]),
         },
     ),
 ]
