@@ -72,10 +72,12 @@ class ThinkingMapper(ParameterMapper[TextContent]):
 
 
 class ThinkingLevelMapper(ParameterMapper[TextContent]):
-    """Map thinking_level to Anthropic thinking field (adaptive mode).
+    """Map thinking_level to adaptive thinking plus output_config.effort.
 
-    Emits {"type": "adaptive", "effort": <value>} where <value> is one of
-    "low" | "medium" | "high" | "xhigh" | "max".
+    Emits {"thinking": {"type": "adaptive"}, "output_config": {"effort": <value>}}
+    where <value> is one of "low" | "medium" | "high" | "xhigh" | "max" — the
+    Messages API rejects an "effort" key inside the thinking object
+    ("thinking.adaptive.effort: Extra inputs are not permitted").
     """
 
     def map(
@@ -88,7 +90,8 @@ class ThinkingLevelMapper(ParameterMapper[TextContent]):
         validated_value = self._validate_value(value, model)
         if validated_value is None:
             return request
-        request["thinking"] = {"type": "adaptive", "effort": validated_value}
+        request["thinking"] = {"type": "adaptive"}
+        request.setdefault("output_config", {})["effort"] = validated_value
         return request
 
 

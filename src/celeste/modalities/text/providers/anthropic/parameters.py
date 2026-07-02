@@ -68,7 +68,7 @@ class ThinkingBudgetMapper(_ThinkingMapper):
 
 
 class ThinkingLevelMapper(_ThinkingLevelMapper):
-    """Map thinking_level to Anthropic's thinking.effort parameter (adaptive)."""
+    """Map thinking_level to Anthropic's adaptive thinking + output_config.effort."""
 
     name = TextParameter.THINKING_LEVEL
 
