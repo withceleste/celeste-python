@@ -40,11 +40,9 @@ class AnthropicTextStream(_AnthropicMessagesStream, TextStream):
         super().__init__(*args, **kwargs)
         self._message_start: dict[str, Any] | None = None
         self._tool_calls: dict[int, dict[str, Any]] = {}
-        self._thinking_blocks: list[dict[str, Any]] = []
-        self._current_thinking: dict[str, Any] | None = None
 
     def _parse_chunk(self, event_data: dict[str, Any]) -> TextChunk | None:
-        """Parse one SSE event into a typed chunk (captures message_start, tool_use, thinking)."""
+        """Parse one SSE event into a typed chunk (captures message_start and tool_use)."""
         event_type = event_data.get("type")
         if event_type == "message_start":
             message = event_data.get("message")
@@ -53,37 +51,19 @@ class AnthropicTextStream(_AnthropicMessagesStream, TextStream):
             return None
         if event_type == "content_block_start":
             block = event_data.get("content_block", {})
-            block_type = block.get("type")
-            if block_type == "tool_use":
+            if block.get("type") == "tool_use":
                 idx = event_data.get("index", len(self._tool_calls))
                 self._tool_calls[idx] = {
                     "id": block.get("id", ""),
                     "name": block.get("name", ""),
                     "input_json": "",
                 }
-            elif block_type == "thinking":
-                self._current_thinking = {
-                    "type": "thinking",
-                    "thinking": "",
-                    "signature": "",
-                }
-            elif block_type == "redacted_thinking":
-                self._thinking_blocks.append(block)
         elif event_type == "content_block_delta":
             delta = event_data.get("delta", {})
-            delta_type = delta.get("type")
-            if delta_type == "input_json_delta":
+            if delta.get("type") == "input_json_delta":
                 idx = event_data.get("index", -1)
                 if idx in self._tool_calls:
                     self._tool_calls[idx]["input_json"] += delta.get("partial_json", "")
-            elif delta_type == "thinking_delta" and self._current_thinking is not None:
-                self._current_thinking["thinking"] += delta.get("thinking", "")
-            elif delta_type == "signature_delta" and self._current_thinking is not None:
-                self._current_thinking["signature"] += delta.get("signature", "")
-        elif event_type == "content_block_stop":
-            if self._current_thinking is not None:
-                self._thinking_blocks.append(self._current_thinking)
-                self._current_thinking = None
         return super()._parse_chunk(event_data)
 
     def _aggregate_event_data(self, chunks: list[TextChunk]) -> list[dict[str, Any]]:
@@ -110,8 +90,12 @@ class AnthropicTextStream(_AnthropicMessagesStream, TextStream):
     def _aggregate_signature(
         self, chunks: list[TextChunk], raw_events: list[dict[str, Any]]
     ) -> list[dict[str, Any]]:
-        """Return accumulated thinking blocks for round-trip signature."""
-        return self._thinking_blocks
+        """Return the full native content array when the turn carries thinking blocks."""
+        blocks = self._aggregate_content_blocks()
+        has_thinking = any(
+            b.get("type") in {"thinking", "redacted_thinking"} for b in blocks
+        )
+        return blocks if has_thinking else []
 
     def _aggregate_grounding(
         self, chunks: list[TextChunk], raw_events: list[dict[str, Any]]
@@ -191,8 +175,15 @@ class AnthropicTextClient(AnthropicMessagesClient, TextClient):
                 pending_tool_results = []
 
             if role == Role.ASSISTANT and (message.tool_calls or message.signature):
+                sig_blocks = message.signature or []
+                if any(
+                    b.get("type") not in {"thinking", "redacted_thinking"}
+                    for b in sig_blocks
+                ):
+                    # thinking signs block positions — echo the full original turn verbatim
+                    messages.append({"role": "assistant", "content": sig_blocks})
+                    continue
                 content_blocks: list[dict[str, Any]] = []
-                sig_blocks = message.signature
                 if sig_blocks:
                     content_blocks.extend(sig_blocks)
                 if content:
@@ -280,21 +271,18 @@ class AnthropicTextClient(AnthropicMessagesClient, TextClient):
     def _parse_reasoning(
         self, response_data: dict[str, Any]
     ) -> tuple[str | None, list[dict[str, Any]]]:
-        """Parse thinking blocks from Anthropic response."""
+        """Parse thinking from Anthropic response (signature = full content array)."""
         blocks = response_data.get("content", [])
-        reasoning_parts: list[str] = []
-        signature_blocks: list[dict[str, Any]] = []
-        for block in blocks:
-            block_type = block.get("type")
-            if block_type == "thinking":
-                thinking_text = block.get("thinking", "")
-                if thinking_text:
-                    reasoning_parts.append(thinking_text)
-                signature_blocks.append(block)
-            elif block_type == "redacted_thinking":
-                signature_blocks.append(block)
+        reasoning_parts = [
+            b["thinking"]
+            for b in blocks
+            if b.get("type") == "thinking" and b.get("thinking")
+        ]
+        has_thinking = any(
+            b.get("type") in {"thinking", "redacted_thinking"} for b in blocks
+        )
         text = "\n".join(reasoning_parts) if reasoning_parts else None
-        return text, signature_blocks
+        return text, list(blocks) if has_thinking else []
 
     def _parse_tool_calls(self, response_data: dict[str, Any]) -> list[ToolCall]:
         """Parse tool calls from Anthropic response."""

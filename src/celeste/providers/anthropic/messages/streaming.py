@@ -32,15 +32,21 @@ class AnthropicMessagesStream:
             block = event_data.get("content_block", {})
             block_type = block.get("type")
             idx = event_data.get("index", len(self._content_blocks))
-            if block_type == "server_tool_use":
+            if block_type in {"server_tool_use", "tool_use"}:
                 self._content_blocks[idx] = {
-                    "type": "server_tool_use",
+                    "type": block_type,
                     "id": block.get("id", ""),
                     "name": block.get("name", ""),
                     "input_json": "",
                 }
-            elif block_type == "web_search_tool_result":
+            elif block_type in {"web_search_tool_result", "redacted_thinking"}:
                 self._content_blocks[idx] = block
+            elif block_type == "thinking":
+                self._content_blocks[idx] = {
+                    "type": "thinking",
+                    "thinking": block.get("thinking", ""),
+                    "signature": block.get("signature", ""),
+                }
             elif block_type == "text":
                 self._content_blocks[idx] = {
                     "type": "text",
@@ -53,8 +59,12 @@ class AnthropicMessagesStream:
             idx = event_data.get("index", -1)
             block = self._content_blocks.get(idx)
             if delta_type == "input_json_delta":
-                if block and block.get("type") == "server_tool_use":
+                if block and block.get("type") in {"server_tool_use", "tool_use"}:
                     block["input_json"] += delta.get("partial_json", "")
+            elif delta_type in {"thinking_delta", "signature_delta"}:
+                key = delta_type.removesuffix("_delta")
+                if block and block.get("type") == "thinking":
+                    block[key] += delta.get(key, "")
             elif delta_type in {"text_delta", "citations_delta"}:
                 block = self._content_blocks.setdefault(
                     idx, {"type": "text", "text": "", "citations": []}
@@ -72,19 +82,21 @@ class AnthropicMessagesStream:
         blocks: list[dict[str, Any]] = []
         for idx in sorted(self._content_blocks):
             block = self._content_blocks[idx]
-            if block.get("type") == "server_tool_use":
+            if block.get("type") in {"server_tool_use", "tool_use"}:
                 input_data: dict[str, Any] = {}
                 if block["input_json"]:
                     with contextlib.suppress(ValueError, TypeError):
                         input_data = json.loads(block["input_json"])
                 blocks.append(
                     {
-                        "type": "server_tool_use",
+                        "type": block["type"],
                         "id": block["id"],
                         "name": block["name"],
                         "input": input_data,
                     }
                 )
+            elif block.get("type") == "text" and not block.get("citations"):
+                blocks.append({"type": "text", "text": block.get("text", "")})
             else:
                 blocks.append(block)
         return blocks
