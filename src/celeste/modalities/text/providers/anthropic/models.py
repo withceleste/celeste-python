@@ -94,7 +94,7 @@ MODELS: list[Model] = [
         streaming=True,
         parameter_constraints={
             Parameter.MAX_TOKENS: Range(min=1, max=64000),
-            TextParameter.THINKING_BUDGET: Range(min=-1, max=32000),
+            TextParameter.THINKING_BUDGET: Range(min=1024, max=32000),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
             TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
@@ -217,3 +217,15 @@ MODELS: list[Model] = [
         },
     ),
 ]
+
+# Models that support web_search dynamic filtering (web_search_20260209); others use basic.
+DYNAMIC_FILTERING_MODELS = frozenset(
+    {
+        "claude-fable-5",
+        "claude-opus-4-8",
+        "claude-opus-4-7",
+        "claude-opus-4-6",
+        "claude-sonnet-5",
+        "claude-sonnet-4-6",
+    }
+)

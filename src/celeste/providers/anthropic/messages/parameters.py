@@ -74,10 +74,8 @@ class ThinkingMapper(ParameterMapper[TextContent]):
 class ThinkingLevelMapper(ParameterMapper[TextContent]):
     """Map thinking_level to adaptive thinking plus output_config.effort.
 
-    Emits {"thinking": {"type": "adaptive"}, "output_config": {"effort": <value>}}
-    where <value> is one of "low" | "medium" | "high" | "xhigh" | "max" — the
-    Messages API rejects an "effort" key inside the thinking object
-    ("thinking.adaptive.effort: Extra inputs are not permitted").
+    display="summarized" so thinking summaries stream (API default "omitted" is empty).
+    effort goes in output_config, not the thinking object (the API rejects it there).
     """
 
     def map(
@@ -90,7 +88,7 @@ class ThinkingLevelMapper(ParameterMapper[TextContent]):
         validated_value = self._validate_value(value, model)
         if validated_value is None:
             return request
-        request["thinking"] = {"type": "adaptive"}
+        request["thinking"] = {"type": "adaptive", "display": "summarized"}
         request.setdefault("output_config", {})["effort"] = validated_value
         return request
 
