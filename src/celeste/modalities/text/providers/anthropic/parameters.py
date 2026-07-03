@@ -28,6 +28,7 @@ from celeste.providers.anthropic.messages.parameters import (
 from celeste.types import TextContent
 
 from ...parameters import TextParameter
+from .models import DYNAMIC_FILTERING_MODELS
 
 
 class TemperatureMapper(_TemperatureMapper):
@@ -80,9 +81,23 @@ class OutputSchemaMapper(_OutputFormatMapper):
 
 
 class ToolsMapper(_ToolsMapper):
-    """Map tools to Anthropic's tools parameter."""
+    """Map tools to Anthropic's tools parameter (web_search version per model)."""
 
     name = TextParameter.TOOLS
+
+    def map(
+        self,
+        request: dict[str, Any],
+        value: object,
+        model: Model,
+    ) -> dict[str, Any]:
+        """Upgrade web_search to dynamic filtering (web_search_20260209) where the model supports it."""
+        request = super().map(request, value, model)
+        if model.id in DYNAMIC_FILTERING_MODELS:
+            for tool in request.get("tools", []):
+                if tool.get("name") == "web_search":
+                    tool["type"] = "web_search_20260209"
+        return request
 
 
 class ToolChoiceMapper(_ToolChoiceMapper):
