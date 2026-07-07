@@ -117,6 +117,8 @@ class ToolsMapper(ParameterMapper[TextContent]):
                     msg = f"Tool '{type(item).__name__}' is not supported by Anthropic"
                     raise ValueError(msg)
                 tools.append(mapper.map_tool(item))
+            elif isinstance(item, dict) and "type" in item:
+                tools.append(item)
             elif isinstance(item, dict) and "name" in item:
                 tools.append(self._map_user_tool(item))
             elif isinstance(item, dict):
