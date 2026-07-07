@@ -33,13 +33,17 @@ class AnthropicMessagesStream:
             block_type = block.get("type")
             idx = event_data.get("index", len(self._content_blocks))
             if block_type in {"server_tool_use", "tool_use"}:
+                input_value = block.get("input")
                 self._content_blocks[idx] = {
                     "type": block_type,
                     "id": block.get("id", ""),
                     "name": block.get("name", ""),
+                    "input": input_value if isinstance(input_value, dict) else None,
                     "input_json": "",
                 }
-            elif block_type in {"web_search_tool_result", "redacted_thinking"}:
+            elif block_type == "redacted_thinking" or (
+                isinstance(block_type, str) and block_type.endswith("_tool_result")
+            ):
                 self._content_blocks[idx] = block
             elif block_type == "thinking":
                 self._content_blocks[idx] = {
@@ -83,7 +87,7 @@ class AnthropicMessagesStream:
         for idx in sorted(self._content_blocks):
             block = self._content_blocks[idx]
             if block.get("type") in {"server_tool_use", "tool_use"}:
-                input_data: dict[str, Any] = {}
+                input_data = block.get("input") or {}
                 if block["input_json"]:
                     with contextlib.suppress(ValueError, TypeError):
                         input_data = json.loads(block["input_json"])

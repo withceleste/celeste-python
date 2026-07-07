@@ -10,6 +10,16 @@ from celeste.providers.google.auth import GoogleADC
 
 from . import config
 
+_NATIVE_REPLAY_BLOCK_TYPES = {"thinking", "redacted_thinking", "server_tool_use"}
+
+
+def needs_native_replay(blocks: list[dict[str, Any]]) -> bool:
+    return any(
+        (block_type := block.get("type")) in _NATIVE_REPLAY_BLOCK_TYPES
+        or (isinstance(block_type, str) and block_type.endswith("_tool_result"))
+        for block in blocks
+    )
+
 
 class AnthropicMessagesClient(APIMixin):
     """Mixin for Anthropic Messages API capabilities.

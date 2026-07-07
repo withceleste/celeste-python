@@ -1,8 +1,6 @@
 """Anthropic text client (modality)."""
 
 import base64
-import contextlib
-import json
 from typing import Any
 
 from celeste.artifacts import DocumentArtifact, ImageArtifact
@@ -15,7 +13,10 @@ from celeste.messages import (
 )
 from celeste.mime_types import ImageMimeType
 from celeste.parameters import ParameterMapper
-from celeste.providers.anthropic.messages.client import AnthropicMessagesClient
+from celeste.providers.anthropic.messages.client import (
+    AnthropicMessagesClient,
+    needs_native_replay,
+)
 from celeste.providers.anthropic.messages.streaming import (
     AnthropicMessagesStream as _AnthropicMessagesStream,
 )
@@ -39,31 +40,15 @@ class AnthropicTextStream(_AnthropicMessagesStream, TextStream):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         self._message_start: dict[str, Any] | None = None
-        self._tool_calls: dict[int, dict[str, Any]] = {}
 
     def _parse_chunk(self, event_data: dict[str, Any]) -> TextChunk | None:
-        """Parse one SSE event into a typed chunk (captures message_start and tool_use)."""
+        """Parse one SSE event into a typed chunk (captures message_start)."""
         event_type = event_data.get("type")
         if event_type == "message_start":
             message = event_data.get("message")
             if isinstance(message, dict):
                 self._message_start = message
             return None
-        if event_type == "content_block_start":
-            block = event_data.get("content_block", {})
-            if block.get("type") == "tool_use":
-                idx = event_data.get("index", len(self._tool_calls))
-                self._tool_calls[idx] = {
-                    "id": block.get("id", ""),
-                    "name": block.get("name", ""),
-                    "input_json": "",
-                }
-        elif event_type == "content_block_delta":
-            delta = event_data.get("delta", {})
-            if delta.get("type") == "input_json_delta":
-                idx = event_data.get("index", -1)
-                if idx in self._tool_calls:
-                    self._tool_calls[idx]["input_json"] += delta.get("partial_json", "")
         return super()._parse_chunk(event_data)
 
     def _aggregate_event_data(self, chunks: list[TextChunk]) -> list[dict[str, Any]]:
@@ -78,24 +63,22 @@ class AnthropicTextStream(_AnthropicMessagesStream, TextStream):
         self, chunks: list[TextChunk], raw_events: list[dict[str, Any]]
     ) -> list[ToolCall]:
         """Reconstruct tool calls from accumulated content_block events."""
-        result: list[ToolCall] = []
-        for tc in self._tool_calls.values():
-            arguments = {}
-            if tc["input_json"]:
-                with contextlib.suppress(ValueError, TypeError):
-                    arguments = json.loads(tc["input_json"])
-            result.append(ToolCall(id=tc["id"], name=tc["name"], arguments=arguments))
-        return result
+        return [
+            ToolCall(
+                id=block["id"],
+                name=block["name"],
+                arguments=block.get("input", {}),
+            )
+            for block in self._aggregate_content_blocks()
+            if block.get("type") == "tool_use"
+        ]
 
     def _aggregate_signature(
         self, chunks: list[TextChunk], raw_events: list[dict[str, Any]]
     ) -> list[dict[str, Any]]:
-        """Return the full native content array when the turn carries thinking blocks."""
+        """Return native content when Anthropic requires exact assistant replay."""
         blocks = self._aggregate_content_blocks()
-        has_thinking = any(
-            b.get("type") in {"thinking", "redacted_thinking"} for b in blocks
-        )
-        return blocks if has_thinking else []
+        return blocks if needs_native_replay(blocks) else []
 
     def _aggregate_grounding(
         self, chunks: list[TextChunk], raw_events: list[dict[str, Any]]
@@ -278,11 +261,8 @@ class AnthropicTextClient(AnthropicMessagesClient, TextClient):
             for b in blocks
             if b.get("type") == "thinking" and b.get("thinking")
         ]
-        has_thinking = any(
-            b.get("type") in {"thinking", "redacted_thinking"} for b in blocks
-        )
         text = "\n".join(reasoning_parts) if reasoning_parts else None
-        return text, list(blocks) if has_thinking else []
+        return text, list(blocks) if needs_native_replay(blocks) else []
 
     def _parse_tool_calls(self, response_data: dict[str, Any]) -> list[ToolCall]:
         """Parse tool calls from Anthropic response."""
