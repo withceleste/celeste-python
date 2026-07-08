@@ -85,4 +85,39 @@ MODELS: list[Model] = [
             ImageParameter.WATERMARK: Bool(),
         },
     ),
+    Model(
+        id="seedream-5-0-pro-260628",
+        provider=Provider.BYTEPLUS,
+        display_name="Seedream 5.0 Pro",
+        operations={Modality.IMAGES: {Operation.GENERATE}},
+        streaming=False,
+        parameter_constraints={
+            ImageParameter.ASPECT_RATIO: Dimensions(
+                min_pixels=1280 * 720,  # 921,600
+                max_pixels=2048 * 2048,  # 4,194,304
+                min_aspect_ratio=1 / 16,
+                max_aspect_ratio=16,
+                presets={
+                    "1K 1:1": "1024x1024",
+                    "1K 4:3": "1152x864",
+                    "1K 3:4": "864x1152",
+                    "1K 16:9": "1312x736",
+                    "1K 9:16": "736x1312",
+                    "1K 3:2": "1248x832",
+                    "1K 2:3": "832x1248",
+                    "1K 21:9": "1568x672",
+                    "2K 1:1": "2048x2048",
+                    "2K 4:3": "2304x1728",
+                    "2K 3:4": "1728x2304",
+                    "2K 16:9": "2848x1600",
+                    "2K 9:16": "1600x2848",
+                    "2K 3:2": "2496x1664",
+                    "2K 2:3": "1664x2496",
+                    "2K 21:9": "3136x1344",
+                },
+            ),
+            ImageParameter.QUALITY: Choice(options=["1K", "2K"]),
+            ImageParameter.WATERMARK: Bool(),
+        },
+    ),
 ]
