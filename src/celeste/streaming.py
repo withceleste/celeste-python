@@ -189,6 +189,9 @@ class Stream[Out: Output, Params: Parameters, Chunk: ChunkBase](ABC):
         grounding = self._aggregate_grounding(chunks, raw_events)
         if grounding is not None:
             kwargs["grounding"] = grounding
+        container = self._aggregate_container(chunks, raw_events)
+        if container is not None:
+            kwargs["container"] = container
         tool_calls = validate_tool_calls(
             self._aggregate_tool_calls(chunks, raw_events),
             parameters.get("tools"),
@@ -213,6 +216,12 @@ class Stream[Out: Output, Params: Parameters, Chunk: ChunkBase](ABC):
         self, chunks: list[Chunk], raw_events: list[dict[str, Any]]
     ) -> Grounding | None:
         """Aggregate web-search grounding from stream events."""
+        return None
+
+    def _aggregate_container(
+        self, chunks: list[Chunk], raw_events: list[dict[str, Any]]
+    ) -> dict[str, Any] | None:
+        """Aggregate provider container state. Override in provider streams."""
         return None
 
     def _aggregate_reasoning(self, chunks: list[Chunk]) -> str | None:

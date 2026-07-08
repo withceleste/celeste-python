@@ -4,7 +4,8 @@ from collections.abc import AsyncIterator
 from typing import Any, ClassVar
 
 from celeste.client import APIMixin
-from celeste.core import UsageField
+from celeste.constraints import Range
+from celeste.core import Parameter, UsageField
 from celeste.io import FinishReason
 from celeste.providers.google.auth import GoogleADC
 
@@ -14,9 +15,15 @@ _NATIVE_REPLAY_BLOCK_TYPES = {"thinking", "redacted_thinking", "server_tool_use"
 
 
 def needs_native_replay(blocks: list[dict[str, Any]]) -> bool:
+    # Programmatic tool_use (non-direct caller) must replay its caller verbatim.
     return any(
         (block_type := block.get("type")) in _NATIVE_REPLAY_BLOCK_TYPES
         or (isinstance(block_type, str) and block_type.endswith("_tool_result"))
+        or (
+            block_type == "tool_use"
+            and isinstance(caller := block.get("caller"), dict)
+            and caller.get("type") != "direct"
+        )
         for block in blocks
     )
 
@@ -101,6 +108,13 @@ class AnthropicMessagesClient(APIMixin):
             request_body["stream"] = True
         return request_body
 
+    def _resolve_max_tokens(self) -> int:
+        """Default max_tokens to the model's output ceiling, not an arbitrary cap."""
+        constraint = self.model.parameter_constraints.get(Parameter.MAX_TOKENS)
+        if isinstance(constraint, Range):
+            return int(constraint.max)
+        return config.DEFAULT_MAX_TOKENS
+
     async def _make_request(
         self,
         request_body: dict[str, Any],
@@ -112,7 +126,7 @@ class AnthropicMessagesClient(APIMixin):
         """Make HTTP request to Anthropic Messages API endpoint."""
         # Apply max_tokens default if not set (Anthropic requires it)
         if "max_tokens" not in request_body:
-            request_body["max_tokens"] = config.DEFAULT_MAX_TOKENS
+            request_body["max_tokens"] = self._resolve_max_tokens()
 
         beta_features: list[str] = request_body.pop("_beta_features", [])
         headers = self._build_headers(
@@ -142,7 +156,7 @@ class AnthropicMessagesClient(APIMixin):
         """Make streaming request to Anthropic Messages API endpoint."""
         # Apply max_tokens default if not set (Anthropic requires it)
         if "max_tokens" not in request_body:
-            request_body["max_tokens"] = config.DEFAULT_MAX_TOKENS
+            request_body["max_tokens"] = self._resolve_max_tokens()
 
         beta_features: list[str] = request_body.pop("_beta_features", [])
         headers = self._build_headers(
@@ -204,6 +218,11 @@ class AnthropicMessagesClient(APIMixin):
         """
         stop_reason = response_data.get("stop_reason")
         return FinishReason(reason=stop_reason)
+
+    def _parse_container(self, response_data: dict[str, Any]) -> dict[str, Any] | None:
+        """Return the code-execution container for reuse in continuation requests."""
+        container = response_data.get("container")
+        return container if isinstance(container, dict) else None
 
 
 __all__ = ["AnthropicMessagesClient"]

@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 from enum import StrEnum
-from typing import Any, ClassVar
+from typing import Any, ClassVar, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 from pydantic import ValidationError as PydanticValidationError
@@ -15,6 +15,8 @@ class Tool(BaseModel):
     """Base for configurable tools. Subclass per tool type.
 
     Provider-specific ToolMappers translate these to wire format.
+    The `kind` discriminator lets serialized tools rehydrate across
+    JSON boundaries (e.g. consumers that relay parameters as JSON).
     """
 
     model_config = ConfigDict(frozen=True)
@@ -29,6 +31,7 @@ class WebSearch(Tool):
     - max_uses → Anthropic: max_uses
     """
 
+    kind: Literal["web_search"] = "web_search"
     allowed_domains: list[str] | None = None
     blocked_domains: list[str] | None = None
     max_uses: int | None = None
@@ -37,9 +40,13 @@ class WebSearch(Tool):
 class XSearch(Tool):
     """X/Twitter search tool (OpenAI/xAI only)."""
 
+    kind: Literal["x_search"] = "x_search"
+
 
 class CodeExecution(Tool):
     """Code execution/interpreter tool."""
+
+    kind: Literal["code_execution"] = "code_execution"
 
 
 class ToolMapper(ABC):
@@ -55,6 +62,22 @@ class ToolMapper(ABC):
 
 
 type ToolDefinition = Tool | dict[str, Any]
+
+_TOOL_KINDS: dict[str, type[Tool]] = {
+    "web_search": WebSearch,
+    "x_search": XSearch,
+    "code_execution": CodeExecution,
+}
+
+
+def rehydrate_tools(tools: list[ToolDefinition]) -> list[ToolDefinition]:
+    """Rebuild Tool instances from kind-tagged dicts (JSON round-trips)."""
+    return [
+        _TOOL_KINDS[item["kind"]].model_validate(item)
+        if isinstance(item, dict) and item.get("kind") in _TOOL_KINDS
+        else item
+        for item in tools
+    ]
 
 
 def _tool_parameter_models(tools: object | None) -> dict[str, type[BaseModel]]:
@@ -163,5 +186,6 @@ __all__ = [
     "ToolResultContent",
     "WebSearch",
     "XSearch",
+    "rehydrate_tools",
     "validate_tool_calls",
 ]

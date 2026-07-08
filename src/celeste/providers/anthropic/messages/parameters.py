@@ -121,8 +121,6 @@ class ToolsMapper(ParameterMapper[TextContent]):
                 tools.append(item)
             elif isinstance(item, dict) and "name" in item:
                 tools.append(self._map_user_tool(item))
-            elif isinstance(item, dict):
-                tools.append(item)
             else:
                 raise InvalidToolError(item)
 

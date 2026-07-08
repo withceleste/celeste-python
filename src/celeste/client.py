@@ -246,6 +246,9 @@ class ModalityClient[
             grounding = self._parse_grounding(response_data)
             if grounding is not None:
                 kwargs["grounding"] = grounding
+            container = self._parse_container(response_data)
+            if container is not None:
+                kwargs["container"] = container
             output = self._output_class()(
                 content=content,
                 usage=self._get_usage(response_data),
@@ -266,6 +269,10 @@ class ModalityClient[
     ) -> tuple[str | None, list[dict[str, Any]]]:
         """Parse reasoning from response. Returns (text, signature_blocks)."""
         return None, []
+
+    def _parse_container(self, response_data: dict[str, Any]) -> dict[str, Any] | None:
+        """Parse provider container state. Override in providers that reuse containers."""
+        return None
 
     def _parse_grounding(self, response_data: dict[str, Any]) -> Grounding | None:
         """Parse web-search grounding from response."""

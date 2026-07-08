@@ -80,6 +80,18 @@ class AnthropicTextStream(_AnthropicMessagesStream, TextStream):
         blocks = self._aggregate_content_blocks()
         return blocks if needs_native_replay(blocks) else []
 
+    def _aggregate_container(
+        self, chunks: list[TextChunk], raw_events: list[dict[str, Any]]
+    ) -> dict[str, Any] | None:
+        """Recover the top-level container from message_start / message_delta events."""
+        for event in reversed(raw_events):
+            for holder in (event, event.get("message"), event.get("delta")):
+                if isinstance(holder, dict) and isinstance(
+                    holder.get("container"), dict
+                ):
+                    return holder["container"]
+        return None
+
     def _aggregate_grounding(
         self, chunks: list[TextChunk], raw_events: list[dict[str, Any]]
     ) -> Grounding | None:
@@ -126,6 +138,7 @@ class AnthropicTextClient(AnthropicMessagesClient, TextClient):
         system_blocks: list[dict[str, Any]] = []
         messages: list[dict[str, Any]] = []
         pending_tool_results: list[dict[str, Any]] = []
+        container_id: str | None = None
 
         for message in request_messages(
             prompt=inputs.prompt,
@@ -156,6 +169,10 @@ class AnthropicTextClient(AnthropicMessagesClient, TextClient):
             if pending_tool_results:
                 messages.append({"role": "user", "content": pending_tool_results})
                 pending_tool_results = []
+
+            # Last-wins: the pending turn's code-execution container is echoed top-level.
+            if message.container and message.container.get("id"):
+                container_id = message.container["id"]
 
             if role == Role.ASSISTANT and (message.tool_calls or message.signature):
                 sig_blocks = message.signature or []
@@ -192,6 +209,8 @@ class AnthropicTextClient(AnthropicMessagesClient, TextClient):
         request: dict[str, Any] = {"messages": messages}
         if system_blocks:
             request["system"] = system_blocks
+        if container_id:
+            request["container"] = container_id
         return request
 
     def _build_document_source(self, doc: DocumentArtifact) -> dict[str, Any]:

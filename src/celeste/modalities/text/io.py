@@ -62,6 +62,7 @@ class TextOutput(Output[TextContent]):
     finish_reason: TextFinishReason | None = None
     reasoning: str | None = None
     signature: list[dict[str, Any]] | None = None
+    container: dict[str, Any] | None = None
 
     @property
     def message(self) -> Message:
@@ -72,6 +73,7 @@ class TextOutput(Output[TextContent]):
             tool_calls=self.tool_calls if self.tool_calls else None,
             reasoning=self.reasoning,
             signature=self.signature,
+            container=self.container,
         )
 
 

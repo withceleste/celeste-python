@@ -34,13 +34,13 @@ class AnthropicMessagesStream:
             idx = event_data.get("index", len(self._content_blocks))
             if block_type in {"server_tool_use", "tool_use"}:
                 input_value = block.get("input")
-                self._content_blocks[idx] = {
-                    "type": block_type,
-                    "id": block.get("id", ""),
-                    "name": block.get("name", ""),
-                    "input": input_value if isinstance(input_value, dict) else None,
-                    "input_json": "",
-                }
+                # Keep provider fields like `caller`; only input streams via deltas.
+                captured = dict(block)
+                captured["input"] = (
+                    input_value if isinstance(input_value, dict) else None
+                )
+                captured["input_json"] = ""
+                self._content_blocks[idx] = captured
             elif block_type == "redacted_thinking" or (
                 isinstance(block_type, str) and block_type.endswith("_tool_result")
             ):
@@ -88,17 +88,13 @@ class AnthropicMessagesStream:
             block = self._content_blocks[idx]
             if block.get("type") in {"server_tool_use", "tool_use"}:
                 input_data = block.get("input") or {}
-                if block["input_json"]:
+                if block.get("input_json"):
                     with contextlib.suppress(ValueError, TypeError):
                         input_data = json.loads(block["input_json"])
-                blocks.append(
-                    {
-                        "type": block["type"],
-                        "id": block["id"],
-                        "name": block["name"],
-                        "input": input_data,
-                    }
-                )
+                # Keep all captured fields (incl. caller); drop input_json accumulator.
+                emitted = {k: v for k, v in block.items() if k != "input_json"}
+                emitted["input"] = input_data
+                blocks.append(emitted)
             elif block.get("type") == "text" and not block.get("citations"):
                 blocks.append({"type": "text", "text": block.get("text", "")})
             else:

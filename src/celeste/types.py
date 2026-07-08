@@ -113,6 +113,7 @@ class Message(BaseModel):
     tool_calls: list[ToolCall] | None = None
     reasoning: str | None = None
     signature: list[dict[str, Any]] | None = None
+    container: dict[str, Any] | None = None
 
 
 __all__ = [

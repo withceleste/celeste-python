@@ -8,7 +8,13 @@ from asgiref.sync import async_to_sync
 from celeste.client import ModalityClient
 from celeste.core import Modality
 from celeste.messages import media_types
-from celeste.tools import CodeExecution, ToolResult, WebSearch, XSearch
+from celeste.tools import (
+    CodeExecution,
+    ToolResult,
+    WebSearch,
+    XSearch,
+    rehydrate_tools,
+)
 from celeste.types import (
     AudioContent,
     DocumentContent,
@@ -101,10 +107,11 @@ class TextClient(
         streaming: bool = False,
         **parameters: Unpack[TextParameters],
     ) -> dict[str, Any]:
-        """Build request, migrating deprecated boolean tool params first.
-
-        TODO(deprecation): Remove this override on 2026-06-07.
-        """
+        """Build request, rehydrating tools and migrating deprecated boolean tool params."""
+        tools = parameters.get("tools")
+        if isinstance(tools, list):
+            parameters["tools"] = rehydrate_tools(tools)
+        # TODO(deprecation): Remove the boolean-param migration on 2026-06-07.
         for old_param, tool_cls in self._DEPRECATED_TOOL_PARAMS.items():
             value = parameters.pop(old_param, None)  # type: ignore[misc]
             if value:
