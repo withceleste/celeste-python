@@ -233,11 +233,7 @@ class Stream[Out: Output, Params: Parameters, Chunk: ChunkBase](ABC):
     def _aggregate_raw_response(
         self, chunks: list[Chunk], raw_events: list[dict[str, Any]]
     ) -> dict[str, Any] | None:
-        """Reconstructed final response dict (streaming counterpart of raw_response).
-
-        Default covers wires whose terminal event is response-shaped (top-level
-        usage). Providers override where the wire wraps or splits the response.
-        """
+        """Reconstruct the final response dict; providers override for wrapped/split wires."""
         for event in reversed(raw_events):
             if isinstance(event.get("usage"), dict):
                 return event

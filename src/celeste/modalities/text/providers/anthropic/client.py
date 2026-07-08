@@ -72,6 +72,7 @@ class AnthropicTextStream(_AnthropicMessagesStream, TextStream):
         return None
 
     def _usage_from_raw_response(self, raw_response: dict[str, Any]) -> TextUsage:
+        """Derive typed usage from the assembled response (usage is split across events)."""
         return self._usage_class(
             **AnthropicMessagesClient.map_usage_fields(raw_response.get("usage") or {})
         )
