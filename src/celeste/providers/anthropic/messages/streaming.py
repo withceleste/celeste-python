@@ -24,10 +24,16 @@ class AnthropicMessagesStream:
     def __init__(self, *args: Any, **kwargs: Any) -> None:  # noqa: ANN401
         super().__init__(*args, **kwargs)
         self._content_blocks: dict[int, dict[str, Any]] = {}
+        self._message_start: dict[str, Any] | None = None
 
     def _parse_chunk(self, event_data: dict[str, Any]) -> Any:  # noqa: ANN401
         """Capture native content blocks before delegating to the modality stream."""
         event_type = event_data.get("type")
+        if event_type == "message_start":
+            message = event_data.get("message")
+            if isinstance(message, dict):
+                self._message_start = message
+            return None
         if event_type == "content_block_start":
             block = event_data.get("content_block", {})
             block_type = block.get("type")
@@ -80,6 +86,31 @@ class AnthropicMessagesStream:
                     if isinstance(citation, dict):
                         block["citations"].append(citation)
         return super()._parse_chunk(event_data)  # type: ignore[misc]
+
+    def _aggregate_event_data(self, chunks: list[Any]) -> list[dict[str, Any]]:
+        """Prepend the captured message_start, then delegate to the modality stream."""
+        events: list[dict[str, Any]] = []
+        if self._message_start is not None:
+            events.append({"type": "message_start", "message": self._message_start})
+        events.extend(super()._aggregate_event_data(chunks))  # type: ignore[misc]
+        return events
+
+    def _aggregate_raw_response(
+        self, chunks: list[Any], raw_events: list[dict[str, Any]]
+    ) -> dict[str, Any] | None:
+        """Assemble the final Messages response: message_start merged with message_delta."""
+        if self._message_start is None:
+            return None
+        response = dict(self._message_start)
+        for event in reversed(raw_events):
+            if event.get("type") == "message_delta":
+                response.update(event.get("delta") or {})
+                response["usage"] = {
+                    **(response.get("usage") or {}),
+                    **(event.get("usage") or {}),
+                }
+                break
+        return response
 
     def _aggregate_content_blocks(self) -> list[dict[str, Any]]:
         """Return reconstructed native Anthropic content blocks."""

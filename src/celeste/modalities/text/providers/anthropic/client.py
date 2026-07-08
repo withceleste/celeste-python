@@ -28,6 +28,7 @@ from ...client import TextClient
 from ...io import (
     TextChunk,
     TextInput,
+    TextUsage,
 )
 from ...streaming import TextStream
 from .grounding import parse_grounding
@@ -36,28 +37,6 @@ from .parameters import ANTHROPIC_PARAMETER_MAPPERS
 
 class AnthropicTextStream(_AnthropicMessagesStream, TextStream):
     """Anthropic streaming for text modality."""
-
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
-        super().__init__(*args, **kwargs)
-        self._message_start: dict[str, Any] | None = None
-
-    def _parse_chunk(self, event_data: dict[str, Any]) -> TextChunk | None:
-        """Parse one SSE event into a typed chunk (captures message_start)."""
-        event_type = event_data.get("type")
-        if event_type == "message_start":
-            message = event_data.get("message")
-            if isinstance(message, dict):
-                self._message_start = message
-            return None
-        return super()._parse_chunk(event_data)
-
-    def _aggregate_event_data(self, chunks: list[TextChunk]) -> list[dict[str, Any]]:
-        """Prepend message_start, then delegate to base."""
-        events: list[dict[str, Any]] = []
-        if self._message_start is not None:
-            events.append({"type": "message_start", "message": self._message_start})
-        events.extend(super()._aggregate_event_data(chunks))
-        return events
 
     def _aggregate_tool_calls(
         self, chunks: list[TextChunk], raw_events: list[dict[str, Any]]
@@ -91,6 +70,11 @@ class AnthropicTextStream(_AnthropicMessagesStream, TextStream):
                 ):
                     return holder["container"]
         return None
+
+    def _usage_from_raw_response(self, raw_response: dict[str, Any]) -> TextUsage:
+        return self._usage_class(
+            **AnthropicMessagesClient.map_usage_fields(raw_response.get("usage") or {})
+        )
 
     def _aggregate_grounding(
         self, chunks: list[TextChunk], raw_events: list[dict[str, Any]]

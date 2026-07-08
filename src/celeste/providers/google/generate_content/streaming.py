@@ -73,6 +73,15 @@ class GoogleGenerateContentStream:
 
         return None
 
+    def _aggregate_raw_response(
+        self, chunks: list[Any], raw_events: list[dict[str, Any]]
+    ) -> dict[str, Any] | None:
+        """The last chunk carrying cumulative usageMetadata is response-shaped."""
+        for event in reversed(raw_events):
+            if isinstance(event.get("usageMetadata"), dict):
+                return event
+        return None
+
     def _parse_chunk_finish_reason(
         self, event_data: dict[str, Any]
     ) -> FinishReason | None:
