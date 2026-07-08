@@ -7,6 +7,31 @@ from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
     InMemorySpanExporter,
 )
 from opentelemetry.trace import Span
+from pydantic import SecretStr
+
+from celeste import Model
+from celeste.auth import AuthHeader
+from celeste.constraints import Constraint
+from celeste.core import Modality, Operation, Provider
+from celeste.modalities.text.providers.anthropic.client import AnthropicTextClient
+
+
+def anthropic_test_client(
+    constraints: dict[str, Constraint] | None = None,
+) -> AnthropicTextClient:
+    """Anthropic text client over a minimal model, for request/stream tests."""
+    model = Model(
+        id="claude-opus-4-8",
+        provider=Provider.ANTHROPIC,
+        display_name="Claude Opus 4.8",
+        operations={Modality.TEXT: {Operation.GENERATE}},
+        parameter_constraints=constraints or {},
+    )
+    return AnthropicTextClient(
+        model=model,
+        provider=Provider.ANTHROPIC,
+        auth=AuthHeader(secret=SecretStr("test"), header="x-api-key", prefix=""),
+    )
 
 
 @pytest.fixture
