@@ -75,6 +75,16 @@ class OpenResponsesStream:
                 return OpenResponsesClient.map_usage_fields(usage_data)
         return None
 
+    def _aggregate_raw_response(
+        self, chunks: list[Any], raw_events: list[dict[str, Any]]
+    ) -> dict[str, Any] | None:
+        """Unwrap the final Response object from the response.completed event."""
+        for event in reversed(raw_events):
+            if event.get("type") == "response.completed":
+                response = event.get("response")
+                return response if isinstance(response, dict) else None
+        return None
+
     def _parse_chunk_finish_reason(
         self, event_data: dict[str, Any]
     ) -> FinishReason | None:

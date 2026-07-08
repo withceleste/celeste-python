@@ -196,11 +196,17 @@ class Stream[Out: Output, Params: Parameters, Chunk: ChunkBase](ABC):
             self._aggregate_tool_calls(chunks, raw_events),
             parameters.get("tools"),
         )
+        metadata = self._build_stream_metadata(raw_events)
+        raw_response = self._aggregate_raw_response(chunks, raw_events)
+        usage: Usage | None = None
+        if raw_response is not None:
+            metadata["raw_response"] = raw_response
+            usage = self._usage_from_raw_response(raw_response)
         output = self._output_class(
             content=content,
-            usage=self._aggregate_usage(chunks),
+            usage=usage or self._aggregate_usage(chunks),
             finish_reason=self._aggregate_finish_reason(chunks),
-            metadata=self._build_stream_metadata(raw_events),
+            metadata=metadata,
             tool_calls=tool_calls,
             **kwargs,
         )
@@ -222,6 +228,19 @@ class Stream[Out: Output, Params: Parameters, Chunk: ChunkBase](ABC):
         self, chunks: list[Chunk], raw_events: list[dict[str, Any]]
     ) -> dict[str, Any] | None:
         """Aggregate provider container state. Override in provider streams."""
+        return None
+
+    def _aggregate_raw_response(
+        self, chunks: list[Chunk], raw_events: list[dict[str, Any]]
+    ) -> dict[str, Any] | None:
+        """Reconstruct the final response dict; providers override for wrapped/split wires."""
+        for event in reversed(raw_events):
+            if isinstance(event.get("usage"), dict):
+                return event
+        return None
+
+    def _usage_from_raw_response(self, raw_response: dict[str, Any]) -> Usage | None:
+        """Typed usage from the assembled response. Providers with split usage override."""
         return None
 
     def _aggregate_reasoning(self, chunks: list[Chunk]) -> str | None:

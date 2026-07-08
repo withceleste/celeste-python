@@ -81,6 +81,17 @@ class GoogleInteractionsStream:
 
         return None
 
+    def _aggregate_raw_response(
+        self, chunks: list[Any], raw_events: list[dict[str, Any]]
+    ) -> dict[str, Any] | None:
+        """Unwrap the final Interaction object from the interaction.complete event."""
+        for event in reversed(raw_events):
+            event_type = event.get("event_type") or event.get("type")
+            if event_type == "interaction.complete":
+                interaction = event.get("interaction")
+                return interaction if isinstance(interaction, dict) else None
+        return None
+
     def _parse_chunk_finish_reason(
         self, event_data: dict[str, Any]
     ) -> FinishReason | None:
