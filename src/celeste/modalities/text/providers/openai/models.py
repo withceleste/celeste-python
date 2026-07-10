@@ -208,6 +208,78 @@ MODELS: list[Model] = [
         },
     ),
     Model(
+        id="gpt-5.6",
+        provider=Provider.OPENAI,
+        display_name="GPT-5.6",
+        operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
+        streaming=True,
+        parameter_constraints={
+            Parameter.MAX_TOKENS: Range(min=1, max=128000),
+            TextParameter.THINKING_BUDGET: Choice(
+                options=["none", "low", "medium", "high", "xhigh", "max"]
+            ),
+            TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
+            TextParameter.OUTPUT_SCHEMA: Schema(),
+            TextParameter.IMAGE: ImagesConstraint(),
+            TextParameter.DOCUMENT: DocumentsConstraint(),
+        },
+    ),
+    Model(
+        id="gpt-5.6-sol",
+        provider=Provider.OPENAI,
+        display_name="GPT-5.6 Sol",
+        operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
+        streaming=True,
+        parameter_constraints={
+            Parameter.MAX_TOKENS: Range(min=1, max=128000),
+            TextParameter.THINKING_BUDGET: Choice(
+                options=["none", "low", "medium", "high", "xhigh", "max"]
+            ),
+            TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
+            TextParameter.OUTPUT_SCHEMA: Schema(),
+            TextParameter.IMAGE: ImagesConstraint(),
+            TextParameter.DOCUMENT: DocumentsConstraint(),
+        },
+    ),
+    Model(
+        id="gpt-5.6-terra",
+        provider=Provider.OPENAI,
+        display_name="GPT-5.6 Terra",
+        operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
+        streaming=True,
+        parameter_constraints={
+            Parameter.MAX_TOKENS: Range(min=1, max=128000),
+            TextParameter.THINKING_BUDGET: Choice(
+                options=["none", "low", "medium", "high", "xhigh", "max"]
+            ),
+            TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
+            TextParameter.OUTPUT_SCHEMA: Schema(),
+            TextParameter.IMAGE: ImagesConstraint(),
+            TextParameter.DOCUMENT: DocumentsConstraint(),
+        },
+    ),
+    Model(
+        id="gpt-5.6-luna",
+        provider=Provider.OPENAI,
+        display_name="GPT-5.6 Luna",
+        operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
+        streaming=True,
+        parameter_constraints={
+            Parameter.MAX_TOKENS: Range(min=1, max=128000),
+            TextParameter.THINKING_BUDGET: Choice(
+                options=["none", "low", "medium", "high", "xhigh", "max"]
+            ),
+            TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
+            TextParameter.OUTPUT_SCHEMA: Schema(),
+            TextParameter.IMAGE: ImagesConstraint(),
+            TextParameter.DOCUMENT: DocumentsConstraint(),
+        },
+    ),
+    Model(
         id="gpt-5.5",
         provider=Provider.OPENAI,
         display_name="GPT-5.5",
