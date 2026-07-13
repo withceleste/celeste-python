@@ -21,6 +21,7 @@ class AudioClient(
     modality: Modality = Modality.AUDIO
     _usage_class = AudioUsage
     _finish_reason_class = AudioFinishReason
+    _content_fields: ClassVar[set[str]] = {"audio_bytes"}
 
     _speak_endpoint: ClassVar[str | None] = None
 
