@@ -228,16 +228,22 @@ class TestExtendedUsageAttributes:
         assert "gen_ai.usage.images_generated" not in attrs
 
     def test_response_model_emitted_from_metadata(self) -> None:
-        """`gen_ai.response.model` reads from `output.metadata["model"]`."""
         output: Output[Any] = TelemetryOutput(
             content="",
             usage=TelemetryUsage(),
-            metadata={"model": "claude-opus-4-1-20250805"},
+            metadata={"response_model": "claude-opus-4-1-20250805"},
         )
 
         attrs = telemetry.output_attributes(output)
 
         assert attrs["gen_ai.response.model"] == "claude-opus-4-1-20250805"
+
+    def test_response_model_omitted_when_provider_does_not_return_one(self) -> None:
+        output: Output[Any] = TelemetryOutput(
+            content="", usage=TelemetryUsage(), metadata={}
+        )
+
+        assert "gen_ai.response.model" not in telemetry.output_attributes(output)
 
 
 class TestNoSpanActivationInAnext:

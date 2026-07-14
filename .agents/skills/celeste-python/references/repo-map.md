@@ -193,8 +193,6 @@ Start new provider, protocol, modality, and test work from templates:
 - `templates/modalities/{modality_slug}/providers/{provider_slug}/`
 - `templates/protocols/{protocol_slug}/`
 
-Provider API mixin templates are validated by focused tests. If changing provider API patterns, inspect the template and `references/verification.md` together.
-
 ## Tests As Executable Documentation
 
 Use focused tests by seam. The canonical test routing matrix lives in `references/verification.md`; keep detailed test-file lists there to avoid duplicate drift.

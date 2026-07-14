@@ -1,20 +1,13 @@
 """Celeste - Open source, type-safe primitives for multi-modal AI."""
 
-import logging
 import warnings
 
 from pydantic import SecretStr
 
 from celeste import providers as _providers  # noqa: F401
-from celeste.auth import APIKey, Authentication, AuthHeader, NoAuth
+from celeste.auth import Authentication, AuthHeader, NoAuth
 from celeste.client import ModalityClient
-from celeste.core import (
-    Capability,
-    Modality,
-    Operation,
-    Protocol,
-    Provider,
-)
+from celeste.core import Modality, Operation, Protocol, Provider
 from celeste.credentials import credentials
 from celeste.exceptions import (
     ClientNotFoundError,
@@ -59,8 +52,6 @@ from celeste.types import (
     VideoPart,
 )
 
-logger = logging.getLogger(__name__)
-
 _CLIENT_MAP: dict[tuple[Modality, Provider | Protocol], type[ModalityClient]] = {
     **{(Modality.TEXT, p): c for p, c in _text_providers.items()},
     **{(Modality.IMAGES, p): c for p, c in _images_providers.items()},
@@ -81,14 +72,6 @@ for _model in [
 ]:
     assert _model.provider is not None
     _models[(_model.id, _model.provider)] = _model
-
-_CAPABILITY_TO_MODALITY_OPERATION: dict[Capability, tuple[Modality, Operation]] = {
-    Capability.TEXT_GENERATION: (Modality.TEXT, Operation.GENERATE),
-    Capability.TEXT_EMBEDDINGS: (Modality.EMBEDDINGS, Operation.EMBED),
-    Capability.IMAGE_GENERATION: (Modality.IMAGES, Operation.GENERATE),
-    Capability.VIDEO_GENERATION: (Modality.VIDEOS, Operation.GENERATE),
-    Capability.SPEECH_GENERATION: (Modality.AUDIO, Operation.SPEAK),
-}
 
 
 def _resolve_model(
@@ -118,40 +101,23 @@ def _resolve_model(
     if isinstance(model, str):
         found = get_model(model, provider)
         if not found:
-            # Protocol path: unregistered models are expected
-            if protocol is not None:
-                if modality is None:
-                    msg = f"Model '{model}' not registered. Specify 'modality' explicitly."
-                    raise ValueError(msg)
-                operations: dict[Modality, set[Operation]] = {}
-                if modality is not None:
-                    operations[modality] = {operation} if operation else set()
-                return Model(
-                    id=model,
-                    provider=provider,
-                    display_name=model,
-                    operations=operations,
-                    streaming=True,
-                )
-            if provider is None:
-                raise ModelNotFoundError(model_id=model, provider=provider)
+            if protocol is None and provider is None:
+                raise ModelNotFoundError(model_id=model)
             if modality is None:
                 msg = f"Model '{model}' not registered. Specify 'modality' explicitly."
                 raise ValueError(msg)
-            warnings.warn(
-                f"Model '{model}' not registered in Celeste for provider {provider}. "
-                "Parameter validation disabled.",
-                UserWarning,
-                stacklevel=3,
-            )
-            operations = {}
-            if modality is not None:
-                operations[modality] = {operation} if operation else set()
+            if protocol is None:
+                warnings.warn(
+                    f"Model '{model}' not registered in Celeste for provider {provider}. "
+                    "Parameter validation disabled.",
+                    UserWarning,
+                    stacklevel=3,
+                )
             return Model(
                 id=model,
                 provider=provider,
                 display_name=model,
-                operations=operations,
+                operations={modality: {operation} if operation else set()},
                 streaming=True,
             )
         return found
@@ -159,28 +125,7 @@ def _resolve_model(
     return model
 
 
-def _infer_operation(model: Model, modality: Modality) -> Operation:
-    """Infer operation from model for a given modality. Raises if ambiguous."""
-    if modality not in model.operations:
-        msg = f"Model '{model.id}' does not support modality '{modality.value}'"
-        raise ValueError(msg)
-
-    operations = model.operations[modality]
-    if len(operations) == 1:
-        return next(iter(operations))
-    if len(operations) > 1:
-        ops = ", ".join(o.value for o in operations)
-        msg = (
-            f"Model '{model.id}' supports multiple operations for {modality.value}: {ops}. "
-            "Specify 'operation' explicitly."
-        )
-        raise ValueError(msg)
-    msg = f"Model '{model.id}' has no registered operations for modality '{modality.value}'"
-    raise ValueError(msg)
-
-
 def create_client(
-    capability: Capability | None = None,
     modality: Modality | None = None,
     operation: Operation | None = None,
     provider: Provider | None = None,
@@ -190,10 +135,9 @@ def create_client(
     protocol: Protocol | None = None,
     base_url: str | None = None,
 ) -> ModalityClient:
-    """Create an async client for the specified AI capability or modality.
+    """Create an async client for the specified modality.
 
     Args:
-        capability: The AI capability to use (deprecated, use modality instead).
         modality: The modality to use (e.g., Modality.IMAGES, "images").
         operation: The operation to use (e.g., Operation.GENERATE, "generate").
         provider: Optional provider (e.g., Provider.OPENAI).
@@ -209,60 +153,41 @@ def create_client(
         Configured client instance ready for generation operations.
 
     Raises:
-        ModelNotFoundError: If no model found for the specified capability/provider.
-        ClientNotFoundError: If no client registered for capability/provider/protocol.
+        ModelNotFoundError: If no model is found for the specified modality/provider.
+        ClientNotFoundError: If no client is registered for the modality/target.
         MissingCredentialsError: If required credentials are not configured.
-        ValueError: If capability/operation cannot be inferred from model.
+        ValueError: If neither a modality nor enough model context is provided.
     """
-    # Translation layer: convert deprecated capability to modality/operation
-    if capability is not None and modality is None:
-        warnings.warn(
-            "capability parameter is deprecated, use modality/operation instead",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        if capability not in _CAPABILITY_TO_MODALITY_OPERATION:
-            msg = f"Unknown capability: {capability}"
-            raise ValueError(msg)
-        modality, operation = _CAPABILITY_TO_MODALITY_OPERATION[capability]
-
     if modality is None:
-        msg = "Either 'modality' or 'model' must be provided"
+        msg = "'modality' must be provided"
         raise ValueError(msg)
 
-    resolved_modality = modality
-    resolved_operation = operation
-    resolved_provider = provider
-    resolved_protocol = protocol
-
     # Default to openresponses when base_url is given without protocol or provider
-    if base_url is not None and resolved_protocol is None and resolved_provider is None:
-        resolved_protocol = Protocol.OPENRESPONSES
+    if base_url is not None and protocol is None and provider is None:
+        protocol = Protocol.OPENRESPONSES
 
     resolved_model = _resolve_model(
-        modality=resolved_modality,
-        operation=resolved_operation,
-        provider=resolved_provider,
+        modality=modality,
+        operation=operation,
+        provider=provider,
         model=model,
-        protocol=resolved_protocol,
+        protocol=protocol,
     )
 
-    if resolved_provider is None and resolved_protocol is None:
-        resolved_provider = resolved_model.provider
+    if provider is None and protocol is None:
+        provider = resolved_model.provider
 
     # Client lookup: protocol takes precedence for compatible API path
-    target = (
-        resolved_protocol if resolved_protocol is not None else resolved_model.provider
-    )
+    target = protocol if protocol is not None else resolved_model.provider
     if target is None:
-        raise ClientNotFoundError(modality=resolved_modality)
+        raise ClientNotFoundError(modality=modality)
 
-    if (resolved_modality, target) not in _CLIENT_MAP:
-        raise ClientNotFoundError(modality=resolved_modality, provider=target)
-    modality_client_class = _CLIENT_MAP[(resolved_modality, target)]
+    if (modality, target) not in _CLIENT_MAP:
+        raise ClientNotFoundError(modality=modality, provider=target)
+    modality_client_class = _CLIENT_MAP[(modality, target)]
 
     # Auth resolution: BYOA for protocol path, credentials for provider path
-    if resolved_protocol is not None and resolved_provider is None:
+    if protocol is not None and provider is None:
         if auth is not None:
             resolved_auth = auth
         elif api_key is not None:
@@ -277,20 +202,18 @@ def create_client(
         )
 
     return modality_client_class(
-        modality=resolved_modality,
+        modality=modality,
         model=resolved_model,
-        provider=resolved_provider,
-        protocol=resolved_protocol,
+        provider=provider,
+        protocol=protocol,
         auth=resolved_auth,
         base_url=base_url,
     )
 
 
 __all__ = [
-    "APIKey",
     "AudioPart",
     "Authentication",
-    "Capability",
     "CodeExecution",
     "DocumentPart",
     "Error",

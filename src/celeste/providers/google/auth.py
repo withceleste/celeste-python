@@ -58,9 +58,11 @@ class GoogleADC(Authentication):
     @property
     def resolved_project_id(self) -> str | None:
         """Return effective project_id (explicit or from ADC credentials)."""
+        if self.project_id is not None:
+            return self.project_id
         if self._credentials is None:
             self._get_access_token()
-        return self.project_id or self._project
+        return self._project
 
     def get_vertex_base_url(self) -> str:
         """Return the Vertex AI base URL for the configured location."""

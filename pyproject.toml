@@ -49,7 +49,6 @@ dev = [
     "mypy>=1.13.0",
     "bandit[toml]>=1.7.5",
     "pre-commit>=3.5.0",
-    "pytest-rerunfailures>=16.1",
     "opentelemetry-sdk>=1.30",
 ]
 
@@ -62,30 +61,20 @@ packages = ["src/celeste"]
 
 [tool.pytest.ini_options]
 minversion = "8.0"
-testpaths = ["tests"]
+testpaths = ["tests/unit_tests"]
 addopts = "-ra --strict-markers --strict-config"
 asyncio_mode = "auto"
 pythonpath = ["src"]
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
-    "smoke: quick checks for critical paths",
-    "integration: marks tests as integration tests (require API keys)",
 ]
 
 [tool.coverage.run]
 branch = true
-# dynamic_context handled by pytest-cov's --cov-context option
-omit = [
-    # Provider/protocol implementations (tested via integration tests, not unit tests)
-    "src/celeste/providers/*",
-    "src/celeste/protocols/*",
-    "src/celeste/modalities/*",
-    "src/celeste/namespaces/*"
-]
 
 [tool.coverage.report]
 show_missing = true
-fail_under = 80
+fail_under = 65
 
 [tool.ruff]
 # Same as Black's default

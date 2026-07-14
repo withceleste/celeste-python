@@ -8,14 +8,14 @@ from celeste.models import Model
 
 
 class Parameters(TypedDict, total=False):
-    """Base parameters for all capabilities."""
+    """Base parameters for all modalities."""
 
 
 class ParameterMapper[Content](ABC):
     """Base class for provider-specific parameter transformation."""
 
     name: ClassVar[StrEnum]
-    """Parameter name matching capability TypedDict key. Must be StrEnum for type safety."""
+    """Parameter name matching a Parameters key. Must be StrEnum for type safety."""
 
     @abstractmethod
     def map(self, request: dict[str, Any], value: Any, model: Model) -> dict[str, Any]:  # noqa: ANN401

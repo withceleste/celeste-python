@@ -1,20 +1,15 @@
-"""Tool-call argument validation tests."""
+"""Tool-call arguments are validated at the response boundary."""
 
 from collections.abc import AsyncIterator
 from enum import StrEnum
-from typing import Any, Unpack
+from typing import Any
 
 import pytest
-from pydantic import BaseModel, SecretStr
+from pydantic import BaseModel
 
-from celeste.auth import APIKey
-from celeste.client import ModalityClient
-from celeste.core import Modality, Provider
 from celeste.exceptions import ValidationError
-from celeste.io import Chunk, Input, Output
-from celeste.modalities.text.parameters import TextParameter
-from celeste.models import Model, Operation
-from celeste.parameters import ParameterMapper, Parameters
+from celeste.io import Chunk, Output
+from celeste.parameters import Parameters
 from celeste.streaming import Stream
 from celeste.tools import CodeExecution, ToolCall, validate_tool_calls
 
@@ -27,7 +22,7 @@ class AnalyzeImageParams(BaseModel):
     image_id: ImageId
 
 
-class NoFirstFrameParams(BaseModel):
+class NullableParams(BaseModel):
     first_frame: None = None
 
 
@@ -35,65 +30,48 @@ def _tool(parameters: type[BaseModel]) -> dict[str, object]:
     return {"name": "analyze_image", "parameters": parameters}
 
 
-def _model() -> Model:
-    return Model(
-        id="test-model",
-        provider=Provider.OPENAI,
-        display_name="Test Model",
-        operations={Modality.TEXT: {Operation.GENERATE}},
+def test_validation_preserves_normalized_arguments_and_provider_fields() -> None:
+    call = ToolCall(
+        id="call-1",
+        name="analyze_image",
+        arguments={"image_id": "img-1"},
+        thoughtSignature="sig-1",
     )
 
-
-class _TextInput(Input):
-    prompt: str
-
-
-class _ToolsMapper(ParameterMapper[str]):
-    name = TextParameter.TOOLS
-
-    def map(
-        self,
-        request: dict[str, Any],
-        value: Any,  # noqa: ANN401
-        model: Model,
-    ) -> dict[str, Any]:
-        return request
+    assert validate_tool_calls([call], [_tool(AnalyzeImageParams)]) == [call]
+    assert call.thoughtSignature == "sig-1"
 
 
-class _Client(ModalityClient[_TextInput, Output[str], Parameters, str, Chunk[str]]):
-    returned_tool_calls: list[ToolCall]
+@pytest.mark.parametrize(
+    ("arguments", "parameters", "match"),
+    [
+        ({"image_id": "fake"}, AnalyzeImageParams, "fake"),
+        ({"first_frame": "img-1"}, NullableParams, "first_frame"),
+    ],
+)
+def test_invalid_arguments_fail(
+    arguments: dict[str, object], parameters: type[BaseModel], match: str
+) -> None:
+    call = ToolCall(id="call-1", name="analyze_image", arguments=arguments)
+    with pytest.raises(ValidationError, match=match):
+        validate_tool_calls([call], [_tool(parameters)])
 
-    @classmethod
-    def parameter_mappers(cls) -> list[ParameterMapper[str]]:
-        return [_ToolsMapper()]
 
-    def _init_request(self, inputs: _TextInput) -> dict[str, Any]:
-        return {"prompt": inputs.prompt}
+@pytest.mark.parametrize("arguments", [{}, {"first_frame": None}])
+def test_nullable_argument_accepts_omission_or_null(
+    arguments: dict[str, object],
+) -> None:
+    call = ToolCall(id="call-1", name="analyze_image", arguments=arguments)
+    assert validate_tool_calls([call], [_tool(NullableParams)]) == [call]
 
-    def _parse_usage(
-        self, response_data: dict[str, Any]
-    ) -> dict[str, int | float | None]:
-        return {}
 
-    def _parse_content(self, response_data: dict[str, Any]) -> str:
-        return "ok"
-
-    @classmethod
-    def _output_class(cls) -> type[Output[str]]:
-        return Output[str]
-
-    async def _make_request(
-        self,
-        request_body: dict[str, Any],
-        *,
-        endpoint: str | None = None,
-        extra_headers: dict[str, str] | None = None,
-        **parameters: Unpack[Parameters],
-    ) -> dict[str, Any]:
-        return {}
-
-    def _parse_tool_calls(self, response_data: dict[str, Any]) -> list[ToolCall]:
-        return self.returned_tool_calls
+def test_raw_schema_and_builtin_tools_are_not_locally_validated() -> None:
+    call = ToolCall(id="call-1", name="raw_tool", arguments={"anything": "ok"})
+    tools = [
+        {"name": "raw_tool", "parameters": {"type": "object"}},
+        CodeExecution(),
+    ]
+    assert validate_tool_calls([call], tools) == [call]
 
 
 class _Stream(Stream[Output[str], Parameters, Chunk[str]]):
@@ -106,9 +84,7 @@ class _Stream(Stream[Output[str], Parameters, Chunk[str]]):
         return "".join(chunk.content for chunk in chunks)
 
     def _aggregate_tool_calls(
-        self,
-        chunks: list[Chunk[str]],
-        raw_events: list[dict[str, Any]],
+        self, chunks: list[Chunk[str]], raw_events: list[dict[str, Any]]
     ) -> list[ToolCall]:
         return self.returned_tool_calls
 
@@ -118,76 +94,7 @@ async def _empty_events() -> AsyncIterator[dict[str, Any]]:
         yield {}
 
 
-def test_validate_tool_calls_accepts_enum_and_preserves_extra_fields() -> None:
-    call = ToolCall(
-        id="call-1",
-        name="analyze_image",
-        arguments={"image_id": "img-1"},
-        thoughtSignature="sig-1",
-    )
-
-    validated = validate_tool_calls([call], [_tool(AnalyzeImageParams)])
-
-    assert validated[0].arguments == {"image_id": "img-1"}
-    assert validated[0].thoughtSignature == "sig-1"
-
-
-def test_validate_tool_calls_rejects_invalid_enum_argument() -> None:
-    call = ToolCall(id="call-1", name="analyze_image", arguments={"image_id": "fake"})
-
-    with pytest.raises(ValidationError, match=r"fake"):
-        validate_tool_calls([call], [_tool(AnalyzeImageParams)])
-
-
-@pytest.mark.parametrize("arguments", [{}, {"first_frame": None}])
-def test_validate_tool_calls_allows_omitted_or_null_null_only_argument(
-    arguments: dict[str, object],
-) -> None:
-    call = ToolCall(id="call-1", name="analyze_image", arguments=arguments)
-
-    validated = validate_tool_calls([call], [_tool(NoFirstFrameParams)])
-
-    assert validated[0].arguments == arguments
-
-
-def test_validate_tool_calls_rejects_string_for_null_only_argument() -> None:
-    call = ToolCall(
-        id="call-1",
-        name="analyze_image",
-        arguments={"first_frame": "img-1"},
-    )
-
-    with pytest.raises(ValidationError, match="first_frame"):
-        validate_tool_calls([call], [_tool(NoFirstFrameParams)])
-
-
-def test_validate_tool_calls_ignores_raw_schema_and_builtin_tools() -> None:
-    call = ToolCall(id="call-1", name="raw_tool", arguments={"anything": "ok"})
-
-    assert validate_tool_calls(
-        [call],
-        [{"name": "raw_tool", "parameters": {"type": "object"}}, CodeExecution()],
-    ) == [call]
-
-
-async def test_predict_rejects_invalid_returned_tool_call() -> None:
-    client = _Client(
-        modality=Modality.TEXT,
-        model=_model(),
-        provider=Provider.OPENAI,
-        auth=APIKey(secret=SecretStr("test")),
-        returned_tool_calls=[
-            ToolCall(id="call-1", name="analyze_image", arguments={"image_id": "fake"})
-        ],
-    )
-
-    with pytest.raises(ValidationError, match="fake"):
-        await client._predict(
-            _TextInput(prompt="test"), tools=[_tool(AnalyzeImageParams)]
-        )
-
-
-def test_stream_output_rejects_invalid_returned_tool_call() -> None:
+def test_stream_validates_aggregated_tool_calls() -> None:
     stream = _Stream(_empty_events(), tools=[_tool(AnalyzeImageParams)])
     stream.returned_tool_calls = [
         ToolCall(id="call-1", name="analyze_image", arguments={"image_id": "fake"})

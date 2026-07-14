@@ -85,7 +85,7 @@ class ReferenceImagesMapper(ParameterMapper[VideoContent]):
             return request
 
         reference_images = []
-        # Validated value is list[ImageArtifact] based on capability constraints
+        # Validated value is list[ImageArtifact] based on the model constraints
         for img in validated_value:
             image_bytes = img.get_bytes()
             mime = img.mime_type or detect_mime_type(image_bytes)

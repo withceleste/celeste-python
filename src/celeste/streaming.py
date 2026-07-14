@@ -201,6 +201,11 @@ class Stream[Out: Output, Params: Parameters, Chunk: ChunkBase](ABC):
         usage: Usage | None = None
         if raw_response is not None:
             metadata["raw_response"] = raw_response
+            if (
+                isinstance(response_model := raw_response.get("model"), str)
+                and response_model
+            ):
+                metadata["response_model"] = response_model
             usage = self._usage_from_raw_response(raw_response)
         output = self._output_class(
             content=content,

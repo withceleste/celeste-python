@@ -62,39 +62,8 @@ class Operation(StrEnum):
     UPSCALE = "upscale"
 
 
-class Capability(StrEnum):
-    """Supported AI capabilities.
-
-    .. deprecated::
-        Use :class:`Modality` and :class:`Operation` instead.
-        This enum is kept for backward compatibility.
-    """
-
-    # Text
-    TEXT_GENERATION = "text-generation"
-    TEXT_EMBEDDINGS = "text-embeddings"
-
-    # Image
-    IMAGE_GENERATION = "image-generation"
-    IMAGE_INTELLIGENCE = "image-intelligence"
-    IMAGE_EDIT = "image-edit"
-
-    # Video
-    VIDEO_INTELLIGENCE = "video-intelligence"
-    VIDEO_GENERATION = "video-generation"
-
-    # Audio
-    AUDIO_INTELLIGENCE = "audio-intelligence"
-
-    # Speech
-    SPEECH_GENERATION = "speech-generation"
-
-    # Search
-    SEARCH = "search"
-
-
 class InputType(StrEnum):
-    """Input types for capabilities."""
+    """Supported input media types."""
 
     TEXT = "text"
     IMAGE = "image"
@@ -104,7 +73,7 @@ class InputType(StrEnum):
 
 
 class Parameter(StrEnum):
-    """Universal parameters across most capabilities."""
+    """Universal parameters across modalities."""
 
     TEMPERATURE = "temperature"
     SEED = "seed"
@@ -112,7 +81,7 @@ class Parameter(StrEnum):
 
 
 class UsageField(StrEnum):
-    """Standard usage field names across Celeste capabilities.
+    """Standard usage field names across Celeste modalities.
 
     Use these when mapping provider usage fields to unified names.
     """
@@ -174,7 +143,6 @@ def infer_modality(domain: Domain, operation: Operation) -> Modality:
 
 __all__ = [
     "DOMAIN_OPERATION_TO_MODALITY",
-    "Capability",
     "Domain",
     "InputType",
     "Modality",

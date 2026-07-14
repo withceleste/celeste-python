@@ -115,7 +115,7 @@ class CohereChatClient(APIMixin):
     def _parse_content(self, response_data: dict[str, Any]) -> Any:
         """Parse content array from Chat API response message.
 
-        Returns raw content array that capability clients extract from.
+        Returns raw content array that modality clients extract from.
         """
         message = response_data.get("message", {})
         content_array = message.get("content", [])

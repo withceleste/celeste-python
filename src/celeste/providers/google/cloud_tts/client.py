@@ -21,7 +21,7 @@ class GoogleCloudTTSClient(APIMixin):
     Auth uses GoogleADC (Application Default Credentials), unlike Gemini API which uses API keys.
     This is set in model_post_init to override the default API key auth.
 
-    Capability clients extend via super() to wrap results in artifacts:
+    Modality clients extend via super() to wrap results in artifacts:
         class GoogleSpeechGenerationClient(GoogleCloudTTSClient, SpeechGenerationClient):
             def _parse_content(self, response_data):
                 audio_b64 = super()._parse_content(response_data)  # Get base64 string
@@ -82,7 +82,7 @@ class GoogleCloudTTSClient(APIMixin):
     def _parse_content(self, response_data: dict[str, Any]) -> Any:
         """Extract base64 audio content from response.
 
-        Returns base64 string that capability clients decode and wrap in artifacts.
+        Returns base64 string that modality clients decode and wrap in artifacts.
         """
         audio_content = response_data.get("audioContent")
         if not audio_content:

@@ -19,19 +19,19 @@ from celeste.tools import ToolCall
 
 
 class Input(BaseModel):
-    """Base class for capability-specific input types."""
+    """Base class for modality-specific input types."""
 
     pass
 
 
 class FinishReason(BaseModel):
-    """Base class for capability-specific finish reasons (used in streaming chunks and outputs)."""
+    """Base class for modality-specific finish reasons used in chunks and outputs."""
 
     reason: str | None = None
 
 
 class Usage(BaseModel):
-    """Base class for capability-specific usage metrics."""
+    """Base class for modality-specific usage metrics."""
 
     pass
 

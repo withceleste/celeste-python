@@ -91,23 +91,10 @@ jobs:
           MOONSHOT_API_KEY: ${{ secrets.MOONSHOT_API_KEY }}
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
-        run: |
-          uv run pytest "$TEST_FILE" \
-            -m integration -v \
-            --reruns 2 --reruns-delay 10 \
-            "--deselect=tests/integration_tests/text/test_generate.py::test_vertex_generate[anthropic-claude-haiku-4-5-us-east5]" \
-            "--deselect=tests/integration_tests/text/test_stream_generate.py::test_vertex_stream_generate[anthropic-claude-haiku-4-5-us-east5]" \
-            "--deselect=tests/integration_tests/audio/test_speak.py::test_speak[google-gemini-2.5-flash-tts]" \
-            "--deselect=tests/integration_tests/audio/test_speak.py::test_speak[google-gemini-2.5-pro-tts]"
+        run: uv run pytest "$TEST_FILE" -v
 
   build:
     needs: [validate-release, run-ci, collect-integration-tests, integration-tests]
-    if: |
-      always() &&
-      needs.validate-release.result == 'success' &&
-      needs.run-ci.result == 'success' &&
-      needs.collect-integration-tests.result == 'success' &&
-      (needs.integration-tests.result == 'success' || needs.integration-tests.result == 'skipped')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
