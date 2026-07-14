@@ -123,7 +123,7 @@ class GradiumTextToSpeechClient(APIMixin):
         """Extract usage data from Gradium API response.
 
         Gradium TTS doesn't provide usage metadata.
-        Returns empty dict for capability clients to wrap in Usage type.
+        Returns empty dict for modality clients to wrap in Usage type.
         """
         return GradiumTextToSpeechClient.map_usage_fields(response_data)
 
@@ -132,7 +132,7 @@ class GradiumTextToSpeechClient(APIMixin):
 
         Gradium uses WebSocket; base generate() should not call this.
         """
-        msg = "Gradium TTS uses WebSocket; capability client must override generate()"
+        msg = "Gradium TTS uses WebSocket; modality client must override generate()"
         raise NotImplementedError(msg)
 
     def _parse_finish_reason(self, response_data: dict[str, Any]) -> FinishReason:

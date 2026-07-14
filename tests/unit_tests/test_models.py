@@ -1,330 +1,121 @@
-"""Tests for models and model registry."""
+"""Tests for model registration, lookup, and filtering."""
 
-from collections.abc import Generator
+from typing import Any
 
 import pytest
 
-from celeste import Capability, Model, Provider
+import celeste.models as models_module
+from celeste import Modality, Model, Operation, Provider
 from celeste.constraints import Str
-from celeste.models import clear, get_model, list_models, register_models
+from celeste.models import get_model, list_models, register_models
 
-# Test data constants
-SAMPLE_MODELS = [
-    Model(
-        id="gpt-4",
-        provider=Provider.OPENAI,
-        display_name="GPT-4",
-    ),
-    Model(
-        id="dall-e-3",
-        provider=Provider.OPENAI,
-        display_name="DALL-E 3",
-    ),
-    Model(
-        id="claude-3",
-        provider=Provider.ANTHROPIC,
-        display_name="Claude 3",
-    ),
-]
+
+def model(
+    model_id: str,
+    provider: Provider | None = Provider.OPENAI,
+    *,
+    modality: Modality | None = None,
+    operation: Operation = Operation.GENERATE,
+) -> Model:
+    operations = {modality: {operation}} if modality else {}
+    return Model(
+        id=model_id,
+        provider=provider,
+        display_name=model_id,
+        operations=operations,
+    )
 
 
 @pytest.fixture(autouse=True)
-def clear_registry() -> Generator[None, None, None]:
-    """Clear registry before and after each test for isolation."""
-    clear()
-    yield
-    clear()
+def isolated_registry(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(models_module, "_models", {})
 
 
-class TestRegisterModels:
-    """Test model registration functionality."""
-
-    @pytest.mark.smoke
-    def test_register_models_accepts_single_or_list(self) -> None:
-        """Registering models works with both single model and list."""
-        single_model = SAMPLE_MODELS[0]
-        register_models(single_model, Capability.TEXT_GENERATION)
-        retrieved = get_model(single_model.id, single_model.provider)
-        assert retrieved is not None
-        assert retrieved.id == single_model.id
-        assert retrieved.provider == single_model.provider
-        assert retrieved.display_name == single_model.display_name
-        assert Capability.TEXT_GENERATION in retrieved.capabilities
-
-        clear()
-
-        register_models(SAMPLE_MODELS, Capability.TEXT_GENERATION)
-        assert len(list_models()) == 3
-        for model in SAMPLE_MODELS:
-            retrieved = get_model(model.id, model.provider)
-            assert retrieved is not None
-            assert model.id == retrieved.id
-            assert model.provider == retrieved.provider
-            assert Capability.TEXT_GENERATION in retrieved.capabilities
-
-    def test_reregistering_same_key_raises_error(self) -> None:
-        """Re-registering with same (id, provider) but different display_name raises ValueError."""
-        original = SAMPLE_MODELS[0]
-        register_models(original, Capability.TEXT_GENERATION)
-
-        duplicate = Model(
-            id=original.id,
-            provider=original.provider,
-            display_name="Duplicate GPT-4",
-        )
-
-        with pytest.raises(ValueError, match="Inconsistent display_name"):
-            register_models(duplicate, Capability.IMAGE_GENERATION)
-
-        result = get_model(original.id, original.provider)
-        assert result is not None
-        assert result.display_name == original.display_name
-        assert len(list_models()) == 1
-
-    def test_registering_same_model_for_multiple_capabilities_merges(self) -> None:
-        """Registering the same model for multiple capabilities merges capabilities."""
-        model = Model(
-            id="multi-cap-model",
-            provider=Provider.OPENAI,
-            display_name="Multi-Cap Model",
-        )
-
-        register_models(model, Capability.TEXT_GENERATION)
-        retrieved = get_model("multi-cap-model", Provider.OPENAI)
-        assert retrieved is not None
-        assert Capability.TEXT_GENERATION in retrieved.capabilities
-        assert Capability.TEXT_EMBEDDINGS not in retrieved.capabilities
-
-        # Register same model for different capability
-        embeddings_model = Model(
-            id="multi-cap-model",
-            provider=Provider.OPENAI,
-            display_name="Multi-Cap Model",
-        )
-        register_models(embeddings_model, Capability.TEXT_EMBEDDINGS)
-
-        retrieved = get_model("multi-cap-model", Provider.OPENAI)
-        assert retrieved is not None
-        assert Capability.TEXT_GENERATION in retrieved.capabilities
-        assert Capability.TEXT_EMBEDDINGS in retrieved.capabilities
-        assert len(list_models()) == 1
+@pytest.mark.parametrize(
+    ("models", "expected"),
+    [
+        (model("one"), {"one"}),
+        ([model("one"), model("two", Provider.ANTHROPIC)], {"one", "two"}),
+    ],
+)
+def test_register_models_accepts_one_or_many(
+    models: Model | list[Model], expected: set[str]
+) -> None:
+    register_models(models)
+    assert {registered.id for registered in list_models()} == expected
 
 
-class TestListModels:
-    """Test model listing and filtering functionality."""
+def test_register_models_requires_provider() -> None:
+    with pytest.raises(ValueError, match="without a provider"):
+        register_models(model("local", None))
 
-    @pytest.fixture(autouse=True)
-    def setup_models(self) -> None:
-        """Set up test models for filtering tests."""
-        register_models(SAMPLE_MODELS[0], Capability.TEXT_GENERATION)
-        register_models(SAMPLE_MODELS[1], Capability.IMAGE_GENERATION)
-        register_models(SAMPLE_MODELS[2], Capability.TEXT_GENERATION)
 
-    def test_list_all_models(self) -> None:
-        """Listing all models without filters."""
-        models = list_models()
-        assert len(models) == 3
-        assert set(m.id for m in models) == {"gpt-4", "dall-e-3", "claude-3"}
+def test_reregistration_merges_contracts_and_rejects_rename() -> None:
+    original = model("shared", modality=Modality.TEXT)
+    original.parameter_constraints = {"temperature": Str()}
+    register_models(original)
 
-    def test_filter_by_provider(self) -> None:
-        """Filtering models by provider."""
-        openai_models = list_models(provider=Provider.OPENAI)
-        assert len(openai_models) == 2
-        assert all(m.provider == Provider.OPENAI for m in openai_models)
+    extension = model("shared", modality=Modality.IMAGES, operation=Operation.EDIT)
+    extension.parameter_constraints = {"seed": Str()}
+    register_models(extension, modality=Modality.EMBEDDINGS, operation=Operation.EMBED)
 
-        anthropic_models = list_models(provider=Provider.ANTHROPIC)
-        assert len(anthropic_models) == 1
-        assert anthropic_models[0].id == "claude-3"
+    registered = get_model("shared", Provider.OPENAI)
+    assert registered is not None
+    assert registered.operations == {
+        Modality.TEXT: {Operation.GENERATE},
+        Modality.IMAGES: {Operation.EDIT},
+        Modality.EMBEDDINGS: {Operation.EMBED},
+    }
+    assert registered.supported_parameters == {"temperature", "seed"}
 
-    def test_filter_by_capability(self) -> None:
-        """Filtering models by capability."""
-        text_models = list_models(capability=Capability.TEXT_GENERATION)
-        assert len(text_models) == 2
-        assert all(Capability.TEXT_GENERATION in m.capabilities for m in text_models)
+    renamed = extension.model_copy(update={"display_name": "renamed"})
+    with pytest.raises(ValueError, match="Inconsistent display_name"):
+        register_models(renamed)
 
-        image_models = list_models(capability=Capability.IMAGE_GENERATION)
-        assert len(image_models) == 1
-        assert image_models[0].id == "dall-e-3"
 
-    def test_filter_by_both_provider_and_capability(self) -> None:
-        """Filtering with multiple criteria."""
-        models = list_models(
-            provider=Provider.OPENAI,
-            capability=Capability.TEXT_GENERATION,
-        )
-        assert len(models) == 1
-        assert models[0].id == "gpt-4"
-
-    @pytest.mark.parametrize(
-        "provider,capability",
+@pytest.fixture
+def populated_registry() -> None:
+    register_models(
         [
-            (Provider.GOOGLE, None),
-            (Provider.ANTHROPIC, Capability.IMAGE_GENERATION),
-        ],
-        ids=["wrong_provider", "wrong_provider_and_capability"],
-    )
-    def test_filter_returns_empty_when_no_match(
-        self, provider: Provider, capability: Capability | None
-    ) -> None:
-        """Filters return empty list when no models match."""
-        assert list_models(provider=provider, capability=capability) == []
-
-
-class TestGetModel:
-    """Test individual model retrieval."""
-
-    def test_get_existing_model(self) -> None:
-        """Retrieving an existing model by id and provider."""
-        model = SAMPLE_MODELS[0]
-        register_models(model, Capability.TEXT_GENERATION)
-
-        result = get_model(model.id, model.provider)
-        assert result is not None
-        assert result.id == model.id
-        assert result.provider == model.provider
-
-    def test_get_nonexistent_model_from_empty_registry_returns_none(self) -> None:
-        """Getting a model from empty registry returns None."""
-        assert get_model("nonexistent", Provider.OPENAI) is None
-
-    @pytest.mark.parametrize(
-        "model_id,provider",
-        [("gpt-5", Provider.OPENAI), ("gpt-4", Provider.ANTHROPIC)],
-        ids=["wrong_id", "wrong_provider"],
-    )
-    def test_get_model_from_populated_registry_with_wrong_key(
-        self, model_id: str, provider: Provider
-    ) -> None:
-        """get_model returns None for non-existent model in populated registry."""
-        register_models(SAMPLE_MODELS[0], Capability.TEXT_GENERATION)
-        register_models(SAMPLE_MODELS[1], Capability.IMAGE_GENERATION)
-        register_models(SAMPLE_MODELS[2], Capability.TEXT_GENERATION)
-        assert get_model(model_id, provider) is None
-
-    def test_same_id_different_providers_are_distinct(self) -> None:
-        """Models with same ID but different providers are kept distinct."""
-        model1 = Model(
-            id="shared-id",
-            provider=Provider.OPENAI,
-            display_name="OpenAI Model",
-        )
-        model2 = Model(
-            id="shared-id",
-            provider=Provider.ANTHROPIC,
-            display_name="Anthropic Model",
-        )
-
-        register_models([model1, model2], Capability.TEXT_GENERATION)
-
-        retrieved1 = get_model("shared-id", Provider.OPENAI)
-        retrieved2 = get_model("shared-id", Provider.ANTHROPIC)
-        assert retrieved1 is not None
-        assert retrieved1.id == model1.id
-        assert retrieved1.provider == model1.provider
-        assert retrieved1.display_name == model1.display_name
-        assert retrieved2 is not None
-        assert retrieved2.id == model2.id
-        assert retrieved2.provider == model2.provider
-        assert retrieved2.display_name == model2.display_name
-
-
-class TestParameterSupport:
-    """Test registry with models that have supported parameters."""
-
-    def test_register_model_with_parameters(self) -> None:
-        """Models with parameter_constraints are registered correctly."""
-        model = Model(
-            id="param-model",
-            provider=Provider.OPENAI,
-            display_name="Model with Params",
-            parameter_constraints={"temperature": Str(), "max_tokens": Str()},
-        )
-
-        register_models(model, Capability.TEXT_GENERATION)
-        retrieved = get_model("param-model", Provider.OPENAI)
-
-        assert retrieved is not None
-        assert len(retrieved.supported_parameters) == 2
-        assert "temperature" in retrieved.supported_parameters
-        assert "max_tokens" in retrieved.supported_parameters
-
-    def test_list_models_includes_parameters(self) -> None:
-        """list_models returns models with their parameter_constraints intact."""
-        models = [
-            Model(
-                id="with-params",
-                provider=Provider.ANTHROPIC,
-                display_name="With Params",
-                parameter_constraints={"feature_a": Str(), "feature_b": Str()},
-            ),
-            Model(
-                id="without-params",
-                provider=Provider.GOOGLE,
-                display_name="Without Params",
+            model("text-openai", modality=Modality.TEXT),
+            model("image-openai", modality=Modality.IMAGES),
+            model(
+                "text-anthropic",
+                Provider.ANTHROPIC,
+                modality=Modality.TEXT,
+                operation=Operation.ANALYZE,
             ),
         ]
-
-        register_models(models[0], Capability.TEXT_GENERATION)
-        register_models(models[1], Capability.IMAGE_GENERATION)
-        all_models = list_models()
-
-        with_params = next((m for m in all_models if m.id == "with-params"), None)
-        without_params = next((m for m in all_models if m.id == "without-params"), None)
-
-        assert with_params is not None
-        assert len(with_params.supported_parameters) == 2
-        assert "feature_a" in with_params.supported_parameters
-
-        assert without_params is not None
-        assert len(without_params.supported_parameters) == 0
+    )
 
 
-class TestClear:
-    """Test registry clearing functionality."""
+@pytest.mark.parametrize(
+    ("filters", "expected"),
+    [
+        ({}, {"text-openai", "image-openai", "text-anthropic"}),
+        ({"provider": Provider.OPENAI}, {"text-openai", "image-openai"}),
+        ({"modality": Modality.TEXT}, {"text-openai", "text-anthropic"}),
+        ({"operation": Operation.GENERATE}, {"text-openai", "image-openai"}),
+        (
+            {"modality": Modality.TEXT, "operation": Operation.GENERATE},
+            {"text-openai"},
+        ),
+        (
+            {"provider": Provider.GOOGLE, "modality": Modality.TEXT},
+            set(),
+        ),
+    ],
+)
+def test_list_models_filters(
+    populated_registry: None, filters: dict[str, Any], expected: set[str]
+) -> None:
+    assert {registered.id for registered in list_models(**filters)} == expected
 
-    def test_clear_removes_all_models(self) -> None:
-        """clear removes all registered models."""
-        register_models(SAMPLE_MODELS[0], Capability.TEXT_GENERATION)
-        register_models(SAMPLE_MODELS[1], Capability.IMAGE_GENERATION)
-        register_models(SAMPLE_MODELS[2], Capability.TEXT_GENERATION)
-        assert len(list_models()) == 3
 
-        clear()
-        assert len(list_models()) == 0
-        assert get_model("gpt-4", Provider.OPENAI) is None
+def test_get_model_distinguishes_providers_and_warns_when_ambiguous() -> None:
+    register_models([model("shared"), model("shared", Provider.ANTHROPIC)])
 
-
-class TestModel:
-    """Test Model class behavior."""
-
-    def test_supported_parameters_computed_from_constraints(self) -> None:
-        """supported_parameters property computes from parameter_constraints keys."""
-        model = Model(
-            id="test-model",
-            provider=Provider.OPENAI,
-            display_name="Test Model",
-            parameter_constraints={"param_a": Str(), "param_b": Str()},
-        )
-
-        register_models(model, Capability.TEXT_GENERATION)
-        retrieved = get_model("test-model", Provider.OPENAI)
-
-        assert retrieved is not None
-        assert len(retrieved.supported_parameters) == 2
-        assert "param_a" in retrieved.supported_parameters
-        assert "param_b" in retrieved.supported_parameters
-        assert "param_c" not in retrieved.supported_parameters
-
-    def test_supported_parameters_empty_by_default(self) -> None:
-        """supported_parameters defaults to empty set when parameter_constraints is empty."""
-        model = Model(
-            id="basic-model",
-            provider=Provider.OPENAI,
-            display_name="Basic Model",
-        )
-
-        register_models(model, Capability.TEXT_GENERATION)
-        retrieved = get_model("basic-model", Provider.OPENAI)
-
-        assert retrieved is not None
-        assert retrieved.supported_parameters == set()
+    assert get_model("shared", Provider.ANTHROPIC).provider is Provider.ANTHROPIC  # type: ignore[union-attr]
+    assert get_model("missing", Provider.OPENAI) is None
+    with pytest.warns(UserWarning, match="found in multiple providers"):
+        assert get_model("shared").provider is Provider.OPENAI  # type: ignore[union-attr]

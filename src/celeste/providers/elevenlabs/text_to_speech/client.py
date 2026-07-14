@@ -22,7 +22,7 @@ class ElevenLabsTextToSpeechClient(APIMixin):
     - _map_output_format_to_mime_type() - Map format string to AudioMimeType
 
     The TTS endpoint returns binary audio data, not JSON.
-    Capability clients must handle the binary response in their generate() override.
+    Modality clients must handle the binary response in their generate() override.
 
     Usage:
         class ElevenLabsSpeechGenerationClient(ElevenLabsTextToSpeechClient, SpeechGenerationClient):
@@ -154,7 +154,7 @@ class ElevenLabsTextToSpeechClient(APIMixin):
 
         The TTS endpoint returns binary audio, so base generate() should not call this.
         """
-        msg = "ElevenLabs TTS returns binary responses; capability client must override generate()"
+        msg = "ElevenLabs TTS returns binary responses; modality client must override generate()"
         raise NotImplementedError(msg)
 
     def _parse_finish_reason(self, response_data: dict[str, Any]) -> FinishReason:

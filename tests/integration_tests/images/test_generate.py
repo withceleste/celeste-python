@@ -1,20 +1,11 @@
-"""Integration tests for images generate operation across all providers."""
+from typing import Any
 
-import warnings
+import pytest
 
-# Suppress deprecation warnings from legacy capability packages
-warnings.filterwarnings(
-    "ignore",
-    message=".*capability parameter is deprecated.*",
-    category=DeprecationWarning,
-)
-
-import pytest  # noqa: E402
-
-from celeste import Modality, Provider, create_client  # noqa: E402
-from celeste.artifacts import ImageArtifact  # noqa: E402
-from celeste.modalities.images import ImageOutput, ImageUsage  # noqa: E402
-from celeste.providers.google.auth import GoogleADC  # noqa: E402
+from celeste import Modality, Provider, create_client
+from celeste.artifacts import ImageArtifact
+from celeste.modalities.images import ImageOutput, ImageUsage
+from celeste.providers.google.auth import GoogleADC
 
 
 @pytest.mark.parametrize(
@@ -27,59 +18,17 @@ from celeste.providers.google.auth import GoogleADC  # noqa: E402
         (Provider.XAI, "grok-imagine-image", {}),
     ],
 )
-@pytest.mark.integration
-@pytest.mark.asyncio
-async def test_generate(provider: Provider, model: str, parameters: dict) -> None:
-    """Test image generation across providers.
+async def test_generate(
+    provider: Provider, model: str, parameters: dict[str, Any]
+) -> None:
+    client = create_client(modality=Modality.IMAGES, provider=provider, model=model)
 
-    Uses cheapest model per provider to minimize costs.
-    """
-    client = create_client(
-        modality=Modality.IMAGES,
-        provider=provider,
-        model=model,
-    )
-
-    response = await client.generate(
-        prompt="A red apple on a white background",
-        **parameters,
-    )
-
-    assert isinstance(response, ImageOutput), (
-        f"Expected ImageOutput, got {type(response)}"
-    )
-    assert isinstance(response.content, ImageArtifact), (
-        f"Expected ImageArtifact content, got {type(response.content)}"
-    )
-    assert response.content.has_content, (
-        f"ImageArtifact has no content (url/data/path): {response.content}"
-    )
-    assert isinstance(response.usage, ImageUsage), (
-        f"Expected ImageUsage, got {type(response.usage)}"
-    )
-
-
-@pytest.mark.integration
-def test_sync_generate() -> None:
-    """Test sync wrapper works correctly.
-
-    Single model smoke test - sync is just async_to_sync wrapper.
-    """
-    client = create_client(
-        modality=Modality.IMAGES,
-        provider=Provider.GOOGLE,
-        model="imagen-4.0-fast-generate-001",
-    )
-
-    response = client.sync.generate(prompt="A red circle", num_images=1)
+    response = await client.generate(prompt="A red apple", **parameters)
 
     assert isinstance(response, ImageOutput)
-    # Content may be list or single artifact depending on provider
-    content = (
-        response.content[0] if isinstance(response.content, list) else response.content
-    )
-    assert isinstance(content, ImageArtifact)
-    assert content.has_content
+    assert isinstance(response.content, ImageArtifact)
+    assert response.content.has_content
+    assert isinstance(response.usage, ImageUsage)
 
 
 @pytest.mark.parametrize(
@@ -89,10 +38,7 @@ def test_sync_generate() -> None:
         ("gemini-2.5-flash-image", {}),
     ],
 )
-@pytest.mark.integration
-@pytest.mark.asyncio
-async def test_vertex_generate(model: str, parameters: dict) -> None:
-    """Test image generation via Vertex AI."""
+async def test_vertex_generate(model: str, parameters: dict[str, Any]) -> None:
     client = create_client(
         modality=Modality.IMAGES,
         provider=Provider.GOOGLE,
@@ -100,10 +46,7 @@ async def test_vertex_generate(model: str, parameters: dict) -> None:
         auth=GoogleADC(),
     )
 
-    response = await client.generate(
-        prompt="A red apple on a white background",
-        **parameters,
-    )
+    response = await client.generate(prompt="A red apple", **parameters)
 
     assert isinstance(response, ImageOutput)
     assert isinstance(response.content, ImageArtifact)

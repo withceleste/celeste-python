@@ -1,483 +1,169 @@
-"""High-value tests for ModalityClient - focusing on request building and framework behavior."""
-
-from collections.abc import AsyncIterator
+import warnings
 from enum import StrEnum
-from typing import Any, Unpack
+from typing import Any, ClassVar, Unpack
+from unittest.mock import AsyncMock, Mock
 
 import httpx
 import pytest
-from pydantic import SecretStr
 
-from celeste.auth import APIKey
+from celeste.auth import NoAuth
 from celeste.client import ModalityClient
-from celeste.core import Modality, Provider
+from celeste.core import Modality, Operation, Provider
 from celeste.exceptions import StreamingNotSupportedError, UnsupportedParameterWarning
 from celeste.io import Chunk, Input, Output, Usage
-from celeste.models import Model, Operation
-from celeste.parameters import ParameterMapper, Parameters
-from celeste.streaming import Stream
-from celeste.types import TextContent
+from celeste.modalities.text.client import TextSyncNamespace
+from celeste.modalities.text.io import TextOutput
+from celeste.models import Model
+from celeste.parameters import FieldMapper, ParameterMapper, Parameters
 
 
-class ParamEnum(StrEnum):
-    """Test parameter enum for unit tests."""
-
-    TEST_PARAM = "test_param"
-    FIRST_PARAM = "first_param"
-    SECOND_PARAM = "second_param"
+class FakeParameter(StrEnum):
+    VALUE = "value"
+    TRANSFORM = "transform"
 
 
-class _TestInput(Input):
-    """Test input with prompt."""
+class ValueMapper(FieldMapper[str]):
+    name = FakeParameter.VALUE
+    field = "mapped"
 
+
+class TransformMapper(ParameterMapper[str]):
+    name = FakeParameter.TRANSFORM
+
+    def map(
+        self,
+        request: dict[str, Any],
+        value: Any,  # noqa: ANN401
+        model: Model,
+    ) -> dict[str, Any]:
+        return request
+
+    def parse_output(self, content: str, value: object | None) -> str:
+        return f"{content}:{value}" if value is not None else content
+
+
+class FakeInput(Input):
     prompt: str
 
 
-def _create_test_mapper(
-    param_name: StrEnum,
-    map_key: str | None = None,
-) -> ParameterMapper[str]:
-    """Create a test parameter mapper instance."""
-    actual_map_key = map_key if map_key is not None else param_name.value
-
-    class TestMapperClass(ParameterMapper[str]):
-        """Test mapper implementation."""
-
-        name = param_name
-
-        def map(
-            self,
-            request: dict[str, Any],
-            value: Any,  # noqa: ANN401
-            model: Model,
-        ) -> dict[str, Any]:
-            if value is not None:
-                request[actual_map_key] = value
-            return request
-
-        def parse_output(
-            self, content: TextContent, value: object | None
-        ) -> TextContent:
-            return content
-
-    return TestMapperClass()
-
-
-def _create_transform_mapper(
-    param_name: StrEnum,
-    map_key: str | None = None,
-) -> ParameterMapper[str]:
-    """Create a test parameter mapper that transforms output."""
-    actual_map_key = map_key if map_key is not None else param_name.value
-
-    class TransformMapperClass(ParameterMapper[str]):
-        """Test mapper with output transformation."""
-
-        name = param_name
-
-        def map(
-            self,
-            request: dict[str, Any],
-            value: Any,  # noqa: ANN401
-            model: Model,
-        ) -> dict[str, Any]:
-            if value is not None:
-                request[actual_map_key] = value
-            return request
-
-        def parse_output(
-            self, content: TextContent, value: object | None
-        ) -> TextContent:
-            if value is not None:
-                return f"{content}_transformed_with_{value}"
-            return content
-
-    return TransformMapperClass()
-
-
-@pytest.fixture
-def text_model() -> Model:
-    """Model that supports text generation."""
-    return Model(
-        id="gpt-4",
-        provider=Provider.OPENAI,
-        operations={Modality.TEXT: {Operation.GENERATE}},
-        display_name="GPT-4",
-    )
-
-
-@pytest.fixture
-def api_key() -> str:
-    """Test API key."""
-    return "sk-test123456789"
-
-
-class ConcreteModalityClient(
-    ModalityClient[_TestInput, Output, Parameters, str, Chunk]
-):
-    """Concrete ModalityClient implementation for testing."""
+class FakeClient(ModalityClient[FakeInput, Output, Parameters, str, Chunk]):
+    mappers: ClassVar[list[ParameterMapper[str]]] = [ValueMapper(), TransformMapper()]
 
     @classmethod
     def parameter_mappers(cls) -> list[ParameterMapper[str]]:
-        return []
+        return cls.mappers
 
-    def _init_request(self, inputs: _TestInput) -> dict[str, Any]:
-        return {"prompt": inputs.prompt, "model": self.model.id}
+    def _init_request(self, inputs: FakeInput) -> dict[str, Any]:
+        return {"prompt": inputs.prompt}
 
-    def _parse_usage(
-        self, response_data: dict[str, Any]
-    ) -> dict[str, int | float | None]:
-        return {}
+    def _parse_usage(self, response_data: dict[str, Any]) -> dict[str, int]:
+        return response_data.get("usage", {})
 
     def _parse_content(self, response_data: dict[str, Any]) -> str:
-        content = response_data.get("content", "test content")
-        return content if isinstance(content, str) else "test content"
+        return str(response_data["content"])
 
     @classmethod
     def _output_class(cls) -> type[Output]:
         return Output
 
-    async def _make_request(  # type: ignore[override]
+    async def _make_request(
         self,
         request_body: dict[str, Any],
         *,
         endpoint: str | None = None,
+        extra_headers: dict[str, str] | None = None,
         **parameters: Unpack[Parameters],
     ) -> dict[str, Any]:
-        return {"content": "test content"}
-
-    def _stream_class(self) -> type[Stream[Output, Parameters, Chunk]]:
-        raise NotImplementedError("Streaming not implemented in test client")
-
-    def _make_stream_request(  # type: ignore[override]
-        self, request_body: dict[str, Any], **parameters: Unpack[Parameters]
-    ) -> AsyncIterator[dict[str, Any]]:
-        raise NotImplementedError("Streaming not implemented in test client")
+        return {
+            "content": request_body.get("mapped", "raw"),
+            "usage": {},
+            "model": "resolved-model",
+        }
 
 
-class TestModalityClientRequestBuilding:
-    """Test ModalityClient._build_request parameter mapping logic."""
-
-    @pytest.mark.smoke
-    def test_build_request_applies_parameter_mappers_correctly(
-        self, text_model: Model, api_key: str
-    ) -> None:
-        """_build_request applies all parameter mappers in sequence."""
-
-        # Arrange
-        class ClientWithMapper(ConcreteModalityClient):
-            """Client with custom parameter mapper."""
-
-            @classmethod
-            def parameter_mappers(cls) -> list[ParameterMapper[str]]:
-                return [_create_test_mapper(ParamEnum.TEST_PARAM)]
-
-        client = ClientWithMapper(
-            modality=Modality.TEXT,
-            model=text_model,
-            provider=text_model.provider,
-            auth=APIKey(secret=SecretStr(api_key)),
-        )
-
-        inputs = _TestInput(prompt="test prompt")
-
-        # Act
-        request = client._build_request(inputs, test_param="mapped_value")
-
-        # Assert
-        assert request["prompt"] == "test prompt"
-        assert request["test_param"] == "mapped_value"
-
-    def test_build_request_with_multiple_mappers(
-        self, text_model: Model, api_key: str
-    ) -> None:
-        """_build_request applies multiple parameter mappers in order."""
-
-        # Arrange
-        class ClientWithMultipleMappers(ConcreteModalityClient):
-            """Client with multiple parameter mappers."""
-
-            @classmethod
-            def parameter_mappers(cls) -> list[ParameterMapper[str]]:
-                return [
-                    _create_test_mapper(ParamEnum.FIRST_PARAM),
-                    _create_test_mapper(ParamEnum.SECOND_PARAM),
-                ]
-
-        client = ClientWithMultipleMappers(
-            modality=Modality.TEXT,
-            model=text_model,
-            provider=text_model.provider,
-            auth=APIKey(secret=SecretStr(api_key)),
-        )
-
-        inputs = _TestInput(prompt="test prompt")
-
-        # Act
-        request = client._build_request(
-            inputs, first_param="first", second_param="second"
-        )
-
-        # Assert
-        assert request["first_param"] == "first"
-        assert request["second_param"] == "second"
-
-    def test_build_request_warns_on_unsupported_parameter(
-        self, text_model: Model, api_key: str
-    ) -> None:
-        """_build_request emits UnsupportedParameterWarning for unmapped parameters."""
-
-        class ClientWithOneMapper(ConcreteModalityClient):
-            @classmethod
-            def parameter_mappers(cls) -> list[ParameterMapper[str]]:
-                return [_create_test_mapper(ParamEnum.FIRST_PARAM)]
-
-        client = ClientWithOneMapper(
-            modality=Modality.TEXT,
-            model=text_model,
-            provider=text_model.provider,
-            auth=APIKey(secret=SecretStr(api_key)),
-        )
-
-        inputs = _TestInput(prompt="test")
-
-        with pytest.warns(UnsupportedParameterWarning, match="second_param.*gpt-4"):
-            client._build_request(inputs, first_param="ok", second_param="unsupported")
-
-    def test_build_request_no_warning_for_supported_parameters(
-        self, text_model: Model, api_key: str
-    ) -> None:
-        """_build_request does not warn when all parameters have mappers."""
-        import warnings
-
-        class ClientWithMapper(ConcreteModalityClient):
-            @classmethod
-            def parameter_mappers(cls) -> list[ParameterMapper[str]]:
-                return [_create_test_mapper(ParamEnum.TEST_PARAM)]
-
-        client = ClientWithMapper(
-            modality=Modality.TEXT,
-            model=text_model,
-            provider=text_model.provider,
-            auth=APIKey(secret=SecretStr(api_key)),
-        )
-
-        inputs = _TestInput(prompt="test")
-
-        with warnings.catch_warnings():
-            warnings.simplefilter("error", UnsupportedParameterWarning)
-            client._build_request(inputs, test_param="supported")
-
-    def test_build_request_no_warning_for_none_unsupported_parameter(
-        self, text_model: Model, api_key: str
-    ) -> None:
-        """_build_request does not warn when unsupported parameter value is None."""
-        import warnings
-
-        client = ConcreteModalityClient(
-            modality=Modality.TEXT,
-            model=text_model,
-            provider=text_model.provider,
-            auth=APIKey(secret=SecretStr(api_key)),
-        )
-
-        inputs = _TestInput(prompt="test")
-
-        with warnings.catch_warnings():
-            warnings.simplefilter("error", UnsupportedParameterWarning)
-            client._build_request(inputs, test_param=None)
-
-    @pytest.mark.parametrize(
-        "param_value,expected_output",
-        [
-            ("test_value", "original content_transformed_with_test_value"),
-            (None, "original content"),
-        ],
-        ids=["with_value", "with_none"],
+@pytest.fixture
+def model() -> Model:
+    return Model(
+        id="test-model",
+        provider=Provider.OPENAI,
+        display_name="Test Model",
+        operations={Modality.TEXT: {Operation.GENERATE}},
     )
-    def test_transform_output_applies_mappers(
-        self,
-        text_model: Model,
-        api_key: str,
-        param_value: str | None,
-        expected_output: str,
-    ) -> None:
-        """_transform_output applies parameter mapper output transformations."""
-
-        # Arrange
-        class ClientWithTransformMapper(ConcreteModalityClient):
-            """Client with output transformation mapper."""
-
-            @classmethod
-            def parameter_mappers(cls) -> list[ParameterMapper[str]]:
-                return [_create_transform_mapper(ParamEnum.TEST_PARAM)]
-
-        client = ClientWithTransformMapper(
-            modality=Modality.TEXT,
-            model=text_model,
-            provider=text_model.provider,
-            auth=APIKey(secret=SecretStr(api_key)),
-        )
-
-        original_content = "original content"
-
-        # Act
-        kwargs = {"test_param": param_value} if param_value is not None else {}
-        transformed = client._transform_output(original_content, **kwargs)
-
-        # Assert
-        assert transformed == expected_output
 
 
-class TestPredictTransformOutput:
-    """Test that _predict applies _transform_output after _parse_content."""
-
-    @pytest.mark.asyncio
-    async def test_predict_applies_transform_output(
-        self, text_model: Model, api_key: str
-    ) -> None:
-        """_predict applies _transform_output to content from _parse_content."""
-
-        class ClientWithTransformMapper(ConcreteModalityClient):
-            @classmethod
-            def parameter_mappers(cls) -> list[ParameterMapper[str]]:
-                return [_create_transform_mapper(ParamEnum.TEST_PARAM)]
-
-        client = ClientWithTransformMapper(
-            modality=Modality.TEXT,
-            model=text_model,
-            provider=text_model.provider,
-            auth=APIKey(secret=SecretStr(api_key)),
-        )
-
-        output = await client._predict(
-            _TestInput(prompt="test"), test_param="test_value"
-        )
-
-        assert output.content == "test content_transformed_with_test_value"
-
-    @pytest.mark.asyncio
-    async def test_predict_no_transform_without_param(
-        self, text_model: Model, api_key: str
-    ) -> None:
-        """_predict returns raw content when no transform param is provided."""
-
-        class ClientWithTransformMapper(ConcreteModalityClient):
-            @classmethod
-            def parameter_mappers(cls) -> list[ParameterMapper[str]]:
-                return [_create_transform_mapper(ParamEnum.TEST_PARAM)]
-
-        client = ClientWithTransformMapper(
-            modality=Modality.TEXT,
-            model=text_model,
-            provider=text_model.provider,
-            auth=APIKey(secret=SecretStr(api_key)),
-        )
-
-        output = await client._predict(_TestInput(prompt="test"))
-
-        assert output.content == "test content"
-
-
-class TestHandleErrorResponse:
-    """Test ModalityClient._handle_error_response edge cases."""
-
-    @pytest.mark.parametrize(
-        "content",
-        [
-            b"\xff random binary",
-            b"\xff\xfe\x00\x00 utf-32-le bom",
-            b"\x80\x81\x82\x83",
-        ],
-        ids=["0xff-byte", "utf-32-le-bom", "high-bytes"],
+@pytest.fixture
+def client(model: Model) -> FakeClient:
+    return FakeClient(
+        modality=Modality.TEXT,
+        model=model,
+        provider=model.provider,
+        auth=NoAuth(),
     )
-    def test_binary_error_body_raises_http_status_error(
-        self, text_model: Model, api_key: str, content: bytes
-    ) -> None:
-        """Binary error bodies produce HTTPStatusError, not UnicodeDecodeError (GH-170)."""
-        client = ConcreteModalityClient(
-            modality=Modality.TEXT,
-            model=text_model,
-            provider=text_model.provider,
-            auth=APIKey(secret=SecretStr(api_key)),
-        )
-        response = httpx.Response(
-            500, content=content, request=httpx.Request("POST", "https://api.test.com")
-        )
-
-        with pytest.raises(httpx.HTTPStatusError):
-            client._handle_error_response(response)
 
 
-class TestModalityClientStreaming:
-    """Test ModalityClient._stream default behavior."""
-
-    def test_stream_raises_not_supported_for_non_streaming_model(
-        self, api_key: str
-    ) -> None:
-        """_stream raises StreamingNotSupportedError when model doesn't support streaming."""
-        # Arrange
-        non_streaming_model = Model(
-            id="non-streaming-model",
-            provider=Provider.OPENAI,
-            operations={Modality.TEXT: {Operation.GENERATE}},
-            display_name="Non-Streaming Model",
-            streaming=False,  # Streaming disabled
-        )
-
-        client = ConcreteModalityClient(
-            modality=Modality.TEXT,
-            model=non_streaming_model,
-            provider=non_streaming_model.provider,
-            auth=APIKey(secret=SecretStr(api_key)),
-        )
-
-        # Act & Assert
-        with pytest.raises(StreamingNotSupportedError) as exc_info:
-            client._stream(
-                _TestInput(prompt="test"),
-                stream_class=Stream,  # type: ignore
-            )
-
-        # Verify error message
-        error_msg = str(exc_info.value)
-        assert "Streaming not supported" in error_msg
-        assert "non-streaming-model" in error_msg
+def test_build_request_applies_mappers(client: FakeClient) -> None:
+    assert client._build_request(FakeInput(prompt="hello"), value="mapped") == {
+        "prompt": "hello",
+        "mapped": "mapped",
+    }
 
 
-class TestGetUsageContract:
-    """Test that _get_usage correctly wraps _parse_usage dict into typed Usage."""
+def test_build_request_warns_only_for_non_none_unsupported_values(
+    client: FakeClient,
+) -> None:
+    with pytest.warns(UnsupportedParameterWarning, match="unsupported.*test-model"):
+        client._build_request(FakeInput(prompt="hello"), unsupported="value")
 
-    async def test_parse_usage_returns_dict_not_typed_object(
-        self, text_model: Model, api_key: str
-    ) -> None:
-        """Regression: _parse_usage must return a dict, not a typed Usage object.
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", UnsupportedParameterWarning)
+        client._build_request(FakeInput(prompt="hello"), unsupported=None)
 
-        If _parse_usage returns a Usage object, _get_usage will crash with:
-        'Usage() argument after ** must be a mapping, not Usage'
-        """
-        client = ConcreteModalityClient(
-            modality=Modality.TEXT,
-            model=text_model,
-            provider=text_model.provider,
-            auth=APIKey(secret=SecretStr(api_key)),
-        )
 
-        raw = client._parse_usage({"some": "data"})
-        assert isinstance(raw, dict), (
-            f"_parse_usage must return a dict, got {type(raw).__name__}"
-        )
+async def test_predict_maps_request_and_transforms_output(client: FakeClient) -> None:
+    output = await client._predict(
+        FakeInput(prompt="hello"), value="mapped", transform="normalized"
+    )
+    assert output.content == "mapped:normalized"
+    assert isinstance(output.usage, Usage)
+    assert output.metadata["response_model"] == "resolved-model"
 
-    async def test_get_usage_wraps_dict_into_typed_usage(
-        self, text_model: Model, api_key: str
-    ) -> None:
-        """_get_usage must convert the raw dict from _parse_usage into typed Usage."""
-        client = ConcreteModalityClient(
-            modality=Modality.TEXT,
-            model=text_model,
-            provider=text_model.provider,
-            auth=APIKey(secret=SecretStr(api_key)),
-        )
 
-        usage = client._get_usage({"some": "data"})
-        assert isinstance(usage, Usage)
+@pytest.mark.parametrize(
+    "content", [b"\xff binary", b"\xff\xfe\x00\x00", b"\x80\x81\x82"]
+)
+def test_binary_error_body_raises_http_error(
+    client: FakeClient, content: bytes
+) -> None:
+    response = httpx.Response(
+        500,
+        content=content,
+        request=httpx.Request("POST", "https://example.com"),
+    )
+    with pytest.raises(httpx.HTTPStatusError):
+        client._handle_error_response(response)
+
+
+def test_non_streaming_model_is_rejected(model: Model) -> None:
+    model.streaming = False
+    client = FakeClient(
+        modality=Modality.TEXT,
+        model=model,
+        provider=model.provider,
+        auth=NoAuth(),
+    )
+    with pytest.raises(StreamingNotSupportedError, match="test-model"):
+        client._stream(FakeInput(prompt="hello"), stream_class=object)  # type: ignore[arg-type]
+
+
+def test_sync_namespace_delegates_to_async_prediction() -> None:
+    expected = TextOutput(content="hello")
+    client = Mock()
+    client._predict = AsyncMock(return_value=expected)
+
+    result = TextSyncNamespace(client).generate("hello", temperature=0.2)
+
+    assert result is expected
+    client._check_media_support.assert_called_once_with(messages=None)
+    inputs = client._predict.await_args.args[0]
+    assert inputs.prompt == "hello"
+    assert client._predict.await_args.kwargs["temperature"] == 0.2

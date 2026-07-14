@@ -26,7 +26,7 @@ class GoogleGenerateContentClient(APIMixin):
     - GoogleADC auth -> Vertex AI endpoints
     - API key auth -> Gemini API endpoints
 
-    Capability clients extend parsing methods via super() to wrap/transform results.
+    Modality clients extend parsing methods via super() to wrap or transform results.
 
     Usage:
         class GoogleTextGenerationClient(GoogleGenerateContentClient, TextGenerationClient):
@@ -123,7 +123,7 @@ class GoogleGenerateContentClient(APIMixin):
     def _parse_content(self, response_data: dict[str, Any]) -> Any:
         """Return all candidates from response.
 
-        Returns list of candidate objects that capability clients extract content from.
+        Returns list of candidate objects that modality clients extract content from.
         """
         candidates = response_data.get("candidates", [])
         if not candidates:
@@ -134,7 +134,7 @@ class GoogleGenerateContentClient(APIMixin):
     def _parse_finish_reason(self, response_data: dict[str, Any]) -> FinishReason:
         """Extract finish reason from Gemini candidates.
 
-        Returns FinishReason that capability clients wrap in their specific type.
+        Returns FinishReason that modality clients wrap in their specific type.
         """
         candidates = response_data.get("candidates", [])
         if not candidates:

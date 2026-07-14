@@ -24,7 +24,7 @@ Provider API mixins handle wire details. Modality clients handle operation metho
 
 `create_client(...)` resolves:
 
-- deprecated `capability` into `modality` + `operation`
+- `modality` + `operation` into a concrete client
 - model objects or string model IDs
 - provider or protocol target
 - provider credentials or BYOA protocol auth
@@ -177,7 +177,6 @@ Use templates before inventing structure:
 - `templates/modalities/{modality_slug}/providers/{provider_slug}/`
 - `templates/protocols/{protocol_slug}/`
 
-Provider API templates are validated by focused tests.
 Templates are source of truth for generated provider/module shape. Current source and message helpers are source of truth for multimodal message serialization semantics.
 
 ## Tests To Consult

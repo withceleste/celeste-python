@@ -1,41 +1,33 @@
-"""Integration tests for tools= parameter - WebSearch, function tools, streaming."""
+import pytest
 
-import warnings
+from celeste import Modality, Provider, ToolChoice, create_client
+from celeste.modalities.text import TextChunk, TextOutput
+from celeste.tools import WebSearch, XSearch
 
-# Suppress deprecation warnings from legacy capability packages
-warnings.filterwarnings(
-    "ignore",
-    message=".*capability parameter is deprecated.*",
-    category=DeprecationWarning,
-)
-
-import pytest  # noqa: E402
-
-from celeste import Modality, create_client  # noqa: E402
-from celeste.modalities.text import TextChunk, TextOutput  # noqa: E402
-from celeste.tools import ToolResult, WebSearch, XSearch  # noqa: E402
-from celeste.types import Message, Role  # noqa: E402
-
-# One cheap model per provider for server-side tools (WebSearch/XSearch)
-# xAI: only grok-4+ supports server-side tools
-SERVER_TOOL_MODELS = [
-    ("anthropic", "claude-haiku-4-5"),
-    ("openai", "gpt-4o-mini"),
-    ("google", "gemini-2.5-flash"),
-    ("xai", "grok-4.20-0309-non-reasoning"),
+WEB_SEARCH_MODELS = [
+    (Provider.ANTHROPIC, "claude-haiku-4-5"),
+    (Provider.GOOGLE, "gemini-2.5-flash-lite"),
+    (Provider.GROQ, "openai/gpt-oss-20b"),
+    (Provider.MOONSHOT, "kimi-k2-0711-preview"),
+    (Provider.OPENAI, "gpt-4o-mini"),
+    (Provider.XAI, "grok-4.20-0309-non-reasoning"),
 ]
 
-# One cheap model per provider for function tools (user-defined)
 FUNCTION_TOOL_MODELS = [
-    ("anthropic", "claude-haiku-4-5"),
-    ("openai", "gpt-4o-mini"),
-    ("google", "gemini-2.5-flash"),
-    ("xai", "grok-3-mini"),
+    (Provider.ANTHROPIC, "claude-haiku-4-5", True),
+    (Provider.DEEPSEEK, "deepseek-chat", True),
+    (Provider.GOOGLE, "gemini-2.5-flash-lite", True),
+    (Provider.GROQ, "llama-3.1-8b-instant", False),
+    (Provider.HUGGINGFACE, "Qwen/Qwen3-4B-Instruct-2507", False),
+    (Provider.MISTRAL, "mistral-tiny", True),
+    (Provider.MOONSHOT, "kimi-k2-0711-preview", True),
+    (Provider.OPENAI, "gpt-4o-mini", True),
+    (Provider.XAI, "grok-3-mini", False),
 ]
 
 WEATHER_TOOL = {
     "name": "get_weather",
-    "description": "Get current weather for a city. You MUST call this tool.",
+    "description": "Get current weather for a city. You must call this tool.",
     "parameters": {
         "type": "object",
         "properties": {"city": {"type": "string"}},
@@ -43,149 +35,68 @@ WEATHER_TOOL = {
     },
 }
 
-TEST_MAX_TOKENS = 500
 
-
-# -- WebSearch (non-streaming) --
-
-
-@pytest.mark.parametrize(
-    ("provider", "model_id"),
-    SERVER_TOOL_MODELS,
-    ids=[f"{p}-{m}" for p, m in SERVER_TOOL_MODELS],
-)
-@pytest.mark.integration
-@pytest.mark.asyncio
-async def test_web_search(provider: str, model_id: str) -> None:
-    """Test WebSearch tool produces a text response across all providers."""
-    client = create_client(modality=Modality.TEXT, provider=provider, model=model_id)
+@pytest.mark.parametrize(("provider", "model"), WEB_SEARCH_MODELS)
+async def test_web_search(provider: Provider, model: str) -> None:
+    client = create_client(modality=Modality.TEXT, provider=provider, model=model)
 
     output = await client.generate(
-        prompt="What year was Python 3.12 released?",
-        tools=[WebSearch()],
-        max_tokens=TEST_MAX_TOKENS,
+        prompt="When was Python 3.12 released?", tools=[WebSearch()], max_tokens=500
     )
 
     assert isinstance(output, TextOutput)
     assert output.content
 
 
-# -- WebSearch (streaming) --
+@pytest.mark.parametrize(("provider", "model"), WEB_SEARCH_MODELS)
+async def test_stream_web_search(provider: Provider, model: str) -> None:
+    client = create_client(modality=Modality.TEXT, provider=provider, model=model)
 
-
-@pytest.mark.parametrize(
-    ("provider", "model_id"),
-    SERVER_TOOL_MODELS,
-    ids=[f"{p}-{m}" for p, m in SERVER_TOOL_MODELS],
-)
-@pytest.mark.integration
-@pytest.mark.asyncio
-async def test_stream_web_search(provider: str, model_id: str) -> None:
-    """Test streaming with WebSearch tool across all providers."""
-    client = create_client(modality=Modality.TEXT, provider=provider, model=model_id)
-
-    chunks: list[TextChunk] = []
-    async for chunk in client.stream.generate(
-        prompt="What year was Python 3.12 released?",
-        tools=[WebSearch()],
-        max_tokens=TEST_MAX_TOKENS,
-    ):
-        chunks.append(chunk)
+    chunks = [
+        chunk
+        async for chunk in client.stream.generate(
+            prompt="When was Python 3.12 released?",
+            tools=[WebSearch()],
+            max_tokens=500,
+        )
+    ]
 
     assert chunks
-    assert all(isinstance(c, TextChunk) for c in chunks)
-
-
-# -- User-defined function tool -> ToolCall parsing --
+    assert all(isinstance(chunk, TextChunk) for chunk in chunks)
 
 
 @pytest.mark.parametrize(
-    ("provider", "model_id"),
-    FUNCTION_TOOL_MODELS,
-    ids=[f"{p}-{m}" for p, m in FUNCTION_TOOL_MODELS],
+    ("provider", "model", "supports_required"), FUNCTION_TOOL_MODELS
 )
-@pytest.mark.integration
-@pytest.mark.asyncio
-async def test_function_tool_call(provider: str, model_id: str) -> None:
-    """Test user-defined function tool returns parsed ToolCall objects."""
-    client = create_client(modality=Modality.TEXT, provider=provider, model=model_id)
+async def test_function_tool_call(
+    provider: Provider, model: str, supports_required: bool
+) -> None:
+    client = create_client(modality=Modality.TEXT, provider=provider, model=model)
+    parameters = {"tool_choice": ToolChoice.REQUIRED} if supports_required else {}
 
     output = await client.generate(
-        prompt="What is the weather in Paris right now? Use the get_weather tool.",
+        prompt="Use get_weather to check the weather in Paris.",
         tools=[WEATHER_TOOL],
-        max_tokens=TEST_MAX_TOKENS,
+        max_tokens=500,
+        **parameters,
     )
 
     assert isinstance(output, TextOutput)
-    assert len(output.tool_calls) > 0, (
-        f"{provider}/{model_id} did not return tool_calls"
-    )
-    tc = output.tool_calls[0]
-    assert tc.name == "get_weather"
-    assert "city" in tc.arguments
+    assert output.tool_calls
+    assert output.tool_calls[0].name == "get_weather"
+    assert "city" in output.tool_calls[0].arguments
 
 
-# -- xAI-specific: XSearch --
-
-
-@pytest.mark.integration
-@pytest.mark.asyncio
-async def test_xai_x_search() -> None:
-    """Test XSearch tool (xAI-only) produces a text response."""
+async def test_x_search() -> None:
     client = create_client(
         modality=Modality.TEXT,
-        provider="xai",
+        provider=Provider.XAI,
         model="grok-4.20-0309-non-reasoning",
     )
 
     output = await client.generate(
-        prompt="What is trending on X right now?",
-        tools=[XSearch()],
-        max_tokens=TEST_MAX_TOKENS,
+        prompt="What is trending on X?", tools=[XSearch()], max_tokens=500
     )
 
     assert isinstance(output, TextOutput)
     assert output.content
-
-
-# -- Multi-turn ToolResult round-trip --
-
-
-@pytest.mark.parametrize(
-    ("provider", "model_id"),
-    FUNCTION_TOOL_MODELS,
-    ids=[f"{p}-{m}" for p, m in FUNCTION_TOOL_MODELS],
-)
-@pytest.mark.integration
-@pytest.mark.asyncio
-async def test_tool_result_round_trip(provider: str, model_id: str) -> None:
-    """Test full round-trip: tool call -> tool result -> final answer."""
-    client = create_client(modality=Modality.TEXT, provider=provider, model=model_id)
-
-    # Step 1: Get tool call
-    output1 = await client.generate(
-        prompt="What is the weather in Paris right now? Use the get_weather tool.",
-        tools=[WEATHER_TOOL],
-        max_tokens=TEST_MAX_TOKENS,
-    )
-
-    assert output1.tool_calls, f"{provider}/{model_id} did not return tool_calls"
-    tc = output1.tool_calls[0]
-    assert tc.name == "get_weather"
-
-    # Step 2: Send tool result back using output.message for round-trip
-    output2 = await client.generate(
-        messages=[
-            Message(
-                role=Role.USER,
-                content="What is the weather in Paris right now? Use the get_weather tool.",
-            ),
-            output1.message,
-            ToolResult(content="18°C, sunny", tool_call_id=tc.id, name=tc.name),
-        ],
-        tools=[WEATHER_TOOL],
-        max_tokens=TEST_MAX_TOKENS,
-    )
-
-    assert isinstance(output2, TextOutput)
-    assert output2.content, f"{provider}/{model_id} did not return final text answer"

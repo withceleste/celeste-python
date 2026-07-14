@@ -3,17 +3,16 @@
 from pydantic import BaseModel, Field, SerializeAsAny, computed_field
 
 from celeste.constraints import Constraint
-from celeste.core import Capability, InputType, Modality, Operation, Provider
+from celeste.core import InputType, Modality, Operation, Provider
 from celeste.io import get_constraint_input_type
 
 
 class Model(BaseModel):
-    """Represents an AI model with its capabilities and metadata."""
+    """Represents an AI model and its metadata."""
 
     id: str
     provider: Provider | None = None
     display_name: str
-    capabilities: set[Capability] = Field(default_factory=set)
     operations: dict[Modality, set[Operation]] = Field(default_factory=dict)
     parameter_constraints: dict[str, SerializeAsAny[Constraint]] = Field(
         default_factory=dict
@@ -43,7 +42,6 @@ _models: dict[tuple[str, Provider], Model] = {}
 
 def register_models(
     models: Model | list[Model],
-    capability: Capability | None = None,
     *,
     modality: Modality | None = None,
     operation: Operation | None = None,
@@ -53,25 +51,12 @@ def register_models(
     Args:
         models: Single Model instance or list of Models to register.
                Each model is indexed by (model_id, provider) tuple.
-        capability: The capability these models are being registered for.
-            .. deprecated::
-                Use modality and operation parameters instead.
         modality: The modality these models belong to (e.g., Modality.IMAGES).
         operation: The operation these models support (e.g., Operation.GENERATE).
 
     Raises:
         ValueError: If display_name differs for duplicate (id, provider) pairs.
     """
-    import warnings
-
-    # Deprecation warning for capability parameter
-    if capability is not None:
-        warnings.warn(
-            "capability parameter is deprecated, use modality and operation instead",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-
     if isinstance(models, Model):
         models = [models]
 
@@ -81,14 +66,13 @@ def register_models(
             raise ValueError(msg)
         key = (model.id, model.provider)
 
-        # Get existing or create new model with empty capabilities/constraints
+        # Get existing or create new model with empty constraints
         registered = _models.setdefault(
             key,
             Model(
                 id=model.id,
                 provider=model.provider,
                 display_name=model.display_name,
-                capabilities=set(),
                 parameter_constraints={},
                 streaming=model.streaming,
             ),
@@ -104,15 +88,10 @@ def register_models(
         # Update constraints
         registered.parameter_constraints.update(model.parameter_constraints)
 
-        # Merge model's pre-existing operations (v1.0 path)
+        # Merge model's pre-existing operations
         for mod, ops in model.operations.items():
             registered.operations.setdefault(mod, set()).update(ops)
 
-        # Handle capability-based registration (backward compatibility)
-        if capability is not None:
-            registered.capabilities.add(capability)
-
-        # Handle modality-based registration (new path)
         if modality is not None and operation is not None:
             registered.operations.setdefault(modality, set()).add(operation)
 
@@ -152,15 +131,13 @@ def get_model(model_id: str, provider: Provider | None = None) -> Model | None:
 
 def list_models(
     provider: Provider | None = None,
-    capability: Capability | None = None,
     modality: Modality | None = None,
     operation: Operation | None = None,
 ) -> list[Model]:
-    """List all registered models, optionally filtered by provider, capability, modality, and/or operation.
+    """List registered models, optionally filtered by provider, modality, or operation.
 
     Args:
         provider: Optional provider filter.
-        capability: Optional capability filter (deprecated, use modality/operation).
         modality: Optional modality filter.
         operation: Optional operation filter (requires modality).
 
@@ -171,9 +148,6 @@ def list_models(
 
     if provider is not None:
         models = [m for m in models if m.provider == provider]
-
-    if capability is not None:
-        models = [m for m in models if capability in m.capabilities]
 
     if modality is not None and operation is not None:
         # Filter by modality AND operation together

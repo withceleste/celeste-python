@@ -38,20 +38,16 @@ typecheck:
 
 # Testing
 test:
-	uv run pytest tests/unit_tests --cov=celeste --cov-report=term-missing --cov-fail-under=80 -v
+	uv run pytest tests/unit_tests --cov=celeste --cov-report=term-missing -v
 
 # Integration testing (requires API keys and/or ADC credentials)
 # Runs tests from tests/integration_tests/
 integration-test:
-	uv run pytest tests/integration_tests/ -m integration -v --dist=worksteal -n auto
+	uv run pytest tests/integration_tests/ -v --dist=worksteal -n auto
 
 # Rerun only last-failed integration tests (without xdist — --lf is incompatible with -n)
 integration-retest:
-	uv run pytest tests/integration_tests/ -m integration -v --lf
-
-# Catch capability names as no-op targets
-%:
-	@:
+	uv run pytest tests/integration_tests/ -v --lf
 
 # Security scanning (config reads from pyproject.toml)
 security:

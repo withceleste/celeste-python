@@ -67,7 +67,7 @@ response = await client.generate("Extract user info")
 
 Important details:
 
-- Prefer `modality` + `operation`; `capability` is deprecated compatibility.
+- Select clients with `modality` + `operation`.
 - Use `protocol` and `base_url` for compatible text APIs.
 - If `base_url` is provided without provider/protocol, Celeste defaults to the OpenResponses protocol path.
 - Unknown provider models can create a fallback model only when provider and modality context make that intentional; check `src/celeste/__init__.py`.
@@ -96,7 +96,7 @@ Relevant source:
 
 Use Celeste-owned types for Celeste concepts. Import paths matter.
 
-- Top-level `celeste`: `Capability`, `Provider`, `Protocol`, `Modality`, `Operation`, `Message`, `MessageContent`, `MessagePart`, `TextPart`, `ImagePart`, `AudioPart`, `VideoPart`, `DocumentPart`, `Role`, `Tool`, `ToolCall`, `WebSearch`, `XSearch`, `CodeExecution`, `ToolChoice`, `ToolResult`, `ToolResultContent`, `ToolOutput`, `ToolError`.
+- Top-level `celeste`: `Provider`, `Protocol`, `Modality`, `Operation`, `Message`, `MessageContent`, `MessagePart`, `TextPart`, `ImagePart`, `AudioPart`, `VideoPart`, `DocumentPart`, `Role`, `Tool`, `ToolCall`, `WebSearch`, `XSearch`, `CodeExecution`, `ToolChoice`, `ToolResult`, `ToolResultContent`, `ToolOutput`, `ToolError`.
 - `celeste.core`: `InputType`, `Domain`, `Parameter`, `UsageField`, and other core enums not exported from the root package.
 - `celeste.artifacts`: `ImageArtifact`, `VideoArtifact`, `AudioArtifact`, `DocumentArtifact`.
 - `celeste.mime_types`: `ImageMimeType`, `VideoMimeType`, `AudioMimeType`, `DocumentMimeType`, `ApplicationMimeType`.
@@ -141,7 +141,7 @@ message = Message(
 
 Do not pass raw artifacts, mixed raw lists, or structured Pydantic payloads directly as `Message.content`. Structured tool payloads belong in `ToolResult.content`, and `ToolResult` is a separate message-list item, not a `Message` subclass.
 
-Use `tools=[WebSearch()]`, `tools=[XSearch()]`, or `tools=[CodeExecution()]` rather than deprecated boolean tool parameters.
+Use `tools=[WebSearch()]`, `tools=[XSearch()]`, or `tools=[CodeExecution()]` for provider tools.
 
 Tool choice uses `ToolChoice.AUTO`, `ToolChoice.REQUIRED`, or `ToolChoice.NONE`.
 

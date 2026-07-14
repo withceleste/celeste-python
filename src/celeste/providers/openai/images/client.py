@@ -175,7 +175,7 @@ class OpenAIImagesClient(APIMixin):
     ) -> dict[str, int | float | None]:
         """Extract usage data from Images API response.
 
-        Returns dict that capability clients wrap in their specific Usage type.
+        Returns dict that modality clients wrap in their specific Usage type.
         gpt-image-1 returns usage, DALL-E models don't.
         """
         usage_data = response_data.get("usage", {})
@@ -184,7 +184,7 @@ class OpenAIImagesClient(APIMixin):
     def _parse_content(self, response_data: dict[str, Any]) -> Any:
         """Parse data array from Images API response.
 
-        Returns data array that capability clients extract images from.
+        Returns data array that modality clients extract images from.
         """
         data = response_data.get("data", [])
         if not data:

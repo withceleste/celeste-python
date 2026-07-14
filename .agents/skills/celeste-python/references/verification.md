@@ -52,19 +52,13 @@ uv run pytest tests/unit_tests/test_client.py -q
 Parameter `TypedDict`s and `ParameterMapper` behavior:
 
 ```bash
-uv run pytest tests/unit_tests/test_parameters.py -q
+uv run pytest tests/unit_tests/test_parameters.py tests/unit_tests/test_parameter_wire_contracts.py -q
 ```
 
 Constraints and optional input support:
 
 ```bash
 uv run pytest tests/unit_tests/test_constraints.py tests/unit_tests/test_io.py -q
-```
-
-Provider API mixin/template contract:
-
-```bash
-uv run pytest tests/unit_tests/test_provider_api_templates.py -q
 ```
 
 Protocol and base URL routing:
@@ -94,7 +88,7 @@ uv run pytest tests/unit_tests/test_tool_choice.py tests/unit_tests/test_tool_ou
 Artifacts and MIME types:
 
 ```bash
-uv run pytest tests/unit_tests/test_artifacts.py tests/unit_tests/test_mime_types.py -q
+uv run pytest tests/unit_tests/test_artifacts.py -q
 ```
 
 Multimodal text messages and media support validation:
@@ -103,10 +97,10 @@ Multimodal text messages and media support validation:
 uv run pytest tests/unit_tests/test_text_multimodal_message_content.py tests/unit_tests/test_text_multimodal_message_request_building.py tests/unit_tests/test_text_media_support_validation.py -q
 ```
 
-Analyze-media convenience paths:
+Document analysis convenience path:
 
 ```bash
-uv run pytest tests/unit_tests/test_text_modality_analyze_image.py tests/unit_tests/test_text_modality_analyze_document.py -q
+uv run pytest tests/unit_tests/test_text_modality_analyze_document.py -q
 ```
 
 Embeddings input and multimodal embeddings:

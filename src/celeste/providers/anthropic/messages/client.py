@@ -203,7 +203,7 @@ class AnthropicMessagesClient(APIMixin):
     def _parse_content(self, response_data: dict[str, Any]) -> Any:
         """Parse content array from Messages API.
 
-        Returns raw content array that capability clients extract from.
+        Returns raw content array that modality clients extract from.
         """
         content = response_data.get("content", [])
         if not content:
@@ -214,7 +214,7 @@ class AnthropicMessagesClient(APIMixin):
     def _parse_finish_reason(self, response_data: dict[str, Any]) -> FinishReason:
         """Extract finish reason from Messages API response.
 
-        Returns FinishReason that capability clients wrap in their specific type.
+        Returns FinishReason that modality clients wrap in their specific type.
         """
         stop_reason = response_data.get("stop_reason")
         return FinishReason(reason=stop_reason)

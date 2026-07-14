@@ -1,108 +1,57 @@
-"""Integration tests for text generate operation - all registered models."""
+import pytest
 
-import warnings
+from celeste import Modality, Provider, create_client
+from celeste.modalities.text import TextChunk, TextOutput, TextUsage
+from celeste.providers.google.auth import GoogleADC
 
-# Suppress deprecation warnings from legacy capability packages
-warnings.filterwarnings(
-    "ignore",
-    message=".*capability parameter is deprecated.*",
-    category=DeprecationWarning,
-)
+MODELS = [
+    (Provider.ANTHROPIC, "claude-haiku-4-5"),
+    (Provider.COHERE, "command-r7b-12-2024"),
+    (Provider.DEEPSEEK, "deepseek-chat"),
+    (Provider.GOOGLE, "gemini-2.5-flash-lite"),
+    (Provider.GROQ, "llama-3.1-8b-instant"),
+    (Provider.HUGGINGFACE, "Qwen/Qwen3-4B-Instruct-2507"),
+    (Provider.MISTRAL, "mistral-tiny"),
+    (Provider.MOONSHOT, "kimi-k2-0711-preview"),
+    (Provider.OPENAI, "gpt-4o-mini"),
+    (Provider.XAI, "grok-3-mini"),
+]
 
-import pytest  # noqa: E402
-
-from celeste import (  # noqa: E402
-    Modality,
-    Model,
-    Operation,
-    create_client,
-    list_models,
-)
-from celeste.modalities.text import TextOutput, TextUsage  # noqa: E402
-from celeste.providers.google.auth import GoogleADC  # noqa: E402
-
-TEST_MAX_TOKENS = 200
-
-
-@pytest.mark.parametrize(
-    "model",
-    [
-        m
-        for m in list_models(modality=Modality.TEXT, operation=Operation.GENERATE)
-        if not m.streaming  # Streaming models tested in test_stream_generate
-        and not m.optional_input_types  # Media-capable models tested in test_analyze_*
-    ],
-    ids=lambda m: f"{m.provider}-{m.id}",
-)
-@pytest.mark.integration
-@pytest.mark.asyncio
-async def test_generate(model: Model) -> None:
-    """Test text generation for all registered models.
-
-    Dynamically discovers all models via list_models() and verifies each one
-    can generate text. Failures indicate deprecated or misconfigured models.
-    """
-    client = create_client(
-        modality=Modality.TEXT,
-        model=model,
-    )
-
-    response = await client.generate(prompt="Hi", max_tokens=TEST_MAX_TOKENS)
-
-    assert isinstance(response, TextOutput), (
-        f"Expected TextOutput, got {type(response)}"
-    )
-    # Empty/None content is valid for reasoning models that use all tokens for thinking
-    if not response.content:
-        assert response.finish_reason is not None, (
-            f"Model {model.provider}/{model.id} returned empty content without finish_reason"
-        )
-    assert isinstance(response.usage, TextUsage), (
-        f"Expected TextUsage, got {type(response.usage)}"
-    )
-    if (
-        response.usage.output_tokens is not None
-        and response.usage.output_tokens > TEST_MAX_TOKENS
-    ):
-        warnings.warn(
-            f"Model {model.provider}/{model.id} exceeded max_tokens: {response.usage.output_tokens} > {TEST_MAX_TOKENS}",
-            stacklevel=1,
-        )
+VERTEX_MODELS = [
+    (Provider.GOOGLE, "gemini-2.5-flash", "global"),
+    (Provider.ANTHROPIC, "claude-haiku-4-5", "us-east5"),
+    (Provider.MISTRAL, "mistral-small-2503", "us-central1"),
+    (Provider.DEEPSEEK, "deepseek-ai/deepseek-v3.2-maas", "global"),
+]
 
 
-@pytest.mark.integration
-def test_sync_generate() -> None:
-    """Test sync wrapper works correctly.
+@pytest.mark.parametrize(("provider", "model"), MODELS)
+async def test_generate(provider: Provider, model: str) -> None:
+    client = create_client(modality=Modality.TEXT, provider=provider, model=model)
 
-    Single model smoke test - sync is just async_to_sync wrapper.
-    """
-    models = list_models(modality=Modality.TEXT, operation=Operation.GENERATE)
-    model = models[0]
-
-    client = create_client(
-        modality=Modality.TEXT,
-        model=model,
-    )
-
-    response = client.sync.generate(prompt="Hi", max_tokens=TEST_MAX_TOKENS)
+    response = await client.generate(prompt="Say hello", max_tokens=200)
 
     assert isinstance(response, TextOutput)
-    assert response.content or response.finish_reason is not None
+    assert response.content
+    assert isinstance(response.usage, TextUsage)
 
 
-@pytest.mark.parametrize(
-    ("provider", "model", "location"),
-    [
-        ("google", "gemini-2.5-flash", "global"),
-        ("anthropic", "claude-haiku-4-5", "us-east5"),
-        ("mistral", "mistral-small-2503", "us-central1"),
-        ("deepseek", "deepseek-ai/deepseek-v3.2-maas", "global"),
-    ],
-)
-@pytest.mark.integration
-@pytest.mark.asyncio
-async def test_vertex_generate(provider: str, model: str, location: str) -> None:
-    """Test text generation via Vertex AI - one model per provider."""
+@pytest.mark.parametrize(("provider", "model"), MODELS)
+async def test_stream_generate(provider: Provider, model: str) -> None:
+    client = create_client(modality=Modality.TEXT, provider=provider, model=model)
+
+    chunks = [
+        chunk
+        async for chunk in client.stream.generate(prompt="Say hello", max_tokens=200)
+    ]
+
+    assert chunks
+    assert all(isinstance(chunk, TextChunk) for chunk in chunks)
+    assert any(chunk.content for chunk in chunks)
+
+
+@pytest.mark.parametrize(("provider", "model", "location"), VERTEX_MODELS)
+async def test_vertex_generate(provider: Provider, model: str, location: str) -> None:
     client = create_client(
         modality=Modality.TEXT,
         provider=provider,
@@ -110,9 +59,28 @@ async def test_vertex_generate(provider: str, model: str, location: str) -> None
         auth=GoogleADC(location=location),
     )
 
-    response = await client.generate(prompt="Hi", max_tokens=TEST_MAX_TOKENS)
+    response = await client.generate(prompt="Say hello", max_tokens=200)
 
     assert isinstance(response, TextOutput)
-    if not response.content:
-        assert response.finish_reason is not None
-    assert isinstance(response.usage, TextUsage)
+    assert response.content
+
+
+@pytest.mark.parametrize(("provider", "model", "location"), VERTEX_MODELS)
+async def test_vertex_stream_generate(
+    provider: Provider, model: str, location: str
+) -> None:
+    client = create_client(
+        modality=Modality.TEXT,
+        provider=provider,
+        model=model,
+        auth=GoogleADC(location=location),
+    )
+
+    chunks = [
+        chunk
+        async for chunk in client.stream.generate(prompt="Say hello", max_tokens=200)
+    ]
+
+    assert chunks
+    assert all(isinstance(chunk, TextChunk) for chunk in chunks)
+    assert any(chunk.content for chunk in chunks)

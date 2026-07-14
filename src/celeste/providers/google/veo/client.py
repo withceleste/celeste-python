@@ -23,11 +23,11 @@ class GoogleVeoClient(APIMixin):
     - _parse_content() - Extract raw video dict from response (generic)
     - download_content() - Download from GCS URL, returns raw bytes (generic)
 
-    Capability clients extend via super() to wrap results in artifacts:
+    Modality clients extend via super() to wrap results in artifacts:
         class GoogleVideoGenerationClient(GoogleVeoClient, VideoGenerationClient):
             def _parse_content(self, response_data):
                 video_data = super()._parse_content(response_data)  # Get generic dict
-                return VideoArtifact(url=video_data["uri"])  # Capability-specific
+                return VideoArtifact(url=video_data["uri"])
 
             async def download_content(self, artifact: VideoArtifact) -> VideoArtifact:
                 video_bytes = await super().download_content(artifact.url)  # Get raw bytes
@@ -157,7 +157,7 @@ class GoogleVeoClient(APIMixin):
     def _parse_content(self, response_data: dict[str, Any]) -> Any:
         """Extract raw video dict from response.
 
-        Returns generic dict with video data that capability clients wrap in artifacts.
+        Returns generic dict with video data that modality clients wrap in artifacts.
         """
         response = response_data.get("response", {})
 
@@ -204,7 +204,7 @@ class GoogleVeoClient(APIMixin):
     ) -> bytes:
         """Download video content from GCS URL.
 
-        Returns raw bytes that capability clients wrap in VideoArtifact.
+        Returns raw bytes that modality clients wrap in VideoArtifact.
 
         Args:
             url: GCS URL (gs://) or HTTPS URL to download from.

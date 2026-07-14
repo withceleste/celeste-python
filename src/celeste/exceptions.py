@@ -22,7 +22,6 @@ class ModelNotFoundError(ModelError):
         self,
         model_id: str | None = None,
         provider: str | None = None,
-        capability: str | None = None,
         modality: str | None = None,
     ) -> None:
         """Initialize with model details.
@@ -30,49 +29,25 @@ class ModelNotFoundError(ModelError):
         Args:
             model_id: Optional specific model ID that was not found.
             provider: Optional provider name.
-            capability: Optional capability name (used when no specific model_id).
             modality: Optional modality name (used when no specific model_id).
         """
         self.model_id = model_id
         self.provider = provider
-        self.capability = capability
         self.modality = modality
 
         # Generate appropriate error message based on available parameters
         if model_id and provider:
             msg = f"Model '{model_id}' not found for provider {provider}"
+        elif model_id:
+            msg = f"Model '{model_id}' not found"
         elif modality and provider:
             msg = f"No model found for modality '{modality}' with provider {provider}"
         elif modality:
             msg = f"No model found for modality '{modality}'"
-        elif capability and provider:
-            msg = (
-                f"No model found for capability '{capability}' with provider {provider}"
-            )
-        elif capability:
-            msg = f"No model found for capability '{capability}'"
         else:
             msg = "Model not found"
 
         super().__init__(msg)
-
-
-class CapabilityError(Error):
-    """Errors related to capability compatibility."""
-
-    pass
-
-
-class UnsupportedCapabilityError(CapabilityError):
-    """Raised when a model doesn't support a requested capability."""
-
-    def __init__(self, model_id: str, capability: str) -> None:
-        """Initialize with model and capability details."""
-        self.model_id = model_id
-        self.capability = capability
-        super().__init__(
-            f"Model '{model_id}' does not support capability '{capability}'"
-        )
 
 
 class ClientError(Error):
@@ -82,17 +57,15 @@ class ClientError(Error):
 
 
 class ClientNotFoundError(ClientError):
-    """Raised when no client is registered for a capability/modality/provider combination."""
+    """Raised when no client is registered for a modality/provider combination."""
 
     def __init__(
         self,
-        capability: str | None = None,
         provider: str | None = None,
         modality: str | None = None,
         operation: str | None = None,
     ) -> None:
-        """Initialize with capability/modality and provider details."""
-        self.capability = capability
+        """Initialize with modality and provider details."""
         self.provider = provider
         self.modality = modality
         self.operation = operation
@@ -104,8 +77,6 @@ class ClientNotFoundError(ClientError):
             msg = f"No client registered for modality '{modality}' with provider {provider}"
         elif modality:
             msg = f"No client registered for modality '{modality}'"
-        elif capability and provider:
-            msg = f"No client registered for {capability} with provider {provider}"
         else:
             msg = "No client registered"
 
@@ -271,7 +242,6 @@ __all__ = [
     "StreamEventError",
     "StreamNotExhaustedError",
     "StreamingNotSupportedError",
-    "UnsupportedCapabilityError",
     "UnsupportedParameterError",
     "UnsupportedParameterWarning",
     "UnsupportedProviderError",

@@ -29,12 +29,6 @@ class TextParameter(StrEnum):
     TOOL_CHOICE = "tool_choice"
     VERBOSITY = "verbosity"
 
-    # Deprecated: use tools=[WebSearch()], tools=[XSearch()], tools=[CodeExecution()] instead.
-    # TODO(deprecation): Remove on 2026-06-07.
-    WEB_SEARCH = "web_search"
-    X_SEARCH = "x_search"
-    CODE_EXECUTION = "code_execution"
-
     # Media input declarations (for optional_input_types)
     IMAGE = "image"
     VIDEO = "video"
@@ -73,16 +67,6 @@ class TextParameters(Parameters, total=False):
         Field(description="Controls whether and which tool the model must call."),
     ]
     verbosity: Annotated[str, Field(description="Output verbosity level.")]
-
-    # Deprecated: use tools=[WebSearch()], tools=[XSearch()], tools=[CodeExecution()] instead.
-    # TODO(deprecation): Remove on 2026-06-07.
-    web_search: Annotated[
-        bool, Field(description="Deprecated. Use tools=[WebSearch()].")
-    ]
-    x_search: Annotated[bool, Field(description="Deprecated. Use tools=[XSearch()].")]
-    code_execution: Annotated[
-        bool, Field(description="Deprecated. Use tools=[CodeExecution()].")
-    ]
 
 
 __all__ = [

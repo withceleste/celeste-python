@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- Removed the expired `Capability` and `APIKey` compatibility APIs, the
+  `capability=` client argument, and deprecated boolean tool parameters. Use
+  `Modality` + `Operation`, `AuthHeader`, and `tools=` respectively.
+- Removed the unused string authentication registry, the unregistered Google
+  Interactions prototype, and the superseded WebSocket client wrapper.
+
+### Changed
+
+- Consolidated the unit and integration suites around public contracts and
+  parametrized provider matrices. Arbitrary unregistered provider model IDs
+  remain supported and optimistically advertise streaming because provider
+  catalogs cannot be exhaustive.
+
 ---
 
 ## [0.11.0] - 2026-03-27

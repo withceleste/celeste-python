@@ -1,20 +1,13 @@
 """Text modality client."""
 
-import warnings
-from typing import Any, ClassVar, Unpack
+from typing import Any, Unpack
 
 from asgiref.sync import async_to_sync
 
 from celeste.client import ModalityClient
 from celeste.core import Modality
 from celeste.messages import media_types
-from celeste.tools import (
-    CodeExecution,
-    ToolResult,
-    WebSearch,
-    XSearch,
-    rehydrate_tools,
-)
+from celeste.tools import ToolResult, rehydrate_tools
 from celeste.types import (
     AudioContent,
     DocumentContent,
@@ -37,14 +30,6 @@ class TextClient(
     modality: Modality = Modality.TEXT
     _usage_class = TextUsage
     _finish_reason_class = TextFinishReason
-
-    # Deprecated param → Tool class mapping.
-    # TODO(deprecation): Remove on 2026-06-07.
-    _DEPRECATED_TOOL_PARAMS: ClassVar[dict[str, type]] = {
-        "web_search": WebSearch,
-        "x_search": XSearch,
-        "code_execution": CodeExecution,
-    }
 
     @classmethod
     def _output_class(cls) -> type[TextOutput]:
@@ -107,22 +92,10 @@ class TextClient(
         streaming: bool = False,
         **parameters: Unpack[TextParameters],
     ) -> dict[str, Any]:
-        """Build request, rehydrating tools and migrating deprecated boolean tool params."""
+        """Build request, rehydrating serialized tools."""
         tools = parameters.get("tools")
         if isinstance(tools, list):
             parameters["tools"] = rehydrate_tools(tools)
-        # TODO(deprecation): Remove the boolean-param migration on 2026-06-07.
-        for old_param, tool_cls in self._DEPRECATED_TOOL_PARAMS.items():
-            value = parameters.pop(old_param, None)  # type: ignore[misc]
-            if value:
-                warnings.warn(
-                    f"'{old_param}=True' is deprecated, "
-                    f"use tools=[{tool_cls.__name__}()] instead. "
-                    "Will be removed on 2026-06-07.",
-                    DeprecationWarning,
-                    stacklevel=4,
-                )
-                parameters.setdefault("tools", []).append(tool_cls())
         return super()._build_request(
             inputs, extra_body=extra_body, streaming=streaming, **parameters
         )

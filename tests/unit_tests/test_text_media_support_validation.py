@@ -1,9 +1,8 @@
-"""Unit tests for TextClient media support validation."""
+"""Text media support follows model constraints."""
 
 import pytest
 from pydantic import SecretStr
 
-from celeste import Model
 from celeste.artifacts import (
     AudioArtifact,
     DocumentArtifact,
@@ -13,6 +12,7 @@ from celeste.artifacts import (
 from celeste.auth import AuthHeader
 from celeste.constraints import (
     AudioConstraint,
+    Constraint,
     DocumentsConstraint,
     ImagesConstraint,
     VideosConstraint,
@@ -20,308 +20,109 @@ from celeste.constraints import (
 from celeste.core import InputType, Modality, Operation, Provider
 from celeste.modalities.text.parameters import TextParameter
 from celeste.modalities.text.providers.google.client import GoogleTextClient
+from celeste.models import Model
 from celeste.types import ImagePart, Message, Role, TextPart
 
+type MediaArtifact = AudioArtifact | DocumentArtifact | ImageArtifact | VideoArtifact
 
-@pytest.fixture
-def model_with_image_support() -> Model:
-    """Model that declares image support."""
-    return Model(
-        id="test-vision",
+
+def _client(
+    parameter: TextParameter | None = None,
+    constraint: Constraint | None = None,
+) -> GoogleTextClient:
+    constraints = (
+        {parameter: constraint}
+        if parameter is not None and constraint is not None
+        else {}
+    )
+    model = Model(
+        id="test",
         provider=Provider.GOOGLE,
-        display_name="Test Vision",
-        operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
-        streaming=True,
-        parameter_constraints={
-            TextParameter.IMAGE: ImagesConstraint(),
-        },
+        display_name="test",
+        operations={Modality.TEXT: {Operation.ANALYZE}},
+        parameter_constraints=constraints,
+    )
+    return GoogleTextClient(
+        model=model,
+        provider=Provider.GOOGLE,
+        auth=AuthHeader(secret=SecretStr("test"), header="x-goog-api-key", prefix=""),
     )
 
 
-@pytest.fixture
-def model_with_video_support() -> Model:
-    """Model that declares video support."""
-    return Model(
-        id="test-video",
-        provider=Provider.GOOGLE,
-        display_name="Test Video",
-        operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
-        streaming=True,
-        parameter_constraints={
-            TextParameter.VIDEO: VideosConstraint(),
-        },
-    )
+MEDIA_CASES = [
+    (
+        TextParameter.IMAGE,
+        ImagesConstraint(),
+        InputType.IMAGE,
+        "image",
+        ImageArtifact(data=b"x"),
+    ),
+    (
+        TextParameter.VIDEO,
+        VideosConstraint(),
+        InputType.VIDEO,
+        "video",
+        VideoArtifact(data=b"x"),
+    ),
+    (
+        TextParameter.AUDIO,
+        AudioConstraint(),
+        InputType.AUDIO,
+        "audio",
+        AudioArtifact(data=b"x"),
+    ),
+    (
+        TextParameter.DOCUMENT,
+        DocumentsConstraint(),
+        InputType.DOCUMENT,
+        "document",
+        DocumentArtifact(data=b"x"),
+    ),
+]
 
 
-@pytest.fixture
-def model_with_document_support() -> Model:
-    """Model that declares document support."""
-    return Model(
-        id="test-document",
-        provider=Provider.GOOGLE,
-        display_name="Test Document",
-        operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
-        streaming=True,
-        parameter_constraints={
-            TextParameter.DOCUMENT: DocumentsConstraint(),
-        },
-    )
-
-
-@pytest.fixture
-def model_with_audio_support() -> Model:
-    """Model that declares audio support."""
-    return Model(
-        id="test-audio",
-        provider=Provider.GOOGLE,
-        display_name="Test Audio",
-        operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
-        streaming=True,
-        parameter_constraints={
-            TextParameter.AUDIO: AudioConstraint(),
-        },
-    )
-
-
-@pytest.fixture
-def model_without_media_support() -> Model:
-    """Model that declares no media support."""
-    return Model(
-        id="test-text-only",
-        provider=Provider.GOOGLE,
-        display_name="Test Text Only",
-        operations={Modality.TEXT: {Operation.GENERATE}},
-        streaming=True,
-        parameter_constraints={},
-    )
-
-
-@pytest.fixture
-def google_auth() -> AuthHeader:
-    """Google auth header."""
-    return AuthHeader(secret=SecretStr("test"), header="x-goog-api-key", prefix="")
-
-
-def test_model_optional_input_types_computed_from_constraints(
-    model_with_image_support: Model,
-    model_with_video_support: Model,
-    model_with_audio_support: Model,
-    model_without_media_support: Model,
+@pytest.mark.parametrize(
+    ("parameter", "constraint", "input_type", "argument", "artifact"), MEDIA_CASES
+)
+def test_declared_media_is_allowed(
+    parameter: TextParameter,
+    constraint: Constraint,
+    input_type: InputType,
+    argument: str,
+    artifact: MediaArtifact,
 ) -> None:
-    """Verify optional_input_types is correctly computed from parameter_constraints."""
-    assert InputType.IMAGE in model_with_image_support.optional_input_types
-    assert InputType.VIDEO not in model_with_image_support.optional_input_types
-
-    assert InputType.VIDEO in model_with_video_support.optional_input_types
-    assert InputType.IMAGE not in model_with_video_support.optional_input_types
-
-    assert InputType.AUDIO in model_with_audio_support.optional_input_types
-    assert InputType.IMAGE not in model_with_audio_support.optional_input_types
-
-    assert InputType.IMAGE not in model_without_media_support.optional_input_types
-    assert InputType.VIDEO not in model_without_media_support.optional_input_types
+    client = _client(parameter, constraint)
+    assert client.model.optional_input_types == {input_type}
+    client._check_media_support(**{argument: artifact})
 
 
-def test_check_media_support_allows_image_when_declared(
-    model_with_image_support: Model,
-    google_auth: AuthHeader,
+@pytest.mark.parametrize(
+    ("_parameter", "_constraint", "input_type", "argument", "artifact"), MEDIA_CASES
+)
+def test_undeclared_media_is_rejected(
+    _parameter: TextParameter,
+    _constraint: Constraint,
+    input_type: InputType,
+    argument: str,
+    artifact: MediaArtifact,
 ) -> None:
-    """Image input should be allowed when model declares ImagesConstraint."""
-    client = GoogleTextClient(
-        model=model_with_image_support,
-        provider=Provider.GOOGLE,
-        auth=google_auth,
-    )
-
-    # Should not raise
-    client._check_media_support(
-        image=ImageArtifact(data=b"test"),
-        video=None,
-        audio=None,
-    )
+    with pytest.raises(
+        NotImplementedError, match=f"does not support {input_type.value}"
+    ):
+        _client()._check_media_support(**{argument: artifact})
 
 
-def test_check_media_support_allows_video_when_declared(
-    model_with_video_support: Model,
-    google_auth: AuthHeader,
-) -> None:
-    """Video input should be allowed when model declares VideosConstraint."""
-    client = GoogleTextClient(
-        model=model_with_video_support,
-        provider=Provider.GOOGLE,
-        auth=google_auth,
-    )
-
-    # Should not raise
-    client._check_media_support(
-        image=None,
-        video=VideoArtifact(data=b"test"),
-        audio=None,
-    )
-
-
-def test_check_media_support_rejects_image_when_not_declared(
-    model_without_media_support: Model,
-    google_auth: AuthHeader,
-) -> None:
-    """Image input should raise NotImplementedError when model doesn't declare support."""
-    client = GoogleTextClient(
-        model=model_without_media_support,
-        provider=Provider.GOOGLE,
-        auth=google_auth,
-    )
-
-    with pytest.raises(NotImplementedError, match="does not support image input"):
-        client._check_media_support(
-            image=ImageArtifact(data=b"test"),
-            video=None,
-            audio=None,
-        )
-
-
-def test_check_media_support_rejects_video_when_not_declared(
-    model_without_media_support: Model,
-    google_auth: AuthHeader,
-) -> None:
-    """Video input should raise NotImplementedError when model doesn't declare support."""
-    client = GoogleTextClient(
-        model=model_without_media_support,
-        provider=Provider.GOOGLE,
-        auth=google_auth,
-    )
-
-    with pytest.raises(NotImplementedError, match="does not support video input"):
-        client._check_media_support(
-            image=None,
-            video=VideoArtifact(data=b"test"),
-            audio=None,
-        )
-
-
-def test_check_media_support_rejects_video_on_image_only_model(
-    model_with_image_support: Model,
-    google_auth: AuthHeader,
-) -> None:
-    """Video should be rejected on model that only declares image support."""
-    client = GoogleTextClient(
-        model=model_with_image_support,
-        provider=Provider.GOOGLE,
-        auth=google_auth,
-    )
-
-    with pytest.raises(NotImplementedError, match="does not support video input"):
-        client._check_media_support(
-            image=None,
-            video=VideoArtifact(data=b"test"),
-            audio=None,
-        )
-
-
-def test_check_media_support_allows_document_when_declared(
-    model_with_document_support: Model,
-    google_auth: AuthHeader,
-) -> None:
-    """Document input should be allowed when model declares DocumentsConstraint."""
-    client = GoogleTextClient(
-        model=model_with_document_support,
-        provider=Provider.GOOGLE,
-        auth=google_auth,
-    )
-
-    # Should not raise
-    client._check_media_support(
-        image=None,
-        video=None,
-        audio=None,
-        document=DocumentArtifact(data=b"test"),
-    )
-
-
-def test_check_media_support_allows_audio_when_declared(
-    model_with_audio_support: Model,
-    google_auth: AuthHeader,
-) -> None:
-    """Audio input should be allowed when model declares AudioConstraint."""
-    client = GoogleTextClient(
-        model=model_with_audio_support,
-        provider=Provider.GOOGLE,
-        auth=google_auth,
-    )
-
-    client._check_media_support(
-        image=None,
-        video=None,
-        audio=AudioArtifact(data=b"test"),
-    )
-
-
-def test_check_media_support_rejects_document_when_not_declared(
-    model_without_media_support: Model,
-    google_auth: AuthHeader,
-) -> None:
-    """Document input should raise NotImplementedError when model doesn't declare support."""
-    client = GoogleTextClient(
-        model=model_without_media_support,
-        provider=Provider.GOOGLE,
-        auth=google_auth,
-    )
-
-    with pytest.raises(NotImplementedError, match="does not support document input"):
-        client._check_media_support(
-            image=None,
-            video=None,
-            audio=None,
-            document=DocumentArtifact(data=b"test"),
-        )
-
-
-def test_check_media_support_allows_none_values(
-    model_without_media_support: Model,
-    google_auth: AuthHeader,
-) -> None:
-    """None values should always be allowed (no media provided)."""
-    client = GoogleTextClient(
-        model=model_without_media_support,
-        provider=Provider.GOOGLE,
-        auth=google_auth,
-    )
-
-    # Should not raise - no media provided
-    client._check_media_support(image=None, video=None, audio=None)
-
-
-def test_check_media_support_rejects_message_image_when_not_declared(
-    model_without_media_support: Model,
-    google_auth: AuthHeader,
-) -> None:
-    """Media inside messages should be validated like top-level media."""
-    client = GoogleTextClient(
-        model=model_without_media_support,
-        provider=Provider.GOOGLE,
-        auth=google_auth,
+@pytest.mark.parametrize("supported", [False, True])
+def test_message_media_uses_same_validation(supported: bool) -> None:
+    client = (
+        _client(TextParameter.IMAGE, ImagesConstraint()) if supported else _client()
     )
     message = Message(
         role=Role.USER,
-        content=[TextPart(text="look"), ImagePart(image=ImageArtifact(data=b"test"))],
+        content=[TextPart(text="look"), ImagePart(image=ImageArtifact(data=b"x"))],
     )
-
-    with pytest.raises(NotImplementedError, match="does not support image input"):
+    if supported:
         client._check_media_support(messages=[message])
-
-
-def test_check_media_support_allows_message_image_when_declared(
-    model_with_image_support: Model,
-    google_auth: AuthHeader,
-) -> None:
-    """Message media should pass when the model declares support."""
-    client = GoogleTextClient(
-        model=model_with_image_support,
-        provider=Provider.GOOGLE,
-        auth=google_auth,
-    )
-    message = Message(
-        role=Role.USER,
-        content=[TextPart(text="look"), ImagePart(image=ImageArtifact(data=b"test"))],
-    )
-
-    client._check_media_support(messages=[message])
+    else:
+        with pytest.raises(NotImplementedError, match="does not support image"):
+            client._check_media_support(messages=[message])

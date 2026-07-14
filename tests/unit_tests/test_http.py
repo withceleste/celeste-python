@@ -1,25 +1,25 @@
-"""High-value tests for HTTPClient - focusing on connection pooling and resource management."""
-
 from collections.abc import AsyncIterator, Generator
-from unittest.mock import AsyncMock, MagicMock, patch
+from types import SimpleNamespace
+from typing import Any
+from unittest.mock import AsyncMock, MagicMock, call, patch
 
 import httpx
 import pytest
 
+import celeste.http as http_module
 from celeste.core import Modality, Provider
 from celeste.http import (
+    DEFAULT_TIMEOUT,
     MAX_RETRIES,
     HTTPClient,
     clear_http_clients,
     close_all_http_clients,
     get_http_client,
 )
-from celeste.mime_types import ApplicationMimeType
 
 
 @pytest.fixture
-def mock_httpx_client() -> AsyncMock:
-    """Mock httpx.AsyncClient for testing HTTP operations."""
+def transport() -> AsyncMock:
     client = AsyncMock(spec=httpx.AsyncClient)
     client.post = AsyncMock(return_value=httpx.Response(200))
     client.get = AsyncMock(return_value=httpx.Response(200))
@@ -27,929 +27,278 @@ def mock_httpx_client() -> AsyncMock:
     return client
 
 
-class TestHTTPClientLifecycle:
-    """Test HTTPClient initialization and cleanup behaviors."""
+@pytest.fixture(autouse=True)
+def isolated_registry() -> Generator[None]:
+    previous = http_module._http_clients.copy()
+    http_module._http_clients.clear()
+    yield
+    http_module._http_clients.clear()
+    http_module._http_clients.update(previous)
 
-    async def test_client_lazy_initialization(self) -> None:
-        """HTTPClient must not create httpx.AsyncClient until first request."""
-        # Arrange
-        http_client = HTTPClient()
 
-        # Assert - Client should not be initialized yet
-        assert http_client._client is None
+async def test_client_is_lazy_reused_and_closed(transport: AsyncMock) -> None:
+    client = HTTPClient(max_connections=7, max_keepalive_connections=3)
+    assert client._client is None
 
-    async def test_client_created_on_first_request(
-        self, mock_httpx_client: AsyncMock
-    ) -> None:
-        """HTTPClient must initialize httpx.AsyncClient on first request."""
-        # Arrange
-        http_client = HTTPClient()
+    with patch("celeste.http.httpx.AsyncClient", return_value=transport) as constructor:
+        await client.post("https://example.com/one", {}, {})
+        await client.post("https://example.com/two", {}, {})
+        created = client._client
+        await client.aclose()
 
-        # Act
-        with patch("celeste.http.httpx.AsyncClient", return_value=mock_httpx_client):
-            await http_client.post(
-                url="https://api.example.com/test",
-                headers={"Authorization": "Bearer test"},
-                json_body={"key": "value"},
+    assert constructor.call_count == 1
+    limits = constructor.call_args.kwargs["limits"]
+    assert (limits.max_connections, limits.max_keepalive_connections) == (7, 3)
+    assert created is transport
+    assert client._client is None
+    transport.aclose.assert_awaited_once()
+
+
+@pytest.mark.parametrize("operation", ["post", "post_multipart", "get"])
+async def test_request_methods_forward_arguments(
+    operation: str, transport: AsyncMock
+) -> None:
+    client = HTTPClient()
+    with patch("celeste.http.httpx.AsyncClient", return_value=transport):
+        if operation == "post":
+            await client.post(
+                "https://example.com",
+                {"Authorization": "key"},
+                {"prompt": "hello"},
+                timeout=10,
+            )
+            assert transport.post.call_args == call(
+                "https://example.com",
+                headers={"Authorization": "key"},
+                json={"prompt": "hello"},
+                timeout=10,
+            )
+        elif operation == "post_multipart":
+            await client.post_multipart(
+                "https://example.com",
+                {"Authorization": "key"},
+                {"file": ("input.bin", b"data", "application/octet-stream")},
+                {"purpose": "input"},
+            )
+            assert transport.post.call_args == call(
+                "https://example.com",
+                headers={"Authorization": "key"},
+                files={"file": ("input.bin", b"data", "application/octet-stream")},
+                data={"purpose": "input"},
+                timeout=DEFAULT_TIMEOUT,
+            )
+        else:
+            await client.get(
+                "https://example.com", {"Authorization": "key"}, timeout=12
+            )
+            assert transport.get.call_args == call(
+                "https://example.com",
+                headers={"Authorization": "key"},
+                timeout=12,
+                follow_redirects=True,
             )
 
-        # Assert
-        assert http_client._client is not None
 
-    async def test_client_reused_across_multiple_requests(
-        self, mock_httpx_client: AsyncMock
-    ) -> None:
-        """HTTPClient must reuse the same httpx.AsyncClient for multiple requests."""
-        # Arrange
-        http_client = HTTPClient()
-
-        # Act
-        with patch("celeste.http.httpx.AsyncClient", return_value=mock_httpx_client):
-            await http_client.post(
-                url="https://api.example.com/test1",
-                headers={"Authorization": "Bearer test"},
-                json_body={"key": "value1"},
-            )
-            first_client = http_client._client
-
-            await http_client.post(
-                url="https://api.example.com/test2",
-                headers={"Authorization": "Bearer test"},
-                json_body={"key": "value2"},
-            )
-            second_client = http_client._client
-
-        # Assert - Same client instance must be reused
-        assert first_client is second_client
-
-    async def test_aclose_sets_client_to_none(
-        self, mock_httpx_client: AsyncMock
-    ) -> None:
-        """HTTPClient.aclose() must properly cleanup and reset client state."""
-        # Arrange
-        http_client = HTTPClient()
-
-        # Act
-        with patch("celeste.http.httpx.AsyncClient", return_value=mock_httpx_client):
-            await http_client.post(
-                url="https://api.example.com/test",
-                headers={"Authorization": "Bearer test"},
-                json_body={"key": "value"},
-            )
-            assert http_client._client is not None
-
-            await http_client.aclose()
-
-        # Assert
-        assert http_client._client is None
-        mock_httpx_client.aclose.assert_called_once()
-
-    async def test_aclose_handles_uninitialized_client(self) -> None:
-        """HTTPClient.aclose() must handle the case when client was never initialized."""
-        # Arrange
-        http_client = HTTPClient()
-
-        # Act & Assert - Should not raise any exceptions
-        await http_client.aclose()
-        assert http_client._client is None
+@pytest.mark.parametrize(
+    ("operation", "arguments"),
+    [
+        ("post", {"headers": {}, "json_body": {}}),
+        ("post_multipart", {"headers": {}, "files": {}, "data": {}}),
+        ("get", {}),
+    ],
+)
+async def test_request_methods_reject_blank_urls(
+    operation: str, arguments: dict[str, Any]
+) -> None:
+    with pytest.raises(ValueError, match="URL cannot be empty"):
+        await getattr(HTTPClient(), operation)(" ", **arguments)
 
 
-class TestHTTPClientConnectionPooling:
-    """Test connection pool configuration behaviors."""
-
-    async def test_connection_limits_applied_to_httpx_client(
-        self, mock_httpx_client: AsyncMock
-    ) -> None:
-        """HTTPClient must configure httpx.AsyncClient with specified connection limits."""
-        # Arrange
-        max_connections = 50
-        max_keepalive = 25
-        http_client = HTTPClient(
-            max_connections=max_connections,
-            max_keepalive_connections=max_keepalive,
-        )
-
-        # Act
-        with patch(
-            "celeste.http.httpx.AsyncClient", return_value=mock_httpx_client
-        ) as mock_constructor:
-            await http_client.post(
-                url="https://api.example.com/test",
-                headers={"Authorization": "Bearer test"},
-                json_body={"key": "value"},
-            )
-
-        # Assert - Verify AsyncClient was called with correct limits
-        mock_constructor.assert_called_once()
-        call_kwargs = mock_constructor.call_args[1]
-        limits = call_kwargs["limits"]
-
-        assert limits.max_connections == max_connections
-        assert limits.max_keepalive_connections == max_keepalive
-
-    async def test_default_connection_limits(
-        self, mock_httpx_client: AsyncMock
-    ) -> None:
-        """HTTPClient must use sensible default connection limits."""
-        # Arrange
-        http_client = HTTPClient()  # No explicit limits
-
-        # Act
-        with patch(
-            "celeste.http.httpx.AsyncClient", return_value=mock_httpx_client
-        ) as mock_constructor:
-            await http_client.post(
-                url="https://api.example.com/test",
-                headers={"Authorization": "Bearer test"},
-                json_body={"key": "value"},
-            )
-
-        # Assert - Verify defaults are applied
-        mock_constructor.assert_called_once()
-        call_kwargs = mock_constructor.call_args[1]
-        limits = call_kwargs["limits"]
-
-        assert limits.max_connections == 20
-        assert limits.max_keepalive_connections == 10
+@pytest.mark.parametrize(
+    ("outcomes", "status", "calls"),
+    [
+        ([httpx.ReadTimeout("timeout"), httpx.Response(200)], 200, 2),
+        ([httpx.Response(503), httpx.Response(200)], 200, 2),
+        ([httpx.Response(401)], 401, 1),
+        ([httpx.Response(503)] * (MAX_RETRIES + 1), 503, MAX_RETRIES + 1),
+    ],
+)
+async def test_retry_policy(
+    transport: AsyncMock,
+    outcomes: list[object],
+    status: int,
+    calls: int,
+) -> None:
+    transport.post.side_effect = outcomes
+    with (
+        patch("celeste.http.httpx.AsyncClient", return_value=transport),
+        patch("celeste.http.asyncio.sleep", new=AsyncMock()),
+    ):
+        response = await HTTPClient().post("https://example.com", {}, {})
+    assert response.status_code == status
+    assert transport.post.call_count == calls
 
 
-class TestHTTPClientRequestMethods:
-    """Test POST and GET request methods."""
-
-    async def test_post_request_with_all_parameters(
-        self, mock_httpx_client: AsyncMock
-    ) -> None:
-        """POST method must pass all parameters correctly to httpx.AsyncClient."""
-        # Arrange
-        http_client = HTTPClient()
-        url = "https://api.example.com/generate"
-        headers = {
-            "Authorization": "Bearer sk-test",
-            "Content-Type": ApplicationMimeType.JSON,
-        }
-        json_body = {"prompt": "Hello", "max_tokens": 100}
-        timeout = 30.0
-
-        mock_response = httpx.Response(200, json={"result": "success"})
-        mock_httpx_client.post.return_value = mock_response
-
-        # Act
-        with patch("celeste.http.httpx.AsyncClient", return_value=mock_httpx_client):
-            response = await http_client.post(
-                url=url,
-                headers=headers,
-                json_body=json_body,
-                timeout=timeout,
-            )
-
-        # Assert
-        mock_httpx_client.post.assert_called_once_with(
-            url,
-            headers=headers,
-            json=json_body,
-            timeout=timeout,
-        )
-        assert response.status_code == 200
-
-    async def test_get_request_with_all_parameters(
-        self, mock_httpx_client: AsyncMock
-    ) -> None:
-        """GET method must pass all parameters correctly to httpx.AsyncClient."""
-        # Arrange
-        http_client = HTTPClient()
-        url = "https://api.example.com/models"
-        headers = {"Authorization": "Bearer sk-test"}
-        timeout = 15.0
-
-        mock_response = httpx.Response(200, json={"models": ["gpt-4"]})
-        mock_httpx_client.get.return_value = mock_response
-
-        # Act
-        with patch("celeste.http.httpx.AsyncClient", return_value=mock_httpx_client):
-            response = await http_client.get(
-                url=url,
-                headers=headers,
-                timeout=timeout,
-            )
-
-        # Assert
-        mock_httpx_client.get.assert_called_once_with(
-            url,
-            headers=headers,
-            timeout=timeout,
-            follow_redirects=True,
-        )
-        assert response.status_code == 200
-
-    async def test_post_propagates_httpx_errors(
-        self, mock_httpx_client: AsyncMock
-    ) -> None:
-        """POST must retry a transient error, then propagate it after MAX_RETRIES."""
-        # Arrange
-        http_client = HTTPClient()
-        mock_httpx_client.post.side_effect = httpx.TimeoutException("Request timeout")
-
-        # Act & Assert
-        with (
-            patch("celeste.http.httpx.AsyncClient", return_value=mock_httpx_client),
-            patch("celeste.http.asyncio.sleep", new=AsyncMock()),
-            pytest.raises(httpx.TimeoutException, match="Request timeout"),
-        ):
-            await http_client.post(
-                url="https://api.example.com/test",
-                headers={"Authorization": "Bearer test"},
-                json_body={"key": "value"},
-            )
-        assert mock_httpx_client.post.call_count == MAX_RETRIES + 1
-
-    async def test_get_propagates_httpx_errors(
-        self, mock_httpx_client: AsyncMock
-    ) -> None:
-        """GET must retry a transient error, then propagate it after MAX_RETRIES."""
-        # Arrange
-        http_client = HTTPClient()
-        mock_httpx_client.get.side_effect = httpx.ConnectError("Connection failed")
-
-        # Act & Assert
-        with (
-            patch("celeste.http.httpx.AsyncClient", return_value=mock_httpx_client),
-            patch("celeste.http.asyncio.sleep", new=AsyncMock()),
-            pytest.raises(httpx.ConnectError, match="Connection failed"),
-        ):
-            await http_client.get(
-                url="https://api.example.com/test",
-                headers={"Authorization": "Bearer test"},
-            )
-        assert mock_httpx_client.get.call_count == MAX_RETRIES + 1
-
-    async def test_post_uses_default_timeout_when_not_specified(
-        self, mock_httpx_client: AsyncMock
-    ) -> None:
-        """POST method must use default timeout when none is specified."""
-        # Arrange
-        http_client = HTTPClient()
-
-        # Act
-        with patch("celeste.http.httpx.AsyncClient", return_value=mock_httpx_client):
-            await http_client.post(
-                url="https://api.example.com/test",
-                headers={"Authorization": "Bearer test"},
-                json_body={"key": "value"},
-                # Note: timeout parameter omitted
-            )
-
-        # Assert - Verify default timeout was used
-        mock_httpx_client.post.assert_called_once()
-        call_kwargs = mock_httpx_client.post.call_args[1]
-        assert call_kwargs["timeout"] == 180.0
-
-    async def test_get_uses_default_timeout_when_not_specified(
-        self, mock_httpx_client: AsyncMock
-    ) -> None:
-        """GET method must use default timeout when none is specified."""
-        # Arrange
-        http_client = HTTPClient()
-
-        # Act
-        with patch("celeste.http.httpx.AsyncClient", return_value=mock_httpx_client):
-            await http_client.get(
-                url="https://api.example.com/test",
-                headers={"Authorization": "Bearer test"},
-                # Note: timeout parameter omitted
-            )
-
-        # Assert - Verify default timeout was used
-        mock_httpx_client.get.assert_called_once()
-        call_kwargs = mock_httpx_client.get.call_args[1]
-        assert call_kwargs["timeout"] == 180.0
-
-    async def test_custom_timeout_passed_to_httpx(
-        self, mock_httpx_client: AsyncMock
-    ) -> None:
-        """HTTPClient passes custom timeout value to httpx.AsyncClient methods."""
-        http_client = HTTPClient()
-        custom_timeout = 120.0
-
-        with patch("celeste.http.httpx.AsyncClient", return_value=mock_httpx_client):
-            await http_client.post(
-                url="https://api.example.com/test",
-                headers={"Authorization": "Bearer test"},
-                json_body={"key": "value"},
-                timeout=custom_timeout,
-            )
-
-        # Verify custom timeout was passed to httpx
-        mock_httpx_client.post.assert_called_once()
-        call_kwargs = mock_httpx_client.post.call_args[1]
-        assert call_kwargs["timeout"] == custom_timeout
+async def test_retry_exhaustion_reraises_transport_error(
+    transport: AsyncMock,
+) -> None:
+    transport.post.side_effect = httpx.ConnectError("down")
+    with (
+        patch("celeste.http.httpx.AsyncClient", return_value=transport),
+        patch("celeste.http.asyncio.sleep", new=AsyncMock()),
+        pytest.raises(httpx.ConnectError, match="down"),
+    ):
+        await HTTPClient().post("https://example.com", {}, {})
+    assert transport.post.call_count == MAX_RETRIES + 1
 
 
-class TestHTTPClientRetry:
-    """Transient-failure retry behavior (MAX_RETRIES attempts with backoff)."""
+def test_registry_is_keyed_by_provider_and_modality() -> None:
+    openai_text = get_http_client(Provider.OPENAI, Modality.TEXT)
+    assert get_http_client(Provider.OPENAI, Modality.TEXT) is openai_text
+    assert get_http_client(Provider.OPENAI, Modality.IMAGES) is not openai_text
+    assert get_http_client(Provider.ANTHROPIC, Modality.TEXT) is not openai_text
 
-    @pytest.mark.parametrize(
-        ("outcomes", "want_status", "want_calls"),
-        [
-            ([httpx.ReadTimeout("x"), httpx.Response(200)], 200, 2),
-            ([httpx.Response(503), httpx.Response(200)], 200, 2),
-            ([httpx.Response(401)], 401, 1),
-            ([httpx.Response(503)] * (MAX_RETRIES + 1), 503, MAX_RETRIES + 1),
-        ],
+
+async def test_close_all_continues_after_a_client_failure() -> None:
+    failing = get_http_client(Provider.OPENAI, Modality.TEXT)
+    healthy = get_http_client(Provider.ANTHROPIC, Modality.TEXT)
+    failing_transport = AsyncMock(spec=httpx.AsyncClient)
+    healthy_transport = AsyncMock(spec=httpx.AsyncClient)
+    failing_transport.aclose.side_effect = RuntimeError("close failed")
+    failing._client = failing_transport
+    healthy._client = healthy_transport
+
+    await close_all_http_clients()
+
+    failing_transport.aclose.assert_awaited_once()
+    healthy_transport.aclose.assert_awaited_once()
+    assert not http_module._http_clients
+
+
+def test_clear_registry_does_not_close_clients() -> None:
+    client = get_http_client(Provider.OPENAI, Modality.TEXT)
+    client._client = AsyncMock(spec=httpx.AsyncClient)
+    clear_http_clients()
+    client._client.aclose.assert_not_called()
+    assert not http_module._http_clients
+
+
+async def test_context_manager_closes_on_exception(transport: AsyncMock) -> None:
+    client = HTTPClient()
+    with (
+        patch("celeste.http.httpx.AsyncClient", return_value=transport),
+        pytest.raises(RuntimeError, match="boom"),
+    ):
+        async with client as entered:
+            assert entered is client
+            await client.post("https://example.com", {}, {})
+            raise RuntimeError("boom")
+    assert client._client is None
+    transport.aclose.assert_awaited_once()
+
+
+async def _iterate(items: list[Any]) -> AsyncIterator[Any]:
+    for item in items:
+        yield item
+
+
+def _event_source(data: list[str], response: httpx.Response | None = None) -> MagicMock:
+    source = MagicMock()
+    source.response = response or httpx.Response(
+        200, request=httpx.Request("POST", "https://example.com")
     )
-    async def test_retry_then_return(
-        self,
-        mock_httpx_client: AsyncMock,
-        outcomes: list[object],
-        want_status: int,
-        want_calls: int,
-    ) -> None:
-        """Transient errors and retryable statuses are retried; others return immediately."""
-        mock_httpx_client.post.side_effect = outcomes
-        with (
-            patch("celeste.http.httpx.AsyncClient", return_value=mock_httpx_client),
-            patch("celeste.http.asyncio.sleep", new=AsyncMock()),
-        ):
-            response = await HTTPClient().post(
-                url="https://x", headers={}, json_body={}
-            )
-        assert response.status_code == want_status
-        assert mock_httpx_client.post.call_count == want_calls
-
-    async def test_reraises_after_exhausting_retries(
-        self, mock_httpx_client: AsyncMock
-    ) -> None:
-        """A persistent transient error is re-raised after MAX_RETRIES + 1 attempts."""
-        mock_httpx_client.post.side_effect = httpx.ConnectError("down")
-        with (
-            patch("celeste.http.httpx.AsyncClient", return_value=mock_httpx_client),
-            patch("celeste.http.asyncio.sleep", new=AsyncMock()),
-            pytest.raises(httpx.ConnectError),
-        ):
-            await HTTPClient().post(url="https://x", headers={}, json_body={})
-        assert mock_httpx_client.post.call_count == MAX_RETRIES + 1
-
-
-class TestHTTPClientRegistry:
-    """Test get_http_client registry and singleton behavior."""
-
-    @pytest.fixture(autouse=True)
-    def clear_registry(self) -> Generator[None, None, None]:
-        """Clear HTTP client registry before each test to ensure isolation."""
-        from celeste.http import _http_clients
-
-        # Arrange - Store original state and clear registry
-        original_clients = _http_clients.copy()
-        _http_clients.clear()
-
-        yield
-
-        # Cleanup - Restore original state
-        _http_clients.clear()
-        _http_clients.update(original_clients)
-
-    def test_get_http_client_returns_same_instance_for_same_key(self) -> None:
-        """get_http_client must return the same HTTPClient for identical provider/capability."""
-        # Arrange
-        provider = Provider.OPENAI
-        capability = Modality.TEXT
-
-        # Act
-        client1 = get_http_client(provider, capability)
-        client2 = get_http_client(provider, capability)
-
-        # Assert - Must be the exact same instance (singleton behavior)
-        assert client1 is client2
-
-    def test_get_http_client_returns_different_instances_for_different_providers(
-        self,
-    ) -> None:
-        """get_http_client must return different HTTPClients for different providers."""
-        # Arrange
-        capability = Modality.TEXT
-
-        # Act
-        openai_client = get_http_client(Provider.OPENAI, capability)
-        anthropic_client = get_http_client(Provider.ANTHROPIC, capability)
-
-        # Assert - Must be different instances
-        assert openai_client is not anthropic_client
-
-    def test_get_http_client_returns_different_instances_for_different_capabilities(
-        self,
-    ) -> None:
-        """get_http_client must return different HTTPClients for different capabilities."""
-        # Arrange
-        provider = Provider.OPENAI
-
-        # Act
-        text_client = get_http_client(provider, Modality.TEXT)
-        image_client = get_http_client(provider, Modality.IMAGES)
-
-        # Assert - Must be different instances
-        assert text_client is not image_client
-
-    def test_registry_isolation_prevents_cross_contamination(self) -> None:
-        """Registry must maintain complete isolation between different provider/capability pairs."""
-        # Arrange - Create clients for different combinations
-        openai_text = get_http_client(Provider.OPENAI, Modality.TEXT)
-        openai_image = get_http_client(Provider.OPENAI, Modality.IMAGES)
-        anthropic_text = get_http_client(Provider.ANTHROPIC, Modality.TEXT)
-
-        # Act - Retrieve them again
-        openai_text_again = get_http_client(Provider.OPENAI, Modality.TEXT)
-        openai_image_again = get_http_client(Provider.OPENAI, Modality.IMAGES)
-        anthropic_text_again = get_http_client(Provider.ANTHROPIC, Modality.TEXT)
-
-        # Assert - Same pairs return same instances, different pairs return different instances
-        assert openai_text is openai_text_again
-        assert openai_image is openai_image_again
-        assert anthropic_text is anthropic_text_again
-
-        # Verify all three are distinct
-        assert openai_text is not openai_image
-        assert openai_text is not anthropic_text
-        assert openai_image is not anthropic_text
-
-
-class TestHTTPClientCleanup:
-    """Test close_all_http_clients and clear_http_clients functionality."""
-
-    @pytest.fixture(autouse=True)
-    def clear_registry(self) -> Generator[None, None, None]:
-        """Clear HTTP client registry before each test to ensure isolation."""
-        from celeste.http import _http_clients
-
-        # Arrange - Store original state and clear registry
-        original_clients = _http_clients.copy()
-        _http_clients.clear()
-
-        yield
-
-        # Cleanup - Restore original state
-        _http_clients.clear()
-        _http_clients.update(original_clients)
-
-    async def test_close_all_http_clients_closes_all_and_clears_registry(
-        self, mock_httpx_client: AsyncMock
-    ) -> None:
-        """close_all_http_clients must close all clients and clear the registry."""
-        from celeste.http import _http_clients, get_http_client
-
-        # Arrange - Create multiple clients
-        client1 = get_http_client(Provider.OPENAI, Modality.TEXT)
-        client2 = get_http_client(Provider.ANTHROPIC, Modality.TEXT)
-
-        # Initialize both clients to create httpx.AsyncClient instances
-        with patch("celeste.http.httpx.AsyncClient", return_value=mock_httpx_client):
-            await client1.post(
-                url="https://api.example.com/test1",
-                headers={"Authorization": "Bearer test"},
-                json_body={"key": "value"},
-            )
-            await client2.post(
-                url="https://api.example.com/test2",
-                headers={"Authorization": "Bearer test"},
-                json_body={"key": "value"},
-            )
-
-        # Verify registry has clients and clients are initialized
-        assert len(_http_clients) == 2
-        assert client1._client is not None
-        assert client2._client is not None
-
-        # Act - Close all clients
-        await close_all_http_clients()
-
-        # Assert - Registry should be empty AND clients should be reset
-        assert len(_http_clients) == 0
-        assert client1._client is None
-        assert client2._client is None
-
-    async def test_close_all_http_clients_calls_aclose_on_each_client(
-        self, mock_httpx_client: AsyncMock
-    ) -> None:
-        """close_all_http_clients must call aclose() on each httpx.AsyncClient."""
-        from celeste.http import get_http_client
-
-        # Arrange - Create and initialize multiple clients with separate mock instances
-        mock_client1 = AsyncMock(spec=httpx.AsyncClient)
-        mock_client1.post = AsyncMock(return_value=httpx.Response(200))
-        mock_client1.aclose = AsyncMock()
-
-        mock_client2 = AsyncMock(spec=httpx.AsyncClient)
-        mock_client2.post = AsyncMock(return_value=httpx.Response(200))
-        mock_client2.aclose = AsyncMock()
-
-        client1 = get_http_client(Provider.OPENAI, Modality.TEXT)
-        client2 = get_http_client(Provider.ANTHROPIC, Modality.TEXT)
-
-        # Initialize clients with different mock instances
-        with patch("celeste.http.httpx.AsyncClient") as mock_constructor:
-            mock_constructor.side_effect = [mock_client1, mock_client2]
-
-            await client1.post(
-                url="https://api.example.com/test1",
-                headers={"Authorization": "Bearer test"},
-                json_body={"key": "value"},
-            )
-            await client2.post(
-                url="https://api.example.com/test2",
-                headers={"Authorization": "Bearer test"},
-                json_body={"key": "value"},
-            )
-
-        # Act - Close all clients
-        await close_all_http_clients()
-
-        # Assert - Both mock clients should have aclose called
-        mock_client1.aclose.assert_called_once()
-        mock_client2.aclose.assert_called_once()
-
-    async def test_clear_http_clients_clears_without_closing(self) -> None:
-        """clear_http_clients must clear registry without calling aclose()."""
-        from celeste.http import _http_clients, get_http_client
-
-        # Arrange - Create multiple clients
-        mock_client1 = AsyncMock(spec=httpx.AsyncClient)
-        mock_client1.post = AsyncMock(return_value=httpx.Response(200))
-        mock_client1.aclose = AsyncMock()
-
-        client1 = get_http_client(Provider.OPENAI, Modality.TEXT)
-
-        # Initialize client
-        with patch("celeste.http.httpx.AsyncClient", return_value=mock_client1):
-            await client1.post(
-                url="https://api.example.com/test",
-                headers={"Authorization": "Bearer test"},
-                json_body={"key": "value"},
-            )
-
-        # Verify registry has client
-        assert len(_http_clients) == 1
-
-        # Act - Clear without closing
-        clear_http_clients()
-
-        # Assert - Registry cleared but aclose not called
-        assert len(_http_clients) == 0
-        mock_client1.aclose.assert_not_called()
-
-    async def test_close_all_handles_multiple_providers_and_capabilities(
-        self,
-    ) -> None:
-        """close_all_http_clients must handle multiple provider/capability combinations."""
-        from celeste.http import _http_clients, get_http_client
-
-        # Arrange - Create clients for different combinations
-        mock_client1 = AsyncMock(spec=httpx.AsyncClient)
-        mock_client1.post = AsyncMock(return_value=httpx.Response(200))
-        mock_client1.aclose = AsyncMock()
-
-        mock_client2 = AsyncMock(spec=httpx.AsyncClient)
-        mock_client2.post = AsyncMock(return_value=httpx.Response(200))
-        mock_client2.aclose = AsyncMock()
-
-        mock_client3 = AsyncMock(spec=httpx.AsyncClient)
-        mock_client3.post = AsyncMock(return_value=httpx.Response(200))
-        mock_client3.aclose = AsyncMock()
-
-        client1 = get_http_client(Provider.OPENAI, Modality.TEXT)
-        client2 = get_http_client(Provider.OPENAI, Modality.IMAGES)
-        client3 = get_http_client(Provider.ANTHROPIC, Modality.TEXT)
-
-        # Initialize all clients
-        with patch("celeste.http.httpx.AsyncClient") as mock_constructor:
-            mock_constructor.side_effect = [mock_client1, mock_client2, mock_client3]
-
-            await client1.post(
-                url="https://api.example.com/test1",
-                headers={"Authorization": "Bearer test"},
-                json_body={"key": "value"},
-            )
-            await client2.post(
-                url="https://api.example.com/test2",
-                headers={"Authorization": "Bearer test"},
-                json_body={"key": "value"},
-            )
-            await client3.post(
-                url="https://api.example.com/test3",
-                headers={"Authorization": "Bearer test"},
-                json_body={"key": "value"},
-            )
-
-        # Verify registry has all 3 clients
-        assert len(_http_clients) == 3
-
-        # Act - Close all
-        await close_all_http_clients()
-
-        # Assert - All closed and registry empty
-        assert len(_http_clients) == 0
-        mock_client1.aclose.assert_called_once()
-        mock_client2.aclose.assert_called_once()
-        mock_client3.aclose.assert_called_once()
-
-    async def test_close_all_continues_despite_individual_failures(self) -> None:
-        """close_all_http_clients must continue closing all clients even if one fails."""
-        from celeste.http import _http_clients, get_http_client
-
-        # Arrange - Create clients where one will fail to close
-        mock_client1 = AsyncMock(spec=httpx.AsyncClient)
-        mock_client1.post = AsyncMock(return_value=httpx.Response(200))
-        mock_client1.aclose = AsyncMock(side_effect=RuntimeError("Close failed"))
-
-        mock_client2 = AsyncMock(spec=httpx.AsyncClient)
-        mock_client2.post = AsyncMock(return_value=httpx.Response(200))
-        mock_client2.aclose = AsyncMock()
-
-        client1 = get_http_client(Provider.OPENAI, Modality.TEXT)
-        client2 = get_http_client(Provider.ANTHROPIC, Modality.TEXT)
-
-        # Initialize both clients
-        with patch("celeste.http.httpx.AsyncClient") as mock_constructor:
-            mock_constructor.side_effect = [mock_client1, mock_client2]
-
-            await client1.post(
-                url="https://api.example.com/test1",
-                headers={"Authorization": "Bearer test"},
-                json_body={"key": "value"},
-            )
-            await client2.post(
-                url="https://api.example.com/test2",
-                headers={"Authorization": "Bearer test"},
-                json_body={"key": "value"},
-            )
-
-        # Act - Should not raise, continues closing despite failure
-        await close_all_http_clients()
-
-        # Assert - Both aclose calls were attempted and registry is cleared
-        mock_client1.aclose.assert_called_once()
-        mock_client2.aclose.assert_called_once()
-        assert len(_http_clients) == 0
-
-
-class TestHTTPClientContextManager:
-    """Test async context manager protocol for resource cleanup."""
-
-    async def test_context_manager_returns_self(
-        self, mock_httpx_client: AsyncMock
-    ) -> None:
-        """__aenter__ must return HTTPClient instance for use in async with block."""
-        # Arrange
-        http_client = HTTPClient()
-
-        # Act
-        async with http_client as client:
-            # Assert - Context manager returns the HTTPClient instance itself
-            assert client is http_client
-
-    async def test_context_manager_calls_aclose_on_exit(
-        self, mock_httpx_client: AsyncMock
-    ) -> None:
-        """__aexit__ must call aclose() to cleanup connections on context exit."""
-        # Arrange
-        http_client = HTTPClient()
-
-        # Act - Initialize client and exit context
-        with patch("celeste.http.httpx.AsyncClient", return_value=mock_httpx_client):
-            async with http_client:
-                await http_client.post(
-                    url="https://api.example.com/test",
-                    headers={"Authorization": "Bearer test"},
-                    json_body={"key": "value"},
-                )
-                # Verify client was initialized
-                assert http_client._client is not None
-
-        # Assert - After exiting context, client should be closed
-        assert http_client._client is None
-        mock_httpx_client.aclose.assert_called_once()
-
-    async def test_context_manager_cleanup_on_exception(
-        self, mock_httpx_client: AsyncMock
-    ) -> None:
-        """__aexit__ must cleanup connections even when exception occurs in context."""
-        # Arrange
-        http_client = HTTPClient()
-
-        # Act & Assert - Verify cleanup happens despite exception
-        with (
-            patch("celeste.http.httpx.AsyncClient", return_value=mock_httpx_client),
-            pytest.raises(ValueError, match="Test exception"),
-        ):
-            async with http_client:
-                await http_client.post(
-                    url="https://api.example.com/test",
-                    headers={"Authorization": "Bearer test"},
-                    json_body={"key": "value"},
-                )
-                raise ValueError("Test exception")
-
-        # Assert - Client was closed despite exception
-        assert http_client._client is None
-        mock_httpx_client.aclose.assert_called_once()
-
-
-class TestHTTPClientStreaming:
-    """Test Server-Sent Events streaming functionality."""
-
-    def _create_mock_sse(self, data: str) -> MagicMock:
-        """Create mock SSE event with data."""
-        mock = MagicMock()
-        mock.data = data
-        return mock
-
-    def _create_mock_event_source(self, events: list) -> MagicMock:
-        """Create mock SSE event source with events."""
-        mock_source = MagicMock()
-        mock_source.aiter_sse = MagicMock(return_value=self._async_iter(events))
-        mock_source.__aenter__ = AsyncMock(return_value=mock_source)
-        mock_source.__aexit__ = AsyncMock(return_value=False)
-
-        # Mock response with headers for httpx_sse content-type check
-        mock_response = MagicMock()
-        mock_response.headers = MagicMock()
-        mock_response.headers.get = MagicMock(return_value="text/event-stream")
-        mock_source._response = mock_response
-
-        return mock_source
-
-    async def test_stream_post_yields_parsed_json_events(
-        self, mock_httpx_client: AsyncMock
-    ) -> None:
-        """stream_post must parse SSE events and yield all JSON."""
-        # Arrange
-        http_client = HTTPClient()
+    source.aiter_sse.return_value = _iterate(
+        [SimpleNamespace(data=item) for item in data]
+    )
+    source.__aenter__ = AsyncMock(return_value=source)
+    source.__aexit__ = AsyncMock(return_value=False)
+    return source
+
+
+async def test_sse_stream_forwards_arguments_and_skips_control_messages(
+    transport: AsyncMock,
+) -> None:
+    source = _event_source(['{"delta": "hello"}', "[DONE]", '{"delta": "!"}'])
+    with (
+        patch("celeste.http.httpx.AsyncClient", return_value=transport),
+        patch("celeste.http.aconnect_sse", return_value=source) as connect,
+    ):
         events = [
-            self._create_mock_sse('{"delta": "Hello"}'),
-            self._create_mock_sse('{"delta": " world"}'),
+            event
+            async for event in HTTPClient().stream_post(
+                "https://example.com",
+                {"Authorization": "key"},
+                {"stream": True},
+                timeout=10,
+            )
         ]
-        mock_event_source = self._create_mock_event_source(events)
 
-        # Act
-        with (
-            patch("celeste.http.httpx.AsyncClient", return_value=mock_httpx_client),
-            patch("celeste.http.aconnect_sse", return_value=mock_event_source),
-        ):
-            chunks = [
-                chunk
-                async for chunk in http_client.stream_post(
-                    url="https://api.example.com/stream",
-                    headers={"Authorization": "Bearer test"},
-                    json_body={"prompt": "test"},
-                )
-            ]
-
-        # Assert - All valid JSON events are parsed and yielded
-        assert chunks == [{"delta": "Hello"}, {"delta": " world"}]
-
-    async def test_stream_post_raises_on_malformed_json(
-        self, mock_httpx_client: AsyncMock
-    ) -> None:
-        """stream_post must raise JSONDecodeError on malformed SSE events."""
-        # Arrange
-        http_client = HTTPClient()
-        events = [
-            self._create_mock_sse('{"valid": true}'),
-            self._create_mock_sse("{invalid json"),
-            self._create_mock_sse('{"valid": "also"}'),
-        ]
-        mock_event_source = self._create_mock_event_source(events)
-
-        # Act
-        results = []
-        with (
-            patch("celeste.http.httpx.AsyncClient", return_value=mock_httpx_client),
-            patch("celeste.http.aconnect_sse", return_value=mock_event_source),
-        ):
-            async for chunk in http_client.stream_post(
-                url="https://api.example.com/stream",
-                headers={"Authorization": "Bearer test"},
-                json_body={"prompt": "test"},
-            ):
-                results.append(chunk)
-
-        # Assert - only valid JSON events are yielded
-        assert len(results) == 2
-        assert results[0] == {"valid": True}
-        assert results[1] == {"valid": "also"}
-
-    async def test_stream_post_passes_parameters_correctly(
-        self, mock_httpx_client: AsyncMock
-    ) -> None:
-        """stream_post must pass all parameters to aconnect_sse correctly."""
-        # Arrange
-        http_client = HTTPClient()
-        url = "https://api.example.com/stream"
-        headers = {"Authorization": "Bearer sk-test", "X-Custom": "value"}
-        json_body = {"prompt": "test", "stream": True}
-        timeout = 120.0
-
-        mock_event_source = self._create_mock_event_source([])  # Empty stream
-
-        # Act
-        with (
-            patch("celeste.http.httpx.AsyncClient", return_value=mock_httpx_client),
-            patch(
-                "celeste.http.aconnect_sse", return_value=mock_event_source
-            ) as mock_sse,
-        ):
-            async for _ in http_client.stream_post(
-                url=url,
-                headers=headers,
-                json_body=json_body,
-                timeout=timeout,
-            ):
-                pass
-
-        # Assert - Verify aconnect_sse called with correct parameters
-        mock_sse.assert_called_once_with(
-            mock_httpx_client,
-            "POST",
-            url,
-            json=json_body,
-            headers=headers,
-            timeout=timeout,
-        )
-
-    async def test_stream_post_raises_http_error_with_readable_body(
-        self, mock_httpx_client: AsyncMock
-    ) -> None:
-        """stream_post reads response body before raising on HTTP errors."""
-        # Arrange
-        http_client = HTTPClient()
-        mock_response = httpx.Response(
-            401,
-            content=b'{"error": {"message": "Invalid API Key"}}',
-            request=httpx.Request("POST", "https://api.example.com/stream"),
-        )
-
-        mock_source = MagicMock()
-        mock_source.response = mock_response
-        mock_source.__aenter__ = AsyncMock(return_value=mock_source)
-        mock_source.__aexit__ = AsyncMock(return_value=False)
-
-        # Act & Assert
-        with (
-            patch("celeste.http.httpx.AsyncClient", return_value=mock_httpx_client),
-            patch("celeste.http.aconnect_sse", return_value=mock_source),
-            pytest.raises(httpx.HTTPStatusError) as exc_info,
-        ):
-            async for _ in http_client.stream_post(
-                url="https://api.example.com/stream",
-                headers={"Authorization": "Bearer bad-key"},
-                json_body={"prompt": "test"},
-            ):
-                pass
-
-        # Body should be readable for downstream enrichment
-        assert exc_info.value.response.json()["error"]["message"] == "Invalid API Key"
-
-    async def test_stream_post_ndjson_raises_http_error_with_readable_body(
-        self, mock_httpx_client: AsyncMock
-    ) -> None:
-        """stream_post_ndjson reads response body before raising on HTTP errors."""
-        # Arrange
-        http_client = HTTPClient()
-        error_body = b'{"error": {"message": "Forbidden"}}'
-        mock_response = httpx.Response(
-            403,
-            content=error_body,
-            request=httpx.Request("POST", "https://api.example.com/stream"),
-        )
-        mock_httpx_client.stream = MagicMock(return_value=_async_context(mock_response))
-
-        # Act & Assert
-        with (
-            patch("celeste.http.httpx.AsyncClient", return_value=mock_httpx_client),
-            pytest.raises(httpx.HTTPStatusError) as exc_info,
-        ):
-            async for _ in http_client.stream_post_ndjson(
-                url="https://api.example.com/stream",
-                headers={"Authorization": "Bearer bad-key"},
-                json_body={"prompt": "test"},
-            ):
-                pass
-
-        # Body should be readable for downstream enrichment
-        assert exc_info.value.response.json()["error"]["message"] == "Forbidden"
-
-    @staticmethod
-    async def _async_iter(items: list) -> AsyncIterator:
-        """Helper to create async iterator from list."""
-        for item in items:
-            yield item
+    assert events == [{"delta": "hello"}, {"delta": "!"}]
+    connect.assert_called_once_with(
+        transport,
+        "POST",
+        "https://example.com",
+        json={"stream": True},
+        headers={"Authorization": "key"},
+        timeout=10,
+    )
 
 
-class _async_context:
-    """Async context manager wrapping a response for client.stream() mocking."""
+async def test_sse_error_body_remains_readable(transport: AsyncMock) -> None:
+    response = httpx.Response(
+        401,
+        content=b'{"error": {"message": "invalid key"}}',
+        request=httpx.Request("POST", "https://example.com"),
+    )
+    with (
+        patch("celeste.http.httpx.AsyncClient", return_value=transport),
+        patch("celeste.http.aconnect_sse", return_value=_event_source([], response)),
+        pytest.raises(httpx.HTTPStatusError) as error,
+    ):
+        async for _ in HTTPClient().stream_post("https://example.com", {}, {}):
+            pass
+    assert error.value.response.json()["error"]["message"] == "invalid key"
 
+
+class AsyncResponseContext:
     def __init__(self, response: httpx.Response) -> None:
-        self._response = response
+        self.response = response
 
     async def __aenter__(self) -> httpx.Response:
-        return self._response
+        return self.response
 
-    async def __aexit__(self, *args: object) -> None:
-        pass
+    async def __aexit__(self, *_args: object) -> None:
+        return None
+
+
+async def test_ndjson_stream_parses_nonempty_lines(transport: AsyncMock) -> None:
+    response = httpx.Response(
+        200,
+        content=b'{"value": 1}\n\n{"value": 2}\n',
+        request=httpx.Request("POST", "https://example.com"),
+    )
+    transport.stream = MagicMock(return_value=AsyncResponseContext(response))
+    with patch("celeste.http.httpx.AsyncClient", return_value=transport):
+        events = [
+            event
+            async for event in HTTPClient().stream_post_ndjson(
+                "https://example.com", {}, {}
+            )
+        ]
+    assert events == [{"value": 1}, {"value": 2}]
+
+
+async def test_ndjson_error_body_remains_readable(transport: AsyncMock) -> None:
+    response = httpx.Response(
+        403,
+        content=b'{"error": {"message": "forbidden"}}',
+        request=httpx.Request("POST", "https://example.com"),
+    )
+    transport.stream = MagicMock(return_value=AsyncResponseContext(response))
+    with (
+        patch("celeste.http.httpx.AsyncClient", return_value=transport),
+        pytest.raises(httpx.HTTPStatusError) as error,
+    ):
+        async for _ in HTTPClient().stream_post_ndjson("https://example.com", {}, {}):
+            pass
+    assert error.value.response.json()["error"]["message"] == "forbidden"

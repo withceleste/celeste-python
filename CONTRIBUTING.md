@@ -56,7 +56,7 @@ Always start by copying from the templates. Replace `{provider_slug}`, `{api_slu
 2. Register auth via `register_auth()` in `src/celeste/providers/<provider>/__init__.py`.
 3. Export the provider in `src/celeste/providers/__init__.py`.
 4. Fill in the scaffolded files: `config.py` (endpoints), `client.py` (HTTP + parsing), `parameters.py` (mappers), `streaming.py` (SSE).
-5. The template contract is enforced by `tests/unit_tests/test_provider_api_templates.py` — `make test` will catch missing or mismatched methods.
+5. Run `make typecheck` and the relevant provider integration tests.
 
 **Modality wiring** — copy from `templates/modalities/`, place in `src/celeste/modalities/<modality>/providers/<provider>/`:
 

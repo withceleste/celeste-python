@@ -105,7 +105,7 @@ class BytePlusImagesClient(APIMixin):
     ) -> dict[str, int | float | None]:
         """Extract usage data from Images API response.
 
-        Returns dict that capability clients wrap in their specific Usage type.
+        Returns dict that modality clients wrap in their specific Usage type.
         """
         usage_data = response_data.get("usage", {})
         return BytePlusImagesClient.map_usage_fields(usage_data)
@@ -113,7 +113,7 @@ class BytePlusImagesClient(APIMixin):
     def _parse_content(self, response_data: dict[str, Any]) -> Any:
         """Parse images/data array from Images API response.
 
-        Returns raw images/data array that capability clients extract from.
+        Returns raw images/data array that modality clients extract from.
         """
         images = response_data.get("images", [])
         if images:

@@ -26,7 +26,7 @@ class GoogleImagenClient(APIMixin):
     - GoogleADC auth -> Vertex AI endpoints
     - API key auth -> Gemini API endpoints
 
-    Capability clients extend parsing methods via super() to wrap/transform results.
+    Modality clients extend parsing methods via super() to wrap or transform results.
 
     Usage:
         class GoogleImageGenerationClient(GoogleImagenClient, ImageGenerationClient):
@@ -110,7 +110,7 @@ class GoogleImagenClient(APIMixin):
     def _parse_content(self, response_data: dict[str, Any]) -> Any:
         """Parse predictions from response.
 
-        Returns predictions array that capability clients extract from.
+        Returns predictions array that modality clients extract from.
         """
         predictions = response_data.get("predictions", [])
         if not predictions:

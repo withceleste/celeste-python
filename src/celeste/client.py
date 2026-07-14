@@ -435,6 +435,11 @@ class ModalityClient[
             "modality": self.modality,
             "raw_response": response_data,
         }
+        if (
+            isinstance(response_model := response_data.get("model"), str)
+            and response_model
+        ):
+            metadata["response_model"] = response_model
         if self.provider is not None:
             metadata["provider"] = self.provider
         if self.protocol is not None:

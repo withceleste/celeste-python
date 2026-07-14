@@ -166,7 +166,7 @@ class OpenAIVideosClient(APIMixin):
     ) -> tuple[dict[str, tuple[str, bytes, str]], dict[str, str]]:
         """Prepare multipart form data from request_body.
 
-        Override in capability client to handle input_reference or other file uploads.
+        Override in a modality client to handle input_reference or other file uploads.
         Default implementation returns empty dicts (no file uploads).
         """
         return {}, {}
@@ -191,7 +191,7 @@ class OpenAIVideosClient(APIMixin):
     def _parse_content(self, response_data: dict[str, Any]) -> Any:
         """Parse video content from response.
 
-        Returns base64-encoded video data that capability clients decode.
+        Returns base64-encoded video data that modality clients decode.
         """
         video_data = response_data.get("video_data")
         if not video_data:
