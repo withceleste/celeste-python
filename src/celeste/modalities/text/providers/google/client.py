@@ -1,7 +1,6 @@
 """Google text client (modality)."""
 
 from typing import Any
-from uuid import uuid4
 
 from celeste.grounding import Grounding
 from celeste.messages import (
@@ -17,6 +16,10 @@ from celeste.providers.google.generate_content.grounding import (
 )
 from celeste.providers.google.generate_content.streaming import (
     GoogleGenerateContentStream as _GoogleGenerateContentStream,
+)
+from celeste.providers.google.generate_content.tools import (
+    needs_native_replay,
+    tool_calls_from_parts,
 )
 from celeste.providers.google.utils import build_media_part
 from celeste.tools import ToolCall, ToolResult
@@ -56,35 +59,18 @@ class GoogleTextStream(_GoogleGenerateContentStream, TextStream):
         self, chunks: list, raw_events: list[dict[str, Any]]
     ) -> list[ToolCall]:
         """Extract tool calls from Google streaming events."""
-        tool_calls: list[ToolCall] = []
-        for event in raw_events:
-            for candidate in event.get("candidates", []):
-                for part in candidate.get("content", {}).get("parts", []):
-                    if "functionCall" in part:
-                        kwargs: dict[str, Any] = {}
-                        if "thoughtSignature" in part:
-                            kwargs["thoughtSignature"] = part["thoughtSignature"]
-                        tool_calls.append(
-                            ToolCall(
-                                id=str(uuid4()),
-                                name=part["functionCall"]["name"],
-                                arguments=part["functionCall"].get("args", {}),
-                                **kwargs,
-                            )
-                        )
-        return tool_calls
+        return tool_calls_from_parts(self._content_parts)
 
     def _aggregate_signature(
         self, chunks: list, raw_events: list[dict[str, Any]]
     ) -> list[dict[str, Any]]:
-        """Extract thought parts with signatures from Google streaming events."""
-        thought_parts: list[dict[str, Any]] = []
-        for event in raw_events:
-            for candidate in event.get("candidates", []):
-                for part in candidate.get("content", {}).get("parts", []):
-                    if part.get("thought") and "thoughtSignature" in part:
-                        thought_parts.append(part)
-        return thought_parts
+        """Return exact native Parts or signed thought Parts."""
+        parts = self._content_parts
+        if needs_native_replay(parts):
+            return parts
+        return [
+            part for part in parts if part.get("thought") and "thoughtSignature" in part
+        ]
 
 
 class GoogleTextClient(GoogleGenerateContentClient, TextClient):
@@ -133,6 +119,7 @@ class GoogleTextClient(GoogleGenerateContentClient, TextClient):
                         "parts": [
                             {
                                 "functionResponse": {
+                                    "id": msg.tool_call_id,
                                     "name": msg.name,
                                     "response": {"result": tool_result_object(msg)},
                                 }
@@ -143,20 +130,26 @@ class GoogleTextClient(GoogleGenerateContentClient, TextClient):
             else:
                 role = "model" if msg.role == Role.ASSISTANT else msg.role
                 sig_blocks = msg.signature
+                if (
+                    msg.role == Role.ASSISTANT
+                    and sig_blocks
+                    and needs_native_replay(sig_blocks)
+                ):
+                    contents.append({"role": role, "parts": sig_blocks})
+                    continue
                 msg_parts = list(sig_blocks) if sig_blocks else []
                 msg_parts.extend(content_to_parts(msg.content))
                 if msg.tool_calls:
                     for tc in msg.tool_calls:
-                        part: dict[str, Any] = {
-                            "functionCall": {
-                                "name": tc.name,
-                                "args": tc.arguments,
+                        msg_parts.append(
+                            {
+                                "functionCall": {
+                                    "id": tc.id,
+                                    "name": tc.name,
+                                    "args": tc.arguments,
+                                }
                             }
-                        }
-                        thought_sig = getattr(tc, "thoughtSignature", None)
-                        if thought_sig:
-                            part["thoughtSignature"] = thought_sig
-                        msg_parts.append(part)
+                        )
                 contents.append({"role": role, "parts": msg_parts})
 
         result: dict[str, Any] = {"contents": contents}
@@ -187,14 +180,9 @@ class GoogleTextClient(GoogleGenerateContentClient, TextClient):
         if not candidates:
             return None, []
         parts = candidates[0].get("content", {}).get("parts", [])
-        reasoning_parts: list[str] = []
-        signature_blocks: list[dict[str, Any]] = []
-        for p in parts:
-            if p.get("thought"):
-                text = p.get("text", "")
-                if text:
-                    reasoning_parts.append(text)
-                signature_blocks.append(p)
+        thought_parts = [p for p in parts if p.get("thought")]
+        reasoning_parts = [p["text"] for p in thought_parts if p.get("text")]
+        signature_blocks = parts if needs_native_replay(parts) else thought_parts
         text = "\n".join(reasoning_parts) if reasoning_parts else None
         return text, signature_blocks
 
@@ -211,21 +199,7 @@ class GoogleTextClient(GoogleGenerateContentClient, TextClient):
         if not candidates:
             return []
         parts = candidates[0].get("content", {}).get("parts", [])
-        tool_calls: list[ToolCall] = []
-        for p in parts:
-            if "functionCall" in p:
-                kwargs: dict[str, Any] = {}
-                if "thoughtSignature" in p:
-                    kwargs["thoughtSignature"] = p["thoughtSignature"]
-                tool_calls.append(
-                    ToolCall(
-                        id=str(uuid4()),
-                        name=p["functionCall"]["name"],
-                        arguments=p["functionCall"].get("args", {}),
-                        **kwargs,
-                    )
-                )
-        return tool_calls
+        return tool_calls_from_parts(parts)
 
     def _stream_class(self) -> type[TextStream]:
         """Return the Stream class for this provider."""

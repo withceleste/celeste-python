@@ -1,10 +1,40 @@
-"""Google GenerateContent API tool mappers."""
+"""Google GenerateContent API tool helpers."""
 
 import warnings
 from typing import Any, ClassVar
 
 from celeste.exceptions import UnsupportedParameterWarning
-from celeste.tools import CodeExecution, Tool, ToolMapper, WebSearch
+from celeste.tools import CodeExecution, Tool, ToolCall, ToolMapper, WebSearch
+
+_NATIVE_REPLAY_PART_KEYS = {
+    "codeExecutionResult",
+    "executableCode",
+    "functionCall",
+    "toolCall",
+    "toolResponse",
+}
+
+
+def needs_native_replay(parts: list[dict[str, Any]]) -> bool:
+    """Return whether Google requires the complete Parts on the next turn."""
+    return any(not _NATIVE_REPLAY_PART_KEYS.isdisjoint(part) for part in parts)
+
+
+def tool_calls_from_parts(parts: list[dict[str, Any]]) -> list[ToolCall]:
+    """Parse Google function-call Parts into canonical tool calls."""
+    tool_calls: list[ToolCall] = []
+    for part in parts:
+        function_call = part.get("functionCall")
+        if not isinstance(function_call, dict):
+            continue
+        tool_calls.append(
+            ToolCall(
+                id=function_call["id"],
+                name=function_call["name"],
+                arguments=function_call.get("args", {}),
+            )
+        )
+    return tool_calls
 
 
 class WebSearchMapper(ToolMapper):
@@ -42,4 +72,10 @@ class CodeExecutionMapper(ToolMapper):
 
 TOOL_MAPPERS: list[ToolMapper] = [WebSearchMapper(), CodeExecutionMapper()]
 
-__all__ = ["TOOL_MAPPERS", "CodeExecutionMapper", "WebSearchMapper"]
+__all__ = [
+    "TOOL_MAPPERS",
+    "CodeExecutionMapper",
+    "WebSearchMapper",
+    "needs_native_replay",
+    "tool_calls_from_parts",
+]
