@@ -19,13 +19,22 @@ class GoogleGenerateContentStream:
     """
 
     _error_type_fields: ClassVar[tuple[str, ...]] = ("status", "code")
+    _content_parts: list[dict[str, Any]]
     _grounding_metadata: list[dict[str, Any]]
 
+    def __init__(self, *args: Any, **kwargs: Any) -> None:  # noqa: ANN401
+        super().__init__(*args, **kwargs)
+        self._content_parts = []
+        self._grounding_metadata = []
+
     def _parse_chunk(self, event_data: dict[str, Any]) -> Any | None:  # noqa: ANN401
-        """Capture grounding metadata before normal chunk filtering."""
-        if not hasattr(self, "_grounding_metadata"):
-            self._grounding_metadata = []
-        for candidate in event_data.get("candidates", []):
+        """Capture native Parts and grounding before normal chunk filtering."""
+        candidates = event_data.get("candidates", [])
+        if candidates:
+            self._content_parts.extend(
+                candidates[0].get("content", {}).get("parts", [])
+            )
+        for candidate in candidates:
             meta = candidate.get("groundingMetadata")
             if isinstance(meta, dict):
                 self._grounding_metadata.append(meta)

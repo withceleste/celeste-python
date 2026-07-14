@@ -31,7 +31,7 @@ def map_grounding(grounding_metadata: dict[str, Any], text: str) -> Grounding:
             GroundingSource(
                 url=url,
                 title=web.get("title"),
-                domain=web.get("domain"),
+                domain=web.get("domain", web.get("title")),
             )
         )
 
