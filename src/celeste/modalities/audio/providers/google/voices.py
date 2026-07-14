@@ -5,7 +5,7 @@ from celeste.core import Provider
 from ...languages import Language
 from ...voices import Voice
 
-# All supported languages for Google Gemini TTS (24 languages, auto-detected)
+# Language metadata shared across Google Gemini TTS voices (auto-detected).
 _SUPPORTED_LANGUAGES = {
     Language.ARABIC,
     Language.GERMAN,
@@ -28,186 +28,46 @@ _SUPPORTED_LANGUAGES = {
     Language.TAMIL,
 }
 
-# Google Gemini TTS voices (30 voices, all support all languages)
+# Snapshot 2026-07-14: 30 prebuilt voices.
+# Source: https://ai.google.dev/gemini-api/docs/speech-generation#voices
 GOOGLE_VOICES = [
     Voice(
-        id="Zephyr",
+        id=name,
         provider=Provider.GOOGLE,
-        name="Zephyr (Bright)",
+        name=name,
+        description=description,
         languages=_SUPPORTED_LANGUAGES,
-    ),
-    Voice(
-        id="Puck",
-        provider=Provider.GOOGLE,
-        name="Puck (Upbeat)",
-        languages=_SUPPORTED_LANGUAGES,
-    ),
-    Voice(
-        id="Charon",
-        provider=Provider.GOOGLE,
-        name="Charon (Informative)",
-        languages=_SUPPORTED_LANGUAGES,
-    ),
-    Voice(
-        id="Kore",
-        provider=Provider.GOOGLE,
-        name="Kore (Firm)",
-        languages=_SUPPORTED_LANGUAGES,
-    ),
-    Voice(
-        id="Fenrir",
-        provider=Provider.GOOGLE,
-        name="Fenrir (Excitable)",
-        languages=_SUPPORTED_LANGUAGES,
-    ),
-    Voice(
-        id="Leda",
-        provider=Provider.GOOGLE,
-        name="Leda (Youthful)",
-        languages=_SUPPORTED_LANGUAGES,
-    ),
-    Voice(
-        id="Orus",
-        provider=Provider.GOOGLE,
-        name="Orus (Firm)",
-        languages=_SUPPORTED_LANGUAGES,
-    ),
-    Voice(
-        id="Aoede",
-        provider=Provider.GOOGLE,
-        name="Aoede (Breezy)",
-        languages=_SUPPORTED_LANGUAGES,
-    ),
-    Voice(
-        id="Callirrhoe",
-        provider=Provider.GOOGLE,
-        name="Callirrhoe (Easy-going)",
-        languages=_SUPPORTED_LANGUAGES,
-    ),
-    Voice(
-        id="Autonoe",
-        provider=Provider.GOOGLE,
-        name="Autonoe (Bright)",
-        languages=_SUPPORTED_LANGUAGES,
-    ),
-    Voice(
-        id="Enceladus",
-        provider=Provider.GOOGLE,
-        name="Enceladus (Breathy)",
-        languages=_SUPPORTED_LANGUAGES,
-    ),
-    Voice(
-        id="Iapetus",
-        provider=Provider.GOOGLE,
-        name="Iapetus (Clear)",
-        languages=_SUPPORTED_LANGUAGES,
-    ),
-    Voice(
-        id="Umbriel",
-        provider=Provider.GOOGLE,
-        name="Umbriel (Easy-going)",
-        languages=_SUPPORTED_LANGUAGES,
-    ),
-    Voice(
-        id="Algieba",
-        provider=Provider.GOOGLE,
-        name="Algieba (Smooth)",
-        languages=_SUPPORTED_LANGUAGES,
-    ),
-    Voice(
-        id="Despina",
-        provider=Provider.GOOGLE,
-        name="Despina (Smooth)",
-        languages=_SUPPORTED_LANGUAGES,
-    ),
-    Voice(
-        id="Erinome",
-        provider=Provider.GOOGLE,
-        name="Erinome (Clear)",
-        languages=_SUPPORTED_LANGUAGES,
-    ),
-    Voice(
-        id="Algenib",
-        provider=Provider.GOOGLE,
-        name="Algenib (Gravelly)",
-        languages=_SUPPORTED_LANGUAGES,
-    ),
-    Voice(
-        id="Rasalgethi",
-        provider=Provider.GOOGLE,
-        name="Rasalgethi (Informative)",
-        languages=_SUPPORTED_LANGUAGES,
-    ),
-    Voice(
-        id="Laomedeia",
-        provider=Provider.GOOGLE,
-        name="Laomedeia (Upbeat)",
-        languages=_SUPPORTED_LANGUAGES,
-    ),
-    Voice(
-        id="Achernar",
-        provider=Provider.GOOGLE,
-        name="Achernar (Soft)",
-        languages=_SUPPORTED_LANGUAGES,
-    ),
-    Voice(
-        id="Alnilam",
-        provider=Provider.GOOGLE,
-        name="Alnilam (Firm)",
-        languages=_SUPPORTED_LANGUAGES,
-    ),
-    Voice(
-        id="Schedar",
-        provider=Provider.GOOGLE,
-        name="Schedar (Even)",
-        languages=_SUPPORTED_LANGUAGES,
-    ),
-    Voice(
-        id="Gacrux",
-        provider=Provider.GOOGLE,
-        name="Gacrux (Mature)",
-        languages=_SUPPORTED_LANGUAGES,
-    ),
-    Voice(
-        id="Pulcherrima",
-        provider=Provider.GOOGLE,
-        name="Pulcherrima (Forward)",
-        languages=_SUPPORTED_LANGUAGES,
-    ),
-    Voice(
-        id="Achird",
-        provider=Provider.GOOGLE,
-        name="Achird (Friendly)",
-        languages=_SUPPORTED_LANGUAGES,
-    ),
-    Voice(
-        id="Zubenelgenubi",
-        provider=Provider.GOOGLE,
-        name="Zubenelgenubi (Casual)",
-        languages=_SUPPORTED_LANGUAGES,
-    ),
-    Voice(
-        id="Vindemiatrix",
-        provider=Provider.GOOGLE,
-        name="Vindemiatrix (Gentle)",
-        languages=_SUPPORTED_LANGUAGES,
-    ),
-    Voice(
-        id="Sadachbia",
-        provider=Provider.GOOGLE,
-        name="Sadachbia (Lively)",
-        languages=_SUPPORTED_LANGUAGES,
-    ),
-    Voice(
-        id="Sadaltager",
-        provider=Provider.GOOGLE,
-        name="Sadaltager (Knowledgeable)",
-        languages=_SUPPORTED_LANGUAGES,
-    ),
-    Voice(
-        id="Sulafat",
-        provider=Provider.GOOGLE,
-        name="Sulafat (Warm)",
-        languages=_SUPPORTED_LANGUAGES,
-    ),
+    )
+    for name, description in [
+        ("Zephyr", "Bright"),
+        ("Puck", "Upbeat"),
+        ("Charon", "Informative"),
+        ("Kore", "Firm"),
+        ("Fenrir", "Excitable"),
+        ("Leda", "Youthful"),
+        ("Orus", "Firm"),
+        ("Aoede", "Breezy"),
+        ("Callirrhoe", "Easy-going"),
+        ("Autonoe", "Bright"),
+        ("Enceladus", "Breathy"),
+        ("Iapetus", "Clear"),
+        ("Umbriel", "Easy-going"),
+        ("Algieba", "Smooth"),
+        ("Despina", "Smooth"),
+        ("Erinome", "Clear"),
+        ("Algenib", "Gravelly"),
+        ("Rasalgethi", "Informative"),
+        ("Laomedeia", "Upbeat"),
+        ("Achernar", "Soft"),
+        ("Alnilam", "Firm"),
+        ("Schedar", "Even"),
+        ("Gacrux", "Mature"),
+        ("Pulcherrima", "Forward"),
+        ("Achird", "Friendly"),
+        ("Zubenelgenubi", "Casual"),
+        ("Vindemiatrix", "Gentle"),
+        ("Sadachbia", "Lively"),
+        ("Sadaltager", "Knowledgeable"),
+        ("Sulafat", "Warm"),
+    ]
 ]

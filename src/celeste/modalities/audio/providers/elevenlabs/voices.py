@@ -4,320 +4,122 @@ from celeste.core import Provider
 
 from ...voices import Voice
 
-# ElevenLabs default voices (from API: GET /v2/voices?voice_type=default)
+# Snapshot 2026-07-14: 21 default voices from GET /v2/voices?voice_type=default.
+# Source: https://elevenlabs.io/docs/api-reference/voices/search
 ELEVENLABS_VOICES = [
     Voice(
-        id="21m00Tcm4TlvDq8ikWAM",
+        id=voice_id,
         provider=Provider.ELEVENLABS,
-        name="Rachel",
-        languages=set(),
-    ),
-    Voice(
-        id="29vD33N1CtxCmqQRPOHJ",
-        provider=Provider.ELEVENLABS,
-        name="Drew",
-        languages=set(),
-    ),
-    Voice(
-        id="2EiwWnXFnvU5JabPnv8n",
-        provider=Provider.ELEVENLABS,
-        name="Clyde",
-        languages=set(),
-    ),
-    Voice(
-        id="5Q0t7uMcjvnagumLfvZi",
-        provider=Provider.ELEVENLABS,
-        name="Paul",
-        languages=set(),
-    ),
-    Voice(
-        id="9BWtsMINqrJLrRacOk9x",
-        provider=Provider.ELEVENLABS,
-        name="Aria",
-        languages=set(),
-    ),
-    Voice(
-        id="AZnzlk1XvdvUeBnXmlld",
-        provider=Provider.ELEVENLABS,
-        name="Domi",
-        languages=set(),
-    ),
-    Voice(
-        id="CYw3kZ02Hs0563khs1Fj",
-        provider=Provider.ELEVENLABS,
-        name="Dave",
-        languages=set(),
-    ),
-    Voice(
-        id="CwhRBWXzGAHq8TQ4Fs17",
-        provider=Provider.ELEVENLABS,
-        name="Roger",
-        languages=set(),
-    ),
-    Voice(
-        id="D38z5RcWu1voky8WS1ja",
-        provider=Provider.ELEVENLABS,
-        name="Fin",
-        languages=set(),
-    ),
-    Voice(
-        id="EXAVITQu4vr4xnSDxMaL",
-        provider=Provider.ELEVENLABS,
-        name="Sarah",
-        languages=set(),
-    ),
-    Voice(
-        id="ErXwobaYiN019PkySvjV",
-        provider=Provider.ELEVENLABS,
-        name="Antoni",
-        languages=set(),
-    ),
-    Voice(
-        id="FGY2WhTYpPnrIDTdsKH5",
-        provider=Provider.ELEVENLABS,
-        name="Laura",
-        languages=set(),
-    ),
-    Voice(
-        id="GBv7mTt0atIp3Br8iCZE",
-        provider=Provider.ELEVENLABS,
-        name="Thomas",
-        languages=set(),
-    ),
-    Voice(
-        id="IKne3meq5aSn9XLyUdCD",
-        provider=Provider.ELEVENLABS,
-        name="Charlie",
-        languages=set(),
-    ),
-    Voice(
-        id="JBFqnCBsd6RMkjVDRZzb",
-        provider=Provider.ELEVENLABS,
-        name="George",
-        languages=set(),
-    ),
-    Voice(
-        id="LcfcDJNUP1GQjkzn1xUU",
-        provider=Provider.ELEVENLABS,
-        name="Emily",
-        languages=set(),
-    ),
-    Voice(
-        id="MF3mGyEYCl7XYWbV9V6O",
-        provider=Provider.ELEVENLABS,
-        name="Elli",
-        languages=set(),
-    ),
-    Voice(
-        id="N2lVS1w4EtoT3dr4eOWO",
-        provider=Provider.ELEVENLABS,
-        name="Callum",
-        languages=set(),
-    ),
-    Voice(
-        id="ODq5zmih8GrVes37Dizd",
-        provider=Provider.ELEVENLABS,
-        name="Patrick",
-        languages=set(),
-    ),
-    Voice(
-        id="SAz9YHcvj6GT2YYXdXww",
-        provider=Provider.ELEVENLABS,
-        name="River",
-        languages=set(),
-    ),
-    Voice(
-        id="SOYHLrjzK2X1ezoPC6cr",
-        provider=Provider.ELEVENLABS,
-        name="Harry",
-        languages=set(),
-    ),
-    Voice(
-        id="TX3LPaxmHKxFdv7VOQHJ",
-        provider=Provider.ELEVENLABS,
-        name="Liam",
-        languages=set(),
-    ),
-    Voice(
-        id="ThT5KcBeYPX3keUQqHPh",
-        provider=Provider.ELEVENLABS,
-        name="Dorothy",
-        languages=set(),
-    ),
-    Voice(
-        id="TxGEqnHWrfWFTfGW9XjX",
-        provider=Provider.ELEVENLABS,
-        name="Josh",
-        languages=set(),
-    ),
-    Voice(
-        id="VR6AewLTigWG4xSOukaG",
-        provider=Provider.ELEVENLABS,
-        name="Arnold",
-        languages=set(),
-    ),
-    Voice(
-        id="XB0fDUnXU5powFXDhCwa",
-        provider=Provider.ELEVENLABS,
-        name="Charlotte",
-        languages=set(),
-    ),
-    Voice(
-        id="Xb7hH8MSUJpSbSDYk0k2",
-        provider=Provider.ELEVENLABS,
-        name="Alice",
-        languages=set(),
-    ),
-    Voice(
-        id="XrExE9yKIg1WjnnlVkGX",
-        provider=Provider.ELEVENLABS,
-        name="Matilda",
-        languages=set(),
-    ),
-    Voice(
-        id="ZQe5CZNOzWyzPSCn5a3c",
-        provider=Provider.ELEVENLABS,
-        name="James",
-        languages=set(),
-    ),
-    Voice(
-        id="Zlb1dXrM653N07WRdFW3",
-        provider=Provider.ELEVENLABS,
-        name="Joseph",
-        languages=set(),
-    ),
-    Voice(
-        id="bIHbv24MWmeRgasZH58o",
-        provider=Provider.ELEVENLABS,
-        name="Will",
-        languages=set(),
-    ),
-    Voice(
-        id="bVMeCyTHy58xNoL34h3p",
-        provider=Provider.ELEVENLABS,
-        name="Jeremy",
-        languages=set(),
-    ),
-    Voice(
-        id="cgSgspJ2msm6clMCkdW9",
-        provider=Provider.ELEVENLABS,
-        name="Jessica",
-        languages=set(),
-    ),
-    Voice(
-        id="cjVigY5qzO86Huf0OWal",
-        provider=Provider.ELEVENLABS,
-        name="Eric",
-        languages=set(),
-    ),
-    Voice(
-        id="flq6f7yk4E4fJM5XTYuZ",
-        provider=Provider.ELEVENLABS,
-        name="Michael",
-        languages=set(),
-    ),
-    Voice(
-        id="g5CIjZEefAph4nQFvHAz",
-        provider=Provider.ELEVENLABS,
-        name="Ethan",
-        languages=set(),
-    ),
-    Voice(
-        id="iP95p4xoKVk53GoZ742B",
-        provider=Provider.ELEVENLABS,
-        name="Chris",
-        languages=set(),
-    ),
-    Voice(
-        id="jBpfuIE2acCO8z3wKNLl",
-        provider=Provider.ELEVENLABS,
-        name="Gigi",
-        languages=set(),
-    ),
-    Voice(
-        id="jsCqWAovK2LkecY7zXl4",
-        provider=Provider.ELEVENLABS,
-        name="Freya",
-        languages=set(),
-    ),
-    Voice(
-        id="nPczCjzI2devNBz1zQrb",
-        provider=Provider.ELEVENLABS,
-        name="Brian",
-        languages=set(),
-    ),
-    Voice(
-        id="oWAxZDx7w5VEj9dCyTzz",
-        provider=Provider.ELEVENLABS,
-        name="Grace",
-        languages=set(),
-    ),
-    Voice(
-        id="onwK4e9ZLuTAKqWW03F9",
-        provider=Provider.ELEVENLABS,
-        name="Daniel",
-        languages=set(),
-    ),
-    Voice(
-        id="pFZP5JQG7iQjIQuC4Bku",
-        provider=Provider.ELEVENLABS,
-        name="Lily",
-        languages=set(),
-    ),
-    Voice(
-        id="pMsXgVXv3BLzUgSXRplE",
-        provider=Provider.ELEVENLABS,
-        name="Serena",
-        languages=set(),
-    ),
-    Voice(
-        id="pNInz6obpgDQGcFmaJgB",
-        provider=Provider.ELEVENLABS,
-        name="Adam",
-        languages=set(),
-    ),
-    Voice(
-        id="piTKgcLEGmPE4e6mEKli",
-        provider=Provider.ELEVENLABS,
-        name="Nicole",
-        languages=set(),
-    ),
-    Voice(
-        id="pqHfZKP75CvOlQylNhV4",
-        provider=Provider.ELEVENLABS,
-        name="Bill",
-        languages=set(),
-    ),
-    Voice(
-        id="t0jbNlBVZ17f02VDIeMI",
-        provider=Provider.ELEVENLABS,
-        name="Jessie",
-        languages=set(),
-    ),
-    Voice(
-        id="yoZ06aMxZJJ28mfd3POQ",
-        provider=Provider.ELEVENLABS,
-        name="Sam",
-        languages=set(),
-    ),
-    Voice(
-        id="z9fAnlkpzviPz146aGWa",
-        provider=Provider.ELEVENLABS,
-        name="Glinda",
-        languages=set(),
-    ),
-    Voice(
-        id="zcAOhNBS3c14rBihAFp1",
-        provider=Provider.ELEVENLABS,
-        name="Giovanni",
-        languages=set(),
-    ),
-    Voice(
-        id="zrHiDhphv9ZnVXBqCLjz",
-        provider=Provider.ELEVENLABS,
-        name="Mimi",
-        languages=set(),
-    ),
+        name=name,
+        description=description,
+    )
+    for voice_id, name, description in [
+        (
+            "pNInz6obpgDQGcFmaJgB",
+            "Adam - Dominant, Firm",
+            "A bright tenor pitch that immediately cuts through. The delivery is brash and openly confident, speaking with unwavering certainty and a slightly aggressive self-assurance.",
+        ),
+        (
+            "Xb7hH8MSUJpSbSDYk0k2",
+            "Alice - Clear, Engaging Educator",
+            "Clear and engaging, friendly woman with a British accent suitable for e-learning.",
+        ),
+        (
+            "hpp4J3VqNfWAUOO0d1Us",
+            "Bella - Professional, Bright, Warm",
+            "This voice is warm, bright, and professional, characterized by a Standard American accent and a polished, narrative quality. It features a medium-high pitch with crisp diction and a deliberate, rhythmic pace that makes it highly intelligible and engaging for long-form listening.",
+        ),
+        (
+            "pqHfZKP75CvOlQylNhV4",
+            "Bill - Wise, Mature, Balanced",
+            "Friendly and comforting voice ready to narrate your stories.",
+        ),
+        (
+            "nPczCjzI2devNBz1zQrb",
+            "Brian - Deep, Resonant and Comforting",
+            "Middle-aged man with a resonant and comforting tone. Great for narrations and advertisements.",
+        ),
+        (
+            "N2lVS1w4EtoT3dr4eOWO",
+            "Callum - Husky Trickster",
+            "Deceptively gravelly, yet unsettling edge.",
+        ),
+        (
+            "IKne3meq5aSn9XLyUdCD",
+            "Charlie - Deep, Confident, Energetic",
+            "A young Australian male with a confident and energetic voice.",
+        ),
+        (
+            "iP95p4xoKVk53GoZ742B",
+            "Chris - Charming, Down-to-Earth",
+            "Natural and real, this down-to-earth voice is great across many use-cases.",
+        ),
+        (
+            "onwK4e9ZLuTAKqWW03F9",
+            "Daniel - Steady Broadcaster",
+            "A strong voice perfect for delivering a professional broadcast or news story.",
+        ),
+        (
+            "cjVigY5qzO86Huf0OWal",
+            "Eric - Smooth, Trustworthy",
+            "A smooth tenor pitch from a man in his 40s - perfect for agentic use cases.",
+        ),
+        (
+            "JBFqnCBsd6RMkjVDRZzb",
+            "George - Warm, Captivating Storyteller",
+            "Warm resonance that instantly captivates listeners.",
+        ),
+        (
+            "SOYHLrjzK2X1ezoPC6cr",
+            "Harry - Fierce Warrior",
+            "An animated warrior ready to charge forward.",
+        ),
+        (
+            "cgSgspJ2msm6clMCkdW9",
+            "Jessica - Playful, Bright, Warm",
+            "Young and popular, this playful American female voice is perfect for trendy content.",
+        ),
+        (
+            "FGY2WhTYpPnrIDTdsKH5",
+            "Laura - Enthusiast, Quirky Attitude",
+            "This young adult female voice delivers sunny enthusiasm with a quirky attitude.",
+        ),
+        (
+            "TX3LPaxmHKxFdv7VOQHJ",
+            "Liam - Energetic, Social Media Creator",
+            "A young adult with energy and warmth - suitable for reels and shorts.",
+        ),
+        (
+            "pFZP5JQG7iQjIQuC4Bku",
+            "Lily - Velvety Actress",
+            "Velvety British female voice delivers news and narrations with warmth and clarity.",
+        ),
+        (
+            "XrExE9yKIg1WjnnlVkGX",
+            "Matilda - Knowledgable, Professional",
+            "A professional woman with a pleasing alto pitch. Suitable for many use cases.",
+        ),
+        (
+            "SAz9YHcvj6GT2YYXdXww",
+            "River - Relaxed, Neutral, Informative",
+            "A relaxed, neutral voice ready for narrations or conversational projects.",
+        ),
+        (
+            "CwhRBWXzGAHq8TQ4Fs17",
+            "Roger - Laid-Back, Casual, Resonant",
+            "Easy going and perfect for casual conversations.",
+        ),
+        (
+            "EXAVITQu4vr4xnSDxMaL",
+            "Sarah - Mature, Reassuring, Confident",
+            "Young adult woman with a confident and warm, mature quality and a reassuring, professional tone.",
+        ),
+        (
+            "bIHbv24MWmeRgasZH58o",
+            "Will - Relaxed Optimist",
+            "Conversational and laid back.",
+        ),
+    ]
 ]
 
 __all__ = ["ELEVENLABS_VOICES"]

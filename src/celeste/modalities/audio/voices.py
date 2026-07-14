@@ -13,6 +13,7 @@ class Voice(BaseModel):
     id: str
     provider: Provider
     name: str
+    description: str | None = None
     languages: set[Language] = Field(default_factory=set)
 
 
