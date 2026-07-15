@@ -33,6 +33,7 @@ from celeste.modalities.text.providers.anthropic.client import AnthropicTextClie
 from celeste.modalities.text.providers.cohere.client import CohereTextClient
 from celeste.modalities.text.providers.google.client import GoogleTextClient
 from celeste.modalities.text.providers.mistral.client import MistralTextClient
+from celeste.modalities.text.providers.moonshot.client import MoonshotTextClient
 from celeste.modalities.text.providers.openai.client import OpenAITextClient
 
 
@@ -92,7 +93,7 @@ def test_openai_message_parts_include_image_and_document_blocks() -> None:
     assert content[2]["file_data"].startswith("data:application/pdf;base64,")
 
 
-def test_chat_completions_message_parts_include_image_and_document_blocks() -> None:
+def test_chat_completions_message_parts_include_media_blocks() -> None:
     client = MistralTextClient(
         model=_model(Provider.MISTRAL),
         provider=Provider.MISTRAL,
@@ -104,6 +105,9 @@ def test_chat_completions_message_parts_include_image_and_document_blocks() -> N
             messages=[
                 _message(
                     ImagePart(image=_image()),
+                    VideoPart(
+                        video=VideoArtifact(data=b"vid", mime_type=VideoMimeType.MP4)
+                    ),
                     DocumentPart(document=_document()),
                     TextPart(text="inspect"),
                 )
@@ -114,9 +118,33 @@ def test_chat_completions_message_parts_include_image_and_document_blocks() -> N
     content = request["messages"][0]["content"]
     assert content[0]["type"] == "image_url"
     assert content[0]["image_url"]["url"].startswith("data:image/png;base64,")
-    assert content[1]["type"] == "document_url"
-    assert content[1]["document_url"].startswith("data:application/pdf;base64,")
-    assert content[2] == {"type": "text", "text": "inspect"}
+    assert content[1]["type"] == "video_url"
+    assert content[1]["video_url"]["url"].startswith("data:video/mp4;base64,")
+    assert content[2]["type"] == "document_url"
+    assert content[2]["document_url"].startswith("data:application/pdf;base64,")
+    assert content[3] == {"type": "text", "text": "inspect"}
+
+
+def test_moonshot_replays_assistant_reasoning() -> None:
+    client = MoonshotTextClient(
+        model=_model(Provider.MOONSHOT),
+        provider=Provider.MOONSHOT,
+        auth=_auth(Provider.MOONSHOT),
+    )
+
+    request = client._init_request(
+        TextInput(
+            messages=[
+                Message(
+                    role=Role.ASSISTANT,
+                    content="answer",
+                    reasoning="thinking",
+                )
+            ]
+        )
+    )
+
+    assert request["messages"][0]["reasoning_content"] == "thinking"
 
 
 def test_chat_completions_assistant_tool_call_serializes_message_parts() -> None:

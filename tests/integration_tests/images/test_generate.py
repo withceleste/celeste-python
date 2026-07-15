@@ -34,7 +34,6 @@ async def test_generate(
 @pytest.mark.parametrize(
     ("model", "parameters"),
     [
-        ("imagen-4.0-fast-generate-001", {"num_images": 1}),
         ("gemini-2.5-flash-image", {}),
     ],
 )

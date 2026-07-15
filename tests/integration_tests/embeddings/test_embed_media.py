@@ -5,7 +5,7 @@ from celeste.artifacts import ImageArtifact
 from celeste.modalities.embeddings import EmbeddingsOutput
 from celeste.providers.google.auth import GoogleADC
 
-MODEL = "gemini-embedding-2-preview"
+MODEL = "gemini-embedding-2"
 
 
 @pytest.mark.parametrize(
@@ -53,7 +53,7 @@ async def test_embed_text_and_image(square_image: ImageArtifact) -> None:
     assert isinstance(response.content[0], float)
 
 
-async def test_vertex_rejects_multimodal(square_image: ImageArtifact) -> None:
+async def test_vertex_embeds_multimodal(square_image: ImageArtifact) -> None:
     client = create_client(
         modality=Modality.EMBEDDINGS,
         provider=Provider.GOOGLE,
@@ -61,5 +61,8 @@ async def test_vertex_rejects_multimodal(square_image: ImageArtifact) -> None:
         auth=GoogleADC(),
     )
 
-    with pytest.raises(ValueError, match="not yet supported via Vertex AI"):
-        await client.embed(images=square_image)
+    response = await client.embed(images=square_image)
+
+    assert isinstance(response, EmbeddingsOutput)
+    assert response.content
+    assert isinstance(response.content[0], float)

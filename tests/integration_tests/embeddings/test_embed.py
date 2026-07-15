@@ -4,7 +4,7 @@ from celeste import Modality, Provider, create_client
 from celeste.modalities.embeddings import EmbeddingsOutput
 from celeste.providers.google.auth import GoogleADC
 
-MODEL = "gemini-embedding-001"
+MODEL = "gemini-embedding-2"
 
 
 @pytest.mark.parametrize(

@@ -22,8 +22,16 @@ from celeste.protocols.chatcompletions.tools import (
     parse_tool_calls,
 )
 from celeste.tools import ToolCall, ToolResult
-from celeste.types import DocumentPart, ImagePart, Message, Role, TextContent, TextPart
-from celeste.utils import build_document_data_url, build_image_data_url
+from celeste.types import (
+    DocumentPart,
+    ImagePart,
+    Message,
+    Role,
+    TextContent,
+    TextPart,
+    VideoPart,
+)
+from celeste.utils import build_data_url
 
 from ...client import TextClient
 from ...grounding import map_url_citation_annotations
@@ -43,7 +51,7 @@ def _serialize_content(content: Any) -> Any:
         require_part(
             "Chat Completions",
             part,
-            (TextPart, ImagePart, DocumentPart),
+            (TextPart, ImagePart, VideoPart, DocumentPart),
         )
         if isinstance(part, TextPart):
             items.append({"type": "text", "text": part.text})
@@ -51,14 +59,21 @@ def _serialize_content(content: Any) -> Any:
             items.append(
                 {
                     "type": "image_url",
-                    "image_url": {"url": build_image_data_url(part.image)},
+                    "image_url": {"url": build_data_url(part.image)},
+                }
+            )
+        elif isinstance(part, VideoPart):
+            items.append(
+                {
+                    "type": "video_url",
+                    "video_url": {"url": build_data_url(part.video)},
                 }
             )
         elif isinstance(part, DocumentPart):
             items.append(
                 {
                     "type": "document_url",
-                    "document_url": build_document_data_url(part.document),
+                    "document_url": build_data_url(part.document),
                 }
             )
     return items

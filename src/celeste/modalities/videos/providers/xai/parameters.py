@@ -8,6 +8,9 @@ from celeste.providers.xai.videos.parameters import (
     DurationMapper as _DurationMapper,
 )
 from celeste.providers.xai.videos.parameters import (
+    FirstFrameMapper as _FirstFrameMapper,
+)
+from celeste.providers.xai.videos.parameters import (
     ResolutionMapper as _ResolutionMapper,
 )
 from celeste.types import VideoContent
@@ -33,10 +36,17 @@ class ResolutionMapper(_ResolutionMapper):
     name = VideoParameter.RESOLUTION
 
 
+class FirstFrameMapper(_FirstFrameMapper):
+    """Map first_frame to xAI's image parameter."""
+
+    name = VideoParameter.FIRST_FRAME
+
+
 XAI_PARAMETER_MAPPERS: list[ParameterMapper[VideoContent]] = [
     DurationMapper(),
     AspectRatioMapper(),
     ResolutionMapper(),
+    FirstFrameMapper(),
 ]
 
 __all__ = ["XAI_PARAMETER_MAPPERS"]

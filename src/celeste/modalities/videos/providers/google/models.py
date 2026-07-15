@@ -16,34 +16,6 @@ VEO_SUPPORTED_MIME_TYPES = [
 
 MODELS: list[Model] = [
     Model(
-        id="veo-3.0-generate-001",
-        provider=Provider.GOOGLE,
-        display_name="Veo 3",
-        operations={Modality.VIDEOS: {Operation.GENERATE}},
-        parameter_constraints={
-            VideoParameter.ASPECT_RATIO: Choice(options=["16:9", "9:16"]),
-            VideoParameter.RESOLUTION: Choice(options=["720p"]),
-            VideoParameter.DURATION: Choice(options=[4, 6, 8]),
-            VideoParameter.FIRST_FRAME: ImageConstraint(
-                supported_mime_types=VEO_SUPPORTED_MIME_TYPES,
-            ),
-        },
-    ),
-    Model(
-        id="veo-3.0-fast-generate-001",
-        provider=Provider.GOOGLE,
-        display_name="Veo 3 Fast",
-        operations={Modality.VIDEOS: {Operation.GENERATE}},
-        parameter_constraints={
-            VideoParameter.ASPECT_RATIO: Choice(options=["16:9", "9:16"]),
-            VideoParameter.RESOLUTION: Choice(options=["720p"]),
-            VideoParameter.DURATION: Choice(options=[4, 6, 8]),
-            VideoParameter.FIRST_FRAME: ImageConstraint(
-                supported_mime_types=VEO_SUPPORTED_MIME_TYPES
-            ),
-        },
-    ),
-    Model(
         id="veo-3.1-generate-preview",
         provider=Provider.GOOGLE,
         display_name="Veo 3.1 (Preview)",

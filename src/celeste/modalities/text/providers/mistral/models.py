@@ -169,20 +169,6 @@ MODELS: list[Model] = [
         },
     ),
     Model(
-        id="labs-devstral-small-2512",
-        provider=Provider.MISTRAL,
-        display_name="Devstral 2 Small",
-        operations={Modality.TEXT: {Operation.GENERATE}},
-        streaming=True,
-        parameter_constraints={
-            Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
-            Parameter.MAX_TOKENS: Range(min=1, max=32768, step=1),
-            TextParameter.OUTPUT_SCHEMA: Schema(),
-            TextParameter.TOOLS: ToolSupport(tools=[]),
-            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
-        },
-    ),
-    Model(
         id="pixtral-12b-latest",
         provider=Provider.MISTRAL,
         display_name="Pixtral 12B",

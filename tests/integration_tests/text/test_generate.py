@@ -12,7 +12,7 @@ MODELS = [
     (Provider.GROQ, "llama-3.1-8b-instant"),
     (Provider.HUGGINGFACE, "Qwen/Qwen3-4B-Instruct-2507"),
     (Provider.MISTRAL, "mistral-tiny"),
-    (Provider.MOONSHOT, "kimi-k2-0711-preview"),
+    (Provider.MOONSHOT, "kimi-k2.6"),
     (Provider.OPENAI, "gpt-4o-mini"),
     (Provider.XAI, "grok-3-mini"),
 ]

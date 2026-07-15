@@ -18,6 +18,7 @@ from celeste.mime_types import (
     ImageMimeType,
     VideoMimeType,
 )
+from celeste.utils import build_data_url
 
 
 @pytest.mark.parametrize(
@@ -63,6 +64,11 @@ def test_get_bytes_prefers_data_then_reads_path(tmp_path: Path) -> None:
 def test_get_bytes_requires_local_content(artifact: Artifact) -> None:
     with pytest.raises(ValueError, match="data or path"):
         artifact.get_bytes()
+
+
+def test_build_data_url_requires_mime_type() -> None:
+    with pytest.raises(ValueError, match="MIME type"):
+        build_data_url(Artifact(data=b"unknown"))
 
 
 def test_data_json_and_base64_round_trip() -> None:

@@ -1,8 +1,10 @@
 """MIME type detection utilities."""
 
+import base64
+
 import filetype
 
-from celeste.artifacts import DocumentArtifact, ImageArtifact
+from celeste.artifacts import Artifact
 from celeste.mime_types import (
     AudioMimeType,
     DocumentMimeType,
@@ -71,42 +73,22 @@ def detect_mime_type_from_path(path: str) -> MimeType | None:
     return None
 
 
-def build_image_data_url(img: ImageArtifact) -> str:
-    """Build a data URL from an ImageArtifact.
+def build_data_url(artifact: Artifact) -> str:
+    """Return a remote URL or encode local artifact content as a data URL."""
+    if artifact.url and not artifact.data and not artifact.path:
+        return artifact.url
 
-    For images with only a URL (no data or path), returns the URL directly.
-    For images with data or path, builds a data URL with MIME type detection.
-    """
-
-    if img.url and not img.data and not img.path:
-        return img.url
-
-    image_bytes = img.get_bytes()
-    mime = img.mime_type or detect_mime_type(image_bytes)
-    mime_str = mime.value if mime else ""
-
-    return f"data:{mime_str};base64,{img.get_base64()}"
-
-
-def build_document_data_url(doc: DocumentArtifact) -> str:
-    """Build a data URL from a DocumentArtifact.
-
-    For documents with only a URL (no data or path), returns the URL directly.
-    For documents with data or path, builds a data URL with MIME type detection.
-    """
-    if doc.url and not doc.data and not doc.path:
-        return doc.url
-
-    doc_bytes = doc.get_bytes()
-    mime = doc.mime_type or detect_mime_type(doc_bytes)
-    mime_str = mime.value if mime else "application/pdf"
-
-    return f"data:{mime_str};base64,{doc.get_base64()}"
+    data = artifact.get_bytes()
+    mime = artifact.mime_type or detect_mime_type(data)
+    if mime is None:
+        msg = "Artifact MIME type must be specified or detectable"
+        raise ValueError(msg)
+    encoded = base64.b64encode(data).decode("utf-8")
+    return f"data:{mime.value};base64,{encoded}"
 
 
 __all__ = [
-    "build_document_data_url",
-    "build_image_data_url",
+    "build_data_url",
     "detect_mime_type",
     "detect_mime_type_from_path",
 ]

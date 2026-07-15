@@ -52,7 +52,7 @@ text   = await celeste.text.generate("Explain quantum computing", model="claude-
 image  = await celeste.images.generate("A serene mountain lake at dawn", model="flux-2-pro")
 speech = await celeste.audio.speak("Welcome to the future", model="eleven_v3")
 video  = await celeste.videos.analyze(video_file, prompt="Summarize this clip", model="gemini-3.1-pro-preview")
-embeddings = await celeste.text.embed(["lorep ipsum", "dolor sit amet"], model="gemini-embedding-001")
+embeddings = await celeste.text.embed(["lorep ipsum", "dolor sit amet"], model="gemini-embedding-2")
 ```
 
 

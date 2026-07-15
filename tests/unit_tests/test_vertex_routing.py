@@ -104,20 +104,20 @@ def test_vertex_url_requires_project() -> None:
         (
             GoogleImagenClient,
             imagen_config.GoogleImagenEndpoint.CREATE_IMAGE,
-            "imagen-3.0-generate-002",
-            "generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict",
+            "imagen-4.0-generate-001",
+            "generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict",
         ),
         (
             GoogleEmbeddingsClient,
             embeddings_config.GoogleEmbeddingsEndpoint.EMBED_CONTENT,
-            "text-embedding-004",
-            "generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent",
+            "gemini-embedding-2",
+            "generativelanguage.googleapis.com/v1beta/models/gemini-embedding-2:embedContent",
         ),
         (
             GoogleVeoClient,
             veo_config.GoogleVeoEndpoint.CREATE_VIDEO,
-            "veo-2.0-generate-001",
-            "generativelanguage.googleapis.com/v1beta/models/veo-2.0-generate-001:predictLongRunning",
+            "veo-3.1-generate-preview",
+            "generativelanguage.googleapis.com/v1beta/models/veo-3.1-generate-preview:predictLongRunning",
         ),
         (
             MistralChatClient,
@@ -157,20 +157,14 @@ def test_api_key_routes_directly(
         (
             GoogleImagenClient,
             imagen_config.GoogleImagenEndpoint.CREATE_IMAGE,
-            "imagen-3.0-generate-002",
-            ("projects/test-project", "publishers/google", "imagen-3.0-generate-002"),
-        ),
-        (
-            GoogleEmbeddingsClient,
-            embeddings_config.GoogleEmbeddingsEndpoint.EMBED_CONTENT,
-            "text-embedding-004",
-            ("projects/test-project", "publishers/google", "text-embedding-004"),
+            "imagen-4.0-generate-001",
+            ("projects/test-project", "publishers/google", "imagen-4.0-generate-001"),
         ),
         (
             GoogleVeoClient,
             veo_config.GoogleVeoEndpoint.CREATE_VIDEO,
-            "veo-2.0-generate-001",
-            ("projects/test-project", "publishers/google", "veo-2.0-generate-001"),
+            "veo-3.1-generate-preview",
+            ("projects/test-project", "publishers/google", "veo-3.1-generate-preview"),
         ),
         (
             MistralChatClient,
@@ -215,6 +209,28 @@ def test_vertex_streaming_uses_stream_endpoint(
     assert "streamRawPredict" in _build_url(
         client_type, endpoint, model_id, _adc(), streaming=True
     )
+
+
+@pytest.mark.parametrize(
+    ("location", "base_url"),
+    [
+        ("global", "https://aiplatform.googleapis.com"),
+        ("us", "https://aiplatform.us.rep.googleapis.com"),
+        ("eu", "https://aiplatform.eu.rep.googleapis.com"),
+        ("us-central1", "https://us-central1-aiplatform.googleapis.com"),
+    ],
+)
+def test_adc_embeddings_use_location_endpoint(location: str, base_url: str) -> None:
+    url = _build_url(
+        GoogleEmbeddingsClient,
+        embeddings_config.GoogleEmbeddingsEndpoint.EMBED_CONTENT,
+        "gemini-embedding-2",
+        _adc(location=location),
+    )
+
+    assert url.startswith(f"{base_url}/v1/")
+    assert f"/locations/{location}/" in url
+    assert url.endswith("/models/gemini-embedding-2:embedContent")
 
 
 def test_veo_poll_routes_match_auth() -> None:

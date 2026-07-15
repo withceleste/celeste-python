@@ -11,7 +11,7 @@ from typing import Any, ClassVar
 from celeste.client import APIMixin
 from celeste.core import UsageField
 from celeste.io import FinishReason
-from celeste.utils import build_image_data_url, detect_mime_type
+from celeste.utils import build_data_url, detect_mime_type
 
 from . import config
 
@@ -147,7 +147,7 @@ class OpenAIImagesClient(APIMixin):
         # Non-streaming uses multipart; streaming uses JSON with images array
         if "image" in request_body and hasattr(request_body["image"], "get_base64"):
             artifact = request_body.pop("image")
-            request_body["images"] = [{"image_url": build_image_data_url(artifact)}]
+            request_body["images"] = [{"image_url": build_data_url(artifact)}]
             endpoint = config.OpenAIImagesEndpoint.CREATE_EDIT
 
         headers = self._json_headers(extra_headers)
