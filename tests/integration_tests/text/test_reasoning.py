@@ -7,7 +7,7 @@ MODELS: list[tuple[Provider, str, int | str]] = [
     (Provider.ANTHROPIC, "claude-haiku-4-5", 1024),
     (Provider.COHERE, "command-a-plus-05-2026", 1024),
     (Provider.GOOGLE, "gemini-2.5-flash-lite", 1024),
-    (Provider.MISTRAL, "mistral-small-2603", "low"),
+    (Provider.MISTRAL, "mistral-small-2603", "high"),
     (Provider.OPENAI, "gpt-5-nano", "low"),
     (Provider.XAI, "grok-3-mini", "low"),
 ]

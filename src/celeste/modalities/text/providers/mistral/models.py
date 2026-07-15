@@ -54,6 +54,7 @@ MODELS: list[Model] = [
         parameter_constraints={
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
             Parameter.MAX_TOKENS: Range(min=1, max=32768, step=1),
+            TextParameter.THINKING_BUDGET: Choice(options=["none", "high"]),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.IMAGE: ImagesConstraint(),
             TextParameter.DOCUMENT: DocumentsConstraint(),
@@ -70,9 +71,7 @@ MODELS: list[Model] = [
         parameter_constraints={
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
             Parameter.MAX_TOKENS: Range(min=1, max=32768, step=1),
-            TextParameter.THINKING_BUDGET: Choice(
-                options=["none", "minimal", "low", "medium", "high", "xhigh"]
-            ),
+            TextParameter.THINKING_BUDGET: Choice(options=["none", "high"]),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.IMAGE: ImagesConstraint(),
             TextParameter.DOCUMENT: DocumentsConstraint(),
@@ -89,9 +88,7 @@ MODELS: list[Model] = [
         parameter_constraints={
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
             Parameter.MAX_TOKENS: Range(min=1, max=32768, step=1),
-            TextParameter.THINKING_BUDGET: Choice(
-                options=["none", "minimal", "low", "medium", "high", "xhigh"]
-            ),
+            TextParameter.THINKING_BUDGET: Choice(options=["none", "high"]),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.IMAGE: ImagesConstraint(),
             TextParameter.DOCUMENT: DocumentsConstraint(),
@@ -108,6 +105,7 @@ MODELS: list[Model] = [
         parameter_constraints={
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
             Parameter.MAX_TOKENS: Range(min=1, max=32768, step=1),
+            TextParameter.THINKING_BUDGET: Choice(options=["none", "high"]),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.IMAGE: ImagesConstraint(),
             TextParameter.DOCUMENT: DocumentsConstraint(),
@@ -201,22 +199,6 @@ MODELS: list[Model] = [
         },
     ),
     Model(
-        id="pixtral-large-latest",
-        provider=Provider.MISTRAL,
-        display_name="Pixtral Large",
-        operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
-        streaming=True,
-        parameter_constraints={
-            Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
-            Parameter.MAX_TOKENS: Range(min=1, max=32768, step=1),
-            TextParameter.OUTPUT_SCHEMA: Schema(),
-            TextParameter.IMAGE: ImagesConstraint(),
-            TextParameter.DOCUMENT: DocumentsConstraint(),
-            TextParameter.TOOLS: ToolSupport(tools=[]),
-            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
-        },
-    ),
-    Model(
         id="ministral-3b-latest",
         provider=Provider.MISTRAL,
         display_name="Ministral 3B",
@@ -259,18 +241,6 @@ MODELS: list[Model] = [
         },
     ),
     Model(
-        id="voxtral-mini-2507",
-        provider=Provider.MISTRAL,
-        display_name="Voxtral Mini",
-        operations={Modality.TEXT: {Operation.GENERATE}},
-        streaming=True,
-        parameter_constraints={
-            Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
-            Parameter.MAX_TOKENS: Range(min=1, max=32768, step=1),
-            TextParameter.OUTPUT_SCHEMA: Schema(),
-        },
-    ),
-    Model(
         id="magistral-small-latest",
         provider=Provider.MISTRAL,
         display_name="Magistral Small",
@@ -279,7 +249,7 @@ MODELS: list[Model] = [
         parameter_constraints={
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
             Parameter.MAX_TOKENS: Range(min=1, max=32768, step=1),
-            TextParameter.THINKING_BUDGET: Range(min=-1, max=32768, step=1),
+            TextParameter.THINKING_BUDGET: Choice(options=["none", "high"]),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.IMAGE: ImagesConstraint(),
             TextParameter.DOCUMENT: DocumentsConstraint(),
@@ -295,7 +265,6 @@ MODELS: list[Model] = [
         parameter_constraints={
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
             Parameter.MAX_TOKENS: Range(min=1, max=32768, step=1),
-            TextParameter.THINKING_BUDGET: Range(min=-1, max=32768, step=1),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.IMAGE: ImagesConstraint(),
             TextParameter.DOCUMENT: DocumentsConstraint(),
