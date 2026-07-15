@@ -8,7 +8,6 @@ WEB_SEARCH_MODELS = [
     (Provider.ANTHROPIC, "claude-haiku-4-5"),
     (Provider.GOOGLE, "gemini-2.5-flash-lite"),
     (Provider.GROQ, "openai/gpt-oss-20b"),
-    (Provider.MOONSHOT, "kimi-k2-0711-preview"),
     (Provider.OPENAI, "gpt-4o-mini"),
     (Provider.XAI, "grok-4.20-0309-non-reasoning"),
 ]
@@ -20,7 +19,7 @@ FUNCTION_TOOL_MODELS = [
     (Provider.GROQ, "llama-3.1-8b-instant", False),
     (Provider.HUGGINGFACE, "Qwen/Qwen3-4B-Instruct-2507", False),
     (Provider.MISTRAL, "mistral-tiny", True),
-    (Provider.MOONSHOT, "kimi-k2-0711-preview", True),
+    (Provider.MOONSHOT, "kimi-k2.6", False),
     (Provider.OPENAI, "gpt-4o-mini", True),
     (Provider.XAI, "grok-3-mini", False),
 ]

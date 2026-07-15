@@ -1,5 +1,6 @@
 """Google Embeddings API client mixin."""
 
+import asyncio
 from collections.abc import AsyncIterator
 from typing import Any, ClassVar
 
@@ -53,7 +54,6 @@ class GoogleEmbeddingsClient(APIMixin):
         """Map Gemini Embeddings endpoint to Vertex AI endpoint."""
         mapping: dict[str, str] = {
             config.GoogleEmbeddingsEndpoint.EMBED_CONTENT: config.VertexEmbeddingsEndpoint.EMBED_CONTENT,
-            config.GoogleEmbeddingsEndpoint.BATCH_EMBED_CONTENTS: config.VertexEmbeddingsEndpoint.BATCH_EMBED_CONTENTS,
         }
         vertex_endpoint = mapping.get(gemini_endpoint)
         if vertex_endpoint is None:
@@ -64,7 +64,8 @@ class GoogleEmbeddingsClient(APIMixin):
         """Build full URL based on auth type."""
         if isinstance(self.auth, GoogleADC):
             return self.auth.build_url(
-                self._get_vertex_endpoint(endpoint), model_id=self.model.id
+                self._get_vertex_endpoint(endpoint),
+                model_id=self.model.id,
             )
         return f"{config.BASE_URL}{endpoint.format(model_id=self.model.id)}"
 
@@ -77,33 +78,28 @@ class GoogleEmbeddingsClient(APIMixin):
         **parameters: Any,
     ) -> dict[str, Any]:
         """Make HTTP request to embeddings endpoint."""
-        # Vertex :predict expects {"instances": [{"content": "..."}]} format
-        if isinstance(self.auth, GoogleADC):
-            # Check for multimodal parts (inline_data / file_data)
-            parts_to_check: list[dict[str, Any]] = []
-            if "requests" in request_body:
-                for req in request_body["requests"]:
-                    parts_to_check.extend(req["content"]["parts"])
-            else:
-                parts_to_check = request_body["content"]["parts"]
-
-            if any("inline_data" in p or "file_data" in p for p in parts_to_check):
-                msg = (
-                    "Multimodal embeddings (images/videos) are not yet supported "
-                    "via Vertex AI (GoogleADC). Use a Gemini API key instead."
-                )
-                raise ValueError(msg)
-
-            if "requests" in request_body:
-                texts = [
-                    req["content"]["parts"][0]["text"]
-                    for req in request_body["requests"]
-                ]
-            else:
-                texts = [request_body["content"]["parts"][0]["text"]]
-            request_body = {"instances": [{"content": text} for text in texts]}
-
         is_batch = "requests" in request_body
+        if isinstance(self.auth, GoogleADC) and is_batch:
+            shared = {
+                key: value for key, value in request_body.items() if key != "requests"
+            }
+            responses = await asyncio.gather(
+                *(
+                    self._make_request(
+                        shared
+                        | {
+                            key: value
+                            for key, value in request.items()
+                            if key != "model"
+                        },
+                        endpoint=config.GoogleEmbeddingsEndpoint.EMBED_CONTENT,
+                        extra_headers=extra_headers,
+                    )
+                    for request in request_body["requests"]
+                )
+            )
+            return {"embeddings": [response["embedding"] for response in responses]}
+
         endpoint_template = (
             config.GoogleEmbeddingsEndpoint.BATCH_EMBED_CONTENTS
             if is_batch
@@ -112,10 +108,11 @@ class GoogleEmbeddingsClient(APIMixin):
         if endpoint is None:
             endpoint = endpoint_template
 
+        url = self._build_url(endpoint)
         headers = self._json_headers(extra_headers)
 
         response = await self.http_client.post(
-            self._build_url(endpoint),
+            url,
             headers=headers,
             json_body=request_body,
         )
@@ -127,14 +124,8 @@ class GoogleEmbeddingsClient(APIMixin):
         """Extract embedding vectors from response.
 
         Returns list of embedding vectors (already generic - no artifacts needed).
-        Handles both Gemini API and Vertex AI :predict response formats.
+        Handles Gemini API single and batch response formats.
         """
-        # Vertex :predict response
-        if "predictions" in response_data:
-            return [
-                pred["embeddings"]["values"] for pred in response_data["predictions"]
-            ]
-
         # Gemini single embedding response
         if "embedding" in response_data:
             return [response_data["embedding"]["values"]]
@@ -143,7 +134,7 @@ class GoogleEmbeddingsClient(APIMixin):
         if "embeddings" in response_data:
             return [emb["values"] for emb in response_data["embeddings"]]
 
-        msg = "Unexpected response format: missing 'embedding', 'embeddings', or 'predictions' field"
+        msg = "Unexpected response format: missing 'embedding' or 'embeddings' field"
         raise ValueError(msg)
 
     def _parse_usage(

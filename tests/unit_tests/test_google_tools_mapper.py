@@ -33,7 +33,7 @@ def _map_tools(tools: list[ToolDefinition]) -> dict[str, Any]:
     return _MAPPER.map({}, tools, _MODEL)
 
 
-def test_maps_to_parameters_json_schema_not_legacy_parameters() -> None:
+def test_maps_to_parameters_json_schema() -> None:
     fn = _map(
         {
             "name": "example",

@@ -108,7 +108,7 @@ def get_constraint_input_type(constraint: Constraint) -> InputType | None:
     if artifact_type is not None and artifact_type in INPUT_TYPE_MAPPING:
         return INPUT_TYPE_MAPPING[artifact_type]
 
-    # Fallback: introspect __call__ signature (Str, other constraints)
+    # Otherwise introspect the __call__ signature (Str, other constraints)
     annotations = inspect.get_annotations(constraint.__call__, eval_str=True)
     for param_type in annotations.values():
         result = _extract_input_type(param_type)

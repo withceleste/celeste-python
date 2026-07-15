@@ -1,15 +1,17 @@
 """Moonshot models for text modality."""
 
 from celeste.constraints import (
+    Choice,
     ImagesConstraint,
     Range,
     Schema,
     ToolChoiceSupport,
     ToolSupport,
+    VideosConstraint,
 )
 from celeste.core import Modality, Operation, Parameter, Provider
 from celeste.models import Model
-from celeste.tools import WebSearch
+from celeste.tools import ToolChoice, WebSearch
 
 from ...parameters import TextParameter
 
@@ -21,11 +23,64 @@ MODELS: list[Model] = [
         operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
         streaming=True,
         parameter_constraints={
-            Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
-            Parameter.MAX_TOKENS: Range(min=1, max=65535, step=1),
+            Parameter.MAX_TOKENS: Range(min=1, max=262_144, step=1),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.IMAGE: ImagesConstraint(),
-            TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
+            TextParameter.TOOLS: ToolSupport(tools=[]),
+            TextParameter.TOOL_CHOICE: Choice(
+                options=[ToolChoice.AUTO, ToolChoice.NONE]
+            ),
+        },
+    ),
+    Model(
+        id="kimi-k2.6",
+        provider=Provider.MOONSHOT,
+        display_name="Kimi K2.6",
+        operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
+        streaming=True,
+        parameter_constraints={
+            Parameter.MAX_TOKENS: Range(min=1, max=262_144, step=1),
+            TextParameter.OUTPUT_SCHEMA: Schema(),
+            TextParameter.IMAGE: ImagesConstraint(),
+            TextParameter.VIDEO: VideosConstraint(),
+            TextParameter.TOOLS: ToolSupport(tools=[]),
+            TextParameter.TOOL_CHOICE: Choice(
+                options=[ToolChoice.AUTO, ToolChoice.NONE]
+            ),
+        },
+    ),
+    Model(
+        id="kimi-k2.7-code",
+        provider=Provider.MOONSHOT,
+        display_name="Kimi K2.7 Code",
+        operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
+        streaming=True,
+        parameter_constraints={
+            Parameter.MAX_TOKENS: Range(min=1, max=262_144, step=1),
+            TextParameter.OUTPUT_SCHEMA: Schema(),
+            TextParameter.IMAGE: ImagesConstraint(),
+            TextParameter.VIDEO: VideosConstraint(),
+            TextParameter.TOOLS: ToolSupport(tools=[]),
+            TextParameter.TOOL_CHOICE: Choice(
+                options=[ToolChoice.AUTO, ToolChoice.NONE]
+            ),
+        },
+    ),
+    Model(
+        id="kimi-k2.7-code-highspeed",
+        provider=Provider.MOONSHOT,
+        display_name="Kimi K2.7 Code Highspeed",
+        operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
+        streaming=True,
+        parameter_constraints={
+            Parameter.MAX_TOKENS: Range(min=1, max=262_144, step=1),
+            TextParameter.OUTPUT_SCHEMA: Schema(),
+            TextParameter.IMAGE: ImagesConstraint(),
+            TextParameter.VIDEO: VideosConstraint(),
+            TextParameter.TOOLS: ToolSupport(tools=[]),
+            TextParameter.TOOL_CHOICE: Choice(
+                options=[ToolChoice.AUTO, ToolChoice.NONE]
+            ),
         },
     ),
     Model(
@@ -39,76 +94,6 @@ MODELS: list[Model] = [
             Parameter.MAX_TOKENS: Range(min=1, max=8192, step=1),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.IMAGE: ImagesConstraint(),
-            TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
-            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
-        },
-    ),
-    Model(
-        id="kimi-k2-0905-preview",
-        provider=Provider.MOONSHOT,
-        display_name="Kimi K2 (0905 Preview)",
-        operations={Modality.TEXT: {Operation.GENERATE}},
-        streaming=True,
-        parameter_constraints={
-            Parameter.TEMPERATURE: Range(min=0.0, max=1.0, step=0.01),
-            Parameter.MAX_TOKENS: Range(min=1, max=32768, step=1),
-            TextParameter.OUTPUT_SCHEMA: Schema(),
-            TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
-            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
-        },
-    ),
-    Model(
-        id="kimi-k2-0711-preview",
-        provider=Provider.MOONSHOT,
-        display_name="Kimi K2 (0711 Preview)",
-        operations={Modality.TEXT: {Operation.GENERATE}},
-        streaming=True,
-        parameter_constraints={
-            Parameter.TEMPERATURE: Range(min=0.0, max=1.0, step=0.01),
-            Parameter.MAX_TOKENS: Range(min=1, max=32768, step=1),
-            TextParameter.OUTPUT_SCHEMA: Schema(),
-            TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
-            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
-        },
-    ),
-    Model(
-        id="kimi-k2-turbo-preview",
-        provider=Provider.MOONSHOT,
-        display_name="Kimi K2 Turbo Preview",
-        operations={Modality.TEXT: {Operation.GENERATE}},
-        streaming=True,
-        parameter_constraints={
-            Parameter.TEMPERATURE: Range(min=0.0, max=1.0, step=0.01),
-            Parameter.MAX_TOKENS: Range(min=1, max=32768, step=1),
-            TextParameter.OUTPUT_SCHEMA: Schema(),
-            TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
-            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
-        },
-    ),
-    Model(
-        id="kimi-k2-thinking-turbo",
-        provider=Provider.MOONSHOT,
-        display_name="Kimi K2 Thinking Turbo",
-        operations={Modality.TEXT: {Operation.GENERATE}},
-        streaming=True,
-        parameter_constraints={
-            Parameter.TEMPERATURE: Range(min=0.0, max=1.0, step=0.01),
-            Parameter.MAX_TOKENS: Range(min=1, max=32768, step=1),
-            TextParameter.OUTPUT_SCHEMA: Schema(),
-            TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
-            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
-        },
-    ),
-    Model(
-        id="kimi-k2-thinking",
-        provider=Provider.MOONSHOT,
-        display_name="Kimi K2 Thinking",
-        operations={Modality.TEXT: {Operation.GENERATE}},
-        streaming=True,
-        parameter_constraints={
-            Parameter.TEMPERATURE: Range(min=0.0, max=1.0, step=0.01),
-            Parameter.MAX_TOKENS: Range(min=1, max=32768, step=1),
-            TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
             TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
         },

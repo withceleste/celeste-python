@@ -68,6 +68,8 @@ class GoogleADC(Authentication):
         """Return the Vertex AI base URL for the configured location."""
         if self.location == "global":
             return VERTEX_GLOBAL_BASE_URL
+        if self.location in ("us", "eu"):
+            return f"https://aiplatform.{self.location}.rep.googleapis.com"
         return VERTEX_BASE_URL.format(location=self.location)
 
     def build_url(self, vertex_endpoint: str, model_id: str | None = None) -> str:

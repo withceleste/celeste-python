@@ -1,9 +1,11 @@
 """Parameter system for Celeste."""
 
+import warnings
 from abc import ABC, abstractmethod
 from enum import StrEnum
 from typing import Any, ClassVar, TypedDict
 
+from celeste.exceptions import UnsupportedParameterWarning
 from celeste.models import Model
 
 
@@ -34,6 +36,22 @@ class ParameterMapper[Content](ABC):
     def parse_output(self, content: Content, value: object | None) -> Content:
         """Optionally transform parsed content based on parameter value (default: return unchanged)."""
         return content
+
+    def _warn_if_unsupported(self, value: object, model: Model) -> bool:
+        """Warn when a constrained model does not support this parameter."""
+        if (
+            value is None
+            or not model.parameter_constraints
+            or self.name in model.parameter_constraints
+        ):
+            return False
+        warnings.warn(
+            f"Parameter '{self.name}' is not supported by model "
+            f"'{model.id}' and will be ignored.",
+            UnsupportedParameterWarning,
+            stacklevel=5,
+        )
+        return True
 
     def _validate_value(self, value: Any, model: Model) -> Any:  # noqa: ANN401
         """Validate parameter value using model constraint if present, otherwise pass through."""

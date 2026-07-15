@@ -11,7 +11,7 @@ from celeste.constraints import (
 )
 from celeste.core import Modality, Operation, Parameter, Provider
 from celeste.models import Model
-from celeste.tools import WebSearch
+from celeste.tools import ToolChoice, WebSearch
 
 from ...parameters import TextParameter
 
@@ -29,7 +29,9 @@ MODELS: list[Model] = [
             ),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
-            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
+            TextParameter.TOOL_CHOICE: Choice(
+                options=[ToolChoice.AUTO, ToolChoice.NONE]
+            ),
             TextParameter.IMAGE: ImagesConstraint(),
             TextParameter.DOCUMENT: DocumentsConstraint(),
         },
@@ -77,6 +79,7 @@ MODELS: list[Model] = [
         operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
         streaming=True,
         parameter_constraints={
+            Parameter.TEMPERATURE: Range(min=0.0, max=1.0, step=0.01),
             Parameter.MAX_TOKENS: Range(min=1, max=64000),
             TextParameter.THINKING_BUDGET: Range(min=-1, max=64000),
             TextParameter.OUTPUT_SCHEMA: Schema(),
@@ -93,6 +96,7 @@ MODELS: list[Model] = [
         operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
         streaming=True,
         parameter_constraints={
+            Parameter.TEMPERATURE: Range(min=0.0, max=1.0, step=0.01),
             Parameter.MAX_TOKENS: Range(min=1, max=64000),
             TextParameter.THINKING_BUDGET: Range(min=1024, max=32000),
             TextParameter.OUTPUT_SCHEMA: Schema(),
@@ -109,6 +113,7 @@ MODELS: list[Model] = [
         operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
         streaming=True,
         parameter_constraints={
+            Parameter.TEMPERATURE: Range(min=0.0, max=1.0, step=0.01),
             Parameter.MAX_TOKENS: Range(min=1, max=32000),
             TextParameter.THINKING_BUDGET: Range(min=-1, max=32000),
             TextParameter.OUTPUT_SCHEMA: Schema(),
@@ -125,6 +130,7 @@ MODELS: list[Model] = [
         operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
         streaming=True,
         parameter_constraints={
+            Parameter.TEMPERATURE: Range(min=0.0, max=1.0, step=0.01),
             Parameter.MAX_TOKENS: Range(min=1, max=64000),
             TextParameter.THINKING_BUDGET: Range(min=-1, max=32000),
             TextParameter.OUTPUT_SCHEMA: Schema(),
@@ -141,6 +147,7 @@ MODELS: list[Model] = [
         operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
         streaming=True,
         parameter_constraints={
+            Parameter.TEMPERATURE: Range(min=0.0, max=1.0, step=0.01),
             Parameter.MAX_TOKENS: Range(min=1, max=64000),
             TextParameter.THINKING_BUDGET: Range(min=-1, max=32000),
             TextParameter.OUTPUT_SCHEMA: Schema(),
@@ -175,41 +182,12 @@ MODELS: list[Model] = [
         operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
         streaming=True,
         parameter_constraints={
+            Parameter.TEMPERATURE: Range(min=0.0, max=1.0, step=0.01),
             Parameter.MAX_TOKENS: Range(min=1, max=64000),
             TextParameter.THINKING_LEVEL: Choice(
                 options=["low", "medium", "high", "max"]
             ),
             TextParameter.OUTPUT_SCHEMA: Schema(),
-            TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
-            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
-            TextParameter.IMAGE: ImagesConstraint(),
-            TextParameter.DOCUMENT: DocumentsConstraint(),
-        },
-    ),
-    Model(
-        id="claude-sonnet-4-20250514",
-        provider=Provider.ANTHROPIC,
-        display_name="Claude Sonnet 4",
-        operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
-        streaming=True,
-        parameter_constraints={
-            Parameter.MAX_TOKENS: Range(min=1, max=64000),
-            TextParameter.THINKING_BUDGET: Range(min=-1, max=64000),
-            TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
-            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
-            TextParameter.IMAGE: ImagesConstraint(),
-            TextParameter.DOCUMENT: DocumentsConstraint(),
-        },
-    ),
-    Model(
-        id="claude-opus-4-20250514",
-        provider=Provider.ANTHROPIC,
-        display_name="Claude Opus 4",
-        operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
-        streaming=True,
-        parameter_constraints={
-            Parameter.MAX_TOKENS: Range(min=1, max=32000),
-            TextParameter.THINKING_BUDGET: Range(min=-1, max=32000),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
             TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
             TextParameter.IMAGE: ImagesConstraint(),

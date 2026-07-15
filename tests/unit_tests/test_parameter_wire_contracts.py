@@ -4,16 +4,19 @@ import pytest
 from pydantic import BaseModel
 
 from celeste.artifacts import ImageArtifact
-from celeste.exceptions import ValidationError
+from celeste.constraints import Range
+from celeste.exceptions import UnsupportedParameterWarning, ValidationError
 from celeste.modalities.images.parameters import ImageParameter
 from celeste.modalities.images.providers.google import parameters as google_images
 from celeste.modalities.text.parameters import TextParameter
 from celeste.modalities.text.protocols.chatcompletions import parameters as chat
 from celeste.modalities.text.providers.anthropic import parameters as anthropic
 from celeste.modalities.text.providers.google import parameters as google_text
+from celeste.modalities.text.providers.moonshot import parameters as moonshot
 from celeste.modalities.text.providers.openai import parameters as openai
 from celeste.modalities.videos.parameters import VideoParameter
 from celeste.modalities.videos.providers.byteplus import parameters as byteplus
+from celeste.modalities.videos.providers.xai import parameters as xai
 from celeste.models import Model
 from celeste.parameters import ParameterMapper
 
@@ -22,7 +25,9 @@ GEMINI = google_images.GEMINI_PARAMETER_MAPPERS
 OPEN = openai.OPENAI_PARAMETER_MAPPERS
 CHAT = chat.CHATCOMPLETIONS_PARAMETER_MAPPERS
 ANTHROPIC = anthropic.ANTHROPIC_PARAMETER_MAPPERS
+MOONSHOT = moonshot.MOONSHOT_PARAMETER_MAPPERS
 BYTEPLUS = byteplus.BYTEPLUS_PARAMETER_MAPPERS
+XAI = xai.XAI_PARAMETER_MAPPERS
 T, IP, V = TextParameter, ImageParameter, VideoParameter
 GC = ("generationConfig",)
 TC = (*GC, "thinkingConfig")
@@ -91,6 +96,10 @@ def _at(data: dict[str, Any], path: tuple[str, ...]) -> Any:  # noqa: ANN401
         (OPEN, T.VERBOSITY, "low", ("text", "verbosity"), "low"),
         (CHAT, T.TEMPERATURE, 0.6, ("temperature",), 0.6),
         (CHAT, T.MAX_TOKENS, 100, ("max_tokens",), 100),
+        (ANTHROPIC, T.TEMPERATURE, 0.3, ("temperature",), 0.3),
+        (MOONSHOT, T.TEMPERATURE, 0.4, ("temperature",), 0.4),
+        (MOONSHOT, T.MAX_TOKENS, 120, ("max_completion_tokens",), 120),
+        (XAI, V.FIRST_FRAME, IMAGE, ("image", "url"), IMAGE.url),
     ],
 )
 def test_scalar_parameters_use_provider_wire_shape(
@@ -104,11 +113,24 @@ def test_scalar_parameters_use_provider_wire_shape(
     assert _at(request, path) == expected
 
 
-@pytest.mark.parametrize("mappers", [GOOGLE, GEMINI, OPEN, CHAT, ANTHROPIC, BYTEPLUS])
+@pytest.mark.parametrize(
+    "mappers", [GOOGLE, GEMINI, OPEN, CHAT, ANTHROPIC, MOONSHOT, BYTEPLUS, XAI]
+)
 def test_none_omits_every_optional_parameter(
     mappers: list[ParameterMapper[Any]],
 ) -> None:
     assert all(mapper.map({}, None, MODEL) == {} for mapper in mappers)
+
+
+def test_constrained_model_omits_unsupported_parameter() -> None:
+    model = Model(
+        id="constrained-test",
+        display_name="Constrained test",
+        parameter_constraints={T.MAX_TOKENS: Range(min=1, max=2)},
+    )
+
+    with pytest.warns(UnsupportedParameterWarning):
+        assert _mapper(MOONSHOT, T.TEMPERATURE).map({}, 0.2, model) == {}
 
 
 @pytest.mark.parametrize(

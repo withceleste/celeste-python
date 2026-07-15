@@ -13,8 +13,7 @@ class GoogleEmbeddingsEndpoint(StrEnum):
 class VertexEmbeddingsEndpoint(StrEnum):
     """Endpoints for Embeddings on Vertex AI."""
 
-    EMBED_CONTENT = "/v1/projects/{project_id}/locations/{location}/publishers/google/models/{model_id}:predict"
-    BATCH_EMBED_CONTENTS = "/v1/projects/{project_id}/locations/{location}/publishers/google/models/{model_id}:predict"
+    EMBED_CONTENT = "/v1/projects/{project_id}/locations/{location}/publishers/google/models/{model_id}:embedContent"
 
 
 BASE_URL = "https://generativelanguage.googleapis.com"

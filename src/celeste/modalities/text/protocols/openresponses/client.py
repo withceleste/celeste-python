@@ -26,7 +26,7 @@ from celeste.protocols.openresponses.tools import (
 )
 from celeste.tools import ToolCall, ToolResult
 from celeste.types import DocumentPart, ImagePart, Message, Role, TextContent, TextPart
-from celeste.utils import build_document_data_url, build_image_data_url
+from celeste.utils import build_data_url
 
 from ...client import TextClient
 from ...grounding import map_url_citation_annotations
@@ -44,7 +44,7 @@ def _input_file(document: DocumentArtifact) -> dict[str, Any]:
     return {
         "type": "input_file",
         "filename": document.path.rsplit("/", 1)[-1] if document.path else "document",
-        "file_data": build_document_data_url(document),
+        "file_data": build_data_url(document),
     }
 
 
@@ -62,7 +62,7 @@ def _serialize_content(content: Any) -> Any:
             items.append({"type": "input_text", "text": part.text})
         elif isinstance(part, ImagePart):
             items.append(
-                {"type": "input_image", "image_url": build_image_data_url(part.image)}
+                {"type": "input_image", "image_url": build_data_url(part.image)}
             )
         elif isinstance(part, DocumentPart):
             items.append(_input_file(part.document))

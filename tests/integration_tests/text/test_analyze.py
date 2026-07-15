@@ -34,6 +34,7 @@ CASES = [
     (Provider.OPENAI, "gpt-4o-mini", "test_document", "document"),
     (Provider.GOOGLE, "gemini-2.5-flash-lite", "test_audio", "audio"),
     (Provider.GOOGLE, "gemini-2.5-flash-lite", "test_video", "video"),
+    (Provider.MOONSHOT, "kimi-k2.6", "test_video", "video"),
 ]
 
 

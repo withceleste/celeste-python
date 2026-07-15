@@ -21,13 +21,10 @@ class OutputDimensionalityMapper(ParameterMapper[EmbeddingsContent]):
         if validated_value is None:
             return request
 
-        # Batch request: add to each individual request
-        if "requests" in request:
-            for req in request["requests"]:
-                req["outputDimensionality"] = validated_value
-        else:
-            # Single request: add at root level
-            request["outputDimensionality"] = validated_value
+        for item in request.get("requests", [request]):
+            item.setdefault("embedContentConfig", {})["outputDimensionality"] = (
+                validated_value
+            )
 
         return request
 

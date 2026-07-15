@@ -36,6 +36,17 @@ class TemperatureMapper(_TemperatureMapper):
 
     name = TextParameter.TEMPERATURE
 
+    def map(
+        self,
+        request: dict[str, Any],
+        value: object,
+        model: Model,
+    ) -> dict[str, Any]:
+        """Omit temperature when the model catalog does not support it."""
+        if self._warn_if_unsupported(value, model):
+            return request
+        return super().map(request, value, model)
+
 
 class MaxTokensMapper(_MaxTokensMapper):
     """Map max_tokens to Anthropic's max_tokens parameter."""

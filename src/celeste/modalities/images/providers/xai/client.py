@@ -7,6 +7,7 @@ from celeste.parameters import ParameterMapper
 from celeste.providers.xai.images import config
 from celeste.providers.xai.images.client import XAIImagesClient as XAIImagesMixin
 from celeste.types import ImageContent
+from celeste.utils import build_data_url
 
 from ...client import ImagesClient
 from ...io import (
@@ -29,13 +30,7 @@ class XAIImagesClient(XAIImagesMixin, ImagesClient):
         """Initialize request from inputs."""
         request: dict[str, Any] = {"prompt": inputs.prompt}
         if inputs.image is not None:
-            # xAI expects {"image": {"url": "..."}} with URL or data URI
-            if inputs.image.url:
-                request["image"] = {"url": inputs.image.url}
-            else:
-                mime_type = inputs.image.mime_type
-                base64_data = inputs.image.get_base64()
-                request["image"] = {"url": f"data:{mime_type};base64,{base64_data}"}
+            request["image"] = {"url": build_data_url(inputs.image)}
         return request
 
     def _parse_content(

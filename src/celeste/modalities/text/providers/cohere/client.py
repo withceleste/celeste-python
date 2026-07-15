@@ -15,7 +15,7 @@ from celeste.providers.cohere.chat.streaming import (
 )
 from celeste.tools import ToolResult
 from celeste.types import ImagePart, TextContent, TextPart
-from celeste.utils import build_image_data_url
+from celeste.utils import build_data_url
 
 from ...client import TextClient
 from ...io import (
@@ -51,7 +51,7 @@ class CohereTextClient(CohereChatClient, TextClient):
                     items.append(
                         {
                             "type": "image_url",
-                            "image_url": {"url": build_image_data_url(part.image)},
+                            "image_url": {"url": build_data_url(part.image)},
                         }
                     )
             return items
