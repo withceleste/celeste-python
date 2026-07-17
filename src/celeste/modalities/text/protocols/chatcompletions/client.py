@@ -166,11 +166,12 @@ class ChatCompletionsTextClient(ChatCompletionsMixin, TextClient):
     def _parse_reasoning(
         self, response_data: dict[str, Any]
     ) -> tuple[str | None, list[dict[str, Any]]]:
-        """Parse reasoning_content from Chat Completions response."""
+        """Parse reasoning from a Chat Completions response."""
         choices = response_data.get("choices", [])
         if not choices:
             return None, []
-        reasoning = choices[0].get("message", {}).get("reasoning_content")
+        message = choices[0].get("message", {})
+        reasoning = message.get("reasoning_content") or message.get("reasoning")
         return reasoning, []  # empty signature — must NOT send back
 
     def _parse_tool_calls(self, response_data: dict[str, Any]) -> list[ToolCall]:

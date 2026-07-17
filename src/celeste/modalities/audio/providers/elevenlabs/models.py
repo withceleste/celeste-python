@@ -107,28 +107,4 @@ MODELS: list[Model] = [
             AudioParameter.OUTPUT_FORMAT: Choice(options=ELEVENLABS_OUTPUT_FORMATS),
         },
     ),
-    Model(
-        id="eleven_multilingual_v1",
-        provider=Provider.ELEVENLABS,
-        display_name="Eleven Multilingual v1",
-        streaming=True,
-        operations={Modality.AUDIO: {Operation.SPEAK}},
-        parameter_constraints={
-            AudioParameter.VOICE: VoiceConstraint(voices=ELEVENLABS_VOICES),
-            AudioParameter.SPEED: Range(min=0.7, max=1.2),
-            AudioParameter.OUTPUT_FORMAT: Choice(options=ELEVENLABS_OUTPUT_FORMATS),
-        },
-    ),
-    Model(
-        id="eleven_monolingual_v1",
-        provider=Provider.ELEVENLABS,
-        display_name="Eleven English v1",
-        streaming=True,
-        operations={Modality.AUDIO: {Operation.SPEAK}},
-        parameter_constraints={
-            AudioParameter.VOICE: VoiceConstraint(voices=ELEVENLABS_VOICES),
-            AudioParameter.SPEED: Range(min=0.7, max=1.2),
-            AudioParameter.OUTPUT_FORMAT: Choice(options=ELEVENLABS_OUTPUT_FORMATS),
-        },
-    ),
 ]

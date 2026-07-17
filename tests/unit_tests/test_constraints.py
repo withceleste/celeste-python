@@ -157,6 +157,19 @@ def test_dimensions_parse_presets_and_bounds() -> None:
     assert constraint("10X20") == "10x20"
 
 
+def test_dimensions_enforce_multiples() -> None:
+    constraint = Dimensions(
+        min_pixels=100,
+        max_pixels=10_000,
+        min_aspect_ratio=0.5,
+        max_aspect_ratio=2,
+        multiple_of=16,
+    )
+    assert constraint("16x32") == "16x32"
+    with pytest.raises(ConstraintViolationError, match="multiples of 16"):
+        constraint("20x32")
+
+
 @pytest.mark.parametrize("value", [1, "20", "axb", "0x20", "5x5", "10x100"])
 def test_dimensions_reject_invalid_values(value: object) -> None:
     constraint = Dimensions(
@@ -256,3 +269,13 @@ def test_tool_support_allows_custom_and_registered_tools() -> None:
     assert constraint(value) is value
     with pytest.raises(ConstraintViolationError, match="XSearch"):
         constraint([XSearch()])
+
+
+def test_tool_support_can_reject_custom_tools() -> None:
+    constraint = ToolSupport(tools=[WebSearch], custom_tools=False)
+    value = [WebSearch(), {"type": "mcp", "server_label": "docs"}]
+    assert constraint(value) is value
+
+    for custom in ({"name": "lookup"}, {"type": "function"}):
+        with pytest.raises(ConstraintViolationError, match="Custom tools"):
+            constraint([custom])

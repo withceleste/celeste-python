@@ -8,6 +8,7 @@ import pytest
 
 from celeste.auth import NoAuth
 from celeste.client import ModalityClient
+from celeste.constraints import Str
 from celeste.core import Modality, Operation, Provider
 from celeste.exceptions import StreamingNotSupportedError, UnsupportedParameterWarning
 from celeste.io import Chunk, Input, Output, Usage
@@ -120,6 +121,8 @@ def test_build_request_warns_only_for_non_none_unsupported_values(
 
 
 async def test_predict_maps_request_and_transforms_output(client: FakeClient) -> None:
+    client.model.parameter_constraints = {FakeParameter.VALUE: Str()}
+
     output = await client._predict(
         FakeInput(prompt="hello"), value="mapped", transform="normalized"
     )

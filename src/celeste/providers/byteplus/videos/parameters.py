@@ -2,10 +2,10 @@
 
 from typing import Any
 
-from celeste.exceptions import ValidationError
 from celeste.models import Model
 from celeste.parameters import ParameterMapper
 from celeste.types import VideoContent
+from celeste.utils import build_data_url
 
 
 class DurationMapper(ParameterMapper[VideoContent]):
@@ -102,7 +102,7 @@ class ReferenceImagesMapper(ParameterMapper[VideoContent]):
             content.append(
                 {
                     "type": "image_url",
-                    "image_url": {"url": img.url},
+                    "image_url": {"url": build_data_url(img)},
                     "role": "reference_image",
                 }
             )
@@ -124,15 +124,11 @@ class FirstFrameMapper(ParameterMapper[VideoContent]):
         if validated_value is None:
             return request
 
-        if not validated_value.url:
-            msg = "BytePlus requires image URL for first_frame."
-            raise ValidationError(msg) from None
-
         content = request.setdefault("content", [])
         content.append(
             {
                 "type": "image_url",
-                "image_url": {"url": validated_value.url},
+                "image_url": {"url": build_data_url(validated_value)},
                 "role": "first_frame",
             }
         )
@@ -154,15 +150,11 @@ class LastFrameMapper(ParameterMapper[VideoContent]):
         if validated_value is None:
             return request
 
-        if not validated_value.url:
-            msg = "BytePlus requires image URL for last_frame."
-            raise ValidationError(msg) from None
-
         content = request.setdefault("content", [])
         content.append(
             {
                 "type": "image_url",
-                "image_url": {"url": validated_value.url},
+                "image_url": {"url": build_data_url(validated_value)},
                 "role": "last_frame",
             }
         )

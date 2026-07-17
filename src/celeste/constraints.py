@@ -131,6 +131,7 @@ class Dimensions(Constraint):
     min_aspect_ratio: float
     max_aspect_ratio: float
     presets: dict[str, str] | None = None
+    multiple_of: int | None = Field(default=None, gt=0)
 
     def __call__(self, value: str) -> str:
         """Validate dimension string against pixel and aspect ratio bounds."""
@@ -164,6 +165,10 @@ class Dimensions(Constraint):
         # Validate dimensions are positive
         if width <= 0 or height <= 0:
             msg = f"Width and height must be positive, got {width}x{height}"
+            raise ConstraintViolationError(msg)
+
+        if self.multiple_of and (width % self.multiple_of or height % self.multiple_of):
+            msg = f"Width and height must be multiples of {self.multiple_of}"
             raise ConstraintViolationError(msg)
 
         # Validate total pixels
@@ -399,6 +404,7 @@ class ToolSupport(Constraint):
     """Tool support constraint - validates Tool instances are supported by the model."""
 
     tools: list[type[Tool]]
+    custom_tools: bool = True
 
     @field_serializer("tools")
     @classmethod
@@ -408,6 +414,13 @@ class ToolSupport(Constraint):
     def __call__(self, value: list) -> list:
         """Validate tools list against supported tools."""
         for item in value:
+            if (
+                not self.custom_tools
+                and isinstance(item, dict)
+                and ("name" in item or item.get("type") == "function")
+            ):
+                msg = "Custom tools are not supported by this model"
+                raise ConstraintViolationError(msg)
             if isinstance(item, Tool) and type(item) not in self.tools:
                 if self.tools:
                     supported = [t.__name__ for t in self.tools]
