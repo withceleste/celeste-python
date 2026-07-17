@@ -71,7 +71,7 @@ MODELS: list[Model] = [
         },
     ),
     Model(
-        id="seedance-2-0-260128",
+        id="dreamina-seedance-2-0-260128",
         provider=Provider.BYTEPLUS,
         operations={Modality.VIDEOS: {Operation.GENERATE}},
         display_name="Seedance 2.0",
@@ -91,10 +91,30 @@ MODELS: list[Model] = [
         },
     ),
     Model(
-        id="seedance-2-0-fast-260128",
+        id="dreamina-seedance-2-0-fast-260128",
         provider=Provider.BYTEPLUS,
         operations={Modality.VIDEOS: {Operation.GENERATE}},
         display_name="Seedance 2.0 Fast",
+        parameter_constraints={
+            VideoParameter.DURATION: Range(min=4, max=15),
+            VideoParameter.RESOLUTION: Choice(options=["480p", "720p"]),
+            VideoParameter.REFERENCE_IMAGES: ImagesConstraint(
+                supported_mime_types=BYTEPLUS_SUPPORTED_MIME_TYPES,
+                max_count=9,
+            ),
+            VideoParameter.FIRST_FRAME: ImageConstraint(
+                supported_mime_types=BYTEPLUS_SUPPORTED_MIME_TYPES,
+            ),
+            VideoParameter.LAST_FRAME: ImageConstraint(
+                supported_mime_types=BYTEPLUS_SUPPORTED_MIME_TYPES,
+            ),
+        },
+    ),
+    Model(
+        id="dreamina-seedance-2-0-mini-260615",
+        provider=Provider.BYTEPLUS,
+        operations={Modality.VIDEOS: {Operation.GENERATE}},
+        display_name="Seedance 2.0 Mini",
         parameter_constraints={
             VideoParameter.DURATION: Range(min=4, max=15),
             VideoParameter.RESOLUTION: Choice(options=["480p", "720p"]),

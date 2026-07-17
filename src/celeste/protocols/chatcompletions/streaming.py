@@ -50,11 +50,11 @@ class ChatCompletionsStream:
         return delta.get("content") or None
 
     def _parse_chunk_reasoning(self, event_data: dict[str, Any]) -> str | None:
-        """Extract reasoning_content from SSE event (DeepSeek R1, etc.)."""
+        """Extract reasoning from an SSE event."""
         delta = self._get_chunk_delta(event_data)
         if delta is None:
             return None
-        return delta.get("reasoning_content") or None
+        return delta.get("reasoning_content") or delta.get("reasoning") or None
 
     def _parse_chunk_usage(
         self, event_data: dict[str, Any]

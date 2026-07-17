@@ -171,7 +171,8 @@ class GradiumTextToSpeechClient(APIMixin):
     ) -> AudioMimeType:
         """Map Gradium output_format to AudioMimeType.
 
-        Supported formats: wav, pcm, opus, ulaw_8000, alaw_8000, pcm_16000, pcm_24000.
+        Supported formats: wav, pcm, opus, ulaw_8000, alaw_8000, pcm_8000,
+        pcm_16000, pcm_24000.
         """
         format_map: dict[str, AudioMimeType] = {
             "wav": AudioMimeType.WAV,
@@ -179,6 +180,7 @@ class GradiumTextToSpeechClient(APIMixin):
             "opus": AudioMimeType.OGG,  # Opus in OGG container
             "ulaw_8000": AudioMimeType.WAV,
             "alaw_8000": AudioMimeType.WAV,
+            "pcm_8000": AudioMimeType.WAV,
             "pcm_16000": AudioMimeType.WAV,
             "pcm_24000": AudioMimeType.WAV,
         }

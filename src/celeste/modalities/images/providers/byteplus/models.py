@@ -59,7 +59,7 @@ MODELS: list[Model] = [
         parameter_constraints={
             ImageParameter.ASPECT_RATIO: Dimensions(
                 min_pixels=2560 * 1440,  # 3,686,400
-                max_pixels=10_404_496,  # 3072 * 3072 * 1.1025
+                max_pixels=4096 * 4096,  # 16,777,216
                 min_aspect_ratio=1 / 16,
                 max_aspect_ratio=16,
                 presets={
@@ -79,14 +79,22 @@ MODELS: list[Model] = [
                     "3K 2:3": "2496x3744",
                     "3K 3:2": "3744x2496",
                     "3K 21:9": "4704x2016",
+                    "4K 1:1": "4096x4096",
+                    "4K 3:4": "3520x4704",
+                    "4K 4:3": "4704x3520",
+                    "4K 16:9": "5504x3040",
+                    "4K 9:16": "3040x5504",
+                    "4K 2:3": "3328x4992",
+                    "4K 3:2": "4992x3328",
+                    "4K 21:9": "6240x2656",
                 },
             ),
-            ImageParameter.QUALITY: Choice(options=["2K", "3K"]),
+            ImageParameter.QUALITY: Choice(options=["2K", "3K", "4K"]),
             ImageParameter.WATERMARK: Bool(),
         },
     ),
     Model(
-        id="seedream-5-0-pro-260628",
+        id="dola-seedream-5-0-pro-260628",
         provider=Provider.BYTEPLUS,
         display_name="Seedream 5.0 Pro",
         operations={Modality.IMAGES: {Operation.GENERATE}},
@@ -94,9 +102,10 @@ MODELS: list[Model] = [
         parameter_constraints={
             ImageParameter.ASPECT_RATIO: Dimensions(
                 min_pixels=1280 * 720,  # 921,600
-                max_pixels=2048 * 2048,  # 4,194,304
+                max_pixels=4_624_220,
                 min_aspect_ratio=1 / 16,
                 max_aspect_ratio=16,
+                multiple_of=16,
                 presets={
                     "1K 1:1": "1024x1024",
                     "1K 4:3": "1152x864",

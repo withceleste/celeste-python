@@ -1,8 +1,5 @@
 """Moonshot parameter mappers for text."""
 
-from typing import Any
-
-from celeste.models import Model
 from celeste.parameters import ParameterMapper
 from celeste.protocols.chatcompletions.parameters import (
     ToolsMapper as _ToolsMapper,
@@ -16,9 +13,8 @@ from ...protocols.chatcompletions.parameters import (
 )
 from ...protocols.chatcompletions.parameters import (
     OutputSchemaMapper,
-)
-from ...protocols.chatcompletions.parameters import (
-    TemperatureMapper as _TemperatureMapper,
+    TemperatureMapper,
+    ThinkingBudgetMapper,
 )
 from ...protocols.chatcompletions.parameters import (
     ToolChoiceMapper as _ToolChoiceMapper,
@@ -36,17 +32,6 @@ class ToolChoiceMapper(_ToolChoiceMapper):
     name = TextParameter.TOOL_CHOICE
 
 
-class TemperatureMapper(_TemperatureMapper):
-    """Map temperature when the model catalog supports it."""
-
-    def map(
-        self, request: dict[str, Any], value: object, model: Model
-    ) -> dict[str, Any]:
-        if self._warn_if_unsupported(value, model):
-            return request
-        return super().map(request, value, model)
-
-
 class MaxTokensMapper(_MaxTokensMapper):
     """Map max_tokens to Moonshot's current field name."""
 
@@ -56,6 +41,7 @@ class MaxTokensMapper(_MaxTokensMapper):
 MOONSHOT_PARAMETER_MAPPERS: list[ParameterMapper[TextContent]] = [
     TemperatureMapper(),
     MaxTokensMapper(),
+    ThinkingBudgetMapper(),
     OutputSchemaMapper(),
     ToolsMapper(),
     ToolChoiceMapper(),

@@ -1,6 +1,6 @@
 """Gradium models for audio modality."""
 
-from celeste.constraints import Choice, Range
+from celeste.constraints import Choice
 from celeste.core import Modality, Operation, Provider
 from celeste.models import Model
 
@@ -24,11 +24,11 @@ MODELS: list[Model] = [
                     "opus",
                     "ulaw_8000",
                     "alaw_8000",
+                    "pcm_8000",
                     "pcm_16000",
                     "pcm_24000",
                 ]
             ),
-            AudioParameter.SPEED: Range(min=0.25, max=4.0),
         },
     ),
 ]

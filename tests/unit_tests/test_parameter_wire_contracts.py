@@ -4,14 +4,19 @@ import pytest
 from pydantic import BaseModel
 
 from celeste.artifacts import ImageArtifact
-from celeste.constraints import Range
-from celeste.exceptions import UnsupportedParameterWarning, ValidationError
+from celeste.mime_types import ImageMimeType
 from celeste.modalities.images.parameters import ImageParameter
+from celeste.modalities.images.providers.bfl import parameters as bfl
 from celeste.modalities.images.providers.google import parameters as google_images
 from celeste.modalities.text.parameters import TextParameter
 from celeste.modalities.text.protocols.chatcompletions import parameters as chat
+from celeste.modalities.text.protocols.chatcompletions.client import (
+    ChatCompletionsTextClient,
+    ChatCompletionsTextStream,
+)
 from celeste.modalities.text.providers.anthropic import parameters as anthropic
 from celeste.modalities.text.providers.google import parameters as google_text
+from celeste.modalities.text.providers.groq import parameters as groq
 from celeste.modalities.text.providers.moonshot import parameters as moonshot
 from celeste.modalities.text.providers.openai import parameters as openai
 from celeste.modalities.videos.parameters import VideoParameter
@@ -26,8 +31,10 @@ OPEN = openai.OPENAI_PARAMETER_MAPPERS
 CHAT = chat.CHATCOMPLETIONS_PARAMETER_MAPPERS
 ANTHROPIC = anthropic.ANTHROPIC_PARAMETER_MAPPERS
 MOONSHOT = moonshot.MOONSHOT_PARAMETER_MAPPERS
+GROQ = groq.GROQ_PARAMETER_MAPPERS
 BYTEPLUS = byteplus.BYTEPLUS_PARAMETER_MAPPERS
 XAI = xai.XAI_PARAMETER_MAPPERS
+BFL = bfl.BFL_PARAMETER_MAPPERS
 T, IP, V = TextParameter, ImageParameter, VideoParameter
 GC = ("generationConfig",)
 TC = (*GC, "thinkingConfig")
@@ -36,6 +43,7 @@ GS = (*GC, "responseJsonSchema", "properties", "value", "type")
 TF, RF = ("text", "format", "name"), ("response_format", "type")
 MODEL = Model(id="wire-test", display_name="Wire test")
 IMAGE = ImageArtifact(url="https://example.com/image.png")
+LOCAL_IMAGE = ImageArtifact(data=b"frame", mime_type=ImageMimeType.PNG)
 
 
 class Answer(BaseModel):
@@ -96,9 +104,12 @@ def _at(data: dict[str, Any], path: tuple[str, ...]) -> Any:  # noqa: ANN401
         (OPEN, T.VERBOSITY, "low", ("text", "verbosity"), "low"),
         (CHAT, T.TEMPERATURE, 0.6, ("temperature",), 0.6),
         (CHAT, T.MAX_TOKENS, 100, ("max_tokens",), 100),
+        (CHAT, T.THINKING_BUDGET, "high", ("reasoning_effort",), "high"),
         (ANTHROPIC, T.TEMPERATURE, 0.3, ("temperature",), 0.3),
         (MOONSHOT, T.TEMPERATURE, 0.4, ("temperature",), 0.4),
         (MOONSHOT, T.MAX_TOKENS, 120, ("max_completion_tokens",), 120),
+        (MOONSHOT, T.THINKING_BUDGET, "max", ("reasoning_effort",), "max"),
+        (GROQ, T.THINKING_BUDGET, "default", ("reasoning_effort",), "default"),
         (XAI, V.FIRST_FRAME, IMAGE, ("image", "url"), IMAGE.url),
     ],
 )
@@ -114,23 +125,13 @@ def test_scalar_parameters_use_provider_wire_shape(
 
 
 @pytest.mark.parametrize(
-    "mappers", [GOOGLE, GEMINI, OPEN, CHAT, ANTHROPIC, MOONSHOT, BYTEPLUS, XAI]
+    "mappers",
+    [GOOGLE, GEMINI, OPEN, CHAT, ANTHROPIC, MOONSHOT, GROQ, BYTEPLUS, XAI, BFL],
 )
 def test_none_omits_every_optional_parameter(
     mappers: list[ParameterMapper[Any]],
 ) -> None:
     assert all(mapper.map({}, None, MODEL) == {} for mapper in mappers)
-
-
-def test_constrained_model_omits_unsupported_parameter() -> None:
-    model = Model(
-        id="constrained-test",
-        display_name="Constrained test",
-        parameter_constraints={T.MAX_TOKENS: Range(min=1, max=2)},
-    )
-
-    with pytest.warns(UnsupportedParameterWarning):
-        assert _mapper(MOONSHOT, T.TEMPERATURE).map({}, 0.2, model) == {}
 
 
 @pytest.mark.parametrize(
@@ -139,6 +140,7 @@ def test_constrained_model_omits_unsupported_parameter() -> None:
         (GOOGLE, Answer, '{"value":1}', GS, "integer", Answer(value=1)),
         (OPEN, ANSWERS, '{"items":[{"value":2}]}', TF, "answer_list", A2),
         (CHAT, ANSWERS, W3, RF, "json_object", A3),
+        (GROQ, ANSWERS, W3, RF, "json_object", A3),
     ],
 )
 def test_structured_output_maps_and_parses_typed_results(
@@ -193,9 +195,9 @@ def test_byteplus_options_are_prompt_flags(name: str, value: object, flag: str) 
 @pytest.mark.parametrize(
     ("name", "value", "role"),
     [
-        (V.REFERENCE_IMAGES, [IMAGE], "reference_image"),
-        (V.FIRST_FRAME, IMAGE, "first_frame"),
-        (V.LAST_FRAME, IMAGE, "last_frame"),
+        (V.REFERENCE_IMAGES, [LOCAL_IMAGE], "reference_image"),
+        (V.FIRST_FRAME, LOCAL_IMAGE, "first_frame"),
+        (V.LAST_FRAME, LOCAL_IMAGE, "last_frame"),
     ],
 )
 def test_byteplus_images_have_semantic_roles(
@@ -203,10 +205,33 @@ def test_byteplus_images_have_semantic_roles(
 ) -> None:
     image = _map(BYTEPLUS, name, value)["content"][0]
     assert image["role"] == role
-    assert image["image_url"]["url"] == IMAGE.url
+    assert image["image_url"]["url"].startswith("data:image/png;base64,")
 
 
-@pytest.mark.parametrize("name", [V.FIRST_FRAME, V.LAST_FRAME])
-def test_byteplus_frame_requires_url(name: str) -> None:
-    with pytest.raises(ValidationError, match="requires image URL"):
-        _map(BYTEPLUS, name, ImageArtifact(data=b"frame"))
+def test_bfl_reference_images_follow_primary_image_numbering() -> None:
+    assert _map(BFL, IP.REFERENCE_IMAGES, [IMAGE]) == {"input_image": IMAGE.url}
+    assert _map(
+        BFL,
+        IP.REFERENCE_IMAGES,
+        [IMAGE],
+        {"input_image": "primary"},
+    ) == {"input_image": "primary", "input_image_2": IMAGE.url}
+
+
+def test_chat_completions_reasoning_fields() -> None:
+    client = ChatCompletionsTextClient.model_construct()
+    stream = object.__new__(ChatCompletionsTextStream)
+
+    for field in ("reasoning_content", "reasoning"):
+        assert client._parse_reasoning(
+            {"choices": [{"message": {field: "thought"}}]}
+        ) == ("thought", [])
+        assert (
+            stream._parse_chunk_reasoning(
+                {
+                    "object": "chat.completion.chunk",
+                    "choices": [{"delta": {field: "thought"}}],
+                }
+            )
+            == "thought"
+        )

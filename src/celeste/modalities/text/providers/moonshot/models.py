@@ -17,6 +17,20 @@ from ...parameters import TextParameter
 
 MODELS: list[Model] = [
     Model(
+        id="kimi-k3",
+        provider=Provider.MOONSHOT,
+        display_name="Kimi K3",
+        operations={Modality.TEXT: {Operation.GENERATE}},
+        streaming=True,
+        parameter_constraints={
+            Parameter.MAX_TOKENS: Range(min=1, max=1_048_576, step=1),
+            TextParameter.THINKING_BUDGET: Choice(options=["max"]),
+            TextParameter.OUTPUT_SCHEMA: Schema(),
+            TextParameter.TOOLS: ToolSupport(tools=[]),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
+        },
+    ),
+    Model(
         id="kimi-k2.5",
         provider=Provider.MOONSHOT,
         display_name="Kimi K2.5",

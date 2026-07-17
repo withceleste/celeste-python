@@ -28,16 +28,16 @@ def encode_image(image: ImageArtifact) -> str:
 def add_reference_images(
     request: dict[str, Any],
     images: list[ImageArtifact],
-    *,
-    start_index: int = 2,
 ) -> dict[str, Any]:
-    """Add additional reference images to a BFL request dict.
+    """Add reference images to a BFL request dict.
 
-    BFL expects extra images as sequential fields: ``input_image_2``,
-    ``input_image_3``, ...
+    Generation starts at ``input_image``; editing reserves that field for the
+    primary image and starts references at ``input_image_2``.
     """
-    for i, image in enumerate(images, start=start_index):
-        request[f"input_image_{i}"] = encode_image(image)
+    start = 2 if "input_image" in request else 1
+    for index, image in enumerate(images, start=start):
+        name = "input_image" if index == 1 else f"input_image_{index}"
+        request[name] = encode_image(image)
     return request
 
 

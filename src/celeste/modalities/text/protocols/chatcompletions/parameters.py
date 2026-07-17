@@ -1,6 +1,6 @@
 """Chat Completions parameter mappers for text."""
 
-from celeste.parameters import ParameterMapper
+from celeste.parameters import FieldMapper, ParameterMapper
 from celeste.protocols.chatcompletions.parameters import (
     MaxTokensMapper as _MaxTokensMapper,
 )
@@ -33,6 +33,13 @@ class MaxTokensMapper(_MaxTokensMapper):
     name = TextParameter.MAX_TOKENS
 
 
+class ThinkingBudgetMapper(FieldMapper[TextContent]):
+    """Map thinking_budget to Chat Completions reasoning_effort."""
+
+    name = TextParameter.THINKING_BUDGET
+    field = "reasoning_effort"
+
+
 class OutputSchemaMapper(_ResponseFormatMapper):
     """Map output_schema to Chat Completions response_format parameter."""
 
@@ -54,9 +61,10 @@ class ToolChoiceMapper(_ToolChoiceMapper):
 CHATCOMPLETIONS_PARAMETER_MAPPERS: list[ParameterMapper[TextContent]] = [
     TemperatureMapper(),
     MaxTokensMapper(),
+    ThinkingBudgetMapper(),
     OutputSchemaMapper(),
     ToolsMapper(),
     ToolChoiceMapper(),
 ]
 
-__all__ = ["CHATCOMPLETIONS_PARAMETER_MAPPERS"]
+__all__ = ["CHATCOMPLETIONS_PARAMETER_MAPPERS", "ThinkingBudgetMapper"]

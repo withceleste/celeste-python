@@ -33,9 +33,6 @@ class FirstFrameMapper(ParameterMapper[VideoContent]):
         self, request: dict[str, Any], value: object, model: Model
     ) -> dict[str, Any]:
         """Transform first_frame into the provider request."""
-        if self._warn_if_unsupported(value, model):
-            return request
-
         validated_value = self._validate_value(value, model)
         if validated_value is None:
             return request
