@@ -34,7 +34,7 @@ MODELS: list[Model] = [
             ImageParameter.REFERENCE_IMAGES: ImagesConstraint(max_count=7),
             ImageParameter.SEED: Int(),
             ImageParameter.SAFETY_TOLERANCE: Range(min=0, max=5),
-            ImageParameter.OUTPUT_FORMAT: Choice(options=["jpeg", "png"]),
+            ImageParameter.OUTPUT_FORMAT: Choice(options=["jpeg", "png", "webp"]),
         },
     ),
     Model(
@@ -62,7 +62,7 @@ MODELS: list[Model] = [
             ImageParameter.REFERENCE_IMAGES: ImagesConstraint(max_count=7),
             ImageParameter.SEED: Int(),
             ImageParameter.SAFETY_TOLERANCE: Range(min=0, max=5),
-            ImageParameter.OUTPUT_FORMAT: Choice(options=["jpeg", "png"]),
+            ImageParameter.OUTPUT_FORMAT: Choice(options=["jpeg", "png", "webp"]),
         },
     ),
     Model(
@@ -90,7 +90,7 @@ MODELS: list[Model] = [
             ImageParameter.REFERENCE_IMAGES: ImagesConstraint(max_count=7),
             ImageParameter.SEED: Int(),
             ImageParameter.SAFETY_TOLERANCE: Range(min=0, max=5),
-            ImageParameter.OUTPUT_FORMAT: Choice(options=["jpeg", "png"]),
+            ImageParameter.OUTPUT_FORMAT: Choice(options=["jpeg", "png", "webp"]),
         },
     ),
     Model(
@@ -118,7 +118,7 @@ MODELS: list[Model] = [
             ImageParameter.REFERENCE_IMAGES: ImagesConstraint(max_count=3),
             ImageParameter.SEED: Int(),
             ImageParameter.SAFETY_TOLERANCE: Range(min=0, max=5),
-            ImageParameter.OUTPUT_FORMAT: Choice(options=["jpeg", "png"]),
+            ImageParameter.OUTPUT_FORMAT: Choice(options=["jpeg", "png", "webp"]),
         },
     ),
     Model(
@@ -146,7 +146,7 @@ MODELS: list[Model] = [
             ImageParameter.REFERENCE_IMAGES: ImagesConstraint(max_count=3),
             ImageParameter.SEED: Int(),
             ImageParameter.SAFETY_TOLERANCE: Range(min=0, max=5),
-            ImageParameter.OUTPUT_FORMAT: Choice(options=["jpeg", "png"]),
+            ImageParameter.OUTPUT_FORMAT: Choice(options=["jpeg", "png", "webp"]),
         },
     ),
     Model(
@@ -174,7 +174,7 @@ MODELS: list[Model] = [
             ImageParameter.REFERENCE_IMAGES: ImagesConstraint(max_count=3),
             ImageParameter.SEED: Int(),
             ImageParameter.SAFETY_TOLERANCE: Range(min=0, max=5),
-            ImageParameter.OUTPUT_FORMAT: Choice(options=["jpeg", "png"]),
+            ImageParameter.OUTPUT_FORMAT: Choice(options=["jpeg", "png", "webp"]),
         },
     ),
     Model(
@@ -199,10 +199,10 @@ MODELS: list[Model] = [
                     "Portrait 9:21": "832x1920",
                 },
             ),
-            ImageParameter.REFERENCE_IMAGES: ImagesConstraint(max_count=9),
+            ImageParameter.REFERENCE_IMAGES: ImagesConstraint(max_count=7),
             ImageParameter.SEED: Int(),
             ImageParameter.SAFETY_TOLERANCE: Range(min=0, max=5),
-            ImageParameter.OUTPUT_FORMAT: Choice(options=["jpeg", "png"]),
+            ImageParameter.OUTPUT_FORMAT: Choice(options=["jpeg", "png", "webp"]),
             ImageParameter.STEPS: Range(min=1, max=50),
             ImageParameter.GUIDANCE: Range(min=1.5, max=10.0),
         },

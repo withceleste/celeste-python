@@ -14,7 +14,7 @@ MODELS: list[Model] = [
         display_name="Sora 2",
         operations={Modality.VIDEOS: {Operation.GENERATE}},
         parameter_constraints={
-            VideoParameter.DURATION: Choice(options=["4", "8", "12"]),
+            VideoParameter.DURATION: Choice(options=["4", "8", "12", "16", "20"]),
             VideoParameter.ASPECT_RATIO: Choice(options=["16:9", "9:16"]),
             VideoParameter.RESOLUTION: Choice(options=["720p"]),
         },
@@ -25,9 +25,9 @@ MODELS: list[Model] = [
         display_name="Sora 2 Pro",
         operations={Modality.VIDEOS: {Operation.GENERATE}},
         parameter_constraints={
-            VideoParameter.DURATION: Choice(options=["4", "8", "12"]),
+            VideoParameter.DURATION: Choice(options=["4", "8", "12", "16", "20"]),
             VideoParameter.ASPECT_RATIO: Choice(options=["16:9", "9:16"]),
-            VideoParameter.RESOLUTION: Choice(options=["720p"]),
+            VideoParameter.RESOLUTION: Choice(options=["720p", "1080p"]),
             VideoParameter.FIRST_FRAME: ImageConstraint(
                 supported_mime_types=[
                     ImageMimeType.JPEG,
@@ -43,7 +43,7 @@ MODELS: list[Model] = [
         display_name="Sora 2 (December 2025)",
         operations={Modality.VIDEOS: {Operation.GENERATE}},
         parameter_constraints={
-            VideoParameter.DURATION: Choice(options=["4", "8", "12"]),
+            VideoParameter.DURATION: Choice(options=["4", "8", "12", "16", "20"]),
             VideoParameter.ASPECT_RATIO: Choice(options=["16:9", "9:16"]),
             VideoParameter.RESOLUTION: Choice(options=["720p"]),
         },

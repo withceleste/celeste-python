@@ -98,6 +98,7 @@ MODELS: list[Model] = [
         parameter_constraints={
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
             Parameter.MAX_TOKENS: Range(min=1, max=65536, step=1),
+            TextParameter.THINKING_BUDGET: Choice(options=["low", "medium", "high"]),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch, CodeExecution]),
         },
@@ -111,6 +112,7 @@ MODELS: list[Model] = [
         parameter_constraints={
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
             Parameter.MAX_TOKENS: Range(min=1, max=65536, step=1),
+            TextParameter.THINKING_BUDGET: Choice(options=["low", "medium", "high"]),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch, CodeExecution]),
         },
@@ -124,6 +126,7 @@ MODELS: list[Model] = [
         parameter_constraints={
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
             Parameter.MAX_TOKENS: Range(min=1, max=65536, step=1),
+            TextParameter.THINKING_BUDGET: Choice(options=["low", "medium", "high"]),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch, CodeExecution]),
         },

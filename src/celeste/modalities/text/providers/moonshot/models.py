@@ -20,12 +20,13 @@ MODELS: list[Model] = [
         id="kimi-k3",
         provider=Provider.MOONSHOT,
         display_name="Kimi K3",
-        operations={Modality.TEXT: {Operation.GENERATE}},
+        operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
         streaming=True,
         parameter_constraints={
             Parameter.MAX_TOKENS: Range(min=1, max=1_048_576, step=1),
             TextParameter.THINKING_BUDGET: Choice(options=["max"]),
             TextParameter.OUTPUT_SCHEMA: Schema(),
+            TextParameter.IMAGE: ImagesConstraint(),
             TextParameter.TOOLS: ToolSupport(tools=[]),
             TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
         },
@@ -37,7 +38,6 @@ MODELS: list[Model] = [
         operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
         streaming=True,
         parameter_constraints={
-            Parameter.MAX_TOKENS: Range(min=1, max=262_144, step=1),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.IMAGE: ImagesConstraint(),
             TextParameter.TOOLS: ToolSupport(tools=[]),
@@ -53,7 +53,6 @@ MODELS: list[Model] = [
         operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
         streaming=True,
         parameter_constraints={
-            Parameter.MAX_TOKENS: Range(min=1, max=262_144, step=1),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.IMAGE: ImagesConstraint(),
             TextParameter.VIDEO: VideosConstraint(),
@@ -70,7 +69,6 @@ MODELS: list[Model] = [
         operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
         streaming=True,
         parameter_constraints={
-            Parameter.MAX_TOKENS: Range(min=1, max=262_144, step=1),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.IMAGE: ImagesConstraint(),
             TextParameter.VIDEO: VideosConstraint(),
@@ -87,7 +85,6 @@ MODELS: list[Model] = [
         operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
         streaming=True,
         parameter_constraints={
-            Parameter.MAX_TOKENS: Range(min=1, max=262_144, step=1),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.IMAGE: ImagesConstraint(),
             TextParameter.VIDEO: VideosConstraint(),
@@ -105,7 +102,6 @@ MODELS: list[Model] = [
         streaming=True,
         parameter_constraints={
             Parameter.TEMPERATURE: Range(min=0.0, max=1.0, step=0.01),
-            Parameter.MAX_TOKENS: Range(min=1, max=8192, step=1),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.IMAGE: ImagesConstraint(),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
