@@ -48,6 +48,9 @@ class ElevenLabsTextToSpeechClient(APIMixin):
         if voice_id is None:
             voice_id = parameters.get("voice", config.DEFAULT_VOICE_ID)
 
+        # output_format is a query parameter, not a body field
+        output_format = request_body.pop("output_format", None)
+
         # Set model_id
         request_body["model_id"] = self.model.id
 
@@ -58,8 +61,12 @@ class ElevenLabsTextToSpeechClient(APIMixin):
 
         headers = self._json_headers(extra_headers)
 
+        url = f"{config.BASE_URL}{endpoint}"
+        if output_format:
+            url = f"{url}?output_format={output_format}"
+
         response = await self.http_client.post(
-            f"{config.BASE_URL}{endpoint}",
+            url,
             headers=headers,
             json_body=request_body,
         )
@@ -87,6 +94,9 @@ class ElevenLabsTextToSpeechClient(APIMixin):
         if voice_id is None:
             voice_id = parameters.get("voice", config.DEFAULT_VOICE_ID)
 
+        # output_format is a query parameter, not a body field
+        output_format = request_body.pop("output_format", None)
+
         # Set model_id
         request_body["model_id"] = self.model.id
 
@@ -97,8 +107,12 @@ class ElevenLabsTextToSpeechClient(APIMixin):
 
         headers = self._json_headers(extra_headers)
 
+        url = f"{config.BASE_URL}{endpoint}"
+        if output_format:
+            url = f"{url}?output_format={output_format}"
+
         return self._stream_binary_audio(
-            f"{config.BASE_URL}{endpoint}",
+            url,
             headers=headers,
             json_body=request_body,
         )
@@ -180,8 +194,8 @@ class ElevenLabsTextToSpeechClient(APIMixin):
         codec_map: dict[str, AudioMimeType] = {
             "mp3": AudioMimeType.MP3,
             "pcm": AudioMimeType.PCM,
-            "aac": AudioMimeType.AAC,
-            "flac": AudioMimeType.FLAC,
+            "wav": AudioMimeType.WAV,
+            "opus": AudioMimeType.OGG,
         }
         return codec_map.get(codec, AudioMimeType.MP3)
 
