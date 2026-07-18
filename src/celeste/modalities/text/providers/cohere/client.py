@@ -90,9 +90,23 @@ class CohereTextClient(CohereChatClient, TextClient):
     ) -> TextContent:
         """Parse content from response."""
         content_array = super()._parse_content(response_data)
-        first_content = content_array[0]
-        text = first_content.get("text") or ""
-        return text
+        return "".join(
+            block.get("text") or ""
+            for block in content_array
+            if block.get("type", "text") == "text"
+        )
+
+    def _parse_reasoning(
+        self, response_data: dict[str, Any]
+    ) -> tuple[str | None, list[dict[str, Any]]]:
+        """Parse reasoning from thinking content blocks."""
+        content_array = response_data.get("message", {}).get("content", [])
+        reasoning = "".join(
+            block.get("thinking") or ""
+            for block in content_array
+            if block.get("type") == "thinking"
+        )
+        return reasoning or None, []
 
     def _stream_class(self) -> type[TextStream]:
         """Return the Stream class for this provider."""
