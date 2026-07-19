@@ -103,8 +103,9 @@ class UsageField(StrEnum):
 class Domain(StrEnum):
     """Semantic grouping of operations by resource type.
 
-    Domain represents what you work with (input type), while
-    Modality represents what you produce (output type).
+    Domain is the resource you work with. Modality is the one modality,
+    in addition to text, essential to the model's purpose — these are not
+    input/output type distinctions.
     """
 
     TEXT = "text"

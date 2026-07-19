@@ -83,6 +83,8 @@ class HTTPClient:
     ) -> httpx.Response:
         """Make POST request with connection pooling.
 
+        No query-parameter support — encode query strings into `url`.
+
         Args:
             url: Full URL to POST to.
             headers: HTTP headers including authentication.

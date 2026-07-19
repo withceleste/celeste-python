@@ -12,7 +12,7 @@
 **Prerequisites:** Python 3.12+, [uv](https://docs.astral.sh/uv/)
 
 ```bash
-uv sync --group dev
+uv sync --all-extras
 uv run pre-commit install
 uv run pre-commit install --hook-type pre-push
 ```
@@ -66,6 +66,29 @@ Always start by copying from the templates. Replace `{provider_slug}`, `{api_slu
 9. Register models in `src/celeste/modalities/<modality>/models.py`.
 10. Register the client in the `PROVIDERS` dict in `src/celeste/modalities/<modality>/providers/__init__.py`.
 11. Add the provider's official API docs link to `src/celeste/providers/api_references.md`.
+
+### Protocol-based providers
+
+Most OpenAI-compatible vendors (DeepSeek, Moonshot, Groq, Mistral, HuggingFace, ...) subclass a shared protocol client from `src/celeste/protocols/` (`chatcompletions`, `openresponses`) instead of copying the full provider template — templates live at `templates/protocols/`. Editing a protocol changes every inheriting vendor: vendor-specific behavior goes in that vendor's own `client.py` / `parameters.py` override, never in the shared base.
+
+## Model catalog rules
+
+- `Model.streaming` means celeste's adapter transport streams this model — not the vendor's advertised capability.
+- A `MAX_TOKENS` Range comes only from a provider-documented max-completion/output figure; a context window is never a completion cap. No documented completion max → omit the constraint.
+- Choice/enum literals verbatim from the provider's API request-parameter reference, not marketing pages. Conflicting official pages → keep the current value, record the conflict.
+- One `parameter_constraints` dict serves every call mode (unary and streaming): constrain to the union, let the provider reject mode-specific invalids.
+- Parameters with no constraint pass through unvalidated by design — do not add local guards for values the provider itself rejects.
+
+See CLAUDE.md for the full rules.
+
+## Removing a model
+
+Remove a model id only after a live authenticated call hard-rejects it. Provider lifecycle/deprecation tables are announcements, not serving status — providers keep "retired" aliases serving or silently redirect them (e.g. `pixtral-12b-latest` serves `ministral-14b-latest`). Precedent: PRs #280, #311, #314.
+
+## Testing
+
+- `make ci` is the gate. Wire-contract tests are data-driven over mapper lists (`_map` / `_at` in `tests/unit_tests/test_parameter_wire_contracts.py`); request-payload tests call `client._init_request(...)` directly; stream parse tests instantiate via `object.__new__(...)`; never mock httpx in provider/parameter tests (only `tests/unit_tests/test_http.py` touches the transport).
+- A test must earn its place: focused, guarding real behavior, parametrized over cases instead of duplicated. No test ceremony, no coverage bloat. If a test is not clearly required, no test is better than a weak one.
 
 ## Pull requests
 

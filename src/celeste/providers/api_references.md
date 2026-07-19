@@ -27,11 +27,14 @@ This document contains the official API reference documentation links for all pr
 | **BytePlus** | Videos | [Videos API Reference](https://docs.byteplus.com/en/docs/ModelArk/1520757) | ✅ |
 | **BFL** | Images | [Images API Reference](https://docs.bfl.ml/flux_2/flux2_text_to_image) | ✅ |
 | **Gradium** | TTS | [TTS API Reference](https://gradium.ai/api_docs.html) | ✅ |
+| **HuggingFace** | Chat Completions (router) | [Chat Completion API Reference](https://huggingface.co/docs/inference-providers/tasks/chat-completion) | — |
+| **Ollama** | Responses (OpenAI-compatible) | [API Reference](https://docs.ollama.com/api) | — |
+| **OpenRouter** | Responses | [API Reference](https://openrouter.ai/docs/api/api-reference) | — |
 
 ## Summary
 
-- **Total APIs:** 21 provider-API combinations
-- **All validated:** ✅ Complete
+- **Total APIs:** 24 provider-API combinations
+- **Validated:** 21 ✅ · 3 pending (—)
 - **Naming convention:** Method names only (Provider column provides context)
 - **Link strategy:** Specific method/endpoint pages when available, general API reference pages otherwise
 
