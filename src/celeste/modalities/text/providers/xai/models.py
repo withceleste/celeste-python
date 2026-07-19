@@ -54,7 +54,6 @@ MODELS: list[Model] = [
         streaming=True,
         parameter_constraints={
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0),
-            Parameter.MAX_TOKENS: Range(min=1, max=131072),
             TextParameter.THINKING_BUDGET: Choice(options=["low", "medium", "high"]),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch, XSearch, CodeExecution]),
             TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
@@ -70,7 +69,6 @@ MODELS: list[Model] = [
         streaming=True,
         parameter_constraints={
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0),
-            Parameter.MAX_TOKENS: Range(min=1, max=131072),
             TextParameter.THINKING_BUDGET: Choice(
                 options=["none", "low", "medium", "high"]
             ),
@@ -88,7 +86,6 @@ MODELS: list[Model] = [
         streaming=True,
         parameter_constraints={
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0),
-            Parameter.MAX_TOKENS: Range(min=1, max=131072),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch, XSearch, CodeExecution]),
             TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
             TextParameter.OUTPUT_SCHEMA: Schema(),
@@ -103,7 +100,6 @@ MODELS: list[Model] = [
         streaming=True,
         parameter_constraints={
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0),
-            Parameter.MAX_TOKENS: Range(min=1, max=131072),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch, XSearch, CodeExecution]),
             TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
             TextParameter.OUTPUT_SCHEMA: Schema(),

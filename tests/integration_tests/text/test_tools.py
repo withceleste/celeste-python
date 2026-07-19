@@ -14,7 +14,7 @@ WEB_SEARCH_MODELS = [
 
 FUNCTION_TOOL_MODELS = [
     (Provider.ANTHROPIC, "claude-haiku-4-5", True),
-    (Provider.DEEPSEEK, "deepseek-chat", True),
+    (Provider.DEEPSEEK, "deepseek-v4-flash", True),
     (Provider.GOOGLE, "gemini-2.5-flash-lite", True),
     (Provider.GROQ, "llama-3.1-8b-instant", False),
     (Provider.HUGGINGFACE, "Qwen/Qwen3-4B-Instruct-2507", False),

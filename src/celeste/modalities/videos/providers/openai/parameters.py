@@ -23,40 +23,13 @@ from celeste.types import VideoContent
 
 from ...parameters import VideoParameter
 
-# Resolution to height mapping
-_RESOLUTION_HEIGHT: dict[str, int] = {
-    "720p": 720,
-    "1080p": 1080,
-    "4k": 2160,
+# (aspect_ratio, resolution) → documented OpenAI size; catalogs permit only these combos
+_SIZES: dict[tuple[str, str], str] = {
+    ("16:9", "720p"): "1280x720",
+    ("9:16", "720p"): "720x1280",
+    ("16:9", "1080p"): "1920x1080",
+    ("9:16", "1080p"): "1080x1920",
 }
-
-# Aspect ratio to (width_ratio, height_ratio) mapping
-_ASPECT_RATIOS: dict[str, tuple[int, int]] = {
-    "16:9": (16, 9),
-    "9:16": (9, 16),
-    "1:1": (1, 1),
-    "4:3": (4, 3),
-    "3:4": (3, 4),
-}
-
-
-def _compute_size(aspect_ratio: str, resolution: str) -> str:
-    """Compute OpenAI size from aspect ratio and resolution.
-
-    Args:
-        aspect_ratio: Aspect ratio like "16:9" or "9:16".
-        resolution: Resolution like "720p" or "1080p".
-
-    Returns:
-        Size string like "1280x720".
-    """
-    height = _RESOLUTION_HEIGHT.get(resolution, 720)
-    width_ratio, height_ratio = _ASPECT_RATIOS.get(aspect_ratio, (16, 9))
-
-    # Compute width from height and aspect ratio
-    width = int(height * width_ratio / height_ratio)
-
-    return f"{width}x{height}"
 
 
 class AspectRatioMapper(ParameterMapper[VideoContent]):
@@ -96,7 +69,7 @@ class ResolutionMapper(_SizeMapper):
             return request
 
         aspect_ratio = request.pop("_aspect_ratio", "16:9")
-        size = _compute_size(aspect_ratio, str(validated_value))
+        size = _SIZES.get((aspect_ratio, str(validated_value)), "1280x720")
 
         # Delegate to provider's SizeMapper
         return super().map(request, size, model)

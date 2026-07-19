@@ -7,7 +7,7 @@ from celeste.providers.google.auth import GoogleADC
 MODELS = [
     (Provider.ANTHROPIC, "claude-haiku-4-5"),
     (Provider.COHERE, "command-r7b-12-2024"),
-    (Provider.DEEPSEEK, "deepseek-chat"),
+    (Provider.DEEPSEEK, "deepseek-v4-flash"),
     (Provider.GOOGLE, "gemini-2.5-flash-lite"),
     (Provider.GROQ, "llama-3.1-8b-instant"),
     (Provider.HUGGINGFACE, "Qwen/Qwen3-4B-Instruct-2507"),

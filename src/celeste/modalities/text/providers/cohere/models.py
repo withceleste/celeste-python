@@ -15,7 +15,7 @@ MODELS: list[Model] = [
         streaming=True,
         parameter_constraints={
             Parameter.TEMPERATURE: Range(min=0.0, max=1.0, step=0.01),
-            Parameter.MAX_TOKENS: Range(min=1, max=65536, step=1),
+            Parameter.MAX_TOKENS: Range(min=1, max=64000, step=1),
             TextParameter.THINKING_BUDGET: Range(min=-1, max=65536),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.IMAGE: ImagesConstraint(),

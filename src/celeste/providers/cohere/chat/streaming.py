@@ -30,6 +30,18 @@ class CohereChatStream:
 
         return None
 
+    def _parse_chunk_reasoning(self, event_data: dict[str, Any]) -> str | None:
+        """Extract reasoning delta from SSE event."""
+        event_type = event_data.get("type")
+
+        if event_type == "content-delta":
+            delta = event_data.get("delta", {})
+            message = delta.get("message", {})
+            content = message.get("content", {})
+            return content.get("thinking") or None
+
+        return None
+
     def _parse_chunk_usage(
         self, event_data: dict[str, Any]
     ) -> dict[str, int | float | None] | None:
