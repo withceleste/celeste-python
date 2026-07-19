@@ -204,8 +204,8 @@ import celeste
 response = await celeste.text.generate(
     "Explain AI",
     model="gpt-4o-mini",
-    temperature=0.7,    # ✅ Validated (0.0-2.0)
-    max_tokens=100,     # ✅ Validated (int)
+    temperature=0.7,    # ✅ Validated against the model's declared Range
+    max_tokens=100,     # ✅ Validated when the model declares a constraint
 )
 
 # Typed response
@@ -214,7 +214,7 @@ print(response.usage.input_tokens)   # int
 print(response.metadata["model"])     # str
 ```
 
-Catch errors **before** production.
+Declared constraints raise locally **before** the API call; unconstrained parameters pass through to the provider.
 
 ---
 

@@ -17,7 +17,13 @@ class Model(BaseModel):
     parameter_constraints: dict[str, SerializeAsAny[Constraint]] = Field(
         default_factory=dict
     )
-    streaming: bool = Field(default=False)
+    streaming: bool = Field(
+        default=False,
+        description=(
+            "Celeste's adapter implements streaming for this model — "
+            "not a claim about the upstream vendor's capability."
+        ),
+    )
 
     @property
     def supported_parameters(self) -> set[str]:
