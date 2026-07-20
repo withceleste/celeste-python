@@ -24,7 +24,7 @@ class GoogleEmbeddingsClient(APIMixin):
     - API key auth -> Gemini API endpoints
 
     Modality clients extend via super():
-        class GoogleEmbeddingsClient(GoogleEmbeddingsClient, EmbeddingsClient):
+        class GoogleEmbeddingsClient(GoogleEmbeddingsMixin, EmbeddingsClient):
             def _parse_content(self, response_data):
                 return super()._parse_content(response_data)  # No transformation needed
     """

@@ -3,7 +3,9 @@
 from typing import Any
 
 from celeste.parameters import ParameterMapper
-from celeste.providers.deepseek.chat.client import DeepSeekChatClient
+from celeste.providers.deepseek.chat.client import (
+    DeepSeekChatClient as DeepSeekChatMixin,
+)
 from celeste.providers.deepseek.chat.streaming import (
     DeepSeekChatStream as _DeepSeekChatStream,
 )
@@ -24,7 +26,7 @@ class DeepSeekTextStream(_DeepSeekChatStream, _ChatCompletionsTextStream):
     """DeepSeek streaming for text modality."""
 
 
-class DeepSeekTextClient(DeepSeekChatClient, ChatCompletionsTextClient):
+class DeepSeekTextClient(DeepSeekChatMixin, ChatCompletionsTextClient):
     """DeepSeek text client."""
 
     def _init_request(self, inputs: TextInput) -> dict[str, Any]:

@@ -4,7 +4,7 @@ from typing import Any
 
 from celeste.grounding import Grounding, GroundingSource
 from celeste.parameters import ParameterMapper
-from celeste.providers.groq.chat.client import GroqChatClient
+from celeste.providers.groq.chat.client import GroqChatClient as GroqChatMixin
 from celeste.providers.groq.chat.streaming import GroqChatStream as _GroqChatStream
 from celeste.providers.groq.chat.tools import parse_search_results
 from celeste.types import TextContent
@@ -23,7 +23,7 @@ class GroqTextStream(_GroqChatStream, _ChatCompletionsTextStream):
     """Groq streaming for text modality."""
 
 
-class GroqTextClient(GroqChatClient, ChatCompletionsTextClient):
+class GroqTextClient(GroqChatMixin, ChatCompletionsTextClient):
     """Groq text client."""
 
     @classmethod

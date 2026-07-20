@@ -27,7 +27,7 @@ class BFLImagesClient(APIMixin):
     3. Return final response with merged metadata
 
     Usage:
-        class BFLImageGenerationClient(BFLImagesClient, ImageGenerationClient):
+        class BFLImagesClient(BFLImagesMixin, ImagesClient):
             def _parse_content(self, response_data):
                 result = response_data.get("result", {})
                 # Extract image from result["sample"]...

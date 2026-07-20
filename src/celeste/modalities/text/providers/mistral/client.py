@@ -3,7 +3,7 @@
 from typing import Any
 
 from celeste.parameters import ParameterMapper
-from celeste.providers.mistral.chat.client import MistralChatClient
+from celeste.providers.mistral.chat.client import MistralChatClient as MistralChatMixin
 from celeste.providers.mistral.chat.streaming import (
     MistralChatStream as _MistralChatStream,
 )
@@ -26,7 +26,7 @@ class MistralTextStream(_MistralChatStream, _ChatCompletionsTextStream):
     """Mistral streaming for text modality."""
 
 
-class MistralTextClient(MistralChatClient, ChatCompletionsTextClient):
+class MistralTextClient(MistralChatMixin, ChatCompletionsTextClient):
     """Mistral text client."""
 
     @classmethod

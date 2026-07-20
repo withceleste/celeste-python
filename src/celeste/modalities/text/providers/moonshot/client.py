@@ -3,7 +3,9 @@
 from typing import Any
 
 from celeste.parameters import ParameterMapper
-from celeste.providers.moonshot.chat.client import MoonshotChatClient
+from celeste.providers.moonshot.chat.client import (
+    MoonshotChatClient as MoonshotChatMixin,
+)
 from celeste.providers.moonshot.chat.streaming import (
     MoonshotChatStream as _MoonshotChatStream,
 )
@@ -24,7 +26,7 @@ class MoonshotTextStream(_MoonshotChatStream, _ChatCompletionsTextStream):
     """Moonshot streaming for text modality."""
 
 
-class MoonshotTextClient(MoonshotChatClient, ChatCompletionsTextClient):
+class MoonshotTextClient(MoonshotChatMixin, ChatCompletionsTextClient):
     """Moonshot text client."""
 
     def _init_request(self, inputs: TextInput) -> dict[str, Any]:

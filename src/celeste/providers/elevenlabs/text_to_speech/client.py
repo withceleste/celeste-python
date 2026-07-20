@@ -25,7 +25,7 @@ class ElevenLabsTextToSpeechClient(APIMixin):
     Modality clients must handle the binary response in their generate() override.
 
     Usage:
-        class ElevenLabsSpeechGenerationClient(ElevenLabsTextToSpeechClient, SpeechGenerationClient):
+        class ElevenLabsAudioClient(ElevenLabsTextToSpeechMixin, AudioClient):
             async def generate(self, *args, **parameters):
                 # Handle binary response...
     """

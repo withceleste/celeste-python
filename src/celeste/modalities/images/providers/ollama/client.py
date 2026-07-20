@@ -5,7 +5,9 @@ from typing import Any
 from celeste.artifacts import ImageArtifact
 from celeste.parameters import ParameterMapper
 from celeste.providers.ollama.generate import config
-from celeste.providers.ollama.generate.client import OllamaGenerateClient
+from celeste.providers.ollama.generate.client import (
+    OllamaGenerateClient as OllamaGenerateMixin,
+)
 from celeste.providers.ollama.generate.streaming import (
     OllamaGenerateStream as _OllamaGenerateStream,
 )
@@ -49,7 +51,7 @@ class OllamaImagesStream(_OllamaGenerateStream, ImagesStream):
         raise ValueError(msg)
 
 
-class OllamaImagesClient(OllamaGenerateClient, ImagesClient):
+class OllamaImagesClient(OllamaGenerateMixin, ImagesClient):
     """Ollama images client (generate only, no edit support yet)."""
 
     _generate_endpoint = config.OllamaGenerateEndpoint.GENERATE

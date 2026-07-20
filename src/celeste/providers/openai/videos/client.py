@@ -35,7 +35,7 @@ class OpenAIVideosClient(APIMixin):
     3. GET /v1/videos/{id}/content to retrieve video data
 
     Usage:
-        class OpenAIVideoGenerationClient(OpenAIVideosClient, VideoGenerationClient):
+        class OpenAIVideosClient(OpenAIVideosMixin, VideosClient):
             async def _prepare_multipart_request(self, request_body):
                 # Handle input_reference image uploads...
     """

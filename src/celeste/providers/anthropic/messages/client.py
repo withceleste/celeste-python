@@ -44,7 +44,7 @@ class AnthropicMessagesClient(APIMixin):
     - API key auth -> Anthropic API endpoints
 
     Usage:
-        class AnthropicTextGenerationClient(AnthropicMessagesClient, TextGenerationClient):
+        class AnthropicTextClient(AnthropicMessagesMixin, TextClient):
             def _parse_content(self, response_data):
                 content = super()._parse_content(response_data)  # Raw content array
                 for block in content:

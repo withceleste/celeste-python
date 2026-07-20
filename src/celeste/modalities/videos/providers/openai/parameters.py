@@ -1,13 +1,4 @@
-"""OpenAI parameter mappers for videos.
-
-OpenAI Videos API uses a single `size` parameter (e.g., "1280x720") instead of
-separate aspect_ratio and resolution parameters. This module provides unification
-logic to transform Celeste's unified parameters to OpenAI's format.
-
-Mapping:
-- aspect_ratio="16:9" + resolution="720p" → size="1280x720"
-- aspect_ratio="9:16" + resolution="720p" → size="720x1280"
-"""
+"""OpenAI parameter mappers for videos."""
 
 from typing import Any
 

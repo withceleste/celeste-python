@@ -1,7 +1,9 @@
 """HuggingFace text client (modality)."""
 
 from celeste.parameters import ParameterMapper
-from celeste.providers.huggingface.chat.client import HuggingFaceChatClient
+from celeste.providers.huggingface.chat.client import (
+    HuggingFaceChatClient as HuggingFaceChatMixin,
+)
 from celeste.providers.huggingface.chat.streaming import (
     HuggingFaceChatStream as _HuggingFaceChatStream,
 )
@@ -21,7 +23,7 @@ class HuggingFaceTextStream(_HuggingFaceChatStream, _ChatCompletionsTextStream):
     """HuggingFace streaming for text modality."""
 
 
-class HuggingFaceTextClient(HuggingFaceChatClient, ChatCompletionsTextClient):
+class HuggingFaceTextClient(HuggingFaceChatMixin, ChatCompletionsTextClient):
     """HuggingFace text client."""
 
     @classmethod

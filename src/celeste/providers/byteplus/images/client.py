@@ -22,7 +22,7 @@ class BytePlusImagesClient(APIMixin):
     - _content_fields: ClassVar - Content field names to exclude from metadata
 
     Usage:
-        class BytePlusImageGenerationClient(BytePlusImagesClient, ImageGenerationClient):
+        class BytePlusImagesClient(BytePlusImagesMixin, ImagesClient):
             def _parse_content(self, response_data):
                 images = response_data.get("images", [])
                 # Extract image from images[0] or data[0]...

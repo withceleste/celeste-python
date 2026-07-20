@@ -28,7 +28,7 @@ class BytePlusVideosClient(APIMixin):
     3. Return final response
 
     Usage:
-        class BytePlusVideoGenerationClient(BytePlusVideosClient, VideoGenerationClient):
+        class BytePlusVideosClient(BytePlusVideosMixin, VideosClient):
             def _parse_content(self, response_data):
                 content = response_data.get("content", {})
                 # Extract video from content["video_url"]...

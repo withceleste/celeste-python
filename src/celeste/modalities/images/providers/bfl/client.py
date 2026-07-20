@@ -4,8 +4,8 @@ from typing import Any
 
 from celeste.artifacts import ImageArtifact
 from celeste.parameters import ParameterMapper
-from celeste.providers.bfl.images import config as bfl_config
-from celeste.providers.bfl.images.client import BFLImagesClient as _BFLImagesClient
+from celeste.providers.bfl.images import config
+from celeste.providers.bfl.images.client import BFLImagesClient as BFLImagesMixin
 from celeste.providers.bfl.images.utils import encode_image
 from celeste.types import ImageContent
 
@@ -14,11 +14,11 @@ from ...io import ImageFinishReason, ImageInput
 from .parameters import BFL_PARAMETER_MAPPERS
 
 
-class BFLImagesClient(_BFLImagesClient, ImagesClient):
+class BFLImagesClient(BFLImagesMixin, ImagesClient):
     """BFL images client (generate + edit)."""
 
-    _generate_endpoint = bfl_config.BFLImagesEndpoint.CREATE_IMAGE
-    _edit_endpoint = bfl_config.BFLImagesEndpoint.CREATE_IMAGE
+    _generate_endpoint = config.BFLImagesEndpoint.CREATE_IMAGE
+    _edit_endpoint = config.BFLImagesEndpoint.CREATE_IMAGE
 
     @classmethod
     def parameter_mappers(cls) -> list[ParameterMapper[ImageContent]]:
