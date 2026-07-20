@@ -28,6 +28,10 @@ def reconstruct_steps(raw_events: list[dict[str, Any]]) -> list[dict[str, Any]]:
             if delta_type == "text":
                 content = step.setdefault("content", [{"type": "text", "text": ""}])
                 content[0]["text"] += delta.get("text") or ""
+            elif delta_type == "text_annotation_delta":
+                content = step.setdefault("content", [{"type": "text", "text": ""}])
+                annotations = content[0].setdefault("annotations", [])
+                annotations.extend(delta.get("annotations") or [])
             elif delta_type == "arguments_delta":
                 step["_arguments_json"] = step.get("_arguments_json", "") + (
                     delta.get("arguments") or ""
@@ -38,6 +42,14 @@ def reconstruct_steps(raw_events: list[dict[str, Any]]) -> list[dict[str, Any]]:
             elif delta_type == "thought_signature":
                 step["signature"] = step.get("signature", "") + (
                     delta.get("signature") or ""
+                )
+            else:
+                # google_search_call / google_search_result deltas carry complete
+                # step fields (arguments dict, result list, is_error) verbatim.
+                if delta.get("signature"):
+                    step["signature"] = step.get("signature", "") + delta["signature"]
+                step.update(
+                    {k: v for k, v in delta.items() if k not in ("type", "signature")}
                 )
         elif event_type == "step.stop":
             step = pending.pop(index, None)
