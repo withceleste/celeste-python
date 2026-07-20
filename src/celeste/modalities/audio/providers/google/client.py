@@ -23,7 +23,7 @@ from .parameters import GOOGLE_PARAMETER_MAPPERS, OutputFormatMapper
 # Interactions audio mime strings → celeste audio mime types
 GOOGLE_AUDIO_MIME_TYPES: dict[str, AudioMimeType] = {
     wire: mime for mime, wire in OutputFormatMapper.mime_map.items()
-}
+} | {"audio/mpeg": AudioMimeType.MP3}
 
 
 def _to_audio_mime(raw: str | None) -> AudioMimeType:
@@ -68,9 +68,10 @@ class GoogleAudioStream(_GoogleInteractionsStream, AudioStream):
 
 
 class GoogleAudioClient(GoogleInteractionsMixin, AudioClient):
-    """Google audio client (Interactions API TTS)."""
+    """Google audio client (Interactions API TTS and music generation)."""
 
     _speak_endpoint = config.GoogleInteractionsEndpoint.CREATE_INTERACTION
+    _generate_endpoint = config.GoogleInteractionsEndpoint.CREATE_INTERACTION
 
     @classmethod
     def parameter_mappers(cls) -> list[ParameterMapper[AudioContent]]:

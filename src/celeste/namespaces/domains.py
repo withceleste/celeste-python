@@ -792,6 +792,27 @@ class SyncAudioNamespace:
         )
         return client.sync.speak(text, **params)
 
+    def generate(
+        self,
+        prompt: str,
+        *,
+        model: str,
+        provider: Provider | None = None,
+        api_key: str | SecretStr | None = None,
+        auth: Authentication | None = None,
+        **params: Unpack[AudioParameters],
+    ) -> AudioOutput:
+        """Blocking audio generation."""
+        client = create_client(
+            modality=Modality.AUDIO,
+            operation=Operation.GENERATE,
+            model=model,
+            provider=provider,
+            api_key=api_key,
+            auth=auth,
+        )
+        return client.sync.generate(prompt, **params)
+
     def analyze(
         self,
         audio: AudioContent,
@@ -845,7 +866,7 @@ class SyncAudioNamespace:
 class AudioNamespace:
     """celeste.audio.* namespace.
 
-    Provides text-to-speech and audio analysis operations.
+    Provides text-to-speech, audio generation, and audio analysis operations.
     """
 
     async def speak(
@@ -880,6 +901,39 @@ class AudioNamespace:
             auth=auth,
         )
         return await client.speak(text, **parameters)
+
+    async def generate(
+        self,
+        prompt: str,
+        *,
+        model: str,
+        provider: Provider | None = None,
+        api_key: str | SecretStr | None = None,
+        auth: Authentication | None = None,
+        **parameters: Unpack[AudioParameters],
+    ) -> AudioOutput:
+        """Generate audio from a prompt.
+
+        Args:
+            prompt: The text prompt for audio generation.
+            model: Model ID to use (required).
+            provider: Optional provider override.
+            api_key: Optional API key override.
+            auth: Optional Authentication object (e.g., GoogleADC for Vertex AI).
+            **parameters: Additional model parameters.
+
+        Returns:
+            AudioOutput with generated audio.
+        """
+        client = create_client(
+            modality=Modality.AUDIO,
+            operation=Operation.GENERATE,
+            model=model,
+            provider=provider,
+            api_key=api_key,
+            auth=auth,
+        )
+        return await client.generate(prompt, **parameters)
 
     async def analyze(
         self,

@@ -108,7 +108,7 @@ class InteractionsQualityMapper(_InteractionsImageSizeMapper):
     name = ImageParameter.QUALITY
 
 
-class InteractionsReferenceImagesMapper(_InteractionsMediaContentMapper):
+class InteractionsReferenceImagesMapper(_InteractionsMediaContentMapper[ImageContent]):
     """Map reference_images to Google Interactions input content."""
 
     name = ImageParameter.REFERENCE_IMAGES

@@ -291,7 +291,7 @@ class ImageSizeMapper(ParameterMapper[ImageContent]):
         return request
 
 
-class MediaContentMapper(ParameterMapper[ImageContent]):
+class MediaContentMapper[Content](ParameterMapper[Content]):
     """Map reference_images to Google Interactions input content."""
 
     def map(
@@ -321,6 +321,11 @@ class MediaContentMapper(ParameterMapper[ImageContent]):
         elif isinstance(current_input, list):
             request["input"] = [
                 {"type": "user_input", "content": [*image_parts, *current_input]}
+            ]
+        elif isinstance(current_input, str):
+            request["input"] = [
+                {"type": "text", "text": current_input},
+                *image_parts,
             ]
         else:
             request["input"] = [{"type": "user_input", "content": image_parts}]
