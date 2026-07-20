@@ -159,6 +159,23 @@ class ModalityClient[
             async def generate(self, prompt: str, **parameters) -> ImageGenerationOutput:
                 inputs = ImageGenerationInput(prompt=prompt)
                 return await self._predict(inputs, **parameters)
+
+    Hook contract — everything _predict() / _stream() invoke on self:
+    - unary: parameter_mappers, _validate_artifacts, _init_request,
+      _build_request, _make_request, _parse_content, _transform_output,
+      _parse_tool_calls, _parse_reasoning, _parse_grounding, _parse_container,
+      _parse_usage, _parse_finish_reason, _build_metadata
+    - streaming: parameter_mappers, _validate_artifacts, _init_request,
+      _build_request, _make_stream_request, _handle_error_response,
+      _transform_output, and _stream_class via the modality stream namespaces
+
+    A multi-backend dispatcher ({Provider}{Modality}Client holding a _strategy)
+    must define every hook a backend customizes, forwarding to self._strategy —
+    otherwise this base implementation runs silently. _transform_output and
+    _build_metadata read per-class state (parameter_mappers(), _content_fields),
+    so a dispatcher forwards them whenever that state differs from its own — for
+    merged mapper lists, always. Enforced per dispatcher, hook, and backend by
+    tests/unit_tests/test_dispatcher_delegation.py.
     """
 
     model_config = ConfigDict(arbitrary_types_allowed=True)

@@ -63,6 +63,14 @@ class GoogleImagesClient(ImagesClient):
     ) -> dict[str, Any]:
         return self._strategy._build_request(inputs, **parameters)  # type: ignore[union-attr]
 
+    def _transform_output(
+        self, content: ImageContent, **parameters: Unpack[ImageParameters]
+    ) -> ImageContent:
+        return self._strategy._transform_output(content, **parameters)  # type: ignore[union-attr]
+
+    def _build_metadata(self, response_data: dict[str, Any]) -> dict[str, Any]:
+        return self._strategy._build_metadata(response_data)  # type: ignore[union-attr]
+
     def _parse_usage(
         self, response_data: dict[str, Any]
     ) -> dict[str, int | float | None]:
