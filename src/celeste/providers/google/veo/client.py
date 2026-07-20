@@ -24,7 +24,7 @@ class GoogleVeoClient(APIMixin):
     - download_content() - Download from GCS URL, returns raw bytes (generic)
 
     Modality clients extend via super() to wrap results in artifacts:
-        class GoogleVideoGenerationClient(GoogleVeoClient, VideoGenerationClient):
+        class GoogleVideosClient(GoogleVeoMixin, VideosClient):
             def _parse_content(self, response_data):
                 video_data = super()._parse_content(response_data)  # Get generic dict
                 return VideoArtifact(url=video_data["uri"])

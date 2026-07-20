@@ -1,8 +1,4 @@
-"""BytePlus models for videos modality.
-
-Model IDs use lowercase format with version suffixes (e.g., seedance-1-0-pro-250528).
-Console display names differ from API model IDs.
-"""
+"""BytePlus models for videos modality."""
 
 from celeste.constraints import Choice, ImageConstraint, ImagesConstraint, Range
 from celeste.core import Modality, Operation, Provider
@@ -21,6 +17,8 @@ BYTEPLUS_SUPPORTED_MIME_TYPES = [
     ImageMimeType.GIF,
 ]
 
+# Model ids are lowercase with version suffixes (e.g. seedance-1-0-pro-250528);
+# console display names differ from API ids.
 MODELS: list[Model] = [
     Model(
         id="seedance-1-0-pro-250528",

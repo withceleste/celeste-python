@@ -1,10 +1,6 @@
-"""Ollama models for images modality.
-
-Ollama uses dynamic model discovery - models are pulled by name.
-Users specify model IDs like 'x/z-image-turbo' or 'gemma3:4b'.
-No pre-registered models needed.
-"""
+"""Ollama models for images modality."""
 
 from celeste.models import Model
 
+# Dynamic discovery: models are pulled by name (e.g. "x/z-image-turbo"); none pre-registered.
 MODELS: list[Model] = []

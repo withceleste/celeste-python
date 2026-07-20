@@ -3,7 +3,9 @@
 from typing import Any
 
 from celeste.parameters import ParameterMapper
-from celeste.providers.xai.responses.client import XAIResponsesClient
+from celeste.providers.xai.responses.client import (
+    XAIResponsesClient as XAIResponsesMixin,
+)
 from celeste.providers.xai.responses.streaming import (
     XAIResponsesStream as _XAIResponsesStream,
 )
@@ -24,7 +26,7 @@ class XAITextStream(_XAIResponsesStream, _OpenResponsesTextStream):
     """xAI streaming for text modality."""
 
 
-class XAITextClient(XAIResponsesClient, OpenResponsesTextClient):
+class XAITextClient(XAIResponsesMixin, OpenResponsesTextClient):
     """xAI text client."""
 
     @classmethod

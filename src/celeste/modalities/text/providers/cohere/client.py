@@ -9,7 +9,7 @@ from celeste.messages import (
     tool_result_object,
 )
 from celeste.parameters import ParameterMapper
-from celeste.providers.cohere.chat.client import CohereChatClient
+from celeste.providers.cohere.chat.client import CohereChatClient as CohereChatMixin
 from celeste.providers.cohere.chat.streaming import (
     CohereChatStream as _CohereChatStream,
 )
@@ -29,7 +29,7 @@ class CohereTextStream(_CohereChatStream, TextStream):
     """Cohere streaming for text modality."""
 
 
-class CohereTextClient(CohereChatClient, TextClient):
+class CohereTextClient(CohereChatMixin, TextClient):
     """Cohere text client."""
 
     @classmethod

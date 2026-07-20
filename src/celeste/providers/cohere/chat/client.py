@@ -22,7 +22,7 @@ class CohereChatClient(APIMixin):
     - _content_fields: ClassVar - Content field names to exclude from metadata
 
     Usage:
-        class CohereTextGenerationClient(CohereChatClient, TextGenerationClient):
+        class CohereTextClient(CohereChatMixin, TextClient):
             def _parse_content(self, response_data):
                 content_array = super()._parse_content(response_data)
                 text = content_array[0].get("text") or ""

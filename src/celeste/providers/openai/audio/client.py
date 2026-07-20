@@ -23,7 +23,7 @@ class OpenAIAudioClient(APIMixin):
     Modality clients must handle the binary response in their generate() override.
 
     Usage:
-        class OpenAISpeechGenerationClient(OpenAIAudioClient, SpeechGenerationClient):
+        class OpenAIAudioClient(OpenAIAudioMixin, AudioClient):
             async def generate(self, *args, **parameters):
                 # Handle binary response...
     """
