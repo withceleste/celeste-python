@@ -69,7 +69,20 @@ Always start by copying from the templates. Replace `{provider_slug}`, `{api_slu
 
 ### Protocol-based providers
 
-Most OpenAI-compatible vendors (DeepSeek, Moonshot, Groq, Mistral, HuggingFace, ...) subclass a shared protocol client from `src/celeste/protocols/` (`chatcompletions`, `openresponses`) instead of copying the full provider template — templates live at `templates/protocols/`. Editing a protocol changes every inheriting vendor: vendor-specific behavior goes in that vendor's own `client.py` / `parameters.py` override, never in the shared base.
+A protocol is a wire format served by many vendors (`chatcompletions`, `openresponses`). Vendors that speak one (DeepSeek, Moonshot, Groq, Mistral, HuggingFace, ...) subclass the shared protocol client from `src/celeste/protocols/` instead of copying the full provider template — templates live at `templates/protocols/`. Editing a protocol changes every inheriting vendor: vendor-specific behavior goes in that vendor's own `client.py` / `parameters.py` override, never in the shared base.
+
+### Adding a second API to an existing provider
+
+The steps above assume a new provider. For a new wire API on an existing one (e.g. Interactions next to GenerateContent), the delta is:
+
+1. Steps 1–3 are already done — enum, auth, and exports stay untouched.
+2. Copy `templates/providers/` into `src/celeste/providers/<provider>/<new_api>/`, including `__init__.py`.
+3. On the modality side, rename the existing `client.py` to `<old_api>.py` and its classes `{Provider}{Modality}Client` → `{Provider}{Api}{Modality}Client`; the new backend lands in `<new_api>.py` with the same shape.
+4. The new `client.py` is the dispatcher (`templates/modalities/{modality_slug}/providers/{provider_slug}/_dispatcher.py.template`): selects a backend in `model_post_init`, merges mapper lists, copies endpoint ClassVars, and forwards every hook a backend customizes — `tests/unit_tests/test_dispatcher_delegation.py` fails CI naming any hook you missed (`ModalityClient`'s docstring describes the hook surface).
+5. `parameters.py` now serves two backends, so every set carries its backend token: rename the existing classes to `{Api1}NameMapper` and the existing list to `{PROVIDER}_{API1}_PARAMETER_MAPPERS`, then add the parallel `{Api2}` set with `{PROVIDER}_{API2}_PARAMETER_MAPPERS` — no bare set survives in a multi-backend file. Same-file helper functions take the backend token as a suffix (`map_grounding_vertex` / `map_grounding_interactions`).
+6. Step 10 is a no-op: the `PROVIDERS` entry keeps pointing at `{Provider}{Modality}Client` — the registry never branches.
+7. Live probes before pinning: the endpoint version must serve every catalog model (stable and preview ids); `Model.streaming` flips only after a live call through celeste's stream path; model ids verified against the new API's reference.
+8. Tests: dispatch-selection asserts on `client._strategy`, per-backend `_init_request` payload tests, and wire-contract matrix rows for the new mapper list. The delegation guard (`tests/unit_tests/test_dispatcher_delegation.py`) picks the new dispatcher up automatically from the registry — no new rows.
 
 ## Model catalog rules
 

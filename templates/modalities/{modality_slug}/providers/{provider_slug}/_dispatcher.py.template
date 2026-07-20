@@ -1,0 +1,130 @@
+"""{Provider} {modality} client (dispatches across wire backends).
+
+Use only when one provider serves two or more wire APIs; single-backend
+providers use client.py.template. The PROVIDERS registry entry stays
+{Provider}{Modality}Client — the registry never branches.
+"""
+
+from typing import Any, Unpack
+
+from celeste.grounding import Grounding
+from celeste.parameters import ParameterMapper
+from celeste.tools import ToolCall
+from celeste.types import {Content}
+
+from ...client import {Modality}Client
+from ...io import {Modality}Input
+from ...parameters import {Modality}Parameters
+from .{api1_slug} import {Provider}{Api1}{Modality}Client
+from .{api2_slug} import {Provider}{Api2}{Modality}Client
+from .parameters import (
+    {PROVIDER}_{API1}_PARAMETER_MAPPERS,
+    {PROVIDER}_{API2}_PARAMETER_MAPPERS,
+)
+
+
+class {Provider}{Modality}Client({Modality}Client):
+    """{Provider} {modality} client (selects the {Api1} or {Api2} backend)."""
+
+    _strategy: {Provider}{Api1}{Modality}Client | {Provider}{Api2}{Modality}Client | None = None
+
+    def model_post_init(self, __context: object) -> None:
+        """Select the backend once — by auth type and/or model id."""
+        super().model_post_init(__context)
+
+        # Selection axes used in-repo:
+        #   by auth:     {Api2}... if isinstance(self.auth, {Provider}ADC) else {Api1}...
+        #   by model id: {Api1}... if self.model.id in _{API1}_MODEL_IDS else ...
+        StrategyClass = {Provider}{Api1}{Modality}Client
+        strategy = StrategyClass(
+            modality=self.modality,
+            model=self.model,
+            provider=self.provider,
+            auth=self.auth,
+            base_url=self.base_url,
+        )
+        object.__setattr__(self, "_strategy", strategy)
+        # Copy every endpoint ClassVar the modality routes on:
+        # if strategy._generate_endpoint is not None:
+        #     object.__setattr__(self, "_generate_endpoint", strategy._generate_endpoint)
+
+    @classmethod
+    def parameter_mappers(cls) -> list[ParameterMapper[{Content}]]:
+        return [
+            *{PROVIDER}_{API1}_PARAMETER_MAPPERS,
+            *{PROVIDER}_{API2}_PARAMETER_MAPPERS,
+        ]
+
+    # Forward every hook a backend customizes — a missing delegate silently runs
+    # the base implementation. tests/unit_tests/test_dispatcher_delegation.py
+    # auto-discovers this class from the registry and fails CI naming any hook it
+    # must define; ModalityClient's docstring (src/celeste/client.py) describes
+    # the hook surface.
+    def _init_request(self, inputs: {Modality}Input) -> dict[str, Any]:
+        return self._strategy._init_request(inputs)  # type: ignore[union-attr]
+
+    def _build_request(
+        self,
+        inputs: {Modality}Input,
+        extra_body: dict[str, Any] | None = None,
+        streaming: bool = False,
+        **parameters: Unpack[{Modality}Parameters],
+    ) -> dict[str, Any]:
+        return self._strategy._build_request(  # type: ignore[union-attr]
+            inputs, extra_body=extra_body, streaming=streaming, **parameters
+        )
+
+    async def _make_request(
+        self,
+        request_body: dict[str, Any],
+        *,
+        endpoint: str | None = None,
+        extra_headers: dict[str, str] | None = None,
+        **parameters: Unpack[{Modality}Parameters],
+    ) -> dict[str, Any]:
+        return await self._strategy._make_request(  # type: ignore[union-attr]
+            request_body, endpoint=endpoint, extra_headers=extra_headers, **parameters
+        )
+
+    def _parse_content(self, response_data: dict[str, Any]) -> {Content}:
+        return self._strategy._parse_content(response_data)  # type: ignore[union-attr]
+
+    def _parse_usage(
+        self, response_data: dict[str, Any]
+    ) -> dict[str, int | float | None]:
+        return self._strategy._parse_usage(response_data)  # type: ignore[union-attr]
+
+    def _parse_finish_reason(self, response_data: dict[str, Any]) -> Any:
+        return self._strategy._parse_finish_reason(response_data)  # type: ignore[union-attr]
+
+    def _parse_tool_calls(self, response_data: dict[str, Any]) -> list[ToolCall]:
+        return self._strategy._parse_tool_calls(response_data)  # type: ignore[union-attr]
+
+    def _parse_reasoning(
+        self, response_data: dict[str, Any]
+    ) -> tuple[str | None, list[dict[str, Any]]]:
+        return self._strategy._parse_reasoning(response_data)  # type: ignore[union-attr]
+
+    def _parse_grounding(self, response_data: dict[str, Any]) -> Grounding | None:
+        return self._strategy._parse_grounding(response_data)  # type: ignore[union-attr]
+
+    def _parse_container(self, response_data: dict[str, Any]) -> dict[str, Any] | None:
+        return self._strategy._parse_container(response_data)  # type: ignore[union-attr]
+
+    def _transform_output(self, content: {Content}, **parameters: Any) -> {Content}:
+        return self._strategy._transform_output(content, **parameters)  # type: ignore[union-attr]
+
+    def _build_metadata(self, response_data: dict[str, Any]) -> dict[str, Any]:
+        return self._strategy._build_metadata(response_data)  # type: ignore[union-attr]
+
+    # Streaming path — delete if this provider does not stream this modality:
+    # def _make_stream_request(self, request_body, *, endpoint=None, extra_headers=None, **parameters):
+    #     return self._strategy._make_stream_request(
+    #         request_body, endpoint=endpoint, extra_headers=extra_headers, **parameters
+    #     )
+    #
+    # def _stream_class(self) -> type[{Modality}Stream]:
+    #     return self._strategy._stream_class()
+
+
+__all__ = ["{Provider}{Modality}Client"]
