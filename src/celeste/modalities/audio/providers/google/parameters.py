@@ -11,6 +11,9 @@ from celeste.providers.google.interactions.parameters import (
     LanguageMapper as _LanguageMapper,
 )
 from celeste.providers.google.interactions.parameters import (
+    MediaContentMapper as _MediaContentMapper,
+)
+from celeste.providers.google.interactions.parameters import (
     VoiceMapper as _VoiceMapper,
 )
 from celeste.types import AudioContent
@@ -64,10 +67,17 @@ class OutputFormatMapper(_AudioMimeTypeMapper):
     }
 
 
+class ReferenceImagesMapper(_MediaContentMapper[AudioContent]):
+    """Map reference_images to Google Interactions input content."""
+
+    name = AudioParameter.REFERENCE_IMAGES
+
+
 GOOGLE_PARAMETER_MAPPERS: list[ParameterMapper[AudioContent]] = [
     VoiceMapper(),
     LanguageMapper(),
     OutputFormatMapper(),
+    ReferenceImagesMapper(),
 ]
 
 __all__ = ["GOOGLE_PARAMETER_MAPPERS"]

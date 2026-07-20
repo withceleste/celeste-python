@@ -16,7 +16,7 @@ from .streaming import AudioStream
 class AudioClient(
     ModalityClient[AudioInput, AudioOutput, AudioParameters, AudioContent, AudioChunk]
 ):
-    """Base audio client with speak operation."""
+    """Base audio client with speak and generate operations."""
 
     modality: Modality = Modality.AUDIO
     _usage_class = AudioUsage
@@ -24,6 +24,7 @@ class AudioClient(
     _content_fields: ClassVar[set[str]] = {"audio_bytes"}
 
     _speak_endpoint: ClassVar[str | None] = None
+    _generate_endpoint: ClassVar[str | None] = None
 
     @classmethod
     def _output_class(cls) -> type[AudioOutput]:
@@ -38,6 +39,20 @@ class AudioClient(
         """Convert text to speech audio."""
         inputs = AudioInput(text=text)
         return await self._predict(inputs, endpoint=self._speak_endpoint, **parameters)
+
+    async def generate(
+        self,
+        prompt: str,
+        **parameters: Unpack[AudioParameters],
+    ) -> AudioOutput:
+        """Generate audio from a prompt."""
+        if self._generate_endpoint is None:
+            msg = f"Model {self.model.id} does not support audio generation"
+            raise NotImplementedError(msg)
+        inputs = AudioInput(text=prompt)
+        return await self._predict(
+            inputs, endpoint=self._generate_endpoint, **parameters
+        )
 
     @property
     def stream(self) -> "AudioStreamNamespace":
@@ -93,6 +108,27 @@ class AudioSyncNamespace:
         inputs = AudioInput(text=text)
         return async_to_sync(self._client._predict)(
             inputs, extra_body=extra_body, extra_headers=extra_headers, **parameters
+        )
+
+    def generate(
+        self,
+        prompt: str,
+        *,
+        extra_body: dict[str, Any] | None = None,
+        extra_headers: dict[str, str] | None = None,
+        **parameters: Unpack[AudioParameters],
+    ) -> AudioOutput:
+        """Blocking audio generation."""
+        if self._client._generate_endpoint is None:
+            msg = f"Model {self._client.model.id} does not support audio generation"
+            raise NotImplementedError(msg)
+        inputs = AudioInput(text=prompt)
+        return async_to_sync(self._client._predict)(
+            inputs,
+            endpoint=self._client._generate_endpoint,
+            extra_body=extra_body,
+            extra_headers=extra_headers,
+            **parameters,
         )
 
     @property

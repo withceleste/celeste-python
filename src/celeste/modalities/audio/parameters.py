@@ -5,6 +5,7 @@ from typing import Annotated
 
 from pydantic import Field
 
+from celeste.artifacts import ImageArtifact
 from celeste.parameters import Parameters
 
 
@@ -14,8 +15,8 @@ class AudioParameter(StrEnum):
     VOICE = "voice"
     SPEED = "speed"
     OUTPUT_FORMAT = "output_format"
-    PROMPT = "prompt"
     LANGUAGE = "language"
+    REFERENCE_IMAGES = "reference_images"
 
 
 class AudioParameters(Parameters, total=False):
@@ -28,10 +29,11 @@ class AudioParameters(Parameters, total=False):
         float, Field(description="Playback speed multiplier (1.0 = normal).")
     ]
     output_format: Annotated[str, Field(description="Audio file format.")]
-    prompt: Annotated[
-        str, Field(description="Style or delivery instruction for the voice.")
-    ]
     language: Annotated[str, Field(description="BCP-47 language tag, e.g. 'en-US'.")]
+    reference_images: Annotated[
+        list[ImageArtifact],
+        Field(description="Additional images conditioning the audio."),
+    ]
 
 
 __all__ = [

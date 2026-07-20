@@ -4,7 +4,9 @@ import pytest
 from pydantic import BaseModel
 
 from celeste.artifacts import ImageArtifact
-from celeste.mime_types import ImageMimeType
+from celeste.mime_types import AudioMimeType, ImageMimeType
+from celeste.modalities.audio.parameters import AudioParameter
+from celeste.modalities.audio.providers.google import parameters as google_audio
 from celeste.modalities.images.parameters import ImageParameter
 from celeste.modalities.images.providers.bfl import parameters as bfl
 from celeste.modalities.images.providers.google import parameters as google_images
@@ -30,6 +32,7 @@ GOOGLE_INTERACTIONS = google_text.GOOGLE_INTERACTIONS_PARAMETER_MAPPERS
 IMAGES_VERTEX = google_images.GOOGLE_VERTEX_PARAMETER_MAPPERS
 IMAGES_INTERACTIONS = google_images.GOOGLE_INTERACTIONS_PARAMETER_MAPPERS
 IMAGES_IMAGEN = google_images.GOOGLE_IMAGEN_PARAMETER_MAPPERS
+AUDIO_GOOGLE = google_audio.GOOGLE_PARAMETER_MAPPERS
 OPEN = openai.OPENAI_PARAMETER_MAPPERS
 CHAT = chat.CHATCOMPLETIONS_PARAMETER_MAPPERS
 ANTHROPIC = anthropic.ANTHROPIC_PARAMETER_MAPPERS
@@ -38,7 +41,7 @@ GROQ = groq.GROQ_PARAMETER_MAPPERS
 BYTEPLUS = byteplus.BYTEPLUS_PARAMETER_MAPPERS
 XAI = xai.XAI_PARAMETER_MAPPERS
 BFL = bfl.BFL_PARAMETER_MAPPERS
-T, IP, V = TextParameter, ImageParameter, VideoParameter
+T, IP, V, AP = TextParameter, ImageParameter, VideoParameter, AudioParameter
 GC = ("generationConfig",)
 TC = (*GC, "thinkingConfig")
 IC = (*GC, "imageConfig")
@@ -104,6 +107,27 @@ def _at(data: dict[str, Any], path: tuple[str, ...]) -> Any:  # noqa: ANN401
         (IMAGES_IMAGEN, IP.ASPECT_RATIO, "16:9", ("parameters", "aspectRatio"), "16:9"),
         (IMAGES_IMAGEN, IP.QUALITY, "2K", ("parameters", "imageSize"), "2K"),
         (IMAGES_IMAGEN, IP.NUM_IMAGES, 2, ("parameters", "sampleCount"), 2),
+        (
+            AUDIO_GOOGLE,
+            AP.VOICE,
+            "Kore",
+            ("generation_config", "speech_config"),
+            [{"voice": "Kore"}],
+        ),
+        (
+            AUDIO_GOOGLE,
+            AP.LANGUAGE,
+            "en",
+            ("generation_config", "speech_config"),
+            [{"language": "en-US"}],
+        ),
+        (
+            AUDIO_GOOGLE,
+            AP.OUTPUT_FORMAT,
+            AudioMimeType.MP3,
+            ("response_format", "mime_type"),
+            "audio/mp3",
+        ),
         (
             GOOGLE_INTERACTIONS,
             T.TEMPERATURE,
@@ -171,6 +195,7 @@ def test_scalar_parameters_use_provider_wire_shape(
         GOOGLE_VERTEX,
         IMAGES_VERTEX,
         IMAGES_IMAGEN,
+        AUDIO_GOOGLE,
         OPEN,
         CHAT,
         ANTHROPIC,
@@ -231,6 +256,50 @@ def test_google_media_precedes_text_content() -> None:
         {"file_data": {"file_uri": IMAGE.url}},
         {"text": "describe"},
     ]
+
+
+@pytest.mark.parametrize(
+    ("mappers", "name", "request_body", "expected_input"),
+    [
+        (
+            IMAGES_INTERACTIONS,
+            IP.REFERENCE_IMAGES,
+            {
+                "input": [
+                    {
+                        "type": "user_input",
+                        "content": [{"type": "text", "text": "describe"}],
+                    }
+                ]
+            },
+            [
+                {
+                    "type": "user_input",
+                    "content": [
+                        {"type": "image", "uri": IMAGE.url},
+                        {"type": "text", "text": "describe"},
+                    ],
+                }
+            ],
+        ),
+        (
+            AUDIO_GOOGLE,
+            AP.REFERENCE_IMAGES,
+            {"input": "describe"},
+            [
+                {"type": "text", "text": "describe"},
+                {"type": "image", "uri": IMAGE.url},
+            ],
+        ),
+    ],
+)
+def test_google_interactions_media_joins_input_content(
+    mappers: list[ParameterMapper[Any]],
+    name: str,
+    request_body: dict[str, Any],
+    expected_input: list[dict[str, Any]],
+) -> None:
+    assert _map(mappers, name, [IMAGE], request_body)["input"] == expected_input
 
 
 @pytest.mark.parametrize(

@@ -1,6 +1,6 @@
-"""Google TTS models for audio modality."""
+"""Google models for audio modality."""
 
-from celeste.constraints import Choice
+from celeste.constraints import Choice, ImagesConstraint
 from celeste.core import Modality, Operation, Provider
 from celeste.mime_types import AudioMimeType
 from celeste.models import Model
@@ -77,6 +77,26 @@ MODELS: list[Model] = [
             AudioParameter.VOICE: VoiceConstraint(voices=GOOGLE_VOICES),
             AudioParameter.LANGUAGE: Choice(options=GOOGLE_SUPPORTED_LANGUAGES),
             AudioParameter.OUTPUT_FORMAT: Choice(options=GOOGLE_SUPPORTED_FORMATS),
+        },
+    ),
+    Model(
+        id="lyria-3-clip-preview",
+        provider=Provider.GOOGLE,
+        display_name="Google Lyria 3 Clip (Preview)",
+        operations={Modality.AUDIO: {Operation.GENERATE}},
+        parameter_constraints={
+            AudioParameter.OUTPUT_FORMAT: Choice(options=GOOGLE_SUPPORTED_FORMATS),
+            AudioParameter.REFERENCE_IMAGES: ImagesConstraint(max_count=10),
+        },
+    ),
+    Model(
+        id="lyria-3-pro-preview",
+        provider=Provider.GOOGLE,
+        display_name="Google Lyria 3 Pro (Preview)",
+        operations={Modality.AUDIO: {Operation.GENERATE}},
+        parameter_constraints={
+            AudioParameter.OUTPUT_FORMAT: Choice(options=GOOGLE_SUPPORTED_FORMATS),
+            AudioParameter.REFERENCE_IMAGES: ImagesConstraint(max_count=10),
         },
     ),
 ]
