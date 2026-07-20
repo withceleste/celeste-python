@@ -159,17 +159,16 @@ class GoogleInteractionsTextClient(GoogleInteractionsMixin, TextClient):
         self,
         response_data: dict[str, Any],
     ) -> TextContent:
-        """Parse content from response."""
+        """Parse text across all model_output steps (matches stream concatenation)."""
         steps = super()._parse_content(response_data)
-        for step in steps:
-            if step.get("type") != "model_output":
-                continue
-            for part in step.get("content", []):
-                if part.get("type") == "text":
-                    text = part.get("text")
-                    if text is not None:
-                        return text
-        return ""
+        texts = [
+            part.get("text")
+            for step in steps
+            if step.get("type") == "model_output"
+            for part in step.get("content", [])
+            if part.get("type") == "text" and part.get("text") is not None
+        ]
+        return "".join(texts)
 
     def _parse_reasoning(
         self, response_data: dict[str, Any]

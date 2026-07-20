@@ -45,23 +45,26 @@ async def test_web_search(provider: Provider, model: str) -> None:
 
     assert isinstance(output, TextOutput)
     assert output.content
+    assert output.grounding is not None
+    assert output.grounding.sources
 
 
 @pytest.mark.parametrize(("provider", "model"), WEB_SEARCH_MODELS)
 async def test_stream_web_search(provider: Provider, model: str) -> None:
     client = create_client(modality=Modality.TEXT, provider=provider, model=model)
 
-    chunks = [
-        chunk
-        async for chunk in client.stream.generate(
-            prompt="When was Python 3.12 released?",
-            tools=[WebSearch()],
-            max_tokens=500,
-        )
-    ]
+    stream = client.stream.generate(
+        prompt="When was Python 3.12 released?",
+        tools=[WebSearch()],
+        max_tokens=500,
+    )
+    chunks = [chunk async for chunk in stream]
 
     assert chunks
     assert all(isinstance(chunk, TextChunk) for chunk in chunks)
+    grounding = stream.output.grounding
+    assert grounding is not None
+    assert grounding.sources
 
 
 @pytest.mark.parametrize(
