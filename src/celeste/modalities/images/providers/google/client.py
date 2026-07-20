@@ -1,36 +1,52 @@
-"""Google images client."""
+"""Google images client (Imagen by model; Gemini models use Interactions or Vertex by auth)."""
 
 from typing import Any, Unpack
 
 from celeste.parameters import ParameterMapper
+from celeste.providers.google.auth import GoogleADC
 from celeste.types import ImageContent
 
 from ...client import ImagesClient
 from ...io import ImageFinishReason, ImageInput
 from ...parameters import ImageParameters
-from .gemini import GeminiImagesClient
-from .imagen import ImagenImagesClient
-from .models import GEMINI_MODELS, IMAGEN_MODELS
-from .parameters import GEMINI_PARAMETER_MAPPERS, IMAGEN_PARAMETER_MAPPERS
+from .imagen import GoogleImagenImagesClient
+from .interactions import GoogleInteractionsImagesClient
+from .models import GOOGLE_GEMINI_MODELS, GOOGLE_IMAGEN_MODELS
+from .parameters import (
+    GOOGLE_IMAGEN_PARAMETER_MAPPERS,
+    GOOGLE_INTERACTIONS_PARAMETER_MAPPERS,
+    GOOGLE_VERTEX_PARAMETER_MAPPERS,
+)
+from .vertex import GoogleVertexImagesClient
 
-# Model ID → Strategy class mapping
-GOOGLE_MODEL_MAP: dict[str, type[GeminiImagesClient] | type[ImagenImagesClient]] = {
-    **{m.id: ImagenImagesClient for m in IMAGEN_MODELS},
-    **{m.id: GeminiImagesClient for m in GEMINI_MODELS},
-}
+_IMAGEN_MODEL_IDS = frozenset(m.id for m in GOOGLE_IMAGEN_MODELS)
+_GEMINI_MODEL_IDS = frozenset(m.id for m in GOOGLE_GEMINI_MODELS)
 
 
 class GoogleImagesClient(ImagesClient):
-    """Google images client (dispatches between Imagen and Gemini backends)."""
+    """Google images client (selects the Imagen, Interactions, or Vertex backend)."""
 
-    _strategy: GeminiImagesClient | ImagenImagesClient | None = None
+    _strategy: (
+        GoogleImagenImagesClient
+        | GoogleInteractionsImagesClient
+        | GoogleVertexImagesClient
+        | None
+    ) = None
 
     def model_post_init(self, __context: object) -> None:
-        """Initialize strategy based on model id."""
+        """Initialize the backend client based on model id and auth type."""
         super().model_post_init(__context)
 
-        StrategyClass = GOOGLE_MODEL_MAP.get(self.model.id)
-        if StrategyClass is None:
+        StrategyClass: type[ImagesClient]
+        if self.model.id in _IMAGEN_MODEL_IDS:
+            StrategyClass = GoogleImagenImagesClient
+        elif self.model.id in _GEMINI_MODEL_IDS:
+            StrategyClass = (
+                GoogleVertexImagesClient
+                if isinstance(self.auth, GoogleADC)
+                else GoogleInteractionsImagesClient
+            )
+        else:
             msg = f"Unknown Google images model: {self.model.id}"
             raise ValueError(msg)
 
@@ -50,10 +66,13 @@ class GoogleImagesClient(ImagesClient):
 
     @classmethod
     def parameter_mappers(cls) -> list[ParameterMapper[ImageContent]]:
-        return [*GEMINI_PARAMETER_MAPPERS, *IMAGEN_PARAMETER_MAPPERS]
+        return [
+            *GOOGLE_INTERACTIONS_PARAMETER_MAPPERS,
+            *GOOGLE_VERTEX_PARAMETER_MAPPERS,
+            *GOOGLE_IMAGEN_PARAMETER_MAPPERS,
+        ]
 
     def _init_request(self, inputs: ImageInput) -> dict[str, Any]:
-        """Delegate to strategy's _init_request."""
         return self._strategy._init_request(inputs)  # type: ignore[union-attr]
 
     def _build_request(

@@ -29,7 +29,7 @@ class GoogleGenerateContentClient(APIMixin):
     Modality clients extend parsing methods via super() to wrap or transform results.
 
     Usage:
-        class GoogleTextGenerationClient(GoogleGenerateContentClient, TextGenerationClient):
+        class GoogleVertexTextClient(GoogleGenerateContentMixin, TextClient):
             def _parse_content(self, response_data):
                 parts = super()._parse_content(response_data)
                 text = parts[0].get("text") or ""

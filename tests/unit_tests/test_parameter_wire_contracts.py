@@ -25,8 +25,11 @@ from celeste.modalities.videos.providers.xai import parameters as xai
 from celeste.models import Model
 from celeste.parameters import ParameterMapper
 
-GOOGLE = google_text.GOOGLE_PARAMETER_MAPPERS
-GEMINI = google_images.GEMINI_PARAMETER_MAPPERS
+GOOGLE_VERTEX = google_text.GOOGLE_VERTEX_PARAMETER_MAPPERS
+GOOGLE_INTERACTIONS = google_text.GOOGLE_INTERACTIONS_PARAMETER_MAPPERS
+IMAGES_VERTEX = google_images.GOOGLE_VERTEX_PARAMETER_MAPPERS
+IMAGES_INTERACTIONS = google_images.GOOGLE_INTERACTIONS_PARAMETER_MAPPERS
+IMAGES_IMAGEN = google_images.GOOGLE_IMAGEN_PARAMETER_MAPPERS
 OPEN = openai.OPENAI_PARAMETER_MAPPERS
 CHAT = chat.CHATCOMPLETIONS_PARAMETER_MAPPERS
 ANTHROPIC = anthropic.ANTHROPIC_PARAMETER_MAPPERS
@@ -80,24 +83,62 @@ def _at(data: dict[str, Any], path: tuple[str, ...]) -> Any:  # noqa: ANN401
 @pytest.mark.parametrize(
     ("mappers", "name", "value", "path", "expected"),
     [
-        (GOOGLE, T.TEMPERATURE, 0.2, (*GC, "temperature"), 0.2),
-        (GOOGLE, T.MAX_TOKENS, 80, (*GC, "maxOutputTokens"), 80),
+        (GOOGLE_VERTEX, T.TEMPERATURE, 0.2, (*GC, "temperature"), 0.2),
+        (GOOGLE_VERTEX, T.MAX_TOKENS, 80, (*GC, "maxOutputTokens"), 80),
         (
-            GOOGLE,
+            GOOGLE_VERTEX,
             T.THINKING_BUDGET,
             32,
             TC,
             {"thinkingBudget": 32, "includeThoughts": True},
         ),
         (
-            GOOGLE,
+            GOOGLE_VERTEX,
             T.THINKING_LEVEL,
             "high",
             TC,
             {"thinkingLevel": "high", "includeThoughts": True},
         ),
-        (GEMINI, IP.ASPECT_RATIO, "16:9", (*IC, "aspectRatio"), "16:9"),
-        (GEMINI, IP.QUALITY, "2K", (*IC, "imageSize"), "2K"),
+        (IMAGES_VERTEX, IP.ASPECT_RATIO, "16:9", (*IC, "aspectRatio"), "16:9"),
+        (IMAGES_VERTEX, IP.QUALITY, "2K", (*IC, "imageSize"), "2K"),
+        (IMAGES_IMAGEN, IP.ASPECT_RATIO, "16:9", ("parameters", "aspectRatio"), "16:9"),
+        (IMAGES_IMAGEN, IP.QUALITY, "2K", ("parameters", "imageSize"), "2K"),
+        (IMAGES_IMAGEN, IP.NUM_IMAGES, 2, ("parameters", "sampleCount"), 2),
+        (
+            GOOGLE_INTERACTIONS,
+            T.TEMPERATURE,
+            0.2,
+            ("generation_config", "temperature"),
+            0.2,
+        ),
+        (
+            GOOGLE_INTERACTIONS,
+            T.MAX_TOKENS,
+            80,
+            ("generation_config", "max_output_tokens"),
+            80,
+        ),
+        (
+            GOOGLE_INTERACTIONS,
+            T.THINKING_LEVEL,
+            "high",
+            ("generation_config",),
+            {"thinking_level": "high", "thinking_summaries": "auto"},
+        ),
+        (
+            IMAGES_INTERACTIONS,
+            IP.ASPECT_RATIO,
+            "16:9",
+            ("response_format", "aspect_ratio"),
+            "16:9",
+        ),
+        (
+            IMAGES_INTERACTIONS,
+            IP.QUALITY,
+            "2K",
+            ("response_format", "image_size"),
+            "2K",
+        ),
         (OPEN, T.TEMPERATURE, 0.4, ("temperature",), 0.4),
         (OPEN, T.MAX_TOKENS, 90, ("max_output_tokens",), 90),
         (OPEN, T.THINKING_BUDGET, "high", ("reasoning", "effort"), "high"),
@@ -126,7 +167,19 @@ def test_scalar_parameters_use_provider_wire_shape(
 
 @pytest.mark.parametrize(
     "mappers",
-    [GOOGLE, GEMINI, OPEN, CHAT, ANTHROPIC, MOONSHOT, GROQ, BYTEPLUS, XAI, BFL],
+    [
+        GOOGLE_VERTEX,
+        IMAGES_VERTEX,
+        IMAGES_IMAGEN,
+        OPEN,
+        CHAT,
+        ANTHROPIC,
+        MOONSHOT,
+        GROQ,
+        BYTEPLUS,
+        XAI,
+        BFL,
+    ],
 )
 def test_none_omits_every_optional_parameter(
     mappers: list[ParameterMapper[Any]],
@@ -137,7 +190,7 @@ def test_none_omits_every_optional_parameter(
 @pytest.mark.parametrize(
     ("mappers", "schema", "wire", "path", "mapped", "parsed"),
     [
-        (GOOGLE, Answer, '{"value":1}', GS, "integer", Answer(value=1)),
+        (GOOGLE_VERTEX, Answer, '{"value":1}', GS, "integer", Answer(value=1)),
         (OPEN, ANSWERS, '{"items":[{"value":2}]}', TF, "answer_list", A2),
         (CHAT, ANSWERS, W3, RF, "json_object", A3),
         (GROQ, ANSWERS, W3, RF, "json_object", A3),
@@ -171,7 +224,9 @@ def test_user_tools_use_protocol_function_shape(
 
 def test_google_media_precedes_text_content() -> None:
     request = {"contents": [{"parts": [{"text": "describe"}]}]}
-    parts = _map(GEMINI, IP.REFERENCE_IMAGES, [IMAGE], request)["contents"][0]["parts"]
+    parts = _map(IMAGES_VERTEX, IP.REFERENCE_IMAGES, [IMAGE], request)["contents"][0][
+        "parts"
+    ]
     assert parts == [
         {"file_data": {"file_uri": IMAGE.url}},
         {"text": "describe"},

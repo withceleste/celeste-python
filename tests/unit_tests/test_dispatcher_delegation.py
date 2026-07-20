@@ -66,7 +66,7 @@ def _hook_names(modality_base: type[ModalityClient]) -> set[str]:
 
 def test_registry_discovers_known_dispatchers() -> None:
     names = {d.__name__ for d in _dispatchers()}
-    assert "GoogleImagesClient" in names
+    assert {"GoogleTextClient", "GoogleImagesClient"} <= names
 
 
 @pytest.mark.parametrize("dispatcher", _dispatchers(), ids=lambda d: d.__name__)

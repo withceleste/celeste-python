@@ -7,7 +7,7 @@ from celeste.modalities.audio.parameters import AudioParameter
 
 MODELS = [
     (Provider.ELEVENLABS, "eleven_v3"),
-    (Provider.GOOGLE, "gemini-2.5-flash-tts"),
+    (Provider.GOOGLE, "gemini-2.5-flash-preview-tts"),
     (Provider.OPENAI, "tts-1"),
 ]
 

@@ -4,13 +4,13 @@ from typing import ClassVar
 
 from celeste.mime_types import AudioMimeType
 from celeste.parameters import ParameterMapper
-from celeste.providers.google.cloud_tts.parameters import (
-    AudioEncodingMapper as _AudioEncodingMapper,
+from celeste.providers.google.interactions.parameters import (
+    AudioMimeTypeMapper as _AudioMimeTypeMapper,
 )
-from celeste.providers.google.cloud_tts.parameters import (
+from celeste.providers.google.interactions.parameters import (
     LanguageMapper as _LanguageMapper,
 )
-from celeste.providers.google.cloud_tts.parameters import (
+from celeste.providers.google.interactions.parameters import (
     VoiceMapper as _VoiceMapper,
 )
 from celeste.types import AudioContent
@@ -19,13 +19,13 @@ from ...parameters import AudioParameter
 
 
 class VoiceMapper(_VoiceMapper):
-    """Map voice to Google Cloud TTS voice.name field."""
+    """Map voice to Google Interactions speech_config voice field."""
 
     name = AudioParameter.VOICE
 
 
 class LanguageMapper(_LanguageMapper):
-    """Map language to Google Cloud TTS voice.languageCode field."""
+    """Map language to Google Interactions speech_config language field."""
 
     name = AudioParameter.LANGUAGE
     locale_map: ClassVar[dict[str, str]] = {
@@ -52,15 +52,15 @@ class LanguageMapper(_LanguageMapper):
     }
 
 
-class OutputFormatMapper(_AudioEncodingMapper):
-    """Map output_format to Google Cloud TTS audioConfig.audioEncoding field."""
+class OutputFormatMapper(_AudioMimeTypeMapper):
+    """Map output_format to Google Interactions response_format.mime_type field."""
 
     name = AudioParameter.OUTPUT_FORMAT
-    encoding_map: ClassVar[dict[AudioMimeType, str]] = {
-        AudioMimeType.MP3: "MP3",
-        AudioMimeType.WAV: "LINEAR16",
-        AudioMimeType.OGG: "OGG_OPUS",
-        AudioMimeType.PCM: "PCM",
+    mime_map: ClassVar[dict[AudioMimeType, str]] = {
+        AudioMimeType.MP3: "audio/mp3",
+        AudioMimeType.WAV: "audio/wav",
+        AudioMimeType.OGG: "audio/ogg_opus",
+        AudioMimeType.PCM: "audio/l16",
     }
 
 

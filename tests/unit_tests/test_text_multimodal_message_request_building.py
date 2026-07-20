@@ -202,14 +202,14 @@ def test_google_message_parts_include_all_media_blocks() -> None:
         )
     )
 
-    parts = request["contents"][0]["parts"]
-    assert [part.get("inline_data", {}).get("mime_type") for part in parts[:4]] == [
-        "image/png",
-        "video/mp4",
-        "audio/mpeg",
-        "application/pdf",
+    parts = request["input"][0]["content"]
+    assert [(part.get("type"), part.get("mime_type")) for part in parts[:4]] == [
+        ("image", "image/png"),
+        ("video", "video/mp4"),
+        ("audio", "audio/mpeg"),
+        ("document", "application/pdf"),
     ]
-    assert parts[-1] == {"text": "inspect"}
+    assert parts[-1] == {"type": "text", "text": "inspect"}
 
 
 def test_anthropic_message_parts_include_image_and_document_sources() -> None:

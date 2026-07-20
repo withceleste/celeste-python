@@ -19,3 +19,19 @@ def build_media_part(artifact: Artifact) -> dict[str, Any]:
     mime = artifact.mime_type or detect_mime_type(media_bytes)
     mime_str = mime.value if mime else None
     return {"inline_data": {"mime_type": mime_str, "data": b64}}
+
+
+def build_content_part(artifact: Artifact, part_type: str) -> dict[str, Any]:
+    """Convert any media artifact to an Interactions API content part."""
+    if artifact.url:
+        part: dict[str, Any] = {"type": part_type, "uri": artifact.url}
+        if artifact.mime_type:
+            part["mime_type"] = artifact.mime_type.value
+        return part
+    media_bytes = artifact.get_bytes()
+    b64 = base64.b64encode(media_bytes).decode("utf-8")
+    mime = artifact.mime_type or detect_mime_type(media_bytes)
+    part = {"type": part_type, "data": b64}
+    if mime:
+        part["mime_type"] = mime.value
+    return part

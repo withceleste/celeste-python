@@ -25,6 +25,10 @@ class AudioUsage(Usage):
     All fields optional since providers vary.
     """
 
+    total_tokens: int | None = None
+    input_tokens: int | None = None
+    output_tokens: int | None = None
+
 
 class AudioOutput(Output[AudioArtifact]):
     """Output with audio artifact content."""

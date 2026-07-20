@@ -7,7 +7,7 @@ import pytest
 from pydantic import SecretStr
 
 from celeste.auth import AuthHeader
-from celeste.core import Modality, Operation, Provider
+from celeste.core import Provider
 from celeste.models import Model
 from celeste.providers.anthropic.messages import config as anthropic_config
 from celeste.providers.anthropic.messages.client import AnthropicMessagesClient
@@ -240,21 +240,3 @@ def test_veo_poll_routes_match_auth() -> None:
     vertex_url = GoogleVeoClient._build_poll_url(vertex, "operations/abc")
     assert direct_url.endswith("/v1beta/operations/abc")
     assert "fetchPredictOperation" in vertex_url
-
-
-def test_cloud_tts_uses_adc() -> None:
-    from celeste.modalities.audio.providers.google.client import GoogleAudioClient
-
-    model = Model(
-        id="gemini-2.5-flash-tts",
-        provider=Provider.GOOGLE,
-        display_name="TTS",
-        operations={Modality.AUDIO: {Operation.SPEAK}},
-    )
-    client = GoogleAudioClient(
-        modality=Modality.AUDIO,
-        model=model,
-        provider=Provider.GOOGLE,
-        auth=_api_key(),
-    )
-    assert isinstance(client.auth, GoogleADC)

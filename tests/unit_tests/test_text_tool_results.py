@@ -116,10 +116,9 @@ def test_google_tool_result_uses_pydantic_json_object() -> None:
 
     request = client._init_request(TextInput(messages=[_tool_result(output)]))
 
-    result = request["contents"][0]["parts"][0]["functionResponse"]["response"][
-        "result"
-    ]
-    assert result == output.model_dump(mode="json")
+    turn = request["input"][0]
+    assert turn["type"] == "function_result"
+    assert turn["result"] == output.model_dump(mode="json")
 
 
 def test_cohere_tool_result_preserves_pydantic_shape() -> None:

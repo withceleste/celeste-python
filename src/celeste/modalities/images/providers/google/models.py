@@ -7,7 +7,7 @@ from celeste.models import Model
 from ...parameters import ImageParameter
 
 # Imagen API models (instances[].prompt → predictions[])
-IMAGEN_MODELS: list[Model] = [
+GOOGLE_IMAGEN_MODELS: list[Model] = [
     # Imagen 4 models (text-to-image) - Current GA
     Model(
         id="imagen-4.0-generate-001",
@@ -50,7 +50,7 @@ IMAGEN_MODELS: list[Model] = [
 ]
 
 # Gemini API models (contents[].parts[] → candidates[])
-GEMINI_MODELS: list[Model] = [
+GOOGLE_GEMINI_MODELS: list[Model] = [
     Model(
         id="gemini-2.5-flash-image",
         provider=Provider.GOOGLE,
@@ -157,12 +157,12 @@ GEMINI_MODELS: list[Model] = [
 
 # Unified model list for registration
 MODELS: list[Model] = [
-    *IMAGEN_MODELS,
-    *GEMINI_MODELS,
+    *GOOGLE_IMAGEN_MODELS,
+    *GOOGLE_GEMINI_MODELS,
 ]
 
 __all__ = [
-    "GEMINI_MODELS",
-    "IMAGEN_MODELS",
+    "GOOGLE_GEMINI_MODELS",
+    "GOOGLE_IMAGEN_MODELS",
     "MODELS",
 ]

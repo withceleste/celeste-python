@@ -44,10 +44,10 @@ GOOGLE_SUPPORTED_LANGUAGES = [
 
 MODELS: list[Model] = [
     Model(
-        id="gemini-2.5-flash-tts",
+        id="gemini-2.5-flash-preview-tts",
         provider=Provider.GOOGLE,
-        display_name="Google TTS Gemini 2.5 Flash",
-        streaming=False,
+        display_name="Google TTS Gemini 2.5 Flash (Preview)",
+        streaming=True,
         operations={Modality.AUDIO: {Operation.SPEAK}},
         parameter_constraints={
             AudioParameter.VOICE: VoiceConstraint(voices=GOOGLE_VOICES),
@@ -56,10 +56,10 @@ MODELS: list[Model] = [
         },
     ),
     Model(
-        id="gemini-2.5-pro-tts",
+        id="gemini-2.5-pro-preview-tts",
         provider=Provider.GOOGLE,
-        display_name="Google TTS Gemini 2.5 Pro",
-        streaming=False,
+        display_name="Google TTS Gemini 2.5 Pro (Preview)",
+        streaming=True,
         operations={Modality.AUDIO: {Operation.SPEAK}},
         parameter_constraints={
             AudioParameter.VOICE: VoiceConstraint(voices=GOOGLE_VOICES),
@@ -71,7 +71,7 @@ MODELS: list[Model] = [
         id="gemini-3.1-flash-tts-preview",
         provider=Provider.GOOGLE,
         display_name="Google TTS Gemini 3.1 Flash (Preview)",
-        streaming=False,
+        streaming=True,
         operations={Modality.AUDIO: {Operation.SPEAK}},
         parameter_constraints={
             AudioParameter.VOICE: VoiceConstraint(voices=GOOGLE_VOICES),

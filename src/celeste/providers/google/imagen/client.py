@@ -29,7 +29,7 @@ class GoogleImagenClient(APIMixin):
     Modality clients extend parsing methods via super() to wrap or transform results.
 
     Usage:
-        class GoogleImageGenerationClient(GoogleImagenClient, ImageGenerationClient):
+        class GoogleImagenImagesClient(GoogleImagenMixin, ImagesClient):
             def _parse_content(self, response_data):
                 predictions = super()._parse_content(response_data)
                 # Extract image from predictions[0]...
