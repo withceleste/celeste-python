@@ -17,7 +17,9 @@ from celeste.modalities.text.protocols.openresponses.parameters import (
 from celeste.modalities.text.providers.anthropic.parameters import (
     ANTHROPIC_PARAMETER_MAPPERS,
 )
-from celeste.modalities.text.providers.google.parameters import GOOGLE_PARAMETER_MAPPERS
+from celeste.modalities.text.providers.google.parameters import (
+    GOOGLE_VERTEX_PARAMETER_MAPPERS,
+)
 from celeste.modalities.text.providers.mistral.parameters import (
     MISTRAL_PARAMETER_MAPPERS,
 )
@@ -85,19 +87,19 @@ def _map(
             {"tool_choice": {"type": "none"}},
         ),
         (
-            GOOGLE_PARAMETER_MAPPERS,
+            GOOGLE_VERTEX_PARAMETER_MAPPERS,
             Provider.GOOGLE,
             ToolChoice.AUTO,
             {"toolConfig": {"functionCallingConfig": {"mode": "AUTO"}}},
         ),
         (
-            GOOGLE_PARAMETER_MAPPERS,
+            GOOGLE_VERTEX_PARAMETER_MAPPERS,
             Provider.GOOGLE,
             ToolChoice.REQUIRED,
             {"toolConfig": {"functionCallingConfig": {"mode": "ANY"}}},
         ),
         (
-            GOOGLE_PARAMETER_MAPPERS,
+            GOOGLE_VERTEX_PARAMETER_MAPPERS,
             Provider.GOOGLE,
             ToolChoice.NONE,
             {"toolConfig": {"functionCallingConfig": {"mode": "NONE"}}},
@@ -138,7 +140,7 @@ def test_choice_wire_format(
             {"type": "tool", "name": "weather"},
         ),
         (
-            GOOGLE_PARAMETER_MAPPERS,
+            GOOGLE_VERTEX_PARAMETER_MAPPERS,
             Provider.GOOGLE,
             {"mode": "ANY", "allowedFunctionNames": ["weather"]},
         ),

@@ -1,4 +1,4 @@
-"""Gemini client for Google images modality."""
+"""Google images client (Vertex / GenerateContent, GoogleADC auth only)."""
 
 from typing import Any
 
@@ -6,24 +6,26 @@ from celeste.artifacts import ImageArtifact
 from celeste.core import UsageField
 from celeste.mime_types import ImageMimeType
 from celeste.parameters import ParameterMapper
-from celeste.providers.google.generate_content import config as google_config
-from celeste.providers.google.generate_content.client import GoogleGenerateContentClient
+from celeste.providers.google.generate_content import config
+from celeste.providers.google.generate_content.client import (
+    GoogleGenerateContentClient as GoogleGenerateContentMixin,
+)
 from celeste.providers.google.utils import build_media_part
 from celeste.types import ImageContent
 
 from ...client import ImagesClient
 from ...io import ImageFinishReason, ImageInput
-from .parameters import GEMINI_PARAMETER_MAPPERS
+from .parameters import GOOGLE_VERTEX_PARAMETER_MAPPERS
 
 
-class GeminiImagesClient(GoogleGenerateContentClient, ImagesClient):
-    """Google Gemini client for images modality (generate + edit)."""
+class GoogleVertexImagesClient(GoogleGenerateContentMixin, ImagesClient):
+    """Google images client (Vertex / GenerateContent)."""
 
-    _edit_endpoint = google_config.GoogleGenerateContentEndpoint.GENERATE_CONTENT
+    _edit_endpoint = config.GoogleGenerateContentEndpoint.GENERATE_CONTENT
 
     @classmethod
     def parameter_mappers(cls) -> list[ParameterMapper[ImageContent]]:
-        return GEMINI_PARAMETER_MAPPERS
+        return GOOGLE_VERTEX_PARAMETER_MAPPERS
 
     def _init_request(self, inputs: ImageInput) -> dict[str, Any]:
         """Initialize request for Gemini image generation/edit."""
@@ -86,4 +88,4 @@ class GeminiImagesClient(GoogleGenerateContentClient, ImagesClient):
         return ImageFinishReason(reason=finish_reason.reason, message=finish_message)
 
 
-__all__ = ["GeminiImagesClient"]
+__all__ = ["GoogleVertexImagesClient"]

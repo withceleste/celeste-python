@@ -9,9 +9,9 @@ from celeste import Model
 from celeste.auth import AuthHeader
 from celeste.core import Provider
 from celeste.modalities.text.io import TextInput
-from celeste.modalities.text.providers.google.client import (
-    GoogleTextClient,
-    GoogleTextStream,
+from celeste.modalities.text.providers.google.vertex import (
+    GoogleVertexTextClient,
+    GoogleVertexTextStream,
 )
 from celeste.tools import ToolResult
 
@@ -54,7 +54,7 @@ async def test_google_stream_replays_native_tool_parts_verbatim() -> None:
     events[-1]["candidates"][0]["finishReason"] = "STOP"
     events[-1]["usageMetadata"] = {"totalTokenCount": 3}
 
-    stream = GoogleTextStream(_async_iter(events))
+    stream = GoogleVertexTextStream(_async_iter(events))
     async for _ in stream:
         pass
 
@@ -62,7 +62,7 @@ async def test_google_stream_replays_native_tool_parts_verbatim() -> None:
     assert output.signature == parts
     assert output.tool_calls[0].id == "audio-1"
 
-    client = GoogleTextClient(
+    client = GoogleVertexTextClient(
         model=Model(
             id="test-model", provider=Provider.GOOGLE, display_name="Test Model"
         ),

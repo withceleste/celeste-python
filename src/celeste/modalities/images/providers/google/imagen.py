@@ -5,21 +5,23 @@ from typing import Any, Unpack
 from celeste.artifacts import ImageArtifact
 from celeste.mime_types import ImageMimeType
 from celeste.parameters import ParameterMapper
-from celeste.providers.google.imagen.client import GoogleImagenClient
+from celeste.providers.google.imagen.client import (
+    GoogleImagenClient as GoogleImagenMixin,
+)
 from celeste.types import ImageContent
 
 from ...client import ImagesClient
 from ...io import ImageInput
 from ...parameters import ImageParameters
-from .parameters import IMAGEN_PARAMETER_MAPPERS
+from .parameters import GOOGLE_IMAGEN_PARAMETER_MAPPERS
 
 
-class ImagenImagesClient(GoogleImagenClient, ImagesClient):
+class GoogleImagenImagesClient(GoogleImagenMixin, ImagesClient):
     """Google Imagen client for images modality (generate)."""
 
     @classmethod
     def parameter_mappers(cls) -> list[ParameterMapper[ImageContent]]:
-        return IMAGEN_PARAMETER_MAPPERS
+        return GOOGLE_IMAGEN_PARAMETER_MAPPERS
 
     def _init_request(self, inputs: ImageInput) -> dict[str, Any]:
         """Initialize request for Imagen API."""
@@ -66,4 +68,4 @@ class ImagenImagesClient(GoogleImagenClient, ImagesClient):
         return content
 
 
-__all__ = ["ImagenImagesClient"]
+__all__ = ["GoogleImagenImagesClient"]

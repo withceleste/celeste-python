@@ -15,8 +15,8 @@ def _byte_offset_to_char_offset(text: str, offset: int) -> int | None:
         return None
 
 
-def map_grounding(grounding_metadata: dict[str, Any], text: str) -> Grounding:
-    """Map Google Gemini groundingMetadata to text grounding."""
+def map_grounding_vertex(grounding_metadata: dict[str, Any], text: str) -> Grounding:
+    """Map generateContent groundingMetadata to text grounding."""
     sources: list[GroundingSource] = []
     source_indices: dict[int, int] = {}
     for index, chunk in enumerate(grounding_metadata.get("groundingChunks", [])):
@@ -72,4 +72,66 @@ def map_grounding(grounding_metadata: dict[str, Any], text: str) -> Grounding:
     )
 
 
-__all__ = ["map_grounding"]
+def map_grounding_interactions(steps: list[dict[str, Any]]) -> Grounding | None:
+    """Map Interactions API google_search steps and text annotations to grounding."""
+    queries: list[str] = []
+    search_entry_point: str | None = None
+    for step in steps:
+        step_type = step.get("type")
+        if step_type == "google_search_call":
+            queries.extend(step.get("arguments", {}).get("queries", []))
+        elif step_type == "google_search_result":
+            for item in step.get("result", []):
+                suggestions = item.get("search_suggestions")
+                if suggestions:
+                    search_entry_point = suggestions
+
+    sources: list[GroundingSource] = []
+    source_indices: dict[str, int] = {}
+    citations: list[Citation] = []
+    for step in steps:
+        if step.get("type") != "model_output":
+            continue
+        for part in step.get("content", []):
+            if part.get("type") != "text":
+                continue
+            part_text = part.get("text", "")
+            for annotation in part.get("annotations", []):
+                if annotation.get("type") != "url_citation":
+                    continue
+                url = annotation.get("url")
+                if not isinstance(url, str) or not url:
+                    continue
+                if url not in source_indices:
+                    source_indices[url] = len(sources)
+                    sources.append(
+                        GroundingSource(url=url, title=annotation.get("title"))
+                    )
+                start = annotation.get("start_index")
+                end = annotation.get("end_index")
+                if not isinstance(start, int) or not isinstance(end, int):
+                    continue
+                start = _byte_offset_to_char_offset(part_text, start)
+                end = _byte_offset_to_char_offset(part_text, end)
+                if start is None or end is None:
+                    continue
+                citations.append(
+                    Citation(
+                        start=start,
+                        end=end,
+                        source_indices=[source_indices[url]],
+                    )
+                )
+
+    if not queries and not sources and not citations:
+        return None
+
+    return Grounding(
+        queries=queries,
+        sources=sources,
+        citations=citations,
+        search_entry_point=search_entry_point,
+    )
+
+
+__all__ = ["map_grounding_interactions", "map_grounding_vertex"]
