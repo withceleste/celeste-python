@@ -5,7 +5,14 @@ from typing import Any, ClassVar
 from uuid import uuid4
 
 from celeste.exceptions import UnsupportedParameterWarning
-from celeste.tools import CodeExecution, Tool, ToolCall, ToolMapper, WebSearch
+from celeste.tools import (
+    CodeExecution,
+    Tool,
+    ToolCall,
+    ToolMapper,
+    UrlContext,
+    WebSearch,
+)
 
 
 def tool_calls_from_steps(steps: list[dict[str, Any]]) -> list[ToolCall]:
@@ -59,11 +66,25 @@ class CodeExecutionMapper(ToolMapper):
         return {"type": "code_execution"}
 
 
-TOOL_MAPPERS: list[ToolMapper] = [WebSearchMapper(), CodeExecutionMapper()]
+class UrlContextMapper(ToolMapper):
+    """Map UrlContext to Google Interactions url_context wire format."""
+
+    tool_type = UrlContext
+
+    def map_tool(self, tool: Tool) -> dict[str, Any]:
+        return {"type": "url_context"}
+
+
+TOOL_MAPPERS: list[ToolMapper] = [
+    WebSearchMapper(),
+    CodeExecutionMapper(),
+    UrlContextMapper(),
+]
 
 __all__ = [
     "TOOL_MAPPERS",
     "CodeExecutionMapper",
+    "UrlContextMapper",
     "WebSearchMapper",
     "tool_calls_from_steps",
 ]

@@ -4,7 +4,14 @@ import warnings
 from typing import Any, ClassVar
 
 from celeste.exceptions import UnsupportedParameterWarning
-from celeste.tools import CodeExecution, Tool, ToolCall, ToolMapper, WebSearch
+from celeste.tools import (
+    CodeExecution,
+    Tool,
+    ToolCall,
+    ToolMapper,
+    UrlContext,
+    WebSearch,
+)
 
 _NATIVE_REPLAY_PART_KEYS = {
     "codeExecutionResult",
@@ -70,11 +77,25 @@ class CodeExecutionMapper(ToolMapper):
         return {"code_execution": {}}
 
 
-TOOL_MAPPERS: list[ToolMapper] = [WebSearchMapper(), CodeExecutionMapper()]
+class UrlContextMapper(ToolMapper):
+    """Map UrlContext to Google url_context wire format."""
+
+    tool_type = UrlContext
+
+    def map_tool(self, tool: Tool) -> dict[str, Any]:
+        return {"url_context": {}}
+
+
+TOOL_MAPPERS: list[ToolMapper] = [
+    WebSearchMapper(),
+    CodeExecutionMapper(),
+    UrlContextMapper(),
+]
 
 __all__ = [
     "TOOL_MAPPERS",
     "CodeExecutionMapper",
+    "UrlContextMapper",
     "WebSearchMapper",
     "needs_native_replay",
     "tool_calls_from_parts",
