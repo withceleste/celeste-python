@@ -111,7 +111,9 @@ class {Provider}{Modality}Client({Modality}Client):
     def _parse_container(self, response_data: dict[str, Any]) -> dict[str, Any] | None:
         return self._strategy._parse_container(response_data)  # type: ignore[union-attr]
 
-    def _transform_output(self, content: {Content}, **parameters: Any) -> {Content}:
+    def _transform_output(
+        self, content: {Content}, **parameters: Unpack[{Modality}Parameters]
+    ) -> {Content}:
         return self._strategy._transform_output(content, **parameters)  # type: ignore[union-attr]
 
     def _build_metadata(self, response_data: dict[str, Any]) -> dict[str, Any]:
