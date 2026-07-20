@@ -28,3 +28,4 @@ The prefix is always the `Provider` enum name, never a brand or model family (`G
 ## Notes
 
 - The commented Vertex block in `providers/{provider_slug}/{api_slug}/client.py.template` is only for providers that serve the SAME wire API on both api-key and ADC auth (different host). A different wire format per auth is route 3, not a `_build_url` branch.
+- When a modality stream needs events the base `_parse_chunk` filtering drops (tool calls, thought signatures), retain them: seed a private list in `__init__`, append in `_parse_chunk` before calling `super()`, and return it from the matching `_aggregate_*` hook (see the anthropic and google streams).

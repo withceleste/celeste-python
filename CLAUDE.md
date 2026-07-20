@@ -42,6 +42,7 @@ Template-first: new files start from `templates/` — `cp` the template, then ed
 - `Model.streaming` means celeste's adapter transport streams this model — not the vendor's advertised capability. Flip it only after a live call through celeste's own streaming path.
 - A `MAX_TOKENS` Range comes only from a provider-documented max-completion/output figure. A context window is never a completion cap; if no completion max is documented, omit the constraint.
 - Choice/enum literals verbatim from the provider's API request-parameter reference, not marketing/model pages (those use display tokens). If two official pages conflict, keep the current value and record the conflict.
+- When the API reference and live serving disagree, live serving wins for constraints and tests; record the conflict in the PR.
 - One `parameter_constraints` dict serves every call mode (unary AND streaming). Constrain to the union; let the provider reject mode-specific invalids.
 - Remove a model id only after a live authenticated call hard-rejects it. Lifecycle/deprecation tables are announcements; providers keep retired aliases serving or silently redirect them.
 
@@ -50,11 +51,14 @@ Template-first: new files start from `templates/` — `cp` the template, then ed
 - A parameter with no constraint passes through to the provider unvalidated — by design (commit d713074).
 - Never add local guards, omit-and-warn mappers, or constraints whose only purpose is to reject what the provider already rejects.
 - Never encode a mode-conditional restriction (e.g. thinking-mode-only) as an unconditional constraint.
+- A mapper may only write fields that exist in the provider's API request reference. The wire-contract matrix asserts our own mapping, never the API's truth — only a live call proves a field.
+- A unified parameter with no wire representation on a backend gets no mapper there — never invent a translation (thinking_budget exists on Vertex, not on Interactions).
 
 ## Code style
 
 - One-line docstrings on private methods and module helpers.
 - No banner/section comments (`# --- x ---`). Comments state invariants, never history or narration.
+- Modality-layer signatures type parameter kwargs as `Unpack[{Modality}Parameters]`; wire and protocol layers are modality-agnostic and use `**parameters: Any`.
 
 ## Workflow
 
@@ -62,7 +66,8 @@ Template-first: new files start from `templates/` — `cp` the template, then ed
 - `make ci` gates every commit (format, lint, typecheck, security, unit tests).
 - Integration tests hit real provider APIs (cost money, need keys in `.env`): `make integration-test`.
 - One PR per concern: provider-global changes (protocol / transport / `core.py`) never ride in model-addition PRs.
-- Never commit or push without explicit maintainer approval.
+- Groundwork (conventions, guards, docs) merges before the feature that motivated it; the feature lands already conforming.
+- Never commit or push without explicit maintainer approval. On a branch under review, fixes are follow-up commits — never amend or force-push.
 
 ## Testing
 
