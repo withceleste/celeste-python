@@ -105,6 +105,8 @@ class GoogleInteractionsClient(APIMixin):
             UsageField.INPUT_TOKENS: usage_data.get("total_input_tokens"),
             UsageField.OUTPUT_TOKENS: usage_data.get("total_output_tokens"),
             UsageField.TOTAL_TOKENS: usage_data.get("total_tokens"),
+            UsageField.REASONING_TOKENS: usage_data.get("total_thought_tokens"),
+            UsageField.CACHED_TOKENS: usage_data.get("total_cached_tokens"),
         }
 
     def _parse_usage(

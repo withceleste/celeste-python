@@ -141,6 +141,64 @@ def test_reconstructs_interleaved_steps_by_index() -> None:
     assert steps[1]["arguments"] == {"location": "Paris"}
 
 
+def test_reconstructs_text_annotations_and_search_steps() -> None:
+    events = [
+        {
+            "index": 0,
+            "step": {"type": "google_search_call", "id": "s1", "signature": "sig-"},
+            "event_type": "step.start",
+        },
+        {
+            "index": 0,
+            "delta": {
+                "type": "google_search_call",
+                "arguments": {"queries": ["celeste sdk"]},
+                "signature": "call",
+            },
+            "event_type": "step.delta",
+        },
+        {"index": 0, "event_type": "step.stop"},
+        {
+            "index": 1,
+            "step": {"type": "google_search_result"},
+            "event_type": "step.start",
+        },
+        {
+            "index": 1,
+            "delta": {
+                "type": "google_search_result",
+                "result": [{"search_suggestions": "<div/>"}],
+            },
+            "event_type": "step.delta",
+        },
+        {"index": 1, "event_type": "step.stop"},
+        {"index": 2, "step": {"type": "model_output"}, "event_type": "step.start"},
+        {
+            "index": 2,
+            "delta": {"type": "text", "text": "Celeste is a Python SDK."},
+            "event_type": "step.delta",
+        },
+        {
+            "index": 2,
+            "delta": {
+                "type": "text_annotation_delta",
+                "annotations": [{"type": "url_citation", "url": "https://example.com"}],
+            },
+            "event_type": "step.delta",
+        },
+        {"index": 2, "event_type": "step.stop"},
+    ]
+
+    steps = reconstruct_steps(events)
+
+    assert steps[0]["arguments"] == {"queries": ["celeste sdk"]}
+    assert steps[0]["signature"] == "sig-call"
+    assert steps[1]["result"] == [{"search_suggestions": "<div/>"}]
+    annotations = steps[2]["content"][0]["annotations"]
+    assert annotations[0]["type"] == "url_citation"
+    assert annotations[0]["url"] == "https://example.com"
+
+
 def test_step_without_stop_is_dropped() -> None:
     events = [
         {"index": 0, "step": {"type": "model_output"}, "event_type": "step.start"},

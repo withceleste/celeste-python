@@ -29,6 +29,7 @@ MODELS: list[Model] = [
             Parameter.MAX_TOKENS: Range(min=1, max=65536),
             # Flash: allows -1 (dynamic), 0 (disable), or >= 0
             TextParameter.THINKING_BUDGET: Range(min=-1, max=24576),
+            TextParameter.THINKING_LEVEL: Choice(options=["low", "medium", "high"]),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch, CodeExecution]),
             TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
             TextParameter.OUTPUT_SCHEMA: Schema(),
@@ -52,6 +53,7 @@ MODELS: list[Model] = [
             TextParameter.THINKING_BUDGET: Range(
                 min=512, max=24576, special_values=[-1, 0]
             ),
+            TextParameter.THINKING_LEVEL: Choice(options=["low", "high"]),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch, CodeExecution]),
             TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
             TextParameter.OUTPUT_SCHEMA: Schema(),
@@ -75,6 +77,7 @@ MODELS: list[Model] = [
             TextParameter.THINKING_BUDGET: Range(
                 min=128, max=32768, special_values=[-1]
             ),
+            TextParameter.THINKING_LEVEL: Choice(options=["low", "high"]),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch, CodeExecution]),
             TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
             TextParameter.OUTPUT_SCHEMA: Schema(),

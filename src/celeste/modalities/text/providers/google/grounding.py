@@ -104,8 +104,13 @@ def map_grounding_interactions(steps: list[dict[str, Any]]) -> Grounding | None:
                     continue
                 if url not in source_indices:
                     source_indices[url] = len(sources)
+                    title = annotation.get("title")
                     sources.append(
-                        GroundingSource(url=url, title=annotation.get("title"))
+                        GroundingSource(
+                            url=url,
+                            title=title,
+                            domain=annotation.get("domain") or title,
+                        )
                     )
                 start = annotation.get("start_index")
                 end = annotation.get("end_index")
@@ -120,6 +125,7 @@ def map_grounding_interactions(steps: list[dict[str, Any]]) -> Grounding | None:
                         start=start,
                         end=end,
                         source_indices=[source_indices[url]],
+                        cited_text=part_text[start:end] or None,
                     )
                 )
 
