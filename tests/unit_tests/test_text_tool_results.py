@@ -106,19 +106,21 @@ def test_anthropic_tool_result_uses_pydantic_json_text() -> None:
     assert json.loads(tool_block["content"]) == output.model_dump(mode="json")
 
 
-def test_google_tool_result_uses_pydantic_json_object() -> None:
-    output = _artifact_output()
+def test_google_tool_result_wraps_json_in_text_block() -> None:
+    refs = [ArtifactRef(id="image-1", artifact_type=InputType.IMAGE)]
     client = GoogleTextClient(
         model=_text_model(Provider.GOOGLE),
         provider=Provider.GOOGLE,
         auth=AuthHeader(secret=SecretStr("test"), header="x-goog-api-key", prefix=""),
     )
 
-    request = client._init_request(TextInput(messages=[_tool_result(output)]))
+    request = client._init_request(TextInput(messages=[_tool_result(refs)]))
 
     turn = request["input"][0]
     assert turn["type"] == "function_result"
-    assert turn["result"] == output.model_dump(mode="json")
+    assert turn["result"] == [
+        {"type": "text", "text": json.dumps([refs[0].model_dump(mode="json")])}
+    ]
 
 
 def test_cohere_tool_result_preserves_pydantic_shape() -> None:

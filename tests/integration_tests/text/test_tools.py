@@ -1,6 +1,14 @@
 import pytest
 
-from celeste import Modality, Provider, ToolChoice, create_client
+from celeste import (
+    Message,
+    Modality,
+    Provider,
+    Role,
+    ToolChoice,
+    ToolResult,
+    create_client,
+)
 from celeste.modalities.text import TextChunk, TextOutput
 from celeste.tools import WebSearch, XSearch
 
@@ -87,6 +95,38 @@ async def test_function_tool_call(
     assert output.tool_calls
     assert output.tool_calls[0].name == "get_weather"
     assert "city" in output.tool_calls[0].arguments
+
+
+async def test_google_tool_result_replay() -> None:
+    client = create_client(
+        modality=Modality.TEXT, provider=Provider.GOOGLE, model="gemini-3.1-flash-lite"
+    )
+    prompt = "Use get_weather to check the weather in Paris."
+
+    first = await client.generate(
+        prompt=prompt,
+        tools=[WEATHER_TOOL],
+        max_tokens=500,
+        tool_choice=ToolChoice.REQUIRED,
+    )
+    assert first.tool_calls
+
+    output = await client.generate(
+        messages=[
+            Message(role=Role.USER, content=prompt),
+            first.message,
+            ToolResult(
+                content=[{"city": "Paris", "temperature_c": 21}],
+                tool_call_id=first.tool_calls[0].id,
+                name="get_weather",
+            ),
+        ],
+        tools=[WEATHER_TOOL],
+        max_tokens=500,
+    )
+
+    assert isinstance(output, TextOutput)
+    assert output.content
 
 
 async def test_x_search() -> None:
