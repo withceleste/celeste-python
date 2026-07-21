@@ -23,6 +23,7 @@ from celeste.modalities.text.providers.moonshot import parameters as moonshot
 from celeste.modalities.text.providers.openai import parameters as openai
 from celeste.modalities.videos.parameters import VideoParameter
 from celeste.modalities.videos.providers.byteplus import parameters as byteplus
+from celeste.modalities.videos.providers.google import parameters as google_videos
 from celeste.modalities.videos.providers.xai import parameters as xai
 from celeste.models import Model
 from celeste.parameters import ParameterMapper
@@ -33,6 +34,8 @@ IMAGES_VERTEX = google_images.GOOGLE_VERTEX_PARAMETER_MAPPERS
 IMAGES_INTERACTIONS = google_images.GOOGLE_INTERACTIONS_PARAMETER_MAPPERS
 IMAGES_IMAGEN = google_images.GOOGLE_IMAGEN_PARAMETER_MAPPERS
 AUDIO_GOOGLE = google_audio.GOOGLE_PARAMETER_MAPPERS
+VIDEOS_VEO = google_videos.GOOGLE_VEO_PARAMETER_MAPPERS
+VIDEOS_INTERACTIONS = google_videos.GOOGLE_INTERACTIONS_PARAMETER_MAPPERS
 OPEN = openai.OPENAI_PARAMETER_MAPPERS
 CHAT = chat.CHATCOMPLETIONS_PARAMETER_MAPPERS
 ANTHROPIC = anthropic.ANTHROPIC_PARAMETER_MAPPERS
@@ -129,6 +132,37 @@ def _at(data: dict[str, Any], path: tuple[str, ...]) -> Any:  # noqa: ANN401
             ("response_format", "mime_type"),
             "audio/mp3",
         ),
+        (VIDEOS_VEO, V.ASPECT_RATIO, "16:9", ("parameters", "aspectRatio"), "16:9"),
+        (VIDEOS_VEO, V.RESOLUTION, "1080p", ("parameters", "resolution"), "1080p"),
+        (VIDEOS_VEO, V.DURATION, 6, ("parameters", "durationSeconds"), 6),
+        (
+            VIDEOS_INTERACTIONS,
+            V.ASPECT_RATIO,
+            "9:16",
+            ("response_format", "aspect_ratio"),
+            "9:16",
+        ),
+        (
+            VIDEOS_INTERACTIONS,
+            V.DURATION,
+            5,
+            ("response_format", "duration"),
+            "5s",
+        ),
+        (
+            VIDEOS_INTERACTIONS,
+            V.FIRST_FRAME,
+            LOCAL_IMAGE,
+            ("generation_config", "video_config", "task"),
+            "image_to_video",
+        ),
+        (
+            VIDEOS_INTERACTIONS,
+            V.REFERENCE_IMAGES,
+            [LOCAL_IMAGE],
+            ("generation_config", "video_config", "task"),
+            "reference_to_video",
+        ),
         (
             GOOGLE_INTERACTIONS,
             T.TEMPERATURE,
@@ -198,6 +232,8 @@ def test_scalar_parameters_use_provider_wire_shape(
         IMAGES_VERTEX,
         IMAGES_IMAGEN,
         AUDIO_GOOGLE,
+        VIDEOS_VEO,
+        VIDEOS_INTERACTIONS,
         OPEN,
         CHAT,
         ANTHROPIC,
@@ -293,6 +329,15 @@ def test_google_media_precedes_text_content() -> None:
                 {"type": "image", "uri": IMAGE.url},
             ],
         ),
+        (
+            VIDEOS_INTERACTIONS,
+            V.REFERENCE_IMAGES,
+            {"input": "describe"},
+            [
+                {"type": "image", "uri": IMAGE.url},
+                {"type": "text", "text": "describe"},
+            ],
+        ),
     ],
 )
 def test_google_interactions_media_joins_input_content(
@@ -302,6 +347,17 @@ def test_google_interactions_media_joins_input_content(
     expected_input: list[dict[str, Any]],
 ) -> None:
     assert _map(mappers, name, [IMAGE], request_body)["input"] == expected_input
+
+
+def test_google_veo_frames_land_in_instances() -> None:
+    request = _map(VIDEOS_VEO, V.FIRST_FRAME, LOCAL_IMAGE)
+    request = _map(VIDEOS_VEO, V.LAST_FRAME, LOCAL_IMAGE, request)
+    request = _map(VIDEOS_VEO, V.REFERENCE_IMAGES, [LOCAL_IMAGE], request)
+
+    instance = request["instances"][0]
+    assert instance["image"]["bytesBase64Encoded"] == LOCAL_IMAGE.get_base64()
+    assert instance["lastFrame"]["mimeType"] == "image/png"
+    assert instance["referenceImages"][0]["referenceType"] == "asset"
 
 
 @pytest.mark.parametrize(

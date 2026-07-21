@@ -1,6 +1,6 @@
 """Google models for videos modality."""
 
-from celeste.constraints import Choice, ImageConstraint, ImagesConstraint
+from celeste.constraints import Choice, ImageConstraint, ImagesConstraint, Range
 from celeste.core import Modality, Operation, Provider
 from celeste.mime_types import ImageMimeType
 from celeste.models import Model
@@ -14,7 +14,8 @@ GOOGLE_SUPPORTED_MIME_TYPES = [
     ImageMimeType.WEBP,
 ]
 
-MODELS: list[Model] = [
+# Veo API models (predictLongRunning)
+GOOGLE_VEO_MODELS: list[Model] = [
     Model(
         id="veo-3.1-generate-preview",
         provider=Provider.GOOGLE,
@@ -74,4 +75,32 @@ MODELS: list[Model] = [
             ),
         },
     ),
+]
+
+# Interactions API models (Gemini Omni)
+GOOGLE_OMNI_MODELS: list[Model] = [
+    Model(
+        id="gemini-omni-flash-preview",
+        provider=Provider.GOOGLE,
+        display_name="Gemini Omni Flash (Preview)",
+        operations={Modality.VIDEOS: {Operation.GENERATE, Operation.EDIT}},
+        parameter_constraints={
+            VideoParameter.ASPECT_RATIO: Choice(options=["16:9", "9:16"]),
+            VideoParameter.DURATION: Range(min=3, max=10),
+            VideoParameter.FIRST_FRAME: ImageConstraint(),
+            VideoParameter.LAST_FRAME: ImageConstraint(),
+            VideoParameter.REFERENCE_IMAGES: ImagesConstraint(),
+        },
+    ),
+]
+
+MODELS: list[Model] = [
+    *GOOGLE_VEO_MODELS,
+    *GOOGLE_OMNI_MODELS,
+]
+
+__all__ = [
+    "GOOGLE_OMNI_MODELS",
+    "GOOGLE_VEO_MODELS",
+    "MODELS",
 ]

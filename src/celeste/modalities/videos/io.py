@@ -27,6 +27,10 @@ class VideoUsage(Usage):
     """
 
     total_tokens: int | None = None
+    input_tokens: int | None = None
+    output_tokens: int | None = None
+    reasoning_tokens: int | None = None
+    cached_tokens: int | None = None
     billed_units: float | None = None
 
 

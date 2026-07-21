@@ -96,7 +96,7 @@ GOOGLE_VERTEX_PARAMETER_MAPPERS: list[ParameterMapper[ImageContent]] = [
 ]
 
 
-class InteractionsAspectRatioMapper(_InteractionsAspectRatioMapper):
+class InteractionsAspectRatioMapper(_InteractionsAspectRatioMapper[ImageContent]):
     """Map aspect_ratio to Google Interactions response_format.aspect_ratio."""
 
     name = ImageParameter.ASPECT_RATIO

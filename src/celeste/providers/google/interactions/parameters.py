@@ -5,13 +5,13 @@ from typing import Any, ClassVar, get_args, get_origin
 
 from pydantic import BaseModel, TypeAdapter
 
-from celeste.exceptions import InvalidToolError
+from celeste.exceptions import InvalidToolError, ValidationError
 from celeste.mime_types import AudioMimeType
 from celeste.models import Model
 from celeste.parameters import ParameterMapper
 from celeste.providers.google.utils import build_content_part
 from celeste.tools import Tool
-from celeste.types import AudioContent, ImageContent, TextContent
+from celeste.types import AudioContent, ImageContent, TextContent, VideoContent
 
 from .tools import TOOL_MAPPERS
 
@@ -271,7 +271,7 @@ class ResponseFormatMapper(ParameterMapper[TextContent]):
         return result
 
 
-class AspectRatioMapper(ParameterMapper[ImageContent]):
+class AspectRatioMapper[Content](ParameterMapper[Content]):
     """Map aspect_ratio to Google Interactions response_format.aspect_ratio field."""
 
     def map(
@@ -350,6 +350,116 @@ class MediaContentMapper[Content](ParameterMapper[Content]):
         return request
 
 
+def _flat_input_parts(request: dict[str, Any]) -> list[dict[str, Any]]:
+    """Normalize request input to a flat content-parts list (video task shape)."""
+    current_input = request.get("input")
+    if isinstance(current_input, str):
+        parts: list[dict[str, Any]] = [{"type": "text", "text": current_input}]
+    elif isinstance(current_input, list):
+        parts = current_input
+    else:
+        parts = []
+    request["input"] = parts
+    return parts
+
+
+def _set_video_task(request: dict[str, Any], task: str) -> None:
+    """Set generation_config.video_config.task."""
+    request.setdefault("generation_config", {}).setdefault("video_config", {})[
+        "task"
+    ] = task
+
+
+class DurationMapper(ParameterMapper[VideoContent]):
+    """Map duration to Google Interactions response_format.duration field."""
+
+    def map(
+        self,
+        request: dict[str, Any],
+        value: object,
+        model: Model,
+    ) -> dict[str, Any]:
+        """Transform duration into provider request."""
+        if isinstance(value, str):
+            value = int(value)
+
+        validated_value = self._validate_value(value, model)
+        if validated_value is None:
+            return request
+
+        response_format = request.setdefault("response_format", {"type": "video"})
+        response_format["duration"] = f"{validated_value}s"
+        return request
+
+
+class FirstFrameMapper(ParameterMapper[VideoContent]):
+    """Map first_frame to a leading image part with video_config.task image_to_video."""
+
+    def map(
+        self,
+        request: dict[str, Any],
+        value: object,
+        model: Model,
+    ) -> dict[str, Any]:
+        """Transform first_frame into provider request."""
+        validated_value = self._validate_value(value, model)
+        if validated_value is None:
+            return request
+
+        parts = _flat_input_parts(request)
+        request["input"] = [build_content_part(validated_value, "image"), *parts]
+        _set_video_task(request, "image_to_video")
+        return request
+
+
+class LastFrameMapper(ParameterMapper[VideoContent]):
+    """Map last_frame to the second image part with video_config.task image_to_video."""
+
+    def map(
+        self,
+        request: dict[str, Any],
+        value: object,
+        model: Model,
+    ) -> dict[str, Any]:
+        """Transform last_frame into provider request."""
+        validated_value = self._validate_value(value, model)
+        if validated_value is None:
+            return request
+
+        parts = _flat_input_parts(request)
+        if not parts or parts[0].get("type") != "image":
+            msg = "last_frame requires first_frame to be provided"
+            raise ValidationError(msg)
+        request["input"] = [
+            parts[0],
+            build_content_part(validated_value, "image"),
+            *parts[1:],
+        ]
+        _set_video_task(request, "image_to_video")
+        return request
+
+
+class ReferenceImagesMapper(ParameterMapper[VideoContent]):
+    """Map reference_images to leading image parts with video_config.task reference_to_video."""
+
+    def map(
+        self,
+        request: dict[str, Any],
+        value: object,
+        model: Model,
+    ) -> dict[str, Any]:
+        """Transform reference_images into provider request."""
+        validated_value = self._validate_value(value, model)
+        if not validated_value:
+            return request
+
+        parts = _flat_input_parts(request)
+        image_parts = [build_content_part(img, "image") for img in validated_value]
+        request["input"] = [*image_parts, *parts]
+        _set_video_task(request, "reference_to_video")
+        return request
+
+
 class VoiceMapper(ParameterMapper[AudioContent]):
     """Map voice to Google Interactions generation_config.speech_config voice field."""
 
@@ -419,10 +529,14 @@ class AudioMimeTypeMapper(ParameterMapper[AudioContent]):
 __all__ = [
     "AspectRatioMapper",
     "AudioMimeTypeMapper",
+    "DurationMapper",
+    "FirstFrameMapper",
     "ImageSizeMapper",
     "LanguageMapper",
+    "LastFrameMapper",
     "MaxOutputTokensMapper",
     "MediaContentMapper",
+    "ReferenceImagesMapper",
     "ResponseFormatMapper",
     "SeedMapper",
     "TemperatureMapper",
