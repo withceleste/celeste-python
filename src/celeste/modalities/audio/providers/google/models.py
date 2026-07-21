@@ -85,7 +85,6 @@ MODELS: list[Model] = [
         display_name="Google Lyria 3 Clip (Preview)",
         operations={Modality.AUDIO: {Operation.GENERATE}},
         parameter_constraints={
-            AudioParameter.OUTPUT_FORMAT: Choice(options=GOOGLE_SUPPORTED_FORMATS),
             AudioParameter.REFERENCE_IMAGES: ImagesConstraint(max_count=10),
         },
     ),
@@ -95,7 +94,6 @@ MODELS: list[Model] = [
         display_name="Google Lyria 3 Pro (Preview)",
         operations={Modality.AUDIO: {Operation.GENERATE}},
         parameter_constraints={
-            AudioParameter.OUTPUT_FORMAT: Choice(options=GOOGLE_SUPPORTED_FORMATS),
             AudioParameter.REFERENCE_IMAGES: ImagesConstraint(max_count=10),
         },
     ),

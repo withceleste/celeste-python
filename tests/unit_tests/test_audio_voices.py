@@ -1,8 +1,12 @@
 import pytest
 
-from celeste.core import Provider
+from celeste.core import Modality, Operation, Provider
 from celeste.modalities.audio.constraints import VoiceConstraint
+from celeste.modalities.audio.parameters import AudioParameter
 from celeste.modalities.audio.providers.elevenlabs.voices import ELEVENLABS_VOICES
+from celeste.modalities.audio.providers.google.models import (
+    MODELS as GOOGLE_AUDIO_MODELS,
+)
 from celeste.modalities.audio.providers.google.voices import GOOGLE_VOICES
 from celeste.modalities.audio.providers.gradium.voices import GRADIUM_VOICES
 from celeste.modalities.audio.providers.openai.voices import OPENAI_VOICES
@@ -44,6 +48,21 @@ def test_provider_descriptions_match_published_metadata() -> None:
     )
     assert GOOGLE_VOICES[0].name == "Zephyr"
     assert GOOGLE_VOICES[0].description == "Bright"
+
+
+def test_google_generate_audio_models_reject_output_format() -> None:
+    """output_format is SPEAK-only: Google's Lyria (GENERATE) endpoint rejects
+    response_format.mime_type, so GENERATE audio models must not declare it."""
+    generate_models = [
+        m
+        for m in GOOGLE_AUDIO_MODELS
+        if Operation.GENERATE in m.operations.get(Modality.AUDIO, set())
+    ]
+    assert generate_models
+    assert all(
+        AudioParameter.OUTPUT_FORMAT not in m.parameter_constraints
+        for m in generate_models
+    )
 
 
 def test_voice_constraint_still_accepts_name_and_id() -> None:
