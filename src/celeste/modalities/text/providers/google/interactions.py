@@ -3,7 +3,7 @@
 from typing import Any
 
 from celeste.grounding import Grounding
-from celeste.messages import message_parts, request_messages, tool_result_object
+from celeste.messages import content_to_text, message_parts, request_messages
 from celeste.parameters import ParameterMapper
 from celeste.providers.google.interactions.client import (
     GoogleInteractionsClient as GoogleInteractionsMixin,
@@ -126,7 +126,9 @@ class GoogleInteractionsTextClient(GoogleInteractionsMixin, TextClient):
                         "type": "function_result",
                         "name": msg.name,
                         "call_id": msg.tool_call_id,
-                        "result": tool_result_object(msg),
+                        "result": [
+                            {"type": "text", "text": content_to_text(msg.content)}
+                        ],
                     }
                 )
                 continue
