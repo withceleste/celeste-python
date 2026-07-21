@@ -13,7 +13,7 @@ from celeste.constraints import (
 )
 from celeste.core import Modality, Operation, Parameter, Provider
 from celeste.models import Model
-from celeste.tools import CodeExecution, WebSearch
+from celeste.tools import CodeExecution, UrlContext, WebSearch
 
 from ...parameters import TextParameter
 
@@ -30,7 +30,9 @@ MODELS: list[Model] = [
             # Flash: allows -1 (dynamic), 0 (disable), or >= 0
             TextParameter.THINKING_BUDGET: Range(min=-1, max=24576),
             TextParameter.THINKING_LEVEL: Choice(options=["low", "medium", "high"]),
-            TextParameter.TOOLS: ToolSupport(tools=[WebSearch, CodeExecution]),
+            TextParameter.TOOLS: ToolSupport(
+                tools=[WebSearch, CodeExecution, UrlContext]
+            ),
             TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             # Media input support
@@ -54,7 +56,9 @@ MODELS: list[Model] = [
                 min=512, max=24576, special_values=[-1, 0]
             ),
             TextParameter.THINKING_LEVEL: Choice(options=["low", "high"]),
-            TextParameter.TOOLS: ToolSupport(tools=[WebSearch, CodeExecution]),
+            TextParameter.TOOLS: ToolSupport(
+                tools=[WebSearch, CodeExecution, UrlContext]
+            ),
             TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             # Media input support
@@ -78,7 +82,9 @@ MODELS: list[Model] = [
                 min=128, max=32768, special_values=[-1]
             ),
             TextParameter.THINKING_LEVEL: Choice(options=["low", "high"]),
-            TextParameter.TOOLS: ToolSupport(tools=[WebSearch, CodeExecution]),
+            TextParameter.TOOLS: ToolSupport(
+                tools=[WebSearch, CodeExecution, UrlContext]
+            ),
             TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             # Media input support
@@ -98,7 +104,9 @@ MODELS: list[Model] = [
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0),
             Parameter.MAX_TOKENS: Range(min=1, max=65536),
             TextParameter.THINKING_LEVEL: Choice(options=["low", "high"]),
-            TextParameter.TOOLS: ToolSupport(tools=[WebSearch, CodeExecution]),
+            TextParameter.TOOLS: ToolSupport(
+                tools=[WebSearch, CodeExecution, UrlContext]
+            ),
             TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             # Media input support
@@ -118,7 +126,9 @@ MODELS: list[Model] = [
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0),
             Parameter.MAX_TOKENS: Range(min=1, max=65536),
             TextParameter.THINKING_LEVEL: Choice(options=["low", "medium", "high"]),
-            TextParameter.TOOLS: ToolSupport(tools=[WebSearch, CodeExecution]),
+            TextParameter.TOOLS: ToolSupport(
+                tools=[WebSearch, CodeExecution, UrlContext]
+            ),
             TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             # Media input support
@@ -140,7 +150,9 @@ MODELS: list[Model] = [
             TextParameter.THINKING_LEVEL: Choice(
                 options=["minimal", "low", "medium", "high"]
             ),
-            TextParameter.TOOLS: ToolSupport(tools=[WebSearch, CodeExecution]),
+            TextParameter.TOOLS: ToolSupport(
+                tools=[WebSearch, CodeExecution, UrlContext]
+            ),
             TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             # Media input support
@@ -162,7 +174,9 @@ MODELS: list[Model] = [
             TextParameter.THINKING_LEVEL: Choice(
                 options=["minimal", "low", "medium", "high"]
             ),
-            TextParameter.TOOLS: ToolSupport(tools=[WebSearch, CodeExecution]),
+            TextParameter.TOOLS: ToolSupport(
+                tools=[WebSearch, CodeExecution, UrlContext]
+            ),
             TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             # Media input support

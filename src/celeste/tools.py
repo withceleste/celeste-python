@@ -49,6 +49,12 @@ class CodeExecution(Tool):
     kind: Literal["code_execution"] = "code_execution"
 
 
+class UrlContext(Tool):
+    """URL context tool: the model fetches URLs referenced in the prompt (Google)."""
+
+    kind: Literal["url_context"] = "url_context"
+
+
 class ToolMapper(ABC):
     """Maps a single Tool type to provider wire format.
 
@@ -67,6 +73,7 @@ _TOOL_KINDS: dict[str, type[Tool]] = {
     "web_search": WebSearch,
     "x_search": XSearch,
     "code_execution": CodeExecution,
+    "url_context": UrlContext,
 }
 
 
@@ -184,6 +191,7 @@ __all__ = [
     "ToolOutput",
     "ToolResult",
     "ToolResultContent",
+    "UrlContext",
     "WebSearch",
     "XSearch",
     "rehydrate_tools",

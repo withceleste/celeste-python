@@ -8,6 +8,9 @@ from celeste.providers.google.generate_content.parameters import (
     ResponseJsonSchemaMapper as _VertexResponseJsonSchemaMapper,
 )
 from celeste.providers.google.generate_content.parameters import (
+    SeedMapper as _VertexSeedMapper,
+)
+from celeste.providers.google.generate_content.parameters import (
     TemperatureMapper as _VertexTemperatureMapper,
 )
 from celeste.providers.google.generate_content.parameters import (
@@ -27,6 +30,9 @@ from celeste.providers.google.interactions.parameters import (
 )
 from celeste.providers.google.interactions.parameters import (
     ResponseFormatMapper as _InteractionsResponseFormatMapper,
+)
+from celeste.providers.google.interactions.parameters import (
+    SeedMapper as _InteractionsSeedMapper,
 )
 from celeste.providers.google.interactions.parameters import (
     TemperatureMapper as _InteractionsTemperatureMapper,
@@ -87,9 +93,16 @@ class VertexToolChoiceMapper(_VertexToolChoiceMapper[TextContent]):
     name = TextParameter.TOOL_CHOICE
 
 
+class VertexSeedMapper(_VertexSeedMapper[TextContent]):
+    """Map seed to Google's generationConfig.seed parameter."""
+
+    name = TextParameter.SEED
+
+
 GOOGLE_VERTEX_PARAMETER_MAPPERS: list[ParameterMapper[TextContent]] = [
     VertexTemperatureMapper(),
     VertexMaxTokensMapper(),
+    VertexSeedMapper(),
     VertexThinkingBudgetMapper(),
     VertexThinkingLevelMapper(),
     VertexOutputSchemaMapper(),
@@ -134,9 +147,16 @@ class InteractionsToolChoiceMapper(_InteractionsToolChoiceMapper):
     name = TextParameter.TOOL_CHOICE
 
 
+class InteractionsSeedMapper(_InteractionsSeedMapper):
+    """Map seed to Google's generation_config.seed parameter."""
+
+    name = TextParameter.SEED
+
+
 GOOGLE_INTERACTIONS_PARAMETER_MAPPERS: list[ParameterMapper[TextContent]] = [
     InteractionsTemperatureMapper(),
     InteractionsMaxTokensMapper(),
+    InteractionsSeedMapper(),
     InteractionsThinkingLevelMapper(),
     InteractionsOutputSchemaMapper(),
     InteractionsToolsMapper(),

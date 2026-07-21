@@ -10,10 +10,17 @@ from celeste.core import Provider
 from celeste.modalities.text.parameters import TextParameter
 from celeste.models import Model
 from celeste.providers.google.generate_content.parameters import ToolsMapper
-from celeste.tools import CodeExecution, ToolDefinition, WebSearch
+from celeste.providers.google.interactions.parameters import (
+    ToolsMapper as InteractionsToolsMapper,
+)
+from celeste.tools import CodeExecution, ToolDefinition, UrlContext, WebSearch
 
 
 class _GoogleToolsMapper(ToolsMapper):
+    name = TextParameter.TOOLS
+
+
+class _GoogleInteractionsToolsMapper(InteractionsToolsMapper):
     name = TextParameter.TOOLS
 
 
@@ -31,6 +38,12 @@ def _map(tool: dict) -> dict:
 
 def _map_tools(tools: list[ToolDefinition]) -> dict[str, Any]:
     return _MAPPER.map({}, tools, _MODEL)
+
+
+def test_url_context_maps_to_both_wire_shapes() -> None:
+    assert _map_tools([UrlContext()])["tools"] == [{"url_context": {}}]
+    interactions = _GoogleInteractionsToolsMapper().map({}, [UrlContext()], _MODEL)
+    assert interactions["tools"] == [{"type": "url_context"}]
 
 
 def test_maps_to_parameters_json_schema() -> None:

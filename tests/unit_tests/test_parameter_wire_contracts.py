@@ -88,6 +88,7 @@ def _at(data: dict[str, Any], path: tuple[str, ...]) -> Any:  # noqa: ANN401
     [
         (GOOGLE_VERTEX, T.TEMPERATURE, 0.2, (*GC, "temperature"), 0.2),
         (GOOGLE_VERTEX, T.MAX_TOKENS, 80, (*GC, "maxOutputTokens"), 80),
+        (GOOGLE_VERTEX, T.SEED, 7, (*GC, "seed"), 7),
         (
             GOOGLE_VERTEX,
             T.THINKING_BUDGET,
@@ -142,6 +143,7 @@ def _at(data: dict[str, Any], path: tuple[str, ...]) -> Any:  # noqa: ANN401
             ("generation_config", "max_output_tokens"),
             80,
         ),
+        (GOOGLE_INTERACTIONS, T.SEED, 7, ("generation_config", "seed"), 7),
         (
             GOOGLE_INTERACTIONS,
             T.THINKING_LEVEL,

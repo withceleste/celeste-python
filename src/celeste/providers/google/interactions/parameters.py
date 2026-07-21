@@ -56,6 +56,24 @@ class MaxOutputTokensMapper(ParameterMapper[TextContent]):
         return request
 
 
+class SeedMapper(ParameterMapper[TextContent]):
+    """Map seed to Google Interactions generation_config.seed field."""
+
+    def map(
+        self,
+        request: dict[str, Any],
+        value: object,
+        model: Model,
+    ) -> dict[str, Any]:
+        """Transform seed into provider request."""
+        validated_value = self._validate_value(value, model)
+        if validated_value is None:
+            return request
+
+        request.setdefault("generation_config", {})["seed"] = validated_value
+        return request
+
+
 class ThinkingLevelMapper[Content](ParameterMapper[Content]):
     """Map thinking_level to Google Interactions generation_config.thinking_level field."""
 
@@ -406,6 +424,7 @@ __all__ = [
     "MaxOutputTokensMapper",
     "MediaContentMapper",
     "ResponseFormatMapper",
+    "SeedMapper",
     "TemperatureMapper",
     "ThinkingLevelMapper",
     "ToolChoiceMapper",
