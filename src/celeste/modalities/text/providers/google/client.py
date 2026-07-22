@@ -20,6 +20,16 @@ from .parameters import (
 )
 from .vertex import GoogleVertexTextClient
 
+# Interactions rejects mixing built-in tools with function calling for these ids and
+# does not accept tool_config.include_server_side_tool_invocations; GenerateContent
+# accepts the mix when includeServerSideToolInvocations is set (ToolsMapper).
+_GENERATE_CONTENT_API_KEY_MODELS = frozenset(
+    {
+        "gemini-3.5-flash-lite",
+        "gemini-3.6-flash",
+    }
+)
+
 
 class GoogleTextClient(TextClient):
     """Google text client (selects the Interactions or Vertex backend by auth)."""
@@ -30,9 +40,12 @@ class GoogleTextClient(TextClient):
         """Initialize the backend client based on auth type."""
         super().model_post_init(__context)
 
+        use_generate_content = isinstance(self.auth, GoogleADC) or (
+            self.model.id in _GENERATE_CONTENT_API_KEY_MODELS
+        )
         StrategyClass = (
             GoogleVertexTextClient
-            if isinstance(self.auth, GoogleADC)
+            if use_generate_content
             else GoogleInteractionsTextClient
         )
         strategy = StrategyClass(
