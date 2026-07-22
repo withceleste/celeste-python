@@ -1,4 +1,4 @@
-"""Google text client (Interactions API; GoogleADC auth uses Vertex GenerateContent)."""
+"""Google text client dispatcher for Interactions and GenerateContent."""
 
 from collections.abc import AsyncIterator
 from typing import Any, Unpack
@@ -6,11 +6,11 @@ from typing import Any, Unpack
 from celeste.grounding import Grounding
 from celeste.parameters import ParameterMapper
 from celeste.providers.google.auth import GoogleADC
-from celeste.tools import ToolCall
+from celeste.tools import Tool, ToolCall
 from celeste.types import TextContent
 
 from ...client import TextClient
-from ...io import TextInput
+from ...io import TextInput, TextOutput
 from ...parameters import TextParameters
 from ...streaming import TextStream
 from .interactions import GoogleInteractionsTextClient
@@ -20,9 +20,26 @@ from .parameters import (
 )
 from .vertex import GoogleVertexTextClient
 
+# Remove with https://github.com/withceleste/celeste-python/issues/335.
+_GENERATE_CONTENT_MIXED_TOOL_FALLBACK_MODELS = {
+    "gemini-3.5-flash-lite",
+    "gemini-3.6-flash",
+}
+
+
+def _has_mixed_tools(tools: object) -> bool:
+    if not isinstance(tools, list):
+        return False
+    has_function = any(isinstance(tool, dict) and "name" in tool for tool in tools)
+    has_builtin = any(
+        isinstance(tool, Tool) or (isinstance(tool, dict) and "name" not in tool)
+        for tool in tools
+    )
+    return has_function and has_builtin
+
 
 class GoogleTextClient(TextClient):
-    """Google text client (selects the Interactions or Vertex backend by auth)."""
+    """Google text client selecting the backend by auth and request capabilities."""
 
     _strategy: GoogleInteractionsTextClient | GoogleVertexTextClient | None = None
 
@@ -43,6 +60,78 @@ class GoogleTextClient(TextClient):
             base_url=self.base_url,
         )
         object.__setattr__(self, "_strategy", strategy)
+
+    def _generate_content_fallback(
+        self, tools: object
+    ) -> GoogleVertexTextClient | None:
+        if (
+            isinstance(self._strategy, GoogleInteractionsTextClient)
+            and self.model.id in _GENERATE_CONTENT_MIXED_TOOL_FALLBACK_MODELS
+            and _has_mixed_tools(tools)
+        ):
+            return GoogleVertexTextClient(
+                modality=self.modality,
+                model=self.model,
+                provider=self.provider,
+                auth=self.auth,
+                base_url=self.base_url,
+            )
+        return None
+
+    async def _predict(
+        self,
+        inputs: TextInput,
+        *,
+        endpoint: str | None = None,
+        extra_body: dict[str, Any] | None = None,
+        extra_headers: dict[str, str] | None = None,
+        **parameters: Unpack[TextParameters],
+    ) -> TextOutput:
+        fallback = self._generate_content_fallback(parameters.get("tools"))
+        if fallback is None:
+            return await super()._predict(
+                inputs,
+                endpoint=endpoint,
+                extra_body=extra_body,
+                extra_headers=extra_headers,
+                **parameters,
+            )
+        return await fallback._predict(
+            inputs,
+            endpoint=endpoint,
+            extra_body=extra_body,
+            extra_headers=extra_headers,
+            **parameters,
+        )
+
+    def _stream(
+        self,
+        inputs: TextInput,
+        stream_class: type[TextStream],
+        *,
+        endpoint: str | None = None,
+        extra_body: dict[str, Any] | None = None,
+        extra_headers: dict[str, str] | None = None,
+        **parameters: Unpack[TextParameters],
+    ) -> TextStream:
+        fallback = self._generate_content_fallback(parameters.get("tools"))
+        if fallback is None:
+            return super()._stream(
+                inputs,
+                stream_class,
+                endpoint=endpoint,
+                extra_body=extra_body,
+                extra_headers=extra_headers,
+                **parameters,
+            )
+        return fallback._stream(
+            inputs,
+            fallback._stream_class(),
+            endpoint=endpoint,
+            extra_body=extra_body,
+            extra_headers=extra_headers,
+            **parameters,
+        )
 
     @classmethod
     def parameter_mappers(cls) -> list[ParameterMapper[TextContent]]:

@@ -1,4 +1,4 @@
-"""Google text client (GenerateContent API, used only for GoogleADC/Vertex auth)."""
+"""Google text client for the direct and Vertex GenerateContent APIs."""
 
 from typing import Any
 
@@ -44,7 +44,7 @@ from .parameters import GOOGLE_VERTEX_PARAMETER_MAPPERS
 
 
 class GoogleVertexTextStream(_GoogleGenerateContentStream, TextStream):
-    """Google streaming for text modality (Vertex / GenerateContent)."""
+    """Google GenerateContent streaming for the text modality."""
 
     def _aggregate_grounding(
         self, chunks: list, raw_events: list[dict[str, Any]]
@@ -77,7 +77,7 @@ class GoogleVertexTextStream(_GoogleGenerateContentStream, TextStream):
 
 
 class GoogleVertexTextClient(GoogleGenerateContentMixin, TextClient):
-    """Google text client (Vertex / GenerateContent)."""
+    """Google text client for GenerateContent, with auth-based URL routing."""
 
     @classmethod
     def parameter_mappers(cls) -> list[ParameterMapper[TextContent]]:
