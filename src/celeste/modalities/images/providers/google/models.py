@@ -71,7 +71,6 @@ GOOGLE_GEMINI_MODELS: list[Model] = [
                     "21:9",
                 ]
             ),
-            ImageParameter.REFERENCE_IMAGES: ImagesConstraint(max_count=3),
         },
     ),
     Model(
@@ -123,7 +122,7 @@ GOOGLE_GEMINI_MODELS: list[Model] = [
                     "21:9",
                 ]
             ),
-            ImageParameter.QUALITY: Choice(options=["512px", "1K", "2K", "4K"]),
+            ImageParameter.QUALITY: Choice(options=["512", "1K", "2K", "4K"]),
             ImageParameter.REFERENCE_IMAGES: ImagesConstraint(max_count=14),
             ImageParameter.THINKING_LEVEL: Choice(options=["minimal", "high"]),
         },
