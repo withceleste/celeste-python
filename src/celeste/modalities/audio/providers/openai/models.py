@@ -54,4 +54,16 @@ MODELS: list[Model] = [
             AudioParameter.OUTPUT_FORMAT: Choice(options=_RESPONSE_FORMAT_OPTIONS),
         },
     ),
+    Model(
+        id="gpt-4o-mini-tts-2025-12-15",
+        provider=Provider.OPENAI,
+        display_name="GPT-4o Mini TTS (2025-12-15)",
+        streaming=False,
+        operations={Modality.AUDIO: {Operation.SPEAK}},
+        parameter_constraints={
+            AudioParameter.VOICE: VoiceConstraint(voices=GPT4O_MINI_TTS_VOICES),
+            AudioParameter.SPEED: Range(min=0.25, max=4.0),
+            AudioParameter.OUTPUT_FORMAT: Choice(options=_RESPONSE_FORMAT_OPTIONS),
+        },
+    ),
 ]

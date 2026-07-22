@@ -29,6 +29,7 @@ MODELS: list[Model] = [
             Parameter.MAX_TOKENS: Range(min=1, max=65536),
             # Flash: allows -1 (dynamic), 0 (disable), or >= 0
             TextParameter.THINKING_BUDGET: Range(min=-1, max=24576),
+            # Interactions path (API key): thinking_level; Vertex/ADC: thinking_budget
             TextParameter.THINKING_LEVEL: Choice(options=["low", "medium", "high"]),
             TextParameter.TOOLS: ToolSupport(
                 tools=[WebSearch, CodeExecution, UrlContext]
@@ -55,6 +56,7 @@ MODELS: list[Model] = [
             TextParameter.THINKING_BUDGET: Range(
                 min=512, max=24576, special_values=[-1, 0]
             ),
+            # Interactions path (API key): thinking_level; Vertex/ADC: thinking_budget
             TextParameter.THINKING_LEVEL: Choice(options=["low", "high"]),
             TextParameter.TOOLS: ToolSupport(
                 tools=[WebSearch, CodeExecution, UrlContext]
@@ -81,6 +83,7 @@ MODELS: list[Model] = [
             TextParameter.THINKING_BUDGET: Range(
                 min=128, max=32768, special_values=[-1]
             ),
+            # Interactions path (API key): thinking_level; Vertex/ADC: thinking_budget
             TextParameter.THINKING_LEVEL: Choice(options=["low", "high"]),
             TextParameter.TOOLS: ToolSupport(
                 tools=[WebSearch, CodeExecution, UrlContext]
@@ -103,7 +106,9 @@ MODELS: list[Model] = [
         parameter_constraints={
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0),
             Parameter.MAX_TOKENS: Range(min=1, max=65536),
-            TextParameter.THINKING_LEVEL: Choice(options=["low", "high"]),
+            TextParameter.THINKING_LEVEL: Choice(
+                options=["minimal", "low", "medium", "high"]
+            ),
             TextParameter.TOOLS: ToolSupport(
                 tools=[WebSearch, CodeExecution, UrlContext]
             ),

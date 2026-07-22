@@ -144,7 +144,7 @@ MODELS: list[Model] = [
         streaming=True,
         parameter_constraints={
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0),
-            Parameter.MAX_TOKENS: Range(min=1, max=128000),
+            Parameter.MAX_TOKENS: Range(min=1, max=16384),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
             TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
             TextParameter.IMAGE: ImagesConstraint(),

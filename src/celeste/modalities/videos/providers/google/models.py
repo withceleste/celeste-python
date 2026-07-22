@@ -88,7 +88,6 @@ GOOGLE_OMNI_MODELS: list[Model] = [
             VideoParameter.ASPECT_RATIO: Choice(options=["16:9", "9:16"]),
             VideoParameter.DURATION: Range(min=3, max=10),
             VideoParameter.FIRST_FRAME: ImageConstraint(),
-            VideoParameter.LAST_FRAME: ImageConstraint(),
             VideoParameter.REFERENCE_IMAGES: ImagesConstraint(),
         },
     ),

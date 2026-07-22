@@ -207,6 +207,36 @@ MODELS: list[Model] = [
             ImageParameter.GUIDANCE: Range(min=1.5, max=10.0),
         },
     ),
+    Model(
+        id="flux-kontext-max",
+        provider=Provider.BFL,
+        display_name="FLUX.1 Kontext [max]",
+        operations={Modality.IMAGES: {Operation.GENERATE, Operation.EDIT}},
+    ),
+    Model(
+        id="flux-kontext-pro",
+        provider=Provider.BFL,
+        display_name="FLUX.1 Kontext [pro]",
+        operations={Modality.IMAGES: {Operation.GENERATE, Operation.EDIT}},
+    ),
+    Model(
+        id="flux-pro-1.1-ultra",
+        provider=Provider.BFL,
+        display_name="FLUX1.1 [pro] Ultra",
+        operations={Modality.IMAGES: {Operation.GENERATE}},
+    ),
+    Model(
+        id="flux-pro-1.1",
+        provider=Provider.BFL,
+        display_name="FLUX1.1 [pro]",
+        operations={Modality.IMAGES: {Operation.GENERATE}},
+    ),
+    Model(
+        id="flux-dev",
+        provider=Provider.BFL,
+        display_name="FLUX.1 [dev]",
+        operations={Modality.IMAGES: {Operation.GENERATE}},
+    ),
 ]
 
 __all__ = ["MODELS"]
