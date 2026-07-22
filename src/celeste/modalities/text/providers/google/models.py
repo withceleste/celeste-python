@@ -186,4 +186,50 @@ MODELS: list[Model] = [
             TextParameter.DOCUMENT: DocumentsConstraint(),
         },
     ),
+    Model(
+        id="gemini-3.5-flash-lite",
+        provider=Provider.GOOGLE,
+        display_name="Gemini 3.5 Flash Lite",
+        operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
+        streaming=True,
+        parameter_constraints={
+            Parameter.MAX_TOKENS: Range(min=1, max=65536),
+            TextParameter.THINKING_LEVEL: Choice(
+                options=["minimal", "low", "medium", "high"]
+            ),
+            TextParameter.TOOLS: ToolSupport(
+                tools=[WebSearch, CodeExecution, UrlContext]
+            ),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
+            TextParameter.OUTPUT_SCHEMA: Schema(),
+            # Media input support
+            TextParameter.IMAGE: ImagesConstraint(),
+            TextParameter.VIDEO: VideosConstraint(),
+            TextParameter.AUDIO: AudioConstraint(),
+            TextParameter.DOCUMENT: DocumentsConstraint(),
+        },
+    ),
+    Model(
+        id="gemini-3.6-flash",
+        provider=Provider.GOOGLE,
+        display_name="Gemini 3.6 Flash",
+        operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
+        streaming=True,
+        parameter_constraints={
+            Parameter.MAX_TOKENS: Range(min=1, max=65536),
+            TextParameter.THINKING_LEVEL: Choice(
+                options=["minimal", "low", "medium", "high"]
+            ),
+            TextParameter.TOOLS: ToolSupport(
+                tools=[WebSearch, CodeExecution, UrlContext]
+            ),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
+            TextParameter.OUTPUT_SCHEMA: Schema(),
+            # Media input support
+            TextParameter.IMAGE: ImagesConstraint(),
+            TextParameter.VIDEO: VideosConstraint(),
+            TextParameter.AUDIO: AudioConstraint(),
+            TextParameter.DOCUMENT: DocumentsConstraint(),
+        },
+    ),
 ]
