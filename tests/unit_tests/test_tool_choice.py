@@ -18,6 +18,7 @@ from celeste.modalities.text.providers.anthropic.parameters import (
     ANTHROPIC_PARAMETER_MAPPERS,
 )
 from celeste.modalities.text.providers.google.parameters import (
+    GOOGLE_INTERACTIONS_PARAMETER_MAPPERS,
     GOOGLE_VERTEX_PARAMETER_MAPPERS,
 )
 from celeste.modalities.text.providers.mistral.parameters import (
@@ -119,6 +120,30 @@ def test_choice_wire_format(
     expected: dict[str, Any],
 ) -> None:
     assert _map(mappers, value, provider) == expected
+
+
+@pytest.mark.parametrize(
+    ("tools", "expected"),
+    [
+        ([{"type": "google_search"}, {"name": "weather"}], "validated"),
+        ([{"name": "weather"}], "auto"),
+        ([{"type": "google_search"}], "auto"),
+    ],
+)
+def test_google_interactions_auto_choice_for_tool_mix(
+    tools: list[object], expected: str
+) -> None:
+    request: dict[str, Any] = {}
+    parameters: dict[Any, object] = {
+        TextParameter.TOOLS: tools,
+        TextParameter.TOOL_CHOICE: ToolChoice.AUTO,
+    }
+    model = Model(id="test", provider=Provider.GOOGLE, display_name="test")
+
+    for mapper in GOOGLE_INTERACTIONS_PARAMETER_MAPPERS:
+        request = mapper.map(request, parameters.get(mapper.name), model)
+
+    assert request["generation_config"]["tool_choice"] == expected
 
 
 @pytest.mark.parametrize(
