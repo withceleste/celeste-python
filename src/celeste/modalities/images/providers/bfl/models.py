@@ -232,12 +232,6 @@ MODELS: list[Model] = [
         operations={Modality.IMAGES: {Operation.GENERATE}},
     ),
     Model(
-        id="flux-pro",
-        provider=Provider.BFL,
-        display_name="FLUX.1 [pro]",
-        operations={Modality.IMAGES: {Operation.GENERATE}},
-    ),
-    Model(
         id="flux-dev",
         provider=Provider.BFL,
         display_name="FLUX.1 [dev]",
