@@ -177,6 +177,12 @@ class ToolChoiceMapper(ParameterMapper[TextContent]):
             }
         elif validated_value == "required":
             generation_config["tool_choice"] = "any"
+        elif (
+            validated_value == "auto"
+            and any(tool.get("type") == "function" for tool in request.get("tools", []))
+            and any(tool.get("type") != "function" for tool in request.get("tools", []))
+        ):
+            generation_config["tool_choice"] = "validated"
         else:
             generation_config["tool_choice"] = str(validated_value).lower()
         return request
