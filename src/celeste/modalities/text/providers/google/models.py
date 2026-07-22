@@ -199,9 +199,9 @@ MODELS: list[Model] = [
         streaming=True,
         parameter_constraints={
             Parameter.MAX_TOKENS: Range(min=1, max=65536),
-            TextParameter.THINKING_LEVEL: Choice(
-                options=["minimal", "low", "medium", "high"]
-            ),
+            # Live Interactions serving accepts only low|high; Google docs still list
+            # minimal|medium for this id (verified 2026-07-22).
+            TextParameter.THINKING_LEVEL: Choice(options=["low", "high"]),
             TextParameter.TOOLS: ToolSupport(
                 tools=[WebSearch, CodeExecution, UrlContext]
             ),
@@ -222,9 +222,9 @@ MODELS: list[Model] = [
         streaming=True,
         parameter_constraints={
             Parameter.MAX_TOKENS: Range(min=1, max=65536),
-            TextParameter.THINKING_LEVEL: Choice(
-                options=["minimal", "low", "medium", "high"]
-            ),
+            # Live Interactions serving accepts only low|high; Google docs still list
+            # minimal|medium for this id (verified 2026-07-22).
+            TextParameter.THINKING_LEVEL: Choice(options=["low", "high"]),
             TextParameter.TOOLS: ToolSupport(
                 tools=[WebSearch, CodeExecution, UrlContext]
             ),
