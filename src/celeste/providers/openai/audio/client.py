@@ -1,32 +1,49 @@
 """OpenAI Audio API client mixin."""
 
 from collections.abc import AsyncIterator
-from typing import Any
+from typing import Any, ClassVar
 
+from celeste.artifacts import AudioArtifact
 from celeste.client import APIMixin
 from celeste.exceptions import StreamingNotSupportedError
 from celeste.io import FinishReason
 from celeste.mime_types import AudioMimeType
+from celeste.utils import detect_mime_type
 
 from . import config
 
+_MIME_TO_EXT: dict[str, str] = {
+    AudioMimeType.FLAC: "flac",
+    AudioMimeType.MP3: "mp3",
+    AudioMimeType.M4A: "m4a",
+    AudioMimeType.OGG: "ogg",
+    AudioMimeType.WAV: "wav",
+    AudioMimeType.WEBM: "webm",
+}
+
 
 class OpenAIAudioClient(APIMixin):
-    """Mixin for OpenAI Audio API speech generation.
+    """Mixin for OpenAI Audio API speech and transcription.
 
-    Provides shared implementation for speech generation:
-    - _make_request() - HTTP POST to /v1/audio/speech
-    - _parse_usage() - Returns empty dict (Audio API doesn't return usage in body)
+    Provides shared implementation for speech and transcription:
+    - _make_request() - Routes SPEAK (JSON/binary) vs CREATE_TRANSCRIPTION (multipart)
+    - _parse_usage() - Maps token usage; duration-only usage goes to metadata
+    - _parse_content() - Transcript text; speech binary is handled by the modality client
     - _map_response_format_to_mime_type() - Map format string to AudioMimeType
 
-    The Audio API speech endpoint returns binary audio data, not JSON.
-    Modality clients must handle the binary response in their generate() override.
+    The speech endpoint returns binary audio data, not JSON.
+    The transcription endpoint returns JSON with a text field.
+    Modality clients must branch on response shape in _parse_content / speak.
 
     Usage:
         class OpenAIAudioClient(OpenAIAudioMixin, AudioClient):
-            async def generate(self, *args, **parameters):
-                # Handle binary response...
+            def _parse_content(self, response_data):
+                if "audio_bytes" in response_data:
+                    ...
+                return super()._parse_content(response_data)
     """
+
+    _content_fields: ClassVar[set[str]] = {"text", "audio_bytes"}
 
     def _build_request(
         self,
@@ -35,12 +52,14 @@ class OpenAIAudioClient(APIMixin):
         streaming: bool = False,
         **parameters: Any,
     ) -> dict[str, Any]:
-        """Build request with model ID and streaming flag."""
+        """Build request with model ID; default json response for transcription."""
         request_body = super()._build_request(
             inputs, extra_body=extra_body, streaming=streaming, **parameters
         )
         request_body["model"] = self.model.id
-        if streaming:
+        if "file" in request_body:
+            request_body.setdefault("response_format", "json")
+        elif streaming:
             request_body["stream"] = True
         return request_body
 
@@ -52,7 +71,7 @@ class OpenAIAudioClient(APIMixin):
         extra_headers: dict[str, str] | None = None,
         **parameters: Any,
     ) -> AsyncIterator[dict[str, Any]]:
-        """OpenAI Audio API speech endpoint does not support SSE streaming in this client."""
+        """OpenAI Audio speech endpoint does not support SSE streaming in this client."""
         raise StreamingNotSupportedError(model_id=self.model.id)
 
     async def _make_request(
@@ -63,15 +82,17 @@ class OpenAIAudioClient(APIMixin):
         extra_headers: dict[str, str] | None = None,
         **parameters: Any,
     ) -> dict[str, Any]:
-        """Make HTTP request to OpenAI Audio API speech endpoint.
-
-        Returns dict with binary audio content.
-        """
+        """POST speech (JSON/binary) or transcription (multipart/JSON)."""
+        _ = parameters
         if endpoint is None:
             endpoint = config.OpenAIAudioEndpoint.CREATE_SPEECH
 
-        headers = self._json_headers(extra_headers)
+        if endpoint == config.OpenAIAudioEndpoint.CREATE_TRANSCRIPTION:
+            return await self._make_transcription_request(
+                request_body, endpoint=endpoint, extra_headers=extra_headers
+            )
 
+        headers = self._json_headers(extra_headers)
         response = await self.http_client.post(
             f"{config.BASE_URL}{endpoint}",
             headers=headers,
@@ -83,15 +104,58 @@ class OpenAIAudioClient(APIMixin):
             "headers": dict(response.headers),
         }
 
+    async def _make_transcription_request(
+        self,
+        request_body: dict[str, Any],
+        *,
+        endpoint: str,
+        extra_headers: dict[str, str] | None = None,
+    ) -> dict[str, Any]:
+        """Make multipart transcription request to OpenAI Audio API."""
+        audio = request_body.pop("file")
+        if not isinstance(audio, AudioArtifact):
+            msg = "OpenAI transcription requires a single AudioArtifact"
+            raise ValueError(msg)
+
+        audio_bytes = audio.get_bytes()
+        mime = audio.mime_type or detect_mime_type(audio_bytes)
+        mime_str = mime.value if mime else "application/octet-stream"
+        ext = _MIME_TO_EXT.get(mime, "wav") if mime is not None else "wav"
+
+        files = {"file": (f"audio.{ext}", audio_bytes, mime_str)}
+        data: dict[str, str] = {"model": str(request_body.pop("model"))}
+        for key, value in request_body.items():
+            if value is not None:
+                data[key] = str(value)
+
+        response = await self.http_client.post_multipart(
+            f"{config.BASE_URL}{endpoint}",
+            headers=self._merge_headers(self.auth.get_headers(), extra_headers),
+            files=files,
+            data=data,
+        )
+        self._handle_error_response(response)
+        result: dict[str, Any] = response.json()
+        return result
+
     @staticmethod
     def map_usage_fields(usage_data: dict[str, Any]) -> dict[str, int | float | None]:
-        """Map OpenAI Audio usage fields to unified names.
-
-        Shared by client and streaming across all capabilities.
-        Audio API speech endpoint doesn't return usage in response body.
-        Usage may be available in response headers or streaming events.
-        """
-        return {}
+        """Map OpenAI Audio usage fields to unified names."""
+        usage = usage_data.get("usage")
+        if not isinstance(usage, dict):
+            return {}
+        if usage.get("type") == "duration":
+            # Duration-only usage is kept in metadata; TextUsage has no seconds field.
+            return {}
+        mapped: dict[str, int | float | None] = {}
+        for src, dst in (
+            ("input_tokens", "input_tokens"),
+            ("output_tokens", "output_tokens"),
+            ("total_tokens", "total_tokens"),
+        ):
+            if src in usage:
+                mapped[dst] = usage[src]
+        return mapped
 
     def _parse_usage(
         self, response_data: dict[str, Any]
@@ -100,31 +164,44 @@ class OpenAIAudioClient(APIMixin):
         return OpenAIAudioClient.map_usage_fields(response_data)
 
     def _parse_content(self, response_data: dict[str, Any]) -> Any:
-        """Parse content from OpenAI Audio API response.
-
-        The speech endpoint returns binary audio, so base generate() should not call this.
-        """
+        """Parse transcript text; speech responses are handled by the modality client."""
+        text = response_data.get("text")
+        if text is not None:
+            return str(text)
         msg = "OpenAI TTS returns binary responses; modality client must override generate()"
         raise NotImplementedError(msg)
 
     def _parse_finish_reason(self, response_data: dict[str, Any]) -> FinishReason:
         """OpenAI Audio API doesn't provide finish reasons."""
+        _ = response_data
         return FinishReason(reason=None)
+
+    def _build_metadata(self, response_data: dict[str, Any]) -> dict[str, Any]:
+        """Keep language, duration, and duration usage in metadata when present."""
+        metadata = super()._build_metadata(response_data)
+        for key in ("language", "duration"):
+            if key in response_data:
+                metadata[key] = response_data[key]
+        usage = response_data.get("usage")
+        if (
+            isinstance(usage, dict)
+            and usage.get("type") == "duration"
+            and "seconds" in usage
+        ):
+            metadata.setdefault("duration", usage["seconds"])
+        return metadata
 
     def _map_response_format_to_mime_type(
         self, response_format: str | None
     ) -> AudioMimeType:
-        """Map OpenAI response_format to AudioMimeType.
-
-        Supported formats: mp3, opus, aac, flac, wav, pcm.
-        """
+        """Map OpenAI response_format to AudioMimeType."""
         format_map: dict[str, AudioMimeType] = {
             "mp3": AudioMimeType.MP3,
-            "opus": AudioMimeType.OGG,  # Opus is typically in OGG container
+            "opus": AudioMimeType.OGG,
             "aac": AudioMimeType.AAC,
             "flac": AudioMimeType.FLAC,
             "wav": AudioMimeType.WAV,
-            "pcm": AudioMimeType.WAV,  # PCM is raw, closest match is WAV
+            "pcm": AudioMimeType.WAV,
         }
         return format_map.get(response_format or "", AudioMimeType.MP3)
 

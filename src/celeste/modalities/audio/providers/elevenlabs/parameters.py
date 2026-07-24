@@ -1,8 +1,11 @@
 """ElevenLabs parameter mappers for audio modality."""
 
 from celeste.parameters import ParameterMapper
+from celeste.providers.elevenlabs.speech_to_text.parameters import (
+    LanguageCodeMapper as _SpeechToTextLanguageCodeMapper,
+)
 from celeste.providers.elevenlabs.text_to_speech.parameters import (
-    LanguageCodeMapper as _LanguageCodeMapper,
+    LanguageCodeMapper as _TextToSpeechLanguageCodeMapper,
 )
 from celeste.providers.elevenlabs.text_to_speech.parameters import (
     OutputFormatMapper as _OutputFormatMapper,
@@ -36,17 +39,30 @@ class OutputFormatMapper(_OutputFormatMapper):
     name = AudioParameter.OUTPUT_FORMAT
 
 
-class LanguageCodeMapper(_LanguageCodeMapper):
-    """Map language to ElevenLabs language_code parameter."""
+class TextToSpeechLanguageCodeMapper(_TextToSpeechLanguageCodeMapper):
+    """Map language to ElevenLabs TTS language_code parameter."""
 
     name = AudioParameter.LANGUAGE
 
 
-ELEVENLABS_PARAMETER_MAPPERS: list[ParameterMapper[AudioContent]] = [
+class SpeechToTextLanguageCodeMapper(_SpeechToTextLanguageCodeMapper):
+    """Map language to ElevenLabs STT language_code parameter."""
+
+    name = AudioParameter.LANGUAGE
+
+
+ELEVENLABS_TEXT_TO_SPEECH_PARAMETER_MAPPERS: list[ParameterMapper[AudioContent]] = [
     VoiceMapper(),
     SpeedMapper(),
     OutputFormatMapper(),
-    LanguageCodeMapper(),
+    TextToSpeechLanguageCodeMapper(),
 ]
 
-__all__ = ["ELEVENLABS_PARAMETER_MAPPERS"]
+ELEVENLABS_SPEECH_TO_TEXT_PARAMETER_MAPPERS: list[ParameterMapper[AudioContent]] = [
+    SpeechToTextLanguageCodeMapper(),
+]
+
+__all__ = [
+    "ELEVENLABS_SPEECH_TO_TEXT_PARAMETER_MAPPERS",
+    "ELEVENLABS_TEXT_TO_SPEECH_PARAMETER_MAPPERS",
+]

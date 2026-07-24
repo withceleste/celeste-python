@@ -1,7 +1,8 @@
 """ElevenLabs models for audio modality."""
 
-from celeste.constraints import Choice, Range
+from celeste.constraints import AudioConstraint, Choice, Range
 from celeste.core import Modality, Operation, Provider
+from celeste.mime_types import AudioMimeType
 from celeste.models import Model
 
 from ...constraints import VoiceConstraint
@@ -39,7 +40,20 @@ ELEVENLABS_OUTPUT_FORMATS = [
     "opus_48000_192",
 ]
 
-MODELS: list[Model] = [
+_SCRIBE_MIME_TYPES = [
+    AudioMimeType.FLAC,
+    AudioMimeType.MP3,
+    AudioMimeType.M4A,
+    AudioMimeType.OGG,
+    AudioMimeType.WAV,
+    AudioMimeType.WEBM,
+]
+
+_SCRIBE_CONSTRAINTS = {
+    AudioParameter.AUDIO: AudioConstraint(supported_mime_types=_SCRIBE_MIME_TYPES),
+}
+
+ELEVENLABS_TTS_MODELS: list[Model] = [
     Model(
         id="eleven_v3",
         provider=Provider.ELEVENLABS,
@@ -114,4 +128,28 @@ MODELS: list[Model] = [
             AudioParameter.OUTPUT_FORMAT: Choice(options=ELEVENLABS_OUTPUT_FORMATS),
         },
     ),
+]
+
+ELEVENLABS_STT_MODELS: list[Model] = [
+    Model(
+        id="scribe_v2",
+        provider=Provider.ELEVENLABS,
+        display_name="Scribe v2",
+        streaming=False,
+        operations={Modality.AUDIO: {Operation.TRANSCRIBE}},
+        parameter_constraints=_SCRIBE_CONSTRAINTS,
+    ),
+    Model(
+        id="scribe_v1",
+        provider=Provider.ELEVENLABS,
+        display_name="Scribe v1",
+        streaming=False,
+        operations={Modality.AUDIO: {Operation.TRANSCRIBE}},
+        parameter_constraints=_SCRIBE_CONSTRAINTS,
+    ),
+]
+
+MODELS: list[Model] = [
+    *ELEVENLABS_TTS_MODELS,
+    *ELEVENLABS_STT_MODELS,
 ]

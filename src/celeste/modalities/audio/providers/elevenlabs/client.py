@@ -1,68 +1,128 @@
-"""ElevenLabs audio client."""
+"""ElevenLabs audio client (dispatches TTS and STT wire backends)."""
 
-from typing import Any
+from typing import Any, Unpack
 
-from celeste.artifacts import AudioArtifact
 from celeste.parameters import ParameterMapper
-from celeste.providers.elevenlabs.text_to_speech import config
-from celeste.providers.elevenlabs.text_to_speech.client import (
-    ElevenLabsTextToSpeechClient as ElevenLabsTextToSpeechMixin,
-)
-from celeste.providers.elevenlabs.text_to_speech.streaming import (
-    ElevenLabsTextToSpeechStream as _ElevenLabsTextToSpeechStream,
-)
 from celeste.types import AudioContent
 
 from ...client import AudioClient
-from ...io import (
-    AudioChunk,
-    AudioInput,
-)
+from ...io import AudioInput
+from ...parameters import AudioParameters
 from ...streaming import AudioStream
-from .parameters import ELEVENLABS_PARAMETER_MAPPERS
+from .models import ELEVENLABS_STT_MODELS, ELEVENLABS_TTS_MODELS
+from .parameters import (
+    ELEVENLABS_SPEECH_TO_TEXT_PARAMETER_MAPPERS,
+    ELEVENLABS_TEXT_TO_SPEECH_PARAMETER_MAPPERS,
+)
+from .speech_to_text import ElevenLabsSpeechToTextAudioClient
+from .text_to_speech import ElevenLabsTextToSpeechAudioClient
+
+_TTS_MODEL_IDS = frozenset(m.id for m in ELEVENLABS_TTS_MODELS)
+_STT_MODEL_IDS = frozenset(m.id for m in ELEVENLABS_STT_MODELS)
 
 
-class ElevenLabsAudioStream(_ElevenLabsTextToSpeechStream, AudioStream):
-    """ElevenLabs streaming for audio modality."""
+class ElevenLabsAudioClient(AudioClient):
+    """ElevenLabs audio client (selects TTS or STT backend by model id)."""
 
-    def _aggregate_content(self, chunks: list[AudioChunk]) -> AudioArtifact:
-        """Aggregate audio content from chunks into AudioArtifact."""
-        audio_bytes = b"".join(chunk.content for chunk in chunks if chunk.content)
-        output_format = self._parameters.get("output_format")
-        mime_type = ElevenLabsTextToSpeechMixin._map_output_format_to_mime_type(
-            output_format
+    _strategy: (
+        ElevenLabsTextToSpeechAudioClient | ElevenLabsSpeechToTextAudioClient | None
+    ) = None
+
+    def model_post_init(self, __context: object) -> None:
+        """Select the backend once by model id."""
+        super().model_post_init(__context)
+
+        StrategyClass: type[AudioClient]
+        if self.model.id in _TTS_MODEL_IDS:
+            StrategyClass = ElevenLabsTextToSpeechAudioClient
+        elif self.model.id in _STT_MODEL_IDS:
+            StrategyClass = ElevenLabsSpeechToTextAudioClient
+        else:
+            msg = f"Unknown ElevenLabs audio model: {self.model.id}"
+            raise ValueError(msg)
+
+        strategy = StrategyClass(
+            modality=self.modality,
+            model=self.model,
+            provider=self.provider,
+            auth=self.auth,
+            base_url=self.base_url,
         )
-        return AudioArtifact(data=audio_bytes, mime_type=mime_type)
+        object.__setattr__(self, "_strategy", strategy)
 
-
-class ElevenLabsAudioClient(ElevenLabsTextToSpeechMixin, AudioClient):
-    """ElevenLabs audio client (TTS)."""
-
-    _speak_endpoint = config.ElevenLabsTextToSpeechEndpoint.CREATE_SPEECH
+        if strategy._speak_endpoint is not None:
+            object.__setattr__(self, "_speak_endpoint", strategy._speak_endpoint)
+        if strategy._transcribe_endpoint is not None:
+            object.__setattr__(
+                self, "_transcribe_endpoint", strategy._transcribe_endpoint
+            )
 
     @classmethod
     def parameter_mappers(cls) -> list[ParameterMapper[AudioContent]]:
-        return ELEVENLABS_PARAMETER_MAPPERS
+        return [
+            *ELEVENLABS_TEXT_TO_SPEECH_PARAMETER_MAPPERS,
+            *ELEVENLABS_SPEECH_TO_TEXT_PARAMETER_MAPPERS,
+        ]
 
     def _init_request(self, inputs: AudioInput) -> dict[str, Any]:
-        """Initialize request with text input."""
-        return {"text": inputs.text}
+        return self._strategy._init_request(inputs)  # type: ignore[union-attr]
 
-    def _parse_content(
+    def _build_request(
         self,
-        response_data: dict[str, Any],
-    ) -> AudioArtifact:
-        """Extract audio bytes from response."""
-        audio_bytes = response_data.get("audio_bytes")
-        if not audio_bytes:
-            msg = "No audio data in response"
-            raise ValueError(msg)
+        inputs: AudioInput,
+        extra_body: dict[str, Any] | None = None,
+        streaming: bool = False,
+        **parameters: Unpack[AudioParameters],
+    ) -> dict[str, Any]:
+        return self._strategy._build_request(  # type: ignore[union-attr]
+            inputs, extra_body=extra_body, streaming=streaming, **parameters
+        )
 
-        return AudioArtifact(data=audio_bytes)
+    async def _make_request(
+        self,
+        request_body: dict[str, Any],
+        *,
+        endpoint: str | None = None,
+        extra_headers: dict[str, str] | None = None,
+        **parameters: Unpack[AudioParameters],
+    ) -> dict[str, Any]:
+        return await self._strategy._make_request(  # type: ignore[union-attr]
+            request_body, endpoint=endpoint, extra_headers=extra_headers, **parameters
+        )
+
+    def _parse_content(self, response_data: dict[str, Any]) -> Any:
+        return self._strategy._parse_content(response_data)  # type: ignore[union-attr]
+
+    def _parse_usage(
+        self, response_data: dict[str, Any]
+    ) -> dict[str, int | float | None]:
+        return self._strategy._parse_usage(response_data)  # type: ignore[union-attr]
+
+    def _parse_finish_reason(self, response_data: dict[str, Any]) -> Any:
+        return self._strategy._parse_finish_reason(response_data)  # type: ignore[union-attr]
+
+    def _transform_output(
+        self, content: AudioContent, **parameters: Unpack[AudioParameters]
+    ) -> AudioContent:
+        return self._strategy._transform_output(content, **parameters)  # type: ignore[union-attr]
+
+    def _build_metadata(self, response_data: dict[str, Any]) -> dict[str, Any]:
+        return self._strategy._build_metadata(response_data)  # type: ignore[union-attr]
+
+    def _make_stream_request(
+        self,
+        request_body: dict[str, Any],
+        *,
+        endpoint: str | None = None,
+        extra_headers: dict[str, str] | None = None,
+        **parameters: Unpack[AudioParameters],
+    ) -> Any:
+        return self._strategy._make_stream_request(  # type: ignore[union-attr]
+            request_body, endpoint=endpoint, extra_headers=extra_headers, **parameters
+        )
 
     def _stream_class(self) -> type[AudioStream]:
-        """Return the Stream class for this provider."""
-        return ElevenLabsAudioStream
+        return self._strategy._stream_class()  # type: ignore[union-attr]
 
 
-__all__ = ["ElevenLabsAudioClient", "ElevenLabsAudioStream"]
+__all__ = ["ElevenLabsAudioClient"]
