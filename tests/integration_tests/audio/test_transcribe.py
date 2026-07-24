@@ -9,6 +9,13 @@ from celeste.modalities.text.io import TextOutput
 MODELS = [
     (Provider.GROQ, "whisper-large-v3-turbo"),
     (Provider.GROQ, "whisper-large-v3"),
+    (Provider.OPENAI, "gpt-4o-mini-transcribe"),
+    (Provider.OPENAI, "gpt-4o-transcribe"),
+    (Provider.OPENAI, "whisper-1"),
+    (Provider.ELEVENLABS, "scribe_v2"),
+    (Provider.ELEVENLABS, "scribe_v1"),
+    (Provider.MISTRAL, "voxtral-mini-2602"),
+    (Provider.MISTRAL, "voxtral-mini-latest"),
 ]
 
 

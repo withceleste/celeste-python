@@ -6,6 +6,7 @@ from .providers.elevenlabs.models import MODELS as ELEVENLABS_MODELS
 from .providers.google.models import MODELS as GOOGLE_MODELS
 from .providers.gradium.models import MODELS as GRADIUM_MODELS
 from .providers.groq.models import MODELS as GROQ_MODELS
+from .providers.mistral.models import MODELS as MISTRAL_MODELS
 from .providers.openai.models import MODELS as OPENAI_MODELS
 
 MODELS: list[Model] = [
@@ -13,5 +14,6 @@ MODELS: list[Model] = [
     *GOOGLE_MODELS,
     *GRADIUM_MODELS,
     *GROQ_MODELS,
+    *MISTRAL_MODELS,
     *OPENAI_MODELS,
 ]

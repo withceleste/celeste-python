@@ -6,8 +6,11 @@ from pydantic import BaseModel
 from celeste.artifacts import ImageArtifact
 from celeste.mime_types import AudioMimeType, ImageMimeType
 from celeste.modalities.audio.parameters import AudioParameter
+from celeste.modalities.audio.providers.elevenlabs import parameters as elevenlabs_audio
 from celeste.modalities.audio.providers.google import parameters as google_audio
 from celeste.modalities.audio.providers.groq import parameters as groq_audio
+from celeste.modalities.audio.providers.mistral import parameters as mistral_audio
+from celeste.modalities.audio.providers.openai import parameters as openai_audio
 from celeste.modalities.images.parameters import ImageParameter
 from celeste.modalities.images.providers.bfl import parameters as bfl
 from celeste.modalities.images.providers.google import parameters as google_images
@@ -37,6 +40,9 @@ IMAGES_INTERACTIONS = google_images.GOOGLE_INTERACTIONS_PARAMETER_MAPPERS
 IMAGES_IMAGEN = google_images.GOOGLE_IMAGEN_PARAMETER_MAPPERS
 AUDIO_GOOGLE = google_audio.GOOGLE_PARAMETER_MAPPERS
 AUDIO_GROQ = groq_audio.GROQ_PARAMETER_MAPPERS
+AUDIO_OPENAI = openai_audio.OPENAI_PARAMETER_MAPPERS
+AUDIO_ELEVENLABS_STT = elevenlabs_audio.ELEVENLABS_SPEECH_TO_TEXT_PARAMETER_MAPPERS
+AUDIO_MISTRAL = mistral_audio.MISTRAL_PARAMETER_MAPPERS
 VIDEOS_VEO = google_videos.GOOGLE_VEO_PARAMETER_MAPPERS
 VIDEOS_INTERACTIONS = google_videos.GOOGLE_INTERACTIONS_PARAMETER_MAPPERS
 OPEN = openai.OPENAI_PARAMETER_MAPPERS
@@ -218,6 +224,12 @@ def _at(data: dict[str, Any], path: tuple[str, ...]) -> Any:  # noqa: ANN401
         (AUDIO_GROQ, AP.LANGUAGE, "en", ("language",), "en"),
         (AUDIO_GROQ, AP.PROMPT, "Celeste", ("prompt",), "Celeste"),
         (AUDIO_GROQ, AP.TEMPERATURE, 0.0, ("temperature",), 0.0),
+        (AUDIO_OPENAI, AP.LANGUAGE, "en", ("language",), "en"),
+        (AUDIO_OPENAI, AP.PROMPT, "Celeste", ("prompt",), "Celeste"),
+        (AUDIO_OPENAI, AP.TEMPERATURE, 0.0, ("temperature",), 0.0),
+        (AUDIO_ELEVENLABS_STT, AP.LANGUAGE, "en", ("language_code",), "en"),
+        (AUDIO_MISTRAL, AP.LANGUAGE, "en", ("language",), "en"),
+        (AUDIO_MISTRAL, AP.TEMPERATURE, 0.0, ("temperature",), 0.0),
         (XAI, V.FIRST_FRAME, IMAGE, ("image", "url"), IMAGE.url),
         (TOPAZ, IP.OUTPUT_WIDTH, 2048, ("output_width",), 2048),
         (TOPAZ, IP.OUTPUT_HEIGHT, 1536, ("output_height",), 1536),
@@ -264,6 +276,9 @@ def test_scalar_parameters_use_provider_wire_shape(
         IMAGES_IMAGEN,
         AUDIO_GOOGLE,
         AUDIO_GROQ,
+        AUDIO_OPENAI,
+        AUDIO_ELEVENLABS_STT,
+        AUDIO_MISTRAL,
         VIDEOS_VEO,
         VIDEOS_INTERACTIONS,
         OPEN,

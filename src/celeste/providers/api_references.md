@@ -21,9 +21,11 @@ This document contains the official API reference documentation links for all pr
 | **Groq** | Chat | [Chat API Reference](https://console.groq.com/docs/api-reference#chat-create) | ✅ |
 | **Groq** | Audio | [Speech to Text](https://console.groq.com/docs/speech-to-text) | ✅ |
 | **Mistral** | Chat | [Chat API Reference](https://docs.mistral.ai/api/) | ✅ |
+| **Mistral** | Audio | [Speech to Text](https://docs.mistral.ai/capabilities/audio/speech_to_text/offline_transcription) | — |
 | **Moonshot** | Chat | [Chat API Reference](https://platform.moonshot.ai/docs/api/chat) | ✅ |
 | **XAI** | Responses | [Responses API Reference](https://docs.x.ai/docs/api-reference#create-new-response) | ✅ |
 | **ElevenLabs** | Text-to-Speech | [Text-to-Speech API Reference](https://elevenlabs.io/docs/api-reference/text-to-speech) | ✅ |
+| **ElevenLabs** | Speech-to-Text | [Speech-to-Text API Reference](https://elevenlabs.io/docs/api-reference/speech-to-text/convert) | — |
 | **BytePlus** | Images | [Images API Reference](https://docs.byteplus.com/en/docs/ModelArk/1541523) | ✅ |
 | **BytePlus** | Videos | [Videos API Reference](https://docs.byteplus.com/en/docs/ModelArk/1520757) | ✅ |
 | **BFL** | Images | [Images API Reference](https://docs.bfl.ml/flux_2/flux2_text_to_image) | ✅ |
@@ -38,8 +40,8 @@ This document contains the official API reference documentation links for all pr
 
 ## Summary
 
-- **Total APIs:** 29 provider-API combinations
-- **Validated:** 20 ✅ · 9 pending (—)
+- **Total APIs:** 31 provider-API combinations
+- **Validated:** 21 ✅ · 10 pending (—)
 - **Naming convention:** Method names only (Provider column provides context)
 - **Link strategy:** Specific method/endpoint pages when available, general API reference pages otherwise
 
