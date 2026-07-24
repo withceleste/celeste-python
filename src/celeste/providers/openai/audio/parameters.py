@@ -78,9 +78,63 @@ class InstructionsMapper(FieldMapper[AudioContent]):
     field = "instructions"
 
 
+class LanguageMapper[Content](ParameterMapper[Content]):
+    """Map language to OpenAI transcription language field."""
+
+    def map(
+        self,
+        request: dict[str, Any],
+        value: object,
+        model: Model,
+    ) -> dict[str, Any]:
+        """Transform language into provider request."""
+        validated_value = self._validate_value(value, model)
+        if validated_value is None:
+            return request
+        request["language"] = validated_value
+        return request
+
+
+class PromptMapper[Content](ParameterMapper[Content]):
+    """Map prompt to OpenAI transcription prompt field."""
+
+    def map(
+        self,
+        request: dict[str, Any],
+        value: object,
+        model: Model,
+    ) -> dict[str, Any]:
+        """Transform prompt into provider request."""
+        validated_value = self._validate_value(value, model)
+        if validated_value is None:
+            return request
+        request["prompt"] = validated_value
+        return request
+
+
+class TemperatureMapper[Content](ParameterMapper[Content]):
+    """Map temperature to OpenAI transcription temperature field."""
+
+    def map(
+        self,
+        request: dict[str, Any],
+        value: object,
+        model: Model,
+    ) -> dict[str, Any]:
+        """Transform temperature into provider request."""
+        validated_value = self._validate_value(value, model)
+        if validated_value is None:
+            return request
+        request["temperature"] = validated_value
+        return request
+
+
 __all__ = [
     "InstructionsMapper",
+    "LanguageMapper",
+    "PromptMapper",
     "ResponseFormatMapper",
     "SpeedMapper",
+    "TemperatureMapper",
     "VoiceMapper",
 ]
