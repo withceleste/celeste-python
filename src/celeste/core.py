@@ -27,6 +27,7 @@ class Provider(StrEnum):
     GRADIUM = "gradium"
     OLLAMA = "ollama"
     OPENROUTER = "openrouter"
+    FAL = "fal"
 
 
 class Protocol(StrEnum):
@@ -44,6 +45,7 @@ class Modality(StrEnum):
     IMAGES = "images"
     VIDEOS = "videos"
     AUDIO = "audio"
+    SEGMENTATION = "segmentation"
 
 
 class Operation(StrEnum):
@@ -60,6 +62,7 @@ class Operation(StrEnum):
     TRANSCRIBE = "transcribe"
     EMBED = "embed"
     UPSCALE = "upscale"
+    SEGMENT = "segment"
 
 
 class InputType(StrEnum):
@@ -124,6 +127,7 @@ DOMAIN_OPERATION_TO_MODALITY: dict[tuple[Domain, Operation], Modality] = {
     (Domain.IMAGES, Operation.UPSCALE): Modality.IMAGES,
     (Domain.IMAGES, Operation.ANALYZE): Modality.TEXT,
     (Domain.IMAGES, Operation.EMBED): Modality.EMBEDDINGS,
+    (Domain.IMAGES, Operation.SEGMENT): Modality.SEGMENTATION,
     (Domain.AUDIO, Operation.GENERATE): Modality.AUDIO,
     (Domain.AUDIO, Operation.EMBED): Modality.EMBEDDINGS,
     (Domain.AUDIO, Operation.SPEAK): Modality.AUDIO,

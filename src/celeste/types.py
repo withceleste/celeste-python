@@ -25,6 +25,21 @@ type ImageContent = ImageArtifact | list[ImageArtifact]
 type VideoContent = VideoArtifact | list[VideoArtifact]
 type EmbeddingsContent = list[float] | list[list[float]]
 
+
+class SegmentationMask(BaseModel):
+    """A single segmentation mask (RLE) with optional score and box."""
+
+    rle: str
+    index: int | None = None
+    score: float | None = None
+    box: list[float] | None = Field(
+        default=None,
+        description="Normalized bounding box [cx, cy, w, h] when present.",
+    )
+
+
+type SegmentationContent = list[SegmentationMask]
+
 type RawUsage = dict[str, int | float | None]
 
 
@@ -130,6 +145,8 @@ __all__ = [
     "MessagePart",
     "RawUsage",
     "Role",
+    "SegmentationContent",
+    "SegmentationMask",
     "TextContent",
     "TextPart",
     "ToolActivity",

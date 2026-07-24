@@ -15,6 +15,8 @@ from celeste.modalities.images.parameters import ImageParameter
 from celeste.modalities.images.providers.bfl import parameters as bfl
 from celeste.modalities.images.providers.google import parameters as google_images
 from celeste.modalities.images.providers.topazlabs import parameters as topazlabs
+from celeste.modalities.segmentation.parameters import SegmentationParameter
+from celeste.modalities.segmentation.providers.fal import parameters as fal
 from celeste.modalities.text.parameters import TextParameter
 from celeste.modalities.text.protocols.chatcompletions import parameters as chat
 from celeste.modalities.text.protocols.chatcompletions.client import (
@@ -54,7 +56,14 @@ BYTEPLUS = byteplus.BYTEPLUS_PARAMETER_MAPPERS
 XAI = xai.XAI_PARAMETER_MAPPERS
 BFL = bfl.BFL_PARAMETER_MAPPERS
 TOPAZ = topazlabs.TOPAZLABS_PARAMETER_MAPPERS
-T, IP, V, AP = TextParameter, ImageParameter, VideoParameter, AudioParameter
+FAL = fal.FAL_PARAMETER_MAPPERS
+T, IP, V, AP, SP = (
+    TextParameter,
+    ImageParameter,
+    VideoParameter,
+    AudioParameter,
+    SegmentationParameter,
+)
 GC = ("generationConfig",)
 TC = (*GC, "thinkingConfig")
 IC = (*GC, "imageConfig")
@@ -255,6 +264,24 @@ def _at(data: dict[str, Any], path: tuple[str, ...]) -> Any:  # noqa: ANN401
         (TOPAZ, IP.DETAIL_STRENGTH, 6.0, ("detail_strength",), 6.0),
         (TOPAZ, IP.DENOISE_STRENGTH, 0.5, ("denoise_strength",), 0.5),
         (TOPAZ, IP.DECOMPRESSION_STRENGTH, 0.4, ("decompression_strength",), 0.4),
+        (FAL, SP.MAX_MASKS, 5, ("max_masks",), 5),
+        (FAL, SP.INCLUDE_SCORES, True, ("include_scores",), True),
+        (FAL, SP.INCLUDE_BOXES, True, ("include_boxes",), True),
+        (FAL, SP.RETURN_MULTIPLE_MASKS, True, ("return_multiple_masks",), True),
+        (
+            FAL,
+            SP.POINT_PROMPTS,
+            [{"x": 10, "y": 20, "label": 1}],
+            ("point_prompts",),
+            [{"x": 10, "y": 20, "label": 1}],
+        ),
+        (
+            FAL,
+            SP.BOX_PROMPTS,
+            [{"x_min": 1, "y_min": 2, "x_max": 3, "y_max": 4}],
+            ("box_prompts",),
+            [{"x_min": 1, "y_min": 2, "x_max": 3, "y_max": 4}],
+        ),
     ],
 )
 def test_scalar_parameters_use_provider_wire_shape(
