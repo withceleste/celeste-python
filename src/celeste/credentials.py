@@ -68,7 +68,7 @@ class Credentials(BaseSettings):
     xai_api_key: SecretStr | None = Field(None, alias="XAI_API_KEY")
     deepseek_api_key: SecretStr | None = Field(None, alias="DEEPSEEK_API_KEY")
     luma_api_key: SecretStr | None = Field(None, alias="LUMA_API_KEY")
-    topazlabs_api_key: SecretStr | None = Field(None, alias="TOPAZLABS_API_KEY")
+    topaz_api_key: SecretStr | None = Field(None, alias="TOPAZ_API_KEY")
     perplexity_api_key: SecretStr | None = Field(None, alias="PERPLEXITY_API_KEY")
     byteplus_api_key: SecretStr | None = Field(None, alias="BYTEPLUS_API_KEY")
     elevenlabs_api_key: SecretStr | None = Field(None, alias="ELEVENLABS_API_KEY")

@@ -12,6 +12,7 @@ from celeste.core import Domain, Modality, Operation, infer_modality
         (Domain.TEXT, Operation.EMBED, Modality.EMBEDDINGS),
         (Domain.IMAGES, Operation.ANALYZE, Modality.TEXT),
         (Domain.IMAGES, Operation.EDIT, Modality.IMAGES),
+        (Domain.IMAGES, Operation.UPSCALE, Modality.IMAGES),
         (Domain.AUDIO, Operation.GENERATE, Modality.AUDIO),
         (Domain.AUDIO, Operation.SPEAK, Modality.AUDIO),
         (Domain.AUDIO, Operation.TRANSCRIBE, Modality.AUDIO),

@@ -8,6 +8,7 @@ from .byteplus import BytePlusImagesClient
 from .google import GoogleImagesClient
 from .ollama import OllamaImagesClient
 from .openai import OpenAIImagesClient
+from .topazlabs import TopazLabsImagesClient
 from .xai import XAIImagesClient
 
 PROVIDERS: dict[Provider, type[ImagesClient]] = {
@@ -16,5 +17,6 @@ PROVIDERS: dict[Provider, type[ImagesClient]] = {
     Provider.GOOGLE: GoogleImagesClient,
     Provider.OLLAMA: OllamaImagesClient,
     Provider.OPENAI: OpenAIImagesClient,
+    Provider.TOPAZLABS: TopazLabsImagesClient,
     Provider.XAI: XAIImagesClient,
 }

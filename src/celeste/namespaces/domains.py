@@ -463,6 +463,27 @@ class SyncImagesNamespace:
         )
         return client.sync.edit(image, prompt, **params)
 
+    def upscale(
+        self,
+        image: ImageArtifact,
+        *,
+        model: str,
+        provider: Provider | None = None,
+        api_key: str | SecretStr | None = None,
+        auth: Authentication | None = None,
+        **params: Unpack[ImageParameters],
+    ) -> ImageOutput:
+        """Blocking image upscale."""
+        client = create_client(
+            modality=Modality.IMAGES,
+            operation=Operation.UPSCALE,
+            model=model,
+            provider=provider,
+            api_key=api_key,
+            auth=auth,
+        )
+        return client.sync.upscale(image, **params)
+
     def analyze(
         self,
         image: ImageContent,
@@ -516,7 +537,7 @@ class SyncImagesNamespace:
 class ImagesNamespace:
     """celeste.images.* namespace.
 
-    Provides image generation, editing, and analysis operations.
+    Provides image generation, editing, upscaling, and analysis operations.
     """
 
     async def generate(
@@ -586,6 +607,39 @@ class ImagesNamespace:
             auth=auth,
         )
         return await client.edit(image, prompt, **parameters)
+
+    async def upscale(
+        self,
+        image: ImageArtifact,
+        *,
+        model: str,
+        provider: Provider | None = None,
+        api_key: str | SecretStr | None = None,
+        auth: Authentication | None = None,
+        **parameters: Unpack[ImageParameters],
+    ) -> ImageOutput:
+        """Upscale an image.
+
+        Args:
+            image: The image to upscale.
+            model: Model ID to use (required).
+            provider: Optional provider override.
+            api_key: Optional API key override.
+            auth: Optional Authentication object (e.g., GoogleADC for Vertex AI).
+            **parameters: Additional model parameters.
+
+        Returns:
+            ImageOutput with upscaled image.
+        """
+        client = create_client(
+            modality=Modality.IMAGES,
+            operation=Operation.UPSCALE,
+            model=model,
+            provider=provider,
+            api_key=api_key,
+            auth=auth,
+        )
+        return await client.upscale(image, **parameters)
 
     async def analyze(
         self,

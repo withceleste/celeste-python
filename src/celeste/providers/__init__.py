@@ -16,6 +16,7 @@ from celeste.providers import (
     ollama,
     openai,
     openrouter,
+    topazlabs,
     xai,
 )
 
@@ -35,5 +36,6 @@ __all__ = [
     "ollama",
     "openai",
     "openrouter",
+    "topazlabs",
     "xai",
 ]

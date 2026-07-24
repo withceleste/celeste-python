@@ -14,6 +14,7 @@ from celeste.modalities.audio.providers.openai import parameters as openai_audio
 from celeste.modalities.images.parameters import ImageParameter
 from celeste.modalities.images.providers.bfl import parameters as bfl
 from celeste.modalities.images.providers.google import parameters as google_images
+from celeste.modalities.images.providers.topazlabs import parameters as topazlabs
 from celeste.modalities.text.parameters import TextParameter
 from celeste.modalities.text.protocols.chatcompletions import parameters as chat
 from celeste.modalities.text.protocols.chatcompletions.client import (
@@ -52,6 +53,7 @@ GROQ = groq.GROQ_PARAMETER_MAPPERS
 BYTEPLUS = byteplus.BYTEPLUS_PARAMETER_MAPPERS
 XAI = xai.XAI_PARAMETER_MAPPERS
 BFL = bfl.BFL_PARAMETER_MAPPERS
+TOPAZ = topazlabs.TOPAZLABS_PARAMETER_MAPPERS
 T, IP, V, AP = TextParameter, ImageParameter, VideoParameter, AudioParameter
 GC = ("generationConfig",)
 TC = (*GC, "thinkingConfig")
@@ -229,6 +231,30 @@ def _at(data: dict[str, Any], path: tuple[str, ...]) -> Any:  # noqa: ANN401
         (AUDIO_MISTRAL, AP.LANGUAGE, "en", ("language",), "en"),
         (AUDIO_MISTRAL, AP.TEMPERATURE, 0.0, ("temperature",), 0.0),
         (XAI, V.FIRST_FRAME, IMAGE, ("image", "url"), IMAGE.url),
+        (TOPAZ, IP.OUTPUT_WIDTH, 2048, ("output_width",), 2048),
+        (TOPAZ, IP.OUTPUT_HEIGHT, 1536, ("output_height",), 1536),
+        (TOPAZ, IP.OUTPUT_FORMAT, "jpeg", ("output_format",), "jpeg"),
+        (TOPAZ, IP.CROP_TO_FILL, True, ("crop_to_fill",), True),
+        (TOPAZ, IP.FACE_ENHANCEMENT, True, ("face_enhancement",), True),
+        (TOPAZ, IP.FACE_ENHANCEMENT_STRENGTH, 0.5, ("face_enhancement_strength",), 0.5),
+        (
+            TOPAZ,
+            IP.FACE_ENHANCEMENT_CREATIVITY,
+            0.2,
+            ("face_enhancement_creativity",),
+            0.2,
+        ),
+        (TOPAZ, IP.SUBJECT_DETECTION, "all", ("subject_detection",), "all"),
+        (TOPAZ, IP.SHARPEN, 0.3, ("sharpen",), 0.3),
+        (TOPAZ, IP.DENOISE, 0.4, ("denoise",), 0.4),
+        (TOPAZ, IP.STRENGTH, 0.8, ("strength",), 0.8),
+        (TOPAZ, IP.FIX_COMPRESSION, 0.6, ("fix_compression",), 0.6),
+        (TOPAZ, IP.RECOVERY_STRENGTH, 0.9, ("recovery_strength",), 0.9),
+        (TOPAZ, IP.OPACITY, 1.0, ("opacity",), 1.0),
+        (TOPAZ, IP.DEBLUR_STRENGTH, 0.5, ("deblur_strength",), 0.5),
+        (TOPAZ, IP.DETAIL_STRENGTH, 6.0, ("detail_strength",), 6.0),
+        (TOPAZ, IP.DENOISE_STRENGTH, 0.5, ("denoise_strength",), 0.5),
+        (TOPAZ, IP.DECOMPRESSION_STRENGTH, 0.4, ("decompression_strength",), 0.4),
     ],
 )
 def test_scalar_parameters_use_provider_wire_shape(
@@ -263,6 +289,7 @@ def test_scalar_parameters_use_provider_wire_shape(
         BYTEPLUS,
         XAI,
         BFL,
+        TOPAZ,
     ],
 )
 def test_none_omits_every_optional_parameter(

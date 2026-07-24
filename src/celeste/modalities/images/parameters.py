@@ -29,6 +29,23 @@ class ImageParameter(StrEnum):
     THINKING_LEVEL = "thinking_level"
     BACKGROUND = "background"
     OUTPUT_COMPRESSION = "output_compression"
+    OUTPUT_WIDTH = "output_width"
+    OUTPUT_HEIGHT = "output_height"
+    CROP_TO_FILL = "crop_to_fill"
+    FACE_ENHANCEMENT = "face_enhancement"
+    FACE_ENHANCEMENT_STRENGTH = "face_enhancement_strength"
+    FACE_ENHANCEMENT_CREATIVITY = "face_enhancement_creativity"
+    SUBJECT_DETECTION = "subject_detection"
+    SHARPEN = "sharpen"
+    DENOISE = "denoise"
+    STRENGTH = "strength"
+    FIX_COMPRESSION = "fix_compression"
+    RECOVERY_STRENGTH = "recovery_strength"
+    OPACITY = "opacity"
+    DEBLUR_STRENGTH = "deblur_strength"
+    DETAIL_STRENGTH = "detail_strength"
+    DENOISE_STRENGTH = "denoise_strength"
+    DECOMPRESSION_STRENGTH = "decompression_strength"
 
 
 class ImageParameters(Parameters, total=False):
@@ -72,6 +89,46 @@ class ImageParameters(Parameters, total=False):
     ]
     output_compression: Annotated[
         int, Field(description="Output compression level (0-100) for jpeg/webp.")
+    ]
+    output_width: Annotated[int, Field(description="Target output width in pixels.")]
+    output_height: Annotated[int, Field(description="Target output height in pixels.")]
+    crop_to_fill: Annotated[
+        bool, Field(description="Crop output to fill the requested dimensions.")
+    ]
+    face_enhancement: Annotated[
+        bool, Field(description="Apply face recovery enhancement.")
+    ]
+    face_enhancement_strength: Annotated[
+        float, Field(description="Strength of face recovery (0-1).")
+    ]
+    face_enhancement_creativity: Annotated[
+        float, Field(description="Creative vs realistic face recovery (0-1).")
+    ]
+    subject_detection: Annotated[
+        str,
+        Field(description="Where enhancements apply: foreground, background, or all."),
+    ]
+    sharpen: Annotated[float, Field(description="Sharpening strength (0-1).")]
+    denoise: Annotated[float, Field(description="Denoise strength (0-1).")]
+    strength: Annotated[float, Field(description="Model enhancement strength.")]
+    fix_compression: Annotated[
+        float, Field(description="Compression-artifact cleanup strength (0-1).")
+    ]
+    recovery_strength: Annotated[
+        float, Field(description="Detail recovery strength for fidelity models.")
+    ]
+    opacity: Annotated[
+        float, Field(description="Blend opacity for enhancement output.")
+    ]
+    deblur_strength: Annotated[float, Field(description="Deblur strength (0-1).")]
+    detail_strength: Annotated[
+        float, Field(description="Facial detail enhancement strength.")
+    ]
+    denoise_strength: Annotated[
+        float, Field(description="Model-specific denoise strength (0-1).")
+    ]
+    decompression_strength: Annotated[
+        float, Field(description="Model-specific decompression strength (0-1).")
     ]
 
 
