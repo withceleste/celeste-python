@@ -33,6 +33,7 @@ This document contains the official API reference documentation links for all pr
 | **Topaz Labs** | Enhance | [Enhance](https://developer.topazlabs.com/reference/api-endpoints/image/enhance) | — |
 | **Topaz Labs** | Tool | [Tool](https://developer.topazlabs.com/reference/api-endpoints/image/tool) | — |
 | **Topaz Labs** | Status / Download | [Status](https://developer.topazlabs.com/reference/api-endpoints/image/status), [Download](https://developer.topazlabs.com/reference/api-endpoints/image/download) | — |
+| **fal** | Queue | [SAM 3 Image RLE API](https://fal.ai/models/fal-ai/sam-3/image-rle/api) | — |
 | **Gradium** | TTS | [TTS API Reference](https://gradium.ai/api_docs.html) | ✅ |
 | **HuggingFace** | Chat Completions (router) | [Chat Completion API Reference](https://huggingface.co/docs/inference-providers/tasks/chat-completion) | — |
 | **Ollama** | Responses (OpenAI-compatible) | [API Reference](https://docs.ollama.com/api) | — |
@@ -40,8 +41,8 @@ This document contains the official API reference documentation links for all pr
 
 ## Summary
 
-- **Total APIs:** 31 provider-API combinations
-- **Validated:** 21 ✅ · 10 pending (—)
+- **Total APIs:** 32 provider-API combinations
+- **Validated:** 21 ✅ · 11 pending (—)
 - **Naming convention:** Method names only (Provider column provides context)
 - **Link strategy:** Specific method/endpoint pages when available, general API reference pages otherwise
 

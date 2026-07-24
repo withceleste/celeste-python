@@ -21,6 +21,10 @@ from celeste.modalities.embeddings.models import MODELS as _embeddings_models
 from celeste.modalities.embeddings.providers import PROVIDERS as _embeddings_providers
 from celeste.modalities.images.models import MODELS as _images_models
 from celeste.modalities.images.providers import PROVIDERS as _images_providers
+from celeste.modalities.segmentation.models import MODELS as _segmentation_models
+from celeste.modalities.segmentation.providers import (
+    PROVIDERS as _segmentation_providers,
+)
 from celeste.modalities.text.models import MODELS as _text_models
 from celeste.modalities.text.protocols.chatcompletions import ChatCompletionsTextClient
 from celeste.modalities.text.protocols.openresponses import OpenResponsesTextClient
@@ -58,6 +62,7 @@ _CLIENT_MAP: dict[tuple[Modality, Provider | Protocol], type[ModalityClient]] = 
     **{(Modality.VIDEOS, p): c for p, c in _videos_providers.items()},
     **{(Modality.AUDIO, p): c for p, c in _audio_providers.items()},
     **{(Modality.EMBEDDINGS, p): c for p, c in _embeddings_providers.items()},
+    **{(Modality.SEGMENTATION, p): c for p, c in _segmentation_providers.items()},
     # Protocol entries (for compatible APIs via protocol= + base_url=)
     (Modality.TEXT, Protocol.OPENRESPONSES): OpenResponsesTextClient,
     (Modality.TEXT, Protocol.CHATCOMPLETIONS): ChatCompletionsTextClient,
@@ -69,6 +74,7 @@ for _model in [
     *_videos_models,
     *_audio_models,
     *_embeddings_models,
+    *_segmentation_models,
 ]:
     assert _model.provider is not None
     _models[(_model.id, _model.provider)] = _model

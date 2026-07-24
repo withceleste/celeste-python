@@ -19,6 +19,8 @@ from celeste.modalities.embeddings.parameters import EmbeddingsParameters
 from celeste.modalities.images.io import ImageOutput
 from celeste.modalities.images.parameters import ImageParameters
 from celeste.modalities.images.streaming import ImagesStream
+from celeste.modalities.segmentation.io import SegmentationOutput
+from celeste.modalities.segmentation.parameters import SegmentationParameters
 from celeste.modalities.text.io import TextOutput
 from celeste.modalities.text.parameters import TextParameters
 from celeste.modalities.text.streaming import TextStream
@@ -528,6 +530,28 @@ class SyncImagesNamespace:
         )
         return client.sync.embed(images=images, **params)
 
+    def segment(
+        self,
+        image: ImageArtifact,
+        prompt: str | None = None,
+        *,
+        model: str,
+        provider: Provider | None = None,
+        api_key: str | SecretStr | None = None,
+        auth: Authentication | None = None,
+        **params: Unpack[SegmentationParameters],
+    ) -> SegmentationOutput:
+        """Blocking image segmentation."""
+        client = create_client(
+            modality=Modality.SEGMENTATION,
+            operation=Operation.SEGMENT,
+            model=model,
+            provider=provider,
+            api_key=api_key,
+            auth=auth,
+        )
+        return client.sync.segment(image, prompt, **params)
+
     @property
     def stream(self) -> SyncStreamImagesNamespace:
         """Access sync streaming image operations."""
@@ -712,6 +736,41 @@ class ImagesNamespace:
             auth=auth,
         )
         return await client.embed(images=images, **parameters)
+
+    async def segment(
+        self,
+        image: ImageArtifact,
+        prompt: str | None = None,
+        *,
+        model: str,
+        provider: Provider | None = None,
+        api_key: str | SecretStr | None = None,
+        auth: Authentication | None = None,
+        **parameters: Unpack[SegmentationParameters],
+    ) -> SegmentationOutput:
+        """Segment an image with an optional text concept and visual prompts.
+
+        Args:
+            image: The image to segment.
+            prompt: Optional text concept prompt (e.g. "wheel").
+            model: Model ID to use (required).
+            provider: Optional provider override.
+            api_key: Optional API key override.
+            auth: Optional Authentication object.
+            **parameters: Additional segmentation parameters.
+
+        Returns:
+            SegmentationOutput with RLE masks.
+        """
+        client = create_client(
+            modality=Modality.SEGMENTATION,
+            operation=Operation.SEGMENT,
+            model=model,
+            provider=provider,
+            api_key=api_key,
+            auth=auth,
+        )
+        return await client.segment(image, prompt, **parameters)
 
     @property
     def sync(self) -> SyncImagesNamespace:
