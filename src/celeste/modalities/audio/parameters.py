@@ -17,6 +17,9 @@ class AudioParameter(StrEnum):
     OUTPUT_FORMAT = "output_format"
     LANGUAGE = "language"
     REFERENCE_IMAGES = "reference_images"
+    PROMPT = "prompt"
+    TEMPERATURE = "temperature"
+    AUDIO = "audio"
 
 
 class AudioParameters(Parameters, total=False):
@@ -29,10 +32,17 @@ class AudioParameters(Parameters, total=False):
         float, Field(description="Playback speed multiplier (1.0 = normal).")
     ]
     output_format: Annotated[str, Field(description="Audio file format.")]
-    language: Annotated[str, Field(description="BCP-47 language tag, e.g. 'en-US'.")]
+    language: Annotated[
+        str,
+        Field(description="Language tag (ISO-639-1 for transcription, e.g. 'en')."),
+    ]
     reference_images: Annotated[
         list[ImageArtifact],
         Field(description="Additional images conditioning the audio."),
+    ]
+    temperature: Annotated[
+        float,
+        Field(description="Sampling temperature for transcription (0-1)."),
     ]
 
 

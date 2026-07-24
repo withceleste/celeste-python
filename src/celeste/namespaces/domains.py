@@ -836,6 +836,28 @@ class SyncAudioNamespace:
         )
         return client.sync.analyze(prompt, messages=messages, audio=audio, **params)
 
+    def transcribe(
+        self,
+        audio: AudioContent,
+        *,
+        model: str,
+        provider: Provider | None = None,
+        api_key: str | SecretStr | None = None,
+        auth: Authentication | None = None,
+        prompt: str | None = None,
+        **params: Unpack[AudioParameters],
+    ) -> TextOutput:
+        """Blocking speech transcription."""
+        client = create_client(
+            modality=Modality.AUDIO,
+            operation=Operation.TRANSCRIBE,
+            model=model,
+            provider=provider,
+            api_key=api_key,
+            auth=auth,
+        )
+        return client.sync.transcribe(audio, prompt=prompt, **params)
+
     def embed(
         self,
         audio: AudioContent,
@@ -866,7 +888,7 @@ class SyncAudioNamespace:
 class AudioNamespace:
     """celeste.audio.* namespace.
 
-    Provides text-to-speech, audio generation, and audio analysis operations.
+    Provides text-to-speech, audio generation, transcription, and analysis.
     """
 
     async def speak(
@@ -973,6 +995,41 @@ class AudioNamespace:
         return await client.analyze(
             prompt, messages=messages, audio=audio, **parameters
         )
+
+    async def transcribe(
+        self,
+        audio: AudioContent,
+        *,
+        model: str,
+        provider: Provider | None = None,
+        api_key: str | SecretStr | None = None,
+        auth: Authentication | None = None,
+        prompt: str | None = None,
+        **parameters: Unpack[AudioParameters],
+    ) -> TextOutput:
+        """Transcribe speech audio to text.
+
+        Args:
+            audio: Audio or list of audio files to transcribe.
+            model: Model ID to use (required).
+            provider: Optional provider override.
+            api_key: Optional API key override.
+            auth: Optional Authentication object (e.g., GoogleADC for Vertex AI).
+            prompt: Optional spelling or style hint for the transcript.
+            **parameters: Additional model parameters (language, temperature).
+
+        Returns:
+            TextOutput with the transcript text.
+        """
+        client = create_client(
+            modality=Modality.AUDIO,
+            operation=Operation.TRANSCRIBE,
+            model=model,
+            provider=provider,
+            api_key=api_key,
+            auth=auth,
+        )
+        return await client.transcribe(audio, prompt=prompt, **parameters)
 
     async def embed(
         self,
