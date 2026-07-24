@@ -19,6 +19,7 @@ This document contains the official API reference documentation links for all pr
 | **Cohere** | Chat | [Chat API Reference](https://docs.cohere.com/reference/chat) | ✅ |
 | **DeepSeek** | Chat | [Chat API Reference](https://api-docs.deepseek.com/api/create-chat-completion) | ✅ |
 | **Groq** | Chat | [Chat API Reference](https://console.groq.com/docs/api-reference#chat-create) | ✅ |
+| **Groq** | Audio | [Speech to Text](https://console.groq.com/docs/speech-to-text) | ✅ |
 | **Mistral** | Chat | [Chat API Reference](https://docs.mistral.ai/api/) | ✅ |
 | **Moonshot** | Chat | [Chat API Reference](https://platform.moonshot.ai/docs/api/chat) | ✅ |
 | **XAI** | Responses | [Responses API Reference](https://docs.x.ai/docs/api-reference#create-new-response) | ✅ |

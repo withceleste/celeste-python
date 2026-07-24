@@ -14,7 +14,7 @@ from celeste.artifacts import (
 from celeste.core import InputType
 
 type JsonValue = (
-    str | int | float | bool | None | dict[str, JsonValue] | list[JsonValue]
+    str | int | float | bool | dict[str, JsonValue] | list[JsonValue] | None
 )
 
 type TextContent = str | JsonValue | BaseModel | list[BaseModel]

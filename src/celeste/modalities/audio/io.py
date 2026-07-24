@@ -4,12 +4,14 @@ from pydantic import Field
 
 from celeste.artifacts import AudioArtifact
 from celeste.io import Chunk, FinishReason, Input, Output, Usage
+from celeste.types import AudioContent
 
 
 class AudioInput(Input):
     """Input for audio operations."""
 
-    text: str
+    text: str | None = None
+    audio: AudioContent | None = None
 
 
 class AudioFinishReason(FinishReason):

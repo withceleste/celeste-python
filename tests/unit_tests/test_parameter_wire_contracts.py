@@ -7,6 +7,7 @@ from celeste.artifacts import ImageArtifact
 from celeste.mime_types import AudioMimeType, ImageMimeType
 from celeste.modalities.audio.parameters import AudioParameter
 from celeste.modalities.audio.providers.google import parameters as google_audio
+from celeste.modalities.audio.providers.groq import parameters as groq_audio
 from celeste.modalities.images.parameters import ImageParameter
 from celeste.modalities.images.providers.bfl import parameters as bfl
 from celeste.modalities.images.providers.google import parameters as google_images
@@ -34,6 +35,7 @@ IMAGES_VERTEX = google_images.GOOGLE_VERTEX_PARAMETER_MAPPERS
 IMAGES_INTERACTIONS = google_images.GOOGLE_INTERACTIONS_PARAMETER_MAPPERS
 IMAGES_IMAGEN = google_images.GOOGLE_IMAGEN_PARAMETER_MAPPERS
 AUDIO_GOOGLE = google_audio.GOOGLE_PARAMETER_MAPPERS
+AUDIO_GROQ = groq_audio.GROQ_PARAMETER_MAPPERS
 VIDEOS_VEO = google_videos.GOOGLE_VEO_PARAMETER_MAPPERS
 VIDEOS_INTERACTIONS = google_videos.GOOGLE_INTERACTIONS_PARAMETER_MAPPERS
 OPEN = openai.OPENAI_PARAMETER_MAPPERS
@@ -211,6 +213,9 @@ def _at(data: dict[str, Any], path: tuple[str, ...]) -> Any:  # noqa: ANN401
         (MOONSHOT, T.MAX_TOKENS, 120, ("max_completion_tokens",), 120),
         (MOONSHOT, T.THINKING_BUDGET, "max", ("reasoning_effort",), "max"),
         (GROQ, T.THINKING_BUDGET, "default", ("reasoning_effort",), "default"),
+        (AUDIO_GROQ, AP.LANGUAGE, "en", ("language",), "en"),
+        (AUDIO_GROQ, AP.PROMPT, "Celeste", ("prompt",), "Celeste"),
+        (AUDIO_GROQ, AP.TEMPERATURE, 0.0, ("temperature",), 0.0),
         (XAI, V.FIRST_FRAME, IMAGE, ("image", "url"), IMAGE.url),
     ],
 )
@@ -232,6 +237,7 @@ def test_scalar_parameters_use_provider_wire_shape(
         IMAGES_VERTEX,
         IMAGES_IMAGEN,
         AUDIO_GOOGLE,
+        AUDIO_GROQ,
         VIDEOS_VEO,
         VIDEOS_INTERACTIONS,
         OPEN,
