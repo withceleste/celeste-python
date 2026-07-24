@@ -1,6 +1,6 @@
 """OpenAI models for audio modality."""
 
-from celeste.constraints import Choice, Range
+from celeste.constraints import AudioConstraint, Choice, Range
 from celeste.core import Modality, Operation, Provider
 from celeste.mime_types import AudioMimeType
 from celeste.models import Model
@@ -16,6 +16,20 @@ _RESPONSE_FORMAT_OPTIONS = [
     AudioMimeType.AAC,
     AudioMimeType.FLAC,
 ]
+
+_OPENAI_TRANSCRIBE_MIME_TYPES = [
+    AudioMimeType.MP3,
+    AudioMimeType.M4A,
+    AudioMimeType.WAV,
+    AudioMimeType.WEBM,
+]
+
+_TRANSCRIBE_CONSTRAINTS = {
+    AudioParameter.AUDIO: AudioConstraint(
+        supported_mime_types=_OPENAI_TRANSCRIBE_MIME_TYPES
+    ),
+    AudioParameter.TEMPERATURE: Range(min=0.0, max=1.0),
+}
 
 MODELS: list[Model] = [
     Model(
@@ -65,5 +79,29 @@ MODELS: list[Model] = [
             AudioParameter.SPEED: Range(min=0.25, max=4.0),
             AudioParameter.OUTPUT_FORMAT: Choice(options=_RESPONSE_FORMAT_OPTIONS),
         },
+    ),
+    Model(
+        id="gpt-4o-mini-transcribe",
+        provider=Provider.OPENAI,
+        display_name="GPT-4o Mini Transcribe",
+        streaming=False,
+        operations={Modality.AUDIO: {Operation.TRANSCRIBE}},
+        parameter_constraints=_TRANSCRIBE_CONSTRAINTS,
+    ),
+    Model(
+        id="gpt-4o-transcribe",
+        provider=Provider.OPENAI,
+        display_name="GPT-4o Transcribe",
+        streaming=False,
+        operations={Modality.AUDIO: {Operation.TRANSCRIBE}},
+        parameter_constraints=_TRANSCRIBE_CONSTRAINTS,
+    ),
+    Model(
+        id="whisper-1",
+        provider=Provider.OPENAI,
+        display_name="Whisper-1",
+        streaming=False,
+        operations={Modality.AUDIO: {Operation.TRANSCRIBE}},
+        parameter_constraints=_TRANSCRIBE_CONSTRAINTS,
     ),
 ]
