@@ -17,7 +17,7 @@ from .streaming import ImagesStream
 class ImagesClient(
     ModalityClient[ImageInput, ImageOutput, ImageParameters, ImageContent, ImageChunk]
 ):
-    """Base images client with generate/edit operations."""
+    """Base images client with generate/edit/upscale operations."""
 
     modality: Modality = Modality.IMAGES
     _usage_class = ImageUsage
@@ -25,6 +25,7 @@ class ImagesClient(
 
     _generate_endpoint: ClassVar[str | None] = None
     _edit_endpoint: ClassVar[str | None] = None
+    _upscale_endpoint: ClassVar[str | None] = None
 
     @classmethod
     def _output_class(cls) -> type[ImageOutput]:
@@ -54,6 +55,20 @@ class ImagesClient(
             raise NotImplementedError(msg)
         inputs = ImageInput(prompt=prompt, image=image)
         return await self._predict(inputs, endpoint=self._edit_endpoint, **parameters)
+
+    async def upscale(
+        self,
+        image: ImageArtifact,
+        **parameters: Unpack[ImageParameters],
+    ) -> ImageOutput:
+        """Upscale an image."""
+        if self._upscale_endpoint is None:
+            msg = f"Model {self.model.id} does not support image upscaling"
+            raise NotImplementedError(msg)
+        inputs = ImageInput(image=image)
+        return await self._predict(
+            inputs, endpoint=self._upscale_endpoint, **parameters
+        )
 
     @property
     def stream(self) -> "ImagesStreamNamespace":
@@ -116,7 +131,7 @@ class ImagesStreamNamespace:
 class ImagesSyncNamespace:
     """Sync namespace for images operations.
 
-    Provides `client.sync.generate()` and `client.sync.edit()`.
+    Provides `client.sync.generate()`, `client.sync.edit()`, and `client.sync.upscale()`.
     """
 
     def __init__(self, client: ImagesClient) -> None:
@@ -157,6 +172,25 @@ class ImagesSyncNamespace:
             result.content.show()
         """
         inputs = ImageInput(prompt=prompt, image=image)
+        return async_to_sync(self._client._predict)(
+            inputs, extra_body=extra_body, extra_headers=extra_headers, **parameters
+        )
+
+    def upscale(
+        self,
+        image: ImageArtifact,
+        *,
+        extra_body: dict[str, Any] | None = None,
+        extra_headers: dict[str, str] | None = None,
+        **parameters: Unpack[ImageParameters],
+    ) -> ImageOutput:
+        """Blocking image upscale.
+
+        Usage:
+            result = client.sync.upscale(image)
+            result.content.show()
+        """
+        inputs = ImageInput(image=image)
         return async_to_sync(self._client._predict)(
             inputs, extra_body=extra_body, extra_headers=extra_headers, **parameters
         )

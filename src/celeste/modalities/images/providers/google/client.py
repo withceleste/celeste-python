@@ -63,6 +63,8 @@ class GoogleImagesClient(ImagesClient):
             object.__setattr__(self, "_generate_endpoint", strategy._generate_endpoint)
         if strategy._edit_endpoint is not None:
             object.__setattr__(self, "_edit_endpoint", strategy._edit_endpoint)
+        if strategy._upscale_endpoint is not None:
+            object.__setattr__(self, "_upscale_endpoint", strategy._upscale_endpoint)
 
     @classmethod
     def parameter_mappers(cls) -> list[ParameterMapper[ImageContent]]:

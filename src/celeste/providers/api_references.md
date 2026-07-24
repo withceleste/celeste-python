@@ -27,6 +27,10 @@ This document contains the official API reference documentation links for all pr
 | **BytePlus** | Images | [Images API Reference](https://docs.byteplus.com/en/docs/ModelArk/1541523) | ✅ |
 | **BytePlus** | Videos | [Videos API Reference](https://docs.byteplus.com/en/docs/ModelArk/1520757) | ✅ |
 | **BFL** | Images | [Images API Reference](https://docs.bfl.ml/flux_2/flux2_text_to_image) | ✅ |
+| **Topaz Labs** | Image | [Image API Reference](https://developer.topazlabs.com/reference/api-endpoints/image) | — |
+| **Topaz Labs** | Enhance | [Enhance](https://developer.topazlabs.com/reference/api-endpoints/image/enhance) | — |
+| **Topaz Labs** | Tool | [Tool](https://developer.topazlabs.com/reference/api-endpoints/image/tool) | — |
+| **Topaz Labs** | Status / Download | [Status](https://developer.topazlabs.com/reference/api-endpoints/image/status), [Download](https://developer.topazlabs.com/reference/api-endpoints/image/download) | — |
 | **Gradium** | TTS | [TTS API Reference](https://gradium.ai/api_docs.html) | ✅ |
 | **HuggingFace** | Chat Completions (router) | [Chat Completion API Reference](https://huggingface.co/docs/inference-providers/tasks/chat-completion) | — |
 | **Ollama** | Responses (OpenAI-compatible) | [API Reference](https://docs.ollama.com/api) | — |
@@ -34,8 +38,8 @@ This document contains the official API reference documentation links for all pr
 
 ## Summary
 
-- **Total APIs:** 24 provider-API combinations
-- **Validated:** 20 ✅ · 4 pending (—)
+- **Total APIs:** 29 provider-API combinations
+- **Validated:** 20 ✅ · 9 pending (—)
 - **Naming convention:** Method names only (Provider column provides context)
 - **Link strategy:** Specific method/endpoint pages when available, general API reference pages otherwise
 
@@ -45,3 +49,4 @@ This document contains the official API reference documentation links for all pr
 - Method names are used in the API column (e.g., "GenerateContent", "Chat", "Responses")
 - The Provider column provides context for which provider's API is being referenced
 - Links point to specific method/endpoint documentation when available for better developer experience
+- Topaz Image catalog follows Gigapixel model pages when OpenAPI `model` enums lag (e.g. `Upscale High Fidelity V3` on enhance, `Detail` on enhance-gen). Omit `Faces` (Recover Faces / Face Recovery 3): model pages document `restore-gen/async` + `model=Faces`, but live serving hard-rejects it (`Unknown model`); OpenAPI restore-gen enum only lists Dust-Scratch / Dust-Scratch V2.

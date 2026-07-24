@@ -121,6 +121,7 @@ DOMAIN_OPERATION_TO_MODALITY: dict[tuple[Domain, Operation], Modality] = {
     (Domain.TEXT, Operation.EMBED): Modality.EMBEDDINGS,
     (Domain.IMAGES, Operation.GENERATE): Modality.IMAGES,
     (Domain.IMAGES, Operation.EDIT): Modality.IMAGES,
+    (Domain.IMAGES, Operation.UPSCALE): Modality.IMAGES,
     (Domain.IMAGES, Operation.ANALYZE): Modality.TEXT,
     (Domain.IMAGES, Operation.EMBED): Modality.EMBEDDINGS,
     (Domain.AUDIO, Operation.GENERATE): Modality.AUDIO,

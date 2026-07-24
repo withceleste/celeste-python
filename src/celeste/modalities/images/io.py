@@ -10,7 +10,7 @@ from celeste.types import ImageContent
 class ImageInput(Input):
     """Input for images operations."""
 
-    prompt: str
+    prompt: str | None = None
     image: ImageArtifact | None = None
 
 
