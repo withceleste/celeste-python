@@ -24,7 +24,7 @@ from celeste.modalities.segmentation.parameters import SegmentationParameters
 from celeste.modalities.text.io import TextOutput
 from celeste.modalities.text.parameters import TextParameters
 from celeste.modalities.text.streaming import TextStream
-from celeste.modalities.videos.io import VideoOutput
+from celeste.modalities.videos.io import VideoDraftCache, VideoOutput
 from celeste.modalities.videos.parameters import VideoParameters
 from celeste.types import (
     AudioContent,
@@ -1268,6 +1268,27 @@ class SyncVideosNamespace:
         )
         return client.sync.generate(prompt, **params)
 
+    def enhance_draft(
+        self,
+        draft_cache: VideoDraftCache,
+        *,
+        model: str,
+        provider: Provider | None = None,
+        api_key: str | SecretStr | None = None,
+        auth: Authentication | None = None,
+        **params: Unpack[VideoParameters],
+    ) -> VideoOutput:
+        """Blocking full-quality render of a cached video draft."""
+        client = create_client(
+            modality=Modality.VIDEOS,
+            operation=Operation.ENHANCE,
+            model=model,
+            provider=provider,
+            api_key=api_key,
+            auth=auth,
+        )
+        return client.sync.enhance_draft(draft_cache, **params)
+
     def analyze(
         self,
         video: VideoContent,
@@ -1321,7 +1342,7 @@ class SyncVideosNamespace:
 class VideosNamespace:
     """celeste.videos.* namespace.
 
-    Provides video generation and analysis operations.
+    Provides video generation, draft enhancement, and analysis operations.
     """
 
     async def generate(
@@ -1356,6 +1377,27 @@ class VideosNamespace:
             auth=auth,
         )
         return await client.generate(prompt, **parameters)
+
+    async def enhance_draft(
+        self,
+        draft_cache: VideoDraftCache,
+        *,
+        model: str,
+        provider: Provider | None = None,
+        api_key: str | SecretStr | None = None,
+        auth: Authentication | None = None,
+        **parameters: Unpack[VideoParameters],
+    ) -> VideoOutput:
+        """Render a cached video draft at full quality."""
+        client = create_client(
+            modality=Modality.VIDEOS,
+            operation=Operation.ENHANCE,
+            model=model,
+            provider=provider,
+            api_key=api_key,
+            auth=auth,
+        )
+        return await client.enhance_draft(draft_cache, **parameters)
 
     async def analyze(
         self,

@@ -2,15 +2,23 @@
 
 from pydantic import Field
 
-from celeste.artifacts import VideoArtifact
+from celeste.artifacts import Artifact, VideoArtifact
 from celeste.io import Chunk, FinishReason, Input, Output, Usage
+from celeste.mime_types import ApplicationMimeType
+
+
+class VideoDraftCache(Artifact):
+    """Opaque provider state used to render a prior video draft."""
+
+    mime_type: ApplicationMimeType | None = ApplicationMimeType.OCTET_STREAM
 
 
 class VideoInput(Input):
-    """Input for video generation and edit operations."""
+    """Input for video generation, editing, and draft enhancement."""
 
-    prompt: str
+    prompt: str | None = None
     video: VideoArtifact | None = None  # For edit operations
+    draft_cache: VideoDraftCache | None = None
 
 
 class VideoFinishReason(FinishReason):
@@ -32,6 +40,8 @@ class VideoUsage(Usage):
     reasoning_tokens: int | None = None
     cached_tokens: int | None = None
     billed_units: float | None = None
+    input_mp: float | None = None
+    output_mp: float | None = None
 
 
 class VideoOutput(Output[VideoArtifact]):
@@ -39,6 +49,12 @@ class VideoOutput(Output[VideoArtifact]):
 
     usage: VideoUsage = Field(default_factory=VideoUsage)
     finish_reason: VideoFinishReason | None = None
+
+    @property
+    def draft_cache(self) -> VideoDraftCache | None:
+        """Return reusable draft state when the provider supplied it."""
+        value = self.metadata.get("draft_cache")
+        return value if isinstance(value, VideoDraftCache) else None
 
 
 class VideoChunk(Chunk[VideoArtifact]):
@@ -50,6 +66,7 @@ class VideoChunk(Chunk[VideoArtifact]):
 
 __all__ = [
     "VideoChunk",
+    "VideoDraftCache",
     "VideoFinishReason",
     "VideoInput",
     "VideoOutput",

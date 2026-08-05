@@ -34,6 +34,7 @@ Available namespace families include:
 - `celeste.audio.analyze`
 - `celeste.audio.embed`
 - `celeste.videos.generate`
+- `celeste.videos.enhance_draft`
 - `celeste.videos.analyze`
 - `celeste.videos.embed`
 - `celeste.documents.analyze`
