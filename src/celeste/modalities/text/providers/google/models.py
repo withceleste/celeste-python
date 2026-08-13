@@ -245,9 +245,8 @@ MODELS: list[Model] = [
         streaming=True,
         parameter_constraints={
             Parameter.MAX_TOKENS: Range(min=1, max=65536),
-            TextParameter.THINKING_LEVEL: Choice(
-                options=["minimal", "low", "medium", "high"]
-            ),
+            # 3.7 Flash rejects minimal with a validation error (Google model page).
+            TextParameter.THINKING_LEVEL: Choice(options=["low", "medium", "high"]),
             TextParameter.TOOLS: ToolSupport(
                 tools=[WebSearch, CodeExecution, UrlContext]
             ),
