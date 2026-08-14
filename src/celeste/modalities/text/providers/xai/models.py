@@ -47,6 +47,23 @@ MODELS: list[Model] = [
         },
     ),
     Model(
+        id="grok-4.6",
+        provider=Provider.XAI,
+        display_name="Grok 4.6",
+        operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
+        streaming=True,
+        parameter_constraints={
+            Parameter.TEMPERATURE: Range(min=0.0, max=2.0),
+            TextParameter.THINKING_BUDGET: Choice(
+                options=["low", "medium", "high", "xhigh"]
+            ),
+            TextParameter.TOOLS: ToolSupport(tools=[WebSearch, XSearch, CodeExecution]),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
+            TextParameter.OUTPUT_SCHEMA: Schema(),
+            TextParameter.IMAGE: ImagesConstraint(),
+        },
+    ),
+    Model(
         id="grok-4.5",
         provider=Provider.XAI,
         display_name="Grok 4.5",
