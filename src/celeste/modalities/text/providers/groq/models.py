@@ -1,6 +1,13 @@
 """Groq models for text modality."""
 
-from celeste.constraints import Choice, ImagesConstraint, Range, Schema, ToolSupport
+from celeste.constraints import (
+    Choice,
+    ImagesConstraint,
+    Range,
+    Schema,
+    ToolChoiceSupport,
+    ToolSupport,
+)
 from celeste.core import Modality, Operation, Parameter, Provider
 from celeste.models import Model
 from celeste.tools import CodeExecution, WebSearch
@@ -8,6 +15,24 @@ from celeste.tools import CodeExecution, WebSearch
 from ...parameters import TextParameter
 
 MODELS: list[Model] = [
+    Model(
+        id="qwen/qwen3.8-27b",
+        provider=Provider.GROQ,
+        display_name="Qwen 3.8 27B",
+        operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
+        streaming=True,
+        parameter_constraints={
+            Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
+            Parameter.MAX_TOKENS: Range(min=1, max=16384, step=1),
+            TextParameter.THINKING_BUDGET: Choice(
+                options=["none", "default", "low", "medium", "high"]
+            ),
+            TextParameter.OUTPUT_SCHEMA: Schema(),
+            TextParameter.IMAGE: ImagesConstraint(max_count=3),
+            TextParameter.TOOLS: ToolSupport(tools=[]),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
+        },
+    ),
     Model(
         id="qwen/qwen3.6-27b",
         provider=Provider.GROQ,
