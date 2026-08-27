@@ -1,16 +1,44 @@
-"""Streaming reconstructs metadata["raw_response"] so billing reads complete usage."""
+"""Streaming requests and raw responses preserve complete billing usage."""
 
 from collections.abc import AsyncIterator
 from typing import Any
 
+from pydantic import SecretStr
+
+from celeste.auth import AuthHeader
+from celeste.core import Provider
+from celeste.modalities.text.io import TextInput
 from celeste.modalities.text.protocols.chatcompletions import ChatCompletionsTextStream
 from celeste.modalities.text.protocols.openresponses import OpenResponsesTextStream
 from celeste.modalities.text.providers.anthropic.client import AnthropicTextStream
+from celeste.modalities.text.providers.groq.client import GroqTextClient
+from celeste.models import Model
 
 
 async def _async_iter(items: list[dict[str, Any]]) -> AsyncIterator[dict[str, Any]]:
     for item in items:
         yield item
+
+
+def test_groq_streaming_request_enables_terminal_usage() -> None:
+    client = GroqTextClient(
+        model=Model(
+            id="qwen/qwen3.8-27b",
+            provider=Provider.GROQ,
+            display_name="Qwen 3.8 27B",
+        ),
+        provider=Provider.GROQ,
+        auth=AuthHeader(secret=SecretStr("test")),
+    )
+    inputs = TextInput(prompt="Hello")
+
+    unary = client._build_request(inputs)
+    streaming = client._build_request(inputs, streaming=True)
+
+    assert "stream" not in unary
+    assert "stream_options" not in unary
+    assert streaming["stream"] is True
+    assert streaming["stream_options"] == {"include_usage": True}
 
 
 async def test_anthropic_stream_assembles_raw_response_with_complete_usage() -> None:
