@@ -213,8 +213,7 @@ When sources disagree, follow this order:
 1. Current source code in `src/celeste/`.
 2. Current tests and templates for existing behavior.
 3. README examples and public exports.
-4. OpenSpec artifacts for the active change's intended behavior and acceptance criteria.
-5. Notes such as `common_agent_mistakes.md`.
-6. Model memory.
+4. Notes such as `common_agent_mistakes.md`.
+5. Model memory.
 
 `common_agent_mistakes.md` is advisory. Keep useful warnings, but verify every rule against current code and task context.

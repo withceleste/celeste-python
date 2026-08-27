@@ -1,6 +1,6 @@
 ---
 name: celeste-python
-description: Use whenever writing, modifying, reviewing, or debugging code involving Celeste, celeste-ai, celeste-python, import celeste, src/celeste, or withceleste app integrations. This includes providers, modalities, models, artifacts, MIME types, parameters, tools, multimodal messages, streaming, structured outputs, protocol/base URL support, OpenSpec changes, and tests. Always use this skill before inventing Celeste types, registries, model catalogs, provider abstractions, request/response shapes, or syntax.
+description: Use whenever writing, modifying, reviewing, or debugging code involving Celeste, celeste-ai, celeste-python, import celeste, src/celeste, or withceleste app integrations. This includes providers, modalities, models, artifacts, MIME types, parameters, tools, multimodal messages, streaming, structured outputs, protocol/base URL support, and tests. Always use this skill before inventing Celeste types, registries, model catalogs, provider abstractions, request/response shapes, or syntax.
 compatibility: Local celeste-python repository skill; no network required.
 ---
 
@@ -28,9 +28,8 @@ When sources disagree, follow this order:
 1. Current source code in `src/celeste/`
 2. Current tests and templates for existing behavior
 3. README examples and public exports
-4. Active OpenSpec artifacts for intended new behavior and acceptance criteria
-5. Notes such as `common_agent_mistakes.md`
-6. Model memory
+4. Notes such as `common_agent_mistakes.md`
+5. Model memory
 
 Treat `common_agent_mistakes.md` as advisory. Verify every warning against current code and the task context.
 
