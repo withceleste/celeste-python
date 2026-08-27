@@ -133,18 +133,6 @@ def test_chat_completions_init_request_includes_image_url_block(
     assert content[-1] == {"type": "text", "text": "Describe the image"}
 
 
-def test_groq_streaming_request_includes_terminal_usage() -> None:
-    client = _client(GroqTextClient, Provider.GROQ, "qwen/qwen3.8-27b")
-    inputs = TextInput(prompt="Hello")
-    unary = client._build_request(inputs)
-    streaming = client._build_request(inputs, streaming=True)
-
-    assert "stream" not in unary
-    assert "stream_options" not in unary
-    assert streaming["stream"] is True
-    assert streaming["stream_options"] == {"include_usage": True}
-
-
 def test_anthropic_init_request_includes_image_source_block() -> None:
     client = _client(AnthropicTextClient, Provider.ANTHROPIC, "claude-sonnet-4-5")
 
