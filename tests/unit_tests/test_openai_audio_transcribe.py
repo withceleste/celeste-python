@@ -8,15 +8,16 @@ from celeste.core import Modality, Operation, Provider
 from celeste.mime_types import AudioMimeType
 from celeste.modalities.audio.io import AudioInput
 from celeste.modalities.audio.providers.openai.client import OpenAIAudioClient
+from celeste.modalities.audio.providers.openai.models import MODELS
 from celeste.models import Model
 
 
-def _client() -> OpenAIAudioClient:
+def _client(model_id: str = "gpt-4o-mini-transcribe") -> OpenAIAudioClient:
     return OpenAIAudioClient(
         model=Model(
-            id="gpt-4o-mini-transcribe",
+            id=model_id,
             provider=Provider.OPENAI,
-            display_name="GPT-4o Mini Transcribe",
+            display_name=model_id,
             operations={Modality.AUDIO: {Operation.TRANSCRIBE}},
         ),
         auth=AuthHeader(secret=SecretStr("test")),
@@ -38,6 +39,21 @@ def test_build_request_adds_model_and_default_response_format() -> None:
     assert request["model"] == "gpt-4o-mini-transcribe"
     assert request["response_format"] == "json"
     assert request["language"] == "en"
+
+
+def test_gpt_transcribe_uses_plural_language_field() -> None:
+    audio = AudioArtifact(data=b"fake-audio", mime_type=AudioMimeType.WAV)
+    request = _client("gpt-transcribe")._build_request(
+        AudioInput(audio=audio), language="en"
+    )
+    assert request["languages[]"] == "en"
+    assert "language" not in request
+
+
+def test_gpt_transcribe_is_registered_for_file_transcription() -> None:
+    model = next(model for model in MODELS if model.id == "gpt-transcribe")
+    assert model.operations == {Modality.AUDIO: {Operation.TRANSCRIBE}}
+    assert model.streaming is False
 
 
 def test_parse_content_returns_transcript_text() -> None:
