@@ -39,9 +39,9 @@ class GoogleImagenImagesClient(GoogleImagenMixin, ImagesClient):
 
         images: list[ImageArtifact] = []
         for prediction in predictions:
-            base64_data = prediction.get("bytesBase64Encoded")
-            if not base64_data:
+            if not self._is_image_prediction(prediction):
                 continue
+            base64_data = prediction.get("bytesBase64Encoded")
             mime_type = ImageMimeType(prediction.get("mimeType", "image/png"))
             images.append(ImageArtifact(data=base64_data, mime_type=mime_type))
 

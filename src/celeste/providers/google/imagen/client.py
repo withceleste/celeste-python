@@ -89,7 +89,21 @@ class GoogleImagenClient(APIMixin):
         raise StreamingNotSupportedError(model_id=self.model.id)
 
     @staticmethod
-    def map_usage_fields(usage_data: dict[str, Any]) -> dict[str, int | float | None]:
+    def _is_image_prediction(prediction: dict[str, Any]) -> bool:
+        """Return whether a prediction contains a generated image artifact."""
+        return bool(prediction.get("bytesBase64Encoded"))
+
+    @classmethod
+    def _count_image_predictions(cls, predictions: list[dict[str, Any]]) -> int:
+        """Count successful images, excluding RAI-filtered predictions."""
+        return sum(
+            1 for prediction in predictions if cls._is_image_prediction(prediction)
+        )
+
+    @classmethod
+    def map_usage_fields(
+        cls, usage_data: dict[str, Any]
+    ) -> dict[str, int | float | None]:
         """Map Google Imagen usage fields to unified names.
 
         Shared by client and streaming across all capabilities.
@@ -97,7 +111,7 @@ class GoogleImagenClient(APIMixin):
         """
         predictions = usage_data.get("predictions", [])
         return {
-            UsageField.NUM_IMAGES: len(predictions),
+            UsageField.NUM_IMAGES: cls._count_image_predictions(predictions),
         }
 
     def _parse_usage(
@@ -106,6 +120,14 @@ class GoogleImagenClient(APIMixin):
         """Extract usage data from Imagen API response."""
         predictions = response_data.get("predictions", [])
         return GoogleImagenClient.map_usage_fields({"predictions": predictions})
+
+    def _build_metadata(self, response_data: dict[str, Any]) -> dict[str, Any]:
+        """Retain successful output count without retaining image payloads."""
+        metadata = super()._build_metadata(response_data)
+        metadata["raw_response"]["num_images"] = self._count_image_predictions(
+            response_data.get("predictions", [])
+        )
+        return metadata
 
     def _parse_content(self, response_data: dict[str, Any]) -> Any:
         """Parse predictions from response.
