@@ -10,6 +10,7 @@ from celeste.exceptions import StreamingNotSupportedError
 from celeste.io import FinishReason
 
 from ..auth import GoogleADC
+from ..utils import get_with_auth_safe_redirects
 from . import config
 
 logger = logging.getLogger(__name__)
@@ -221,11 +222,11 @@ class GoogleVeoClient(APIMixin):
 
         headers = self._merge_headers(self.auth.get_headers(), extra_headers)
 
-        response = await self.http_client.get(
+        response = await get_with_auth_safe_redirects(
+            self.http_client,
             download_url,
-            headers=headers,
+            headers,
             timeout=config.DEFAULT_TIMEOUT,
-            follow_redirects=True,
         )
 
         self._handle_error_response(response)

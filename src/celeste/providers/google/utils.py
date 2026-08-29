@@ -2,9 +2,51 @@
 
 import base64
 from typing import Any
+from urllib.parse import urljoin, urlsplit
+
+import httpx
 
 from celeste.artifacts import Artifact
+from celeste.http import HTTPClient
 from celeste.utils import detect_mime_type
+
+_MAX_REDIRECTS = 20
+_AUTHENTICATED_DOWNLOAD_HOSTS = frozenset(
+    {"generativelanguage.googleapis.com", "storage.googleapis.com"}
+)
+
+
+async def get_with_auth_safe_redirects(
+    client: HTTPClient,
+    url: str,
+    headers: dict[str, str],
+    *,
+    timeout: float,
+) -> httpx.Response:
+    """Follow GET redirects without forwarding credentials across origins."""
+    current_url = url
+    parsed = urlsplit(current_url)
+    current_headers = (
+        headers
+        if parsed.scheme == "https" and parsed.hostname in _AUTHENTICATED_DOWNLOAD_HOSTS
+        else {}
+    )
+    for _ in range(_MAX_REDIRECTS):
+        response = await client.get(
+            current_url,
+            headers=current_headers,
+            timeout=timeout,
+            follow_redirects=False,
+        )
+        if not response.is_redirect or "location" not in response.headers:
+            return response
+        redirect_url = urljoin(current_url, response.headers["location"])
+        if urlsplit(redirect_url)[:2] != urlsplit(current_url)[:2]:
+            current_headers = {}
+        current_url = redirect_url
+    raise httpx.TooManyRedirects(
+        "Exceeded maximum allowed redirects", request=response.request
+    )
 
 
 def build_media_part(artifact: Artifact) -> dict[str, Any]:

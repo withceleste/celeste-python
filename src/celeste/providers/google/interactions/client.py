@@ -7,6 +7,7 @@ from celeste.client import APIMixin
 from celeste.core import UsageField
 from celeste.io import FinishReason
 
+from ..auth import GoogleADC
 from . import config
 
 
@@ -52,7 +53,29 @@ class GoogleInteractionsClient(APIMixin):
         request_body["model"] = self.model.id
         if streaming:
             request_body["stream"] = True
+        response_format = request_body.get("response_format")
+        if (
+            isinstance(self.auth, GoogleADC)
+            and isinstance(response_format, dict)
+            and response_format.get("type") == "video"
+        ):
+            request_body["response_format"] = [response_format]
         return request_body
+
+    def _build_url(self, endpoint: str) -> str:
+        """Build the Developer or Cloud Interactions URL from auth."""
+        if not isinstance(self.auth, GoogleADC):
+            return f"{config.BASE_URL}{endpoint}"
+        project_id = self.auth.resolved_project_id
+        if project_id is None:
+            raise ValueError(
+                "Google Cloud Interactions requires a project_id. "
+                "Pass project_id to GoogleADC() or ensure credentials have a project."
+            )
+        path = config.VertexInteractionsEndpoint.CREATE_INTERACTION.format(
+            project_id=project_id
+        )
+        return f"{config.VERTEX_BASE_URL}{path}"
 
     async def _make_request(
         self,
@@ -68,7 +91,7 @@ class GoogleInteractionsClient(APIMixin):
 
         headers = self._json_headers(extra_headers)
         response = await self.http_client.post(
-            f"{config.BASE_URL}{endpoint}",
+            self._build_url(endpoint),
             headers=headers,
             json_body=request_body,
         )
@@ -90,7 +113,7 @@ class GoogleInteractionsClient(APIMixin):
 
         headers = self._json_headers(extra_headers)
         return self.http_client.stream_post(
-            f"{config.BASE_URL}{endpoint}",
+            self._build_url(endpoint),
             headers=headers,
             json_body=request_body,
         )

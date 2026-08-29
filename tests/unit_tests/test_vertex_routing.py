@@ -20,6 +20,8 @@ from celeste.providers.google.generate_content import config as generate_config
 from celeste.providers.google.generate_content.client import GoogleGenerateContentClient
 from celeste.providers.google.imagen import config as imagen_config
 from celeste.providers.google.imagen.client import GoogleImagenClient
+from celeste.providers.google.interactions import config as interactions_config
+from celeste.providers.google.interactions.client import GoogleInteractionsClient
 from celeste.providers.google.veo import config as veo_config
 from celeste.providers.google.veo.client import GoogleVeoClient
 from celeste.providers.mistral.chat import config as mistral_config
@@ -120,6 +122,12 @@ def test_vertex_url_requires_project() -> None:
             "generativelanguage.googleapis.com/v1beta/models/veo-3.1-generate-preview:predictLongRunning",
         ),
         (
+            GoogleInteractionsClient,
+            interactions_config.GoogleInteractionsEndpoint.CREATE_INTERACTION,
+            "gemini-omni-1.1-flash",
+            "generativelanguage.googleapis.com/v1beta/interactions",
+        ),
+        (
             MistralChatClient,
             mistral_config.MistralChatEndpoint.CREATE_CHAT_COMPLETION,
             "mistral-large-2411",
@@ -186,6 +194,19 @@ def test_adc_routes_through_vertex(
     url = _build_url(client_type, endpoint, model_id, _adc())
     assert url.startswith("https://us-central1-aiplatform.googleapis.com")
     assert all(fragment in url for fragment in fragments)
+
+
+def test_adc_interactions_uses_global_cloud_endpoint() -> None:
+    url = _build_url(
+        GoogleInteractionsClient,
+        interactions_config.GoogleInteractionsEndpoint.CREATE_INTERACTION,
+        "gemini-omni-1.1-flash-preview",
+        _adc(),
+    )
+    assert url == (
+        "https://aiplatform.googleapis.com/v1beta1/projects/test-project/"
+        "locations/global/interactions"
+    )
 
 
 @pytest.mark.parametrize(

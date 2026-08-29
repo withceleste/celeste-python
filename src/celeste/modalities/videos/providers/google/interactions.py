@@ -1,19 +1,27 @@
 """Google videos client (Interactions API — Gemini Omni)."""
 
-from typing import Any
+import asyncio
+from typing import Any, Unpack
+from urllib.parse import urlsplit, urlunsplit
 
 from celeste.artifacts import VideoArtifact
+from celeste.http import DEFAULT_TIMEOUT
 from celeste.mime_types import VideoMimeType
 from celeste.parameters import ParameterMapper
+from celeste.providers.google.auth import GoogleADC
 from celeste.providers.google.interactions import config
 from celeste.providers.google.interactions.client import (
     GoogleInteractionsClient as GoogleInteractionsMixin,
 )
-from celeste.providers.google.utils import build_content_part
+from celeste.providers.google.utils import (
+    build_content_part,
+    get_with_auth_safe_redirects,
+)
 from celeste.types import VideoContent
 
 from ...client import VideosClient
 from ...io import VideoInput
+from ...parameters import VideoParameters
 from .parameters import GOOGLE_INTERACTIONS_PARAMETER_MAPPERS
 
 
@@ -37,7 +45,32 @@ class GoogleInteractionsVideosClient(GoogleInteractionsMixin, VideosClient):
             build_content_part(inputs.video, "video"),
             {"type": "text", "text": inputs.prompt},
         ]
-        request["generation_config"] = {"video_config": {"task": "edit"}}
+        if self.model.id == "gemini-omni-flash-preview":
+            request["generation_config"] = {"video_config": {"task": "edit"}}
+        return request
+
+    def _build_request(
+        self,
+        inputs: VideoInput,
+        extra_body: dict[str, Any] | None = None,
+        streaming: bool = False,
+        **parameters: Unpack[VideoParameters],
+    ) -> dict[str, Any]:
+        """Build a request and select URI delivery for Developer high-res video."""
+        request = super()._build_request(
+            inputs,
+            extra_body=extra_body,
+            streaming=streaming,
+            **parameters,
+        )
+        response_format = request.get("response_format")
+        if (
+            not isinstance(self.auth, GoogleADC)
+            and self.model.id == "gemini-omni-1.1-flash"
+            and isinstance(response_format, dict)
+            and response_format.get("resolution") in ("1080p", "4k")
+        ):
+            response_format["delivery"] = "uri"
         return request
 
     def _parse_content(
@@ -70,11 +103,56 @@ class GoogleInteractionsVideosClient(GoogleInteractionsMixin, VideosClient):
             raise ValueError(msg)
 
         headers = self.auth.get_headers()
-        response = await self.http_client.get(
-            artifact.url, headers=headers, follow_redirects=True
+        status_url = self._file_status_url(artifact.url)
+        while status_url is not None:
+            status_response = await get_with_auth_safe_redirects(
+                self.http_client,
+                status_url,
+                headers,
+                timeout=DEFAULT_TIMEOUT,
+            )
+            self._handle_error_response(status_response)
+            state = status_response.json().get("state")
+            if state == "ACTIVE":
+                break
+            if state == "FAILED":
+                raise ValueError("Google Files video processing failed")
+            await asyncio.sleep(config.FILE_POLL_INTERVAL)
+
+        download_url = artifact.url
+        if status_url is not None and not urlsplit(download_url).path.endswith(
+            ":download"
+        ):
+            download_url = f"{status_url}:download?alt=media"
+        if download_url.startswith("gs://"):
+            download_url = download_url.replace("gs://", config.STORAGE_BASE_URL, 1)
+        response = await get_with_auth_safe_redirects(
+            self.http_client,
+            download_url,
+            headers,
+            timeout=DEFAULT_TIMEOUT,
         )
         self._handle_error_response(response)
         return VideoArtifact(data=response.content, mime_type=artifact.mime_type)
+
+    @staticmethod
+    def _file_status_url(url: str) -> str | None:
+        """Return the Files metadata URL for a Developer API download URI."""
+        parsed = urlsplit(url)
+        if (
+            parsed.netloc != "generativelanguage.googleapis.com"
+            or "/v1beta/files/" not in parsed.path
+        ):
+            return None
+        return urlunsplit(
+            (
+                parsed.scheme,
+                parsed.netloc,
+                parsed.path.removesuffix(":download"),
+                "",
+                "",
+            )
+        )
 
 
 __all__ = ["GoogleInteractionsVideosClient"]

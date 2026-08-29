@@ -5,8 +5,11 @@ from unittest.mock import AsyncMock, MagicMock, call, patch
 
 import httpx
 import pytest
+from pydantic import SecretStr
 
 import celeste.http as http_module
+from celeste.artifacts import VideoArtifact
+from celeste.auth import AuthHeader
 from celeste.core import Modality, Provider
 from celeste.http import (
     DEFAULT_TIMEOUT,
@@ -16,6 +19,12 @@ from celeste.http import (
     close_all_http_clients,
     get_http_client,
 )
+from celeste.mime_types import VideoMimeType
+from celeste.modalities.videos.providers.google.interactions import (
+    GoogleInteractionsVideosClient,
+)
+from celeste.models import Model
+from celeste.providers.google.utils import get_with_auth_safe_redirects
 
 
 @pytest.fixture
@@ -97,6 +106,78 @@ async def test_request_methods_forward_arguments(
                 timeout=12,
                 follow_redirects=True,
             )
+
+
+async def test_google_files_download_polls_and_drops_auth_on_redirect(
+    transport: AsyncMock,
+) -> None:
+    transport.get.side_effect = [
+        httpx.Response(200, json={"state": "ACTIVE"}),
+        httpx.Response(
+            302, headers={"location": "https://storage.googleapis.com/video.mp4"}
+        ),
+        httpx.Response(200, content=b"video"),
+    ]
+    client = GoogleInteractionsVideosClient(
+        model=Model(id="gemini-omni-1.1-flash", display_name="Omni"),
+        provider=Provider.GOOGLE,
+        auth=AuthHeader(secret=SecretStr("test"), header="x-goog-api-key", prefix=""),
+    )
+    uri = "https://generativelanguage.googleapis.com/v1beta/files/abc"
+
+    with patch("celeste.http.httpx.AsyncClient", return_value=transport):
+        artifact = await client.download_content(
+            VideoArtifact(url=uri, mime_type=VideoMimeType.MP4)
+        )
+
+    assert artifact.data == b"video"
+    assert transport.get.call_args_list == [
+        call(
+            "https://generativelanguage.googleapis.com/v1beta/files/abc",
+            headers={"x-goog-api-key": "test"},
+            timeout=DEFAULT_TIMEOUT,
+            follow_redirects=False,
+        ),
+        call(
+            f"{uri}:download?alt=media",
+            headers={"x-goog-api-key": "test"},
+            timeout=DEFAULT_TIMEOUT,
+            follow_redirects=False,
+        ),
+        call(
+            "https://storage.googleapis.com/video.mp4",
+            headers={},
+            timeout=DEFAULT_TIMEOUT,
+            follow_redirects=False,
+        ),
+    ]
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        "https://example.com/provider-output.mp4",
+        "http://generativelanguage.googleapis.com/v1beta/files/abc",
+    ],
+)
+async def test_google_download_does_not_authenticate_untrusted_initial_url(
+    transport: AsyncMock, url: str
+) -> None:
+    transport.get.return_value = httpx.Response(200)
+    with patch("celeste.http.httpx.AsyncClient", return_value=transport):
+        await get_with_auth_safe_redirects(
+            HTTPClient(),
+            url,
+            {"x-goog-api-key": "test"},
+            timeout=DEFAULT_TIMEOUT,
+        )
+
+    assert transport.get.call_args == call(
+        url,
+        headers={},
+        timeout=DEFAULT_TIMEOUT,
+        follow_redirects=False,
+    )
 
 
 @pytest.mark.parametrize(
