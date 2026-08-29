@@ -92,7 +92,9 @@ MODELS: list[Model] = [
             ImageParameter.QUALITY: Choice(options=["low", "medium", "high", "auto"]),
             ImageParameter.NUM_IMAGES: Range(min=1, max=10),
             ImageParameter.OUTPUT_FORMAT: Choice(options=["png", "jpeg", "webp"]),
-            ImageParameter.BACKGROUND: Choice(options=["opaque", "auto"]),
+            ImageParameter.BACKGROUND: Choice(
+                options=["transparent", "opaque", "auto"]
+            ),
             ImageParameter.SAFETY_TOLERANCE: Choice(options=["auto", "low"]),
             ImageParameter.OUTPUT_COMPRESSION: Range(min=0, max=100),
         },
