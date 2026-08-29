@@ -38,7 +38,7 @@ class AnthropicMessagesStream:
             block = event_data.get("content_block", {})
             block_type = block.get("type")
             idx = event_data.get("index", len(self._content_blocks))
-            if block_type in {"server_tool_use", "tool_use"}:
+            if block_type in {"mcp_tool_use", "server_tool_use", "tool_use"}:
                 input_value = block.get("input")
                 # Keep provider fields like `caller`; only input streams via deltas.
                 captured = dict(block)
@@ -63,13 +63,19 @@ class AnthropicMessagesStream:
                     "text": block.get("text", ""),
                     "citations": [],
                 }
+            elif block_type in {"compaction", "connector_text", "fallback"}:
+                self._content_blocks[idx] = dict(block)
         elif event_type == "content_block_delta":
             delta = event_data.get("delta", {})
             delta_type = delta.get("type")
             idx = event_data.get("index", -1)
             block = self._content_blocks.get(idx)
             if delta_type == "input_json_delta":
-                if block and block.get("type") in {"server_tool_use", "tool_use"}:
+                if block and block.get("type") in {
+                    "mcp_tool_use",
+                    "server_tool_use",
+                    "tool_use",
+                }:
                     block["input_json"] += delta.get("partial_json", "")
             elif delta_type in {"thinking_delta", "signature_delta"}:
                 key = delta_type.removesuffix("_delta")
@@ -85,6 +91,14 @@ class AnthropicMessagesStream:
                     citation = delta.get("citation")
                     if isinstance(citation, dict):
                         block["citations"].append(citation)
+            elif (
+                delta_type == "compaction_delta"
+                and block
+                and block.get("type") == "compaction"
+            ):
+                block.update(
+                    {key: value for key, value in delta.items() if key != "type"}
+                )
         return super()._parse_chunk(event_data)  # type: ignore[misc]
 
     def _aggregate_event_data(self, chunks: list[Any]) -> list[dict[str, Any]]:
@@ -110,6 +124,12 @@ class AnthropicMessagesStream:
                     **(event.get("usage") or {}),
                 }
                 break
+        for block in reversed(self._aggregate_content_blocks()):
+            target = block.get("to")
+            if block.get("type") == "fallback" and isinstance(target, dict):
+                if isinstance(target_model := target.get("model"), str):
+                    response["model"] = target_model
+                break
         return response
 
     def _aggregate_content_blocks(self) -> list[dict[str, Any]]:
@@ -117,7 +137,7 @@ class AnthropicMessagesStream:
         blocks: list[dict[str, Any]] = []
         for idx in sorted(self._content_blocks):
             block = self._content_blocks[idx]
-            if block.get("type") in {"server_tool_use", "tool_use"}:
+            if block.get("type") in {"mcp_tool_use", "server_tool_use", "tool_use"}:
                 input_data = block.get("input") or {}
                 if block.get("input_json"):
                     with contextlib.suppress(ValueError, TypeError):
@@ -145,6 +165,18 @@ class AnthropicMessagesStream:
                 return delta.get("text") or None
 
         return None
+
+    def _parse_stream_error(self, event_data: dict[str, Any]) -> dict[str, Any] | None:
+        """Detect Google Vertex HTTP-200 prompt blocks."""
+        feedback = event_data.get("promptFeedback")
+        if isinstance(feedback, dict):
+            reason = feedback.get("blockReason")
+            suffix = f": {reason}" if reason else ""
+            return {
+                "type": str(reason) if reason else "vertex_prompt_blocked",
+                "message": f"Prompt blocked by Google Vertex safety filters{suffix}",
+            }
+        return super()._parse_stream_error(event_data)  # type: ignore[misc]
 
     def _parse_chunk_reasoning(self, event_data: dict[str, Any]) -> str | None:
         """Extract thinking content from SSE event."""

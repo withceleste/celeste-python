@@ -1,8 +1,5 @@
 """Anthropic parameter mappers for text."""
 
-from typing import Any
-
-from celeste.models import Model
 from celeste.parameters import ParameterMapper
 from celeste.providers.anthropic.messages.parameters import (
     MaxTokensMapper as _MaxTokensMapper,
@@ -28,7 +25,6 @@ from celeste.providers.anthropic.messages.parameters import (
 from celeste.types import TextContent
 
 from ...parameters import TextParameter
-from .models import DYNAMIC_FILTERING_MODELS
 
 
 class TemperatureMapper(_TemperatureMapper):
@@ -48,25 +44,6 @@ class ThinkingBudgetMapper(_ThinkingMapper):
 
     name = TextParameter.THINKING_BUDGET
 
-    def map(
-        self,
-        request: dict[str, Any],
-        value: object,
-        model: Model,
-    ) -> dict[str, Any]:
-        """Transform thinking_budget with unified value translation."""
-        validated_value = self._validate_value(value, model)
-        if validated_value is None:
-            return request
-
-        # Translate unified → provider-native
-        if validated_value == -1:
-            provider_value = "auto"
-        else:
-            provider_value = validated_value
-
-        return super().map(request, provider_value, model)
-
 
 class ThinkingLevelMapper(_ThinkingLevelMapper):
     """Map thinking_level to Anthropic's adaptive thinking + output_config.effort."""
@@ -75,29 +52,15 @@ class ThinkingLevelMapper(_ThinkingLevelMapper):
 
 
 class OutputSchemaMapper(_OutputFormatMapper):
-    """Map output_schema to Anthropic's output_format parameter."""
+    """Map output_schema to Anthropic's output_config.format parameter."""
 
     name = TextParameter.OUTPUT_SCHEMA
 
 
 class ToolsMapper(_ToolsMapper):
-    """Map tools to Anthropic's tools parameter (web_search version per model)."""
+    """Map tools to Anthropic's tools parameter."""
 
     name = TextParameter.TOOLS
-
-    def map(
-        self,
-        request: dict[str, Any],
-        value: object,
-        model: Model,
-    ) -> dict[str, Any]:
-        """Upgrade web_search to dynamic filtering (web_search_20260209) where the model supports it."""
-        request = super().map(request, value, model)
-        if model.id in DYNAMIC_FILTERING_MODELS:
-            for tool in request.get("tools", []):
-                if tool.get("name") == "web_search":
-                    tool["type"] = "web_search_20260209"
-        return request
 
 
 class ToolChoiceMapper(_ToolChoiceMapper):

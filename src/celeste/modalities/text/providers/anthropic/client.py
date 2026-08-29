@@ -1,7 +1,7 @@
 """Anthropic text client (modality)."""
 
 import base64
-from typing import Any
+from typing import Any, Unpack
 
 from celeste.artifacts import DocumentArtifact, ImageArtifact
 from celeste.grounding import Grounding
@@ -16,11 +16,12 @@ from celeste.parameters import ParameterMapper
 from celeste.providers.anthropic.messages.client import (
     AnthropicMessagesClient as AnthropicMessagesMixin,
 )
-from celeste.providers.anthropic.messages.client import needs_native_replay
+from celeste.providers.anthropic.messages.client import native_replay_blocks
 from celeste.providers.anthropic.messages.streaming import (
     AnthropicMessagesStream as _AnthropicMessagesStream,
 )
-from celeste.tools import ToolCall, ToolResult
+from celeste.providers.google.auth import GoogleADC
+from celeste.tools import ToolCall, ToolResult, WebSearch
 from celeste.types import DocumentPart, ImagePart, Role, TextContent, TextPart
 from celeste.utils import detect_mime_type
 
@@ -30,9 +31,15 @@ from ...io import (
     TextInput,
     TextUsage,
 )
+from ...parameters import TextParameters
 from ...streaming import TextStream
 from .grounding import parse_grounding
+from .models import DYNAMIC_FILTERING_MODELS
 from .parameters import ANTHROPIC_PARAMETER_MAPPERS
+
+_MID_CONVERSATION_SYSTEM_MODELS = frozenset(
+    {"claude-fable-5", "claude-mythos-5", "claude-opus-4-8", "claude-opus-5"}
+)
 
 
 class AnthropicTextStream(_AnthropicMessagesStream, TextStream):
@@ -57,7 +64,7 @@ class AnthropicTextStream(_AnthropicMessagesStream, TextStream):
     ) -> list[dict[str, Any]]:
         """Return native content when Anthropic requires exact assistant replay."""
         blocks = self._aggregate_content_blocks()
-        return blocks if needs_native_replay(blocks) else []
+        return native_replay_blocks(blocks)
 
     def _aggregate_container(
         self, chunks: list[TextChunk], raw_events: list[dict[str, Any]]
@@ -90,6 +97,45 @@ class AnthropicTextClient(AnthropicMessagesMixin, TextClient):
     @classmethod
     def parameter_mappers(cls) -> list[ParameterMapper[TextContent]]:
         return ANTHROPIC_PARAMETER_MAPPERS
+
+    def _build_request(
+        self,
+        inputs: TextInput,
+        extra_body: dict[str, Any] | None = None,
+        streaming: bool = False,
+        **parameters: Unpack[TextParameters],
+    ) -> dict[str, Any]:
+        """Select the supported web-search version for unified tools on this route."""
+        tools = parameters.get("tools")
+        unified_web_search = (
+            [
+                isinstance(tool, WebSearch)
+                or (
+                    isinstance(tool, dict)
+                    and tool.get("kind") == "web_search"
+                    and "type" not in tool
+                )
+                for tool in tools
+            ]
+            if isinstance(tools, list)
+            else []
+        )
+        request = super()._build_request(
+            inputs, extra_body=extra_body, streaming=streaming, **parameters
+        )
+        if not (extra_body and "tools" in extra_body):
+            if isinstance(self.auth, GoogleADC):
+                version = "web_search"
+            elif self.model.id in DYNAMIC_FILTERING_MODELS:
+                version = "web_search_20260209"
+            else:
+                version = "web_search_20250305"
+            for tool, is_unified in zip(
+                request.get("tools", []), unified_web_search, strict=False
+            ):
+                if is_unified:
+                    tool["type"] = version
+        return request
 
     def _init_request(self, inputs: TextInput) -> dict[str, Any]:
         """Initialize request from Anthropic Messages API format."""
@@ -124,6 +170,7 @@ class AnthropicTextClient(AnthropicMessagesMixin, TextClient):
         messages: list[dict[str, Any]] = []
         pending_tool_results: list[dict[str, Any]] = []
         container_id: str | None = None
+        supports_mid_system = self.model.id in _MID_CONVERSATION_SYSTEM_MODELS
 
         for message in request_messages(
             prompt=inputs.prompt,
@@ -137,7 +184,19 @@ class AnthropicTextClient(AnthropicMessagesMixin, TextClient):
             content = message.content
 
             if role in {Role.SYSTEM, Role.DEVELOPER}:
-                system_blocks.extend(content_to_blocks(content))
+                blocks = content_to_blocks(content)
+                if supports_mid_system and (messages or pending_tool_results):
+                    if pending_tool_results:
+                        messages.append(
+                            {"role": "user", "content": pending_tool_results}
+                        )
+                        pending_tool_results = []
+                    if messages[-1]["role"] == Role.SYSTEM:
+                        messages[-1]["content"].extend(blocks)
+                    else:
+                        messages.append({"role": Role.SYSTEM, "content": blocks})
+                else:
+                    system_blocks.extend(blocks)
                 continue
 
             if isinstance(message, ToolResult):
@@ -246,14 +305,11 @@ class AnthropicTextClient(AnthropicMessagesMixin, TextClient):
     ) -> TextContent:
         """Parse content from response."""
         content = super()._parse_content(response_data)
-
-        text_content = ""
-        for content_block in content:
-            if content_block.get("type") == "text":
-                text_content = content_block.get("text") or ""
-                break
-
-        return text_content
+        return "".join(
+            content_block.get("text") or ""
+            for content_block in content
+            if content_block.get("type") in {"connector_text", "text"}
+        )
 
     def _parse_reasoning(
         self, response_data: dict[str, Any]
@@ -266,7 +322,7 @@ class AnthropicTextClient(AnthropicMessagesMixin, TextClient):
             if b.get("type") == "thinking" and b.get("thinking")
         ]
         text = "\n".join(reasoning_parts) if reasoning_parts else None
-        return text, list(blocks) if needs_native_replay(blocks) else []
+        return text, native_replay_blocks(blocks)
 
     def _parse_tool_calls(self, response_data: dict[str, Any]) -> list[ToolCall]:
         """Parse tool calls from Anthropic response."""

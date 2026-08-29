@@ -11,7 +11,7 @@ from celeste.constraints import (
 )
 from celeste.core import Modality, Operation, Parameter, Provider
 from celeste.models import Model
-from celeste.tools import ToolChoice, WebSearch
+from celeste.tools import WebSearch
 
 from ...parameters import TextParameter
 
@@ -29,9 +29,25 @@ MODELS: list[Model] = [
             ),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
-            TextParameter.TOOL_CHOICE: Choice(
-                options=[ToolChoice.AUTO, ToolChoice.NONE]
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
+            TextParameter.IMAGE: ImagesConstraint(),
+            TextParameter.DOCUMENT: DocumentsConstraint(),
+        },
+    ),
+    Model(
+        id="claude-mythos-5",
+        provider=Provider.ANTHROPIC,
+        display_name="Claude Mythos 5",
+        operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
+        streaming=True,
+        parameter_constraints={
+            Parameter.MAX_TOKENS: Range(min=1, max=128000),
+            TextParameter.THINKING_LEVEL: Choice(
+                options=["low", "medium", "high", "xhigh", "max"]
             ),
+            TextParameter.OUTPUT_SCHEMA: Schema(),
+            TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
             TextParameter.IMAGE: ImagesConstraint(),
             TextParameter.DOCUMENT: DocumentsConstraint(),
         },
@@ -40,6 +56,24 @@ MODELS: list[Model] = [
         id="claude-opus-4-8",
         provider=Provider.ANTHROPIC,
         display_name="Claude Opus 4.8",
+        operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
+        streaming=True,
+        parameter_constraints={
+            Parameter.MAX_TOKENS: Range(min=1, max=128000),
+            TextParameter.THINKING_LEVEL: Choice(
+                options=["low", "medium", "high", "xhigh", "max"]
+            ),
+            TextParameter.OUTPUT_SCHEMA: Schema(),
+            TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
+            TextParameter.IMAGE: ImagesConstraint(),
+            TextParameter.DOCUMENT: DocumentsConstraint(),
+        },
+    ),
+    Model(
+        id="claude-opus-5",
+        provider=Provider.ANTHROPIC,
+        display_name="Claude Opus 5",
         operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
         streaming=True,
         parameter_constraints={
@@ -81,7 +115,7 @@ MODELS: list[Model] = [
         parameter_constraints={
             Parameter.TEMPERATURE: Range(min=0.0, max=1.0, step=0.01),
             Parameter.MAX_TOKENS: Range(min=1, max=64000),
-            TextParameter.THINKING_BUDGET: Range(min=-1, max=64000),
+            TextParameter.THINKING_BUDGET: Range(min=1024, max=64000),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
             TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
@@ -98,7 +132,7 @@ MODELS: list[Model] = [
         parameter_constraints={
             Parameter.TEMPERATURE: Range(min=0.0, max=1.0, step=0.01),
             Parameter.MAX_TOKENS: Range(min=1, max=64000),
-            TextParameter.THINKING_BUDGET: Range(min=1024, max=32000),
+            TextParameter.THINKING_BUDGET: Range(min=1024, max=64000),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
             TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
@@ -115,8 +149,7 @@ MODELS: list[Model] = [
         parameter_constraints={
             Parameter.TEMPERATURE: Range(min=0.0, max=1.0, step=0.01),
             Parameter.MAX_TOKENS: Range(min=1, max=32000),
-            TextParameter.THINKING_BUDGET: Range(min=-1, max=32000),
-            TextParameter.OUTPUT_SCHEMA: Schema(),
+            TextParameter.THINKING_BUDGET: Range(min=1024, max=32000),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
             TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
             TextParameter.IMAGE: ImagesConstraint(),
@@ -132,7 +165,8 @@ MODELS: list[Model] = [
         parameter_constraints={
             Parameter.TEMPERATURE: Range(min=0.0, max=1.0, step=0.01),
             Parameter.MAX_TOKENS: Range(min=1, max=64000),
-            TextParameter.THINKING_BUDGET: Range(min=-1, max=32000),
+            TextParameter.THINKING_BUDGET: Range(min=1024, max=64000),
+            TextParameter.THINKING_LEVEL: Choice(options=["low", "medium", "high"]),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
             TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
@@ -148,8 +182,11 @@ MODELS: list[Model] = [
         streaming=True,
         parameter_constraints={
             Parameter.TEMPERATURE: Range(min=0.0, max=1.0, step=0.01),
-            Parameter.MAX_TOKENS: Range(min=1, max=64000),
-            TextParameter.THINKING_BUDGET: Range(min=-1, max=32000),
+            Parameter.MAX_TOKENS: Range(min=1, max=128000),
+            TextParameter.THINKING_BUDGET: Range(min=1024, max=128000),
+            TextParameter.THINKING_LEVEL: Choice(
+                options=["low", "medium", "high", "max"]
+            ),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
             TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
@@ -183,7 +220,8 @@ MODELS: list[Model] = [
         streaming=True,
         parameter_constraints={
             Parameter.TEMPERATURE: Range(min=0.0, max=1.0, step=0.01),
-            Parameter.MAX_TOKENS: Range(min=1, max=64000),
+            Parameter.MAX_TOKENS: Range(min=1, max=128000),
+            TextParameter.THINKING_BUDGET: Range(min=1024, max=128000),
             TextParameter.THINKING_LEVEL: Choice(
                 options=["low", "medium", "high", "max"]
             ),
@@ -200,7 +238,9 @@ MODELS: list[Model] = [
 DYNAMIC_FILTERING_MODELS = frozenset(
     {
         "claude-fable-5",
+        "claude-mythos-5",
         "claude-opus-4-8",
+        "claude-opus-5",
         "claude-opus-4-7",
         "claude-opus-4-6",
         "claude-sonnet-5",

@@ -11,7 +11,14 @@ from celeste.providers.google.auth import GoogleADC
 
 from . import config
 
-_NATIVE_REPLAY_BLOCK_TYPES = {"thinking", "redacted_thinking", "server_tool_use"}
+_NATIVE_REPLAY_BLOCK_TYPES = {
+    "compaction",
+    "fallback",
+    "mcp_tool_use",
+    "thinking",
+    "redacted_thinking",
+    "server_tool_use",
+}
 
 
 def needs_native_replay(blocks: list[dict[str, Any]]) -> bool:
@@ -26,6 +33,38 @@ def needs_native_replay(blocks: list[dict[str, Any]]) -> bool:
         )
         for block in blocks
     )
+
+
+def native_replay_blocks(blocks: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Return the exact assistant blocks valid for a continuation request."""
+    fallback_indexes = [
+        index for index, block in enumerate(blocks) if block.get("type") == "fallback"
+    ]
+    if not fallback_indexes:
+        return list(blocks) if needs_native_replay(blocks) else []
+
+    final_fallback = fallback_indexes[-1]
+    before = blocks[:final_fallback]
+    result_ids = {
+        block.get("tool_use_id")
+        for block in before
+        if isinstance(block.get("type"), str) and block["type"].endswith("_tool_result")
+    }
+    server_ids = {
+        block.get("id") for block in before if block.get("type") == "server_tool_use"
+    }
+    replayable = [
+        block
+        for block in before
+        if block.get("type") in {"compaction", "fallback", "text"}
+        or (block.get("type") == "server_tool_use" and block.get("id") in result_ids)
+        or (
+            isinstance(block.get("type"), str)
+            and block["type"].endswith("_tool_result")
+            and block.get("tool_use_id") in server_ids
+        )
+    ]
+    return [*replayable, *blocks[final_fallback:]]
 
 
 class AnthropicMessagesClient(APIMixin):
@@ -78,10 +117,9 @@ class AnthropicMessagesClient(APIMixin):
         extra_headers: dict[str, str] | None = None,
     ) -> dict[str, str]:
         """Build Anthropic request headers."""
-        headers: dict[str, str] = {
-            **self._json_headers(),
-            config.HEADER_ANTHROPIC_VERSION: config.ANTHROPIC_VERSION,
-        }
+        headers = self._json_headers()
+        if not isinstance(self.auth, GoogleADC):
+            headers[config.HEADER_ANTHROPIC_VERSION] = config.ANTHROPIC_VERSION
         if beta_features:
             beta_values = [
                 getattr(config, f"BETA_{f.upper().replace('-', '_')}")
@@ -103,7 +141,13 @@ class AnthropicMessagesClient(APIMixin):
         request_body = super()._build_request(
             inputs, extra_body=extra_body, streaming=streaming, **parameters
         )
-        request_body["model"] = self.model.id
+        if isinstance(self.auth, GoogleADC):
+            request_body.pop("model", None)
+            request_body.setdefault(
+                "anthropic_version", config.VERTEX_ANTHROPIC_VERSION
+            )
+        else:
+            request_body["model"] = self.model.id
         if streaming:
             request_body["stream"] = True
         return request_body
@@ -207,6 +251,14 @@ class AnthropicMessagesClient(APIMixin):
         """
         content = response_data.get("content", [])
         if not content:
+            feedback = response_data.get("promptFeedback")
+            if isinstance(feedback, dict):
+                reason = feedback.get("blockReason")
+                suffix = f": {reason}" if reason else ""
+                msg = f"Prompt blocked by Google Vertex safety filters{suffix}"
+                raise ValueError(msg)
+            if response_data.get("stop_reason") == "refusal":
+                return []
             msg = "No content in response"
             raise ValueError(msg)
         return content

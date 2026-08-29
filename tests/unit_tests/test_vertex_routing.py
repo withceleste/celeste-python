@@ -8,6 +8,8 @@ from pydantic import SecretStr
 
 from celeste.auth import AuthHeader
 from celeste.core import Provider
+from celeste.modalities.text.io import TextInput
+from celeste.modalities.text.providers.anthropic.client import AnthropicTextClient
 from celeste.models import Model
 from celeste.providers.anthropic.messages import config as anthropic_config
 from celeste.providers.anthropic.messages.client import AnthropicMessagesClient
@@ -24,6 +26,7 @@ from celeste.providers.google.veo import config as veo_config
 from celeste.providers.google.veo.client import GoogleVeoClient
 from celeste.providers.mistral.chat import config as mistral_config
 from celeste.providers.mistral.chat.client import MistralChatClient
+from celeste.tools import WebSearch
 
 
 def _model(model_id: str) -> Model:
@@ -209,6 +212,91 @@ def test_vertex_streaming_uses_stream_endpoint(
     assert "streamRawPredict" in _build_url(
         client_type, endpoint, model_id, _adc(), streaming=True
     )
+
+
+def test_anthropic_vertex_uses_url_model_and_body_version() -> None:
+    client = AnthropicTextClient(
+        model=_model("claude-opus-5"),
+        provider=Provider.ANTHROPIC,
+        auth=_adc(),
+    )
+
+    request = client._build_request(
+        TextInput(prompt="hello"), extra_body={"model": "body-override"}
+    )
+
+    assert request["anthropic_version"] == "vertex-2023-10-16"
+    assert "model" not in request
+    assert anthropic_config.HEADER_ANTHROPIC_VERSION not in client._build_headers()
+
+
+def test_anthropic_direct_request_keeps_model_and_version_header() -> None:
+    client = AnthropicTextClient(
+        model=_model("claude-opus-5"),
+        provider=Provider.ANTHROPIC,
+        auth=_api_key(),
+    )
+
+    request = client._build_request(TextInput(prompt="hello"))
+
+    assert request["model"] == "claude-opus-5"
+    assert client._build_headers()[anthropic_config.HEADER_ANTHROPIC_VERSION] == (
+        anthropic_config.ANTHROPIC_VERSION
+    )
+
+
+def test_anthropic_web_search_version_respects_serving_route() -> None:
+    direct = AnthropicTextClient(
+        model=_model("claude-opus-5"),
+        provider=Provider.ANTHROPIC,
+        auth=_api_key(),
+    )
+    vertex = AnthropicTextClient(
+        model=_model("claude-opus-5"),
+        provider=Provider.ANTHROPIC,
+        auth=_adc(),
+    )
+
+    assert (
+        direct._build_request(TextInput(prompt="hello"), tools=[WebSearch()])["tools"][
+            0
+        ]["type"]
+        == "web_search_20260209"
+    )
+    assert (
+        vertex._build_request(TextInput(prompt="hello"), tools=[WebSearch()])["tools"][
+            0
+        ]["type"]
+        == "web_search"
+    )
+
+
+def test_anthropic_raw_web_search_tool_is_not_rewritten() -> None:
+    client = AnthropicTextClient(
+        model=_model("claude-opus-5"),
+        provider=Provider.ANTHROPIC,
+        auth=_api_key(),
+    )
+    raw = {
+        "type": "web_search_20260318",
+        "name": "web_search",
+        "response_inclusion": "search_results",
+    }
+
+    assert client._build_request(TextInput(prompt="hello"), tools=[raw])["tools"] == [
+        raw
+    ]
+
+
+def test_anthropic_vertex_prompt_feedback_is_an_error() -> None:
+    client = AnthropicTextClient(
+        model=_model("claude-opus-5"),
+        provider=Provider.ANTHROPIC,
+        auth=_adc(),
+    )
+
+    with pytest.raises(ValueError, match="PROHIBTED_CONTENT"):
+        client._parse_content({"promptFeedback": {"blockReason": "PROHIBTED_CONTENT"}})
 
 
 @pytest.mark.parametrize(

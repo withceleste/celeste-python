@@ -239,6 +239,57 @@ def test_anthropic_message_parts_include_image_and_document_sources() -> None:
     assert content[2] == {"type": "text", "text": "inspect"}
 
 
+def test_anthropic_keeps_supported_mid_conversation_system_messages_in_place() -> None:
+    model = _model(Provider.ANTHROPIC).model_copy(update={"id": "claude-opus-5"})
+    client = AnthropicTextClient(
+        model=model,
+        provider=Provider.ANTHROPIC,
+        auth=_auth(Provider.ANTHROPIC),
+    )
+
+    request = client._init_request(
+        TextInput(
+            messages=[
+                Message(role=Role.SYSTEM, content="top-level"),
+                Message(role=Role.USER, content="question"),
+                Message(role=Role.DEVELOPER, content="updated rule"),
+                Message(role=Role.ASSISTANT, content="answer"),
+            ]
+        )
+    )
+
+    assert request["system"] == [{"type": "text", "text": "top-level"}]
+    assert [message["role"] for message in request["messages"]] == [
+        Role.USER,
+        Role.SYSTEM,
+        Role.ASSISTANT,
+    ]
+    assert request["messages"][1]["content"] == [
+        {"type": "text", "text": "updated rule"}
+    ]
+
+
+def test_anthropic_hoists_mid_conversation_system_for_unsupported_models() -> None:
+    model = _model(Provider.ANTHROPIC).model_copy(update={"id": "claude-sonnet-5"})
+    client = AnthropicTextClient(
+        model=model,
+        provider=Provider.ANTHROPIC,
+        auth=_auth(Provider.ANTHROPIC),
+    )
+
+    request = client._init_request(
+        TextInput(
+            messages=[
+                Message(role=Role.USER, content="question"),
+                Message(role=Role.SYSTEM, content="updated rule"),
+            ]
+        )
+    )
+
+    assert request["system"] == [{"type": "text", "text": "updated rule"}]
+    assert [message["role"] for message in request["messages"]] == [Role.USER]
+
+
 def test_cohere_message_parts_include_image_block() -> None:
     client = CohereTextClient(
         model=_model(Provider.COHERE),

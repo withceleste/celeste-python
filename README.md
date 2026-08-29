@@ -131,9 +131,11 @@ response = client.messages.create(
         {"role": "user",
          "content": "Extract user info: John is 30"}
     ],
-    output_format={
-        "type": "json_schema",
-        "schema": User.model_json_schema()
+    output_config={
+        "format": {
+            "type": "json_schema",
+            "schema": User.model_json_schema()
+        }
     }
 )
 user_data = json.loads(response.content[0].text)

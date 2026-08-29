@@ -23,6 +23,7 @@ BASE_URL = "https://api.anthropic.com"
 
 # Required
 ANTHROPIC_VERSION = "2023-06-01"
+VERTEX_ANTHROPIC_VERSION = "vertex-2023-10-16"
 CONTENT_TYPE_JSON = "application/json"
 
 # Header
@@ -35,8 +36,6 @@ BETA_COMPUTER_USE = "computer-use-2024-10-22"
 BETA_PDFS = "pdfs-2024-09-25"
 BETA_TOKEN_COUNTING = "token-counting-2024-11-01"  # nosec B105
 BETA_MAX_TOKENS_SONNET_3_5 = "max-tokens-3-5-sonnet-2024-07-15"
-BETA_STRUCTURED_OUTPUTS = "structured-outputs-2025-11-13"
-
 # Defaults
 DEFAULT_MAX_TOKENS = 1024
 

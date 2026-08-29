@@ -3,7 +3,7 @@
 import json
 from typing import Any, get_args, get_origin
 
-from pydantic import BaseModel, TypeAdapter
+from pydantic import BaseModel, TypeAdapter, ValidationError
 
 from celeste.exceptions import InvalidToolError
 from celeste.models import Model
@@ -48,9 +48,7 @@ class StopSequencesMapper(FieldMapper[TextContent]):
 class ThinkingMapper(ParameterMapper[TextContent]):
     """Map thinking to Anthropic thinking field.
 
-    Accepts provider-native values:
-    - "auto": Dynamic budget (API decides)
-    - int: Fixed budget with specified tokens
+    Accepts a fixed manual thinking budget in tokens.
     """
 
     def map(
@@ -64,15 +62,12 @@ class ThinkingMapper(ParameterMapper[TextContent]):
         if validated_value is None:
             return request
 
-        if validated_value == "auto":
-            request["thinking"] = {"type": "auto"}
-        else:
-            request["thinking"] = {"type": "enabled", "budget_tokens": validated_value}
+        request["thinking"] = {"type": "enabled", "budget_tokens": validated_value}
         return request
 
 
 class ThinkingLevelMapper(ParameterMapper[TextContent]):
-    """Map thinking_level to adaptive thinking plus output_config.effort.
+    """Map thinking_level to output_config.effort and adaptive thinking where supported.
 
     display="summarized" so thinking summaries stream (API default "omitted" is empty).
     effort goes in output_config, not the thinking object (the API rejects it there).
@@ -88,7 +83,8 @@ class ThinkingLevelMapper(ParameterMapper[TextContent]):
         validated_value = self._validate_value(value, model)
         if validated_value is None:
             return request
-        request["thinking"] = {"type": "adaptive", "display": "summarized"}
+        if model.id != "claude-opus-4-5" and "thinking" not in request:
+            request["thinking"] = {"type": "adaptive", "display": "summarized"}
         request.setdefault("output_config", {})["effort"] = validated_value
         return request
 
@@ -141,6 +137,8 @@ class ToolsMapper(ParameterMapper[TextContent]):
         result: dict[str, Any] = {"name": tool["name"], "input_schema": input_schema}
         if "description" in tool:
             result["description"] = tool["description"]
+        if "strict" in tool:
+            result["strict"] = tool["strict"]
         return result
 
 
@@ -176,7 +174,7 @@ class ToolChoiceMapper(ParameterMapper[TextContent]):
 
 
 class OutputFormatMapper(ParameterMapper[TextContent]):
-    """Map output_schema to Anthropic output_format field.
+    """Map output_schema to Anthropic output_config.format field.
 
     Handles both single BaseModel and list[BaseModel] types.
     Anthropic supports top-level arrays, $ref, and $defs natively.
@@ -208,14 +206,10 @@ class OutputFormatMapper(ParameterMapper[TextContent]):
                 mode="serialization",
             )
 
-        request["output_format"] = {
+        request.setdefault("output_config", {})["format"] = {
             "type": "json_schema",
             "schema": schema,
         }
-
-        # Signal that structured outputs beta header is needed
-        request.setdefault("_beta_features", []).append("structured-outputs")
-
         return request
 
     def parse_output(self, content: TextContent, value: object | None) -> TextContent:
@@ -233,11 +227,17 @@ class OutputFormatMapper(ParameterMapper[TextContent]):
         if isinstance(content, dict):
             parsed = content
         elif isinstance(content, str):
-            parsed = json.loads(content, strict=False)
+            try:
+                parsed = json.loads(content, strict=False)
+            except json.JSONDecodeError:
+                return content
         else:
             parsed = content
 
-        return TypeAdapter(value).validate_python(parsed)
+        try:
+            return TypeAdapter(value).validate_python(parsed)
+        except ValidationError:
+            return content
 
 
 __all__ = [

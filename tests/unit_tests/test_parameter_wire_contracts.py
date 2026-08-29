@@ -24,6 +24,9 @@ from celeste.modalities.text.protocols.chatcompletions.client import (
     ChatCompletionsTextStream,
 )
 from celeste.modalities.text.providers.anthropic import parameters as anthropic
+from celeste.modalities.text.providers.anthropic.models import (
+    MODELS as ANTHROPIC_MODELS,
+)
 from celeste.modalities.text.providers.google import parameters as google_text
 from celeste.modalities.text.providers.groq import parameters as groq
 from celeste.modalities.text.providers.moonshot import parameters as moonshot
@@ -226,6 +229,13 @@ def _at(data: dict[str, Any], path: tuple[str, ...]) -> Any:  # noqa: ANN401
         (CHAT, T.MAX_TOKENS, 100, ("max_tokens",), 100),
         (CHAT, T.THINKING_BUDGET, "high", ("reasoning_effort",), "high"),
         (ANTHROPIC, T.TEMPERATURE, 0.3, ("temperature",), 0.3),
+        (
+            ANTHROPIC,
+            T.THINKING_BUDGET,
+            2048,
+            ("thinking",),
+            {"type": "enabled", "budget_tokens": 2048},
+        ),
         (MOONSHOT, T.TEMPERATURE, 0.4, ("temperature",), 0.4),
         (MOONSHOT, T.MAX_TOKENS, 120, ("max_completion_tokens",), 120),
         (MOONSHOT, T.THINKING_BUDGET, "max", ("reasoning_effort",), "max"),
@@ -329,6 +339,14 @@ def test_none_omits_every_optional_parameter(
     ("mappers", "schema", "wire", "path", "mapped", "parsed"),
     [
         (GOOGLE_VERTEX, Answer, '{"value":1}', GS, "integer", Answer(value=1)),
+        (
+            ANTHROPIC,
+            Answer,
+            '{"value":1}',
+            ("output_config", "format", "schema", "properties", "value", "type"),
+            "integer",
+            Answer(value=1),
+        ),
         (OPEN, ANSWERS, '{"items":[{"value":2}]}', TF, "answer_list", A2),
         (CHAT, ANSWERS, W3, RF, "json_object", A3),
         (GROQ, ANSWERS, W3, RF, "json_object", A3),
@@ -358,6 +376,53 @@ def test_user_tools_use_protocol_function_shape(
     assert mapped["type"] == "function"
     assert function["name"] == "lookup"
     assert function["parameters"]["properties"]["value"]["type"] == "integer"
+
+
+def test_anthropic_user_tools_preserve_strict_mode() -> None:
+    tool = _map(
+        ANTHROPIC,
+        T.TOOLS,
+        [{"name": "lookup", "parameters": Answer, "strict": True}],
+    )["tools"][0]
+
+    assert tool["strict"] is True
+    assert tool["input_schema"]["properties"]["value"]["type"] == "integer"
+
+
+def test_anthropic_structured_output_uses_stable_wire_shape() -> None:
+    request = _map(ANTHROPIC, T.OUTPUT_SCHEMA, Answer)
+
+    assert request["output_config"]["format"]["type"] == "json_schema"
+    assert "output_format" not in request
+    assert "_beta_features" not in request
+
+
+@pytest.mark.parametrize("content", ("", '{"value":', '{"refusal":"blocked"}'))
+def test_anthropic_structured_output_preserves_non_schema_stop_content(
+    content: str,
+) -> None:
+    mapper = _mapper(ANTHROPIC, T.OUTPUT_SCHEMA)
+
+    assert mapper.parse_output(content, Answer) == content
+
+
+def test_anthropic_opus_4_5_effort_does_not_enable_adaptive_thinking() -> None:
+    model = next(model for model in ANTHROPIC_MODELS if model.id == "claude-opus-4-5")
+    request = _mapper(ANTHROPIC, T.THINKING_LEVEL).map({}, "medium", model)
+
+    assert request == {"output_config": {"effort": "medium"}}
+
+
+def test_anthropic_4_6_effort_preserves_manual_thinking_budget() -> None:
+    model = next(model for model in ANTHROPIC_MODELS if model.id == "claude-opus-4-6")
+    request = _mapper(ANTHROPIC, T.THINKING_BUDGET).map({}, 2048, model)
+
+    request = _mapper(ANTHROPIC, T.THINKING_LEVEL).map(request, "low", model)
+
+    assert request == {
+        "thinking": {"type": "enabled", "budget_tokens": 2048},
+        "output_config": {"effort": "low"},
+    }
 
 
 def test_google_media_precedes_text_content() -> None:
