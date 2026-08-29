@@ -214,7 +214,10 @@ def test_vertex_streaming_uses_stream_endpoint(
     )
 
 
-def test_anthropic_vertex_uses_url_model_and_body_version() -> None:
+def test_anthropic_vertex_uses_url_model_and_body_version(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(GoogleADC, "get_headers", lambda self: {})
     client = AnthropicTextClient(
         model=_model("claude-opus-5"),
         provider=Provider.ANTHROPIC,
