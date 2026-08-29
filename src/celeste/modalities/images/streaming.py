@@ -5,6 +5,7 @@ from typing import Any
 
 from celeste.artifacts import ImageArtifact
 from celeste.streaming import Stream
+from celeste.types import ImageContent
 
 from .io import ImageChunk, ImageFinishReason, ImageOutput, ImageUsage
 from .parameters import ImageParameters
@@ -24,7 +25,7 @@ class ImagesStream(Stream[ImageOutput, ImageParameters, ImageChunk]):
         return ImageArtifact(data=raw_content)
 
     @abstractmethod
-    def _aggregate_content(self, chunks: list[ImageChunk]) -> ImageArtifact:
+    def _aggregate_content(self, chunks: list[ImageChunk]) -> ImageContent:
         """Aggregate content from chunks into raw content (modality-specific)."""
         ...
 

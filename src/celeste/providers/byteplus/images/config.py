@@ -6,7 +6,7 @@ from enum import StrEnum
 class BytePlusImagesEndpoint(StrEnum):
     """Endpoints for BytePlus Images API."""
 
-    CREATE_IMAGE = "/api/v3/images/generations"
+    CREATE_IMAGE = "/images/generations"
 
 
-BASE_URL = "https://ark.ap-southeast.bytepluses.com"
+BASE_URL = "https://ark.ap-southeast.bytepluses.com/api/v3"

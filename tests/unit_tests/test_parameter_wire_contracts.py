@@ -13,6 +13,7 @@ from celeste.modalities.audio.providers.mistral import parameters as mistral_aud
 from celeste.modalities.audio.providers.openai import parameters as openai_audio
 from celeste.modalities.images.parameters import ImageParameter
 from celeste.modalities.images.providers.bfl import parameters as bfl
+from celeste.modalities.images.providers.byteplus import parameters as byteplus_images
 from celeste.modalities.images.providers.google import parameters as google_images
 from celeste.modalities.images.providers.topazlabs import parameters as topazlabs
 from celeste.modalities.segmentation.parameters import SegmentationParameter
@@ -55,6 +56,7 @@ GROQ = groq.GROQ_PARAMETER_MAPPERS
 BYTEPLUS = byteplus.BYTEPLUS_PARAMETER_MAPPERS
 XAI = xai.XAI_PARAMETER_MAPPERS
 BFL = bfl.BFL_PARAMETER_MAPPERS
+BYTEPLUS_IMAGES = byteplus_images.BYTEPLUS_PARAMETER_MAPPERS
 TOPAZ = topazlabs.TOPAZLABS_PARAMETER_MAPPERS
 FAL = fal.FAL_PARAMETER_MAPPERS
 T, IP, V, AP, SP = (
@@ -130,6 +132,11 @@ def _at(data: dict[str, Any], path: tuple[str, ...]) -> Any:  # noqa: ANN401
         (IMAGES_IMAGEN, IP.ASPECT_RATIO, "16:9", ("parameters", "aspectRatio"), "16:9"),
         (IMAGES_IMAGEN, IP.QUALITY, "2K", ("parameters", "imageSize"), "2K"),
         (IMAGES_IMAGEN, IP.NUM_IMAGES, 2, ("parameters", "sampleCount"), 2),
+        (BYTEPLUS_IMAGES, IP.ASPECT_RATIO, "2048x2048", ("size",), "2048x2048"),
+        (BYTEPLUS_IMAGES, IP.QUALITY, "2K", ("size",), "2K"),
+        (BYTEPLUS_IMAGES, IP.WATERMARK, False, ("watermark",), False),
+        (BYTEPLUS_IMAGES, IP.OUTPUT_FORMAT, "png", ("output_format",), "png"),
+        (BYTEPLUS_IMAGES, IP.BACKGROUND, "transparent", ("background",), "transparent"),
         (
             AUDIO_GOOGLE,
             AP.VOICE,
@@ -314,6 +321,7 @@ def test_scalar_parameters_use_provider_wire_shape(
         MOONSHOT,
         GROQ,
         BYTEPLUS,
+        BYTEPLUS_IMAGES,
         XAI,
         BFL,
         TOPAZ,
@@ -473,6 +481,16 @@ def test_bfl_reference_images_follow_primary_image_numbering() -> None:
         [IMAGE],
         {"input_image": "primary"},
     ) == {"input_image": "primary", "input_image_2": IMAGE.url}
+
+
+def test_byteplus_reference_images_follow_primary_order() -> None:
+    assert _map(BYTEPLUS_IMAGES, IP.REFERENCE_IMAGES, [IMAGE]) == {"image": IMAGE.url}
+    assert _map(
+        BYTEPLUS_IMAGES,
+        IP.REFERENCE_IMAGES,
+        [IMAGE],
+        {"image": "primary"},
+    ) == {"image": ["primary", IMAGE.url]}
 
 
 def test_chat_completions_reasoning_fields() -> None:

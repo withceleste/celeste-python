@@ -23,6 +23,8 @@ class ImageMimeType(MimeType):
     BMP = "image/bmp"
     TIFF = "image/tiff"
     GIF = "image/gif"
+    HEIC = "image/heic"
+    HEIF = "image/heif"
 
 
 class VideoMimeType(MimeType):

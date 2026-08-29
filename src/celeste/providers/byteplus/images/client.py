@@ -9,6 +9,15 @@ from celeste.io import FinishReason
 
 from . import config
 
+_IMAGE_PAYLOAD_FIELDS = {"b64_json", "url"}
+
+
+def image_item_metadata(item: dict[str, Any]) -> dict[str, Any]:
+    """Return provider item metadata without retaining the image payload."""
+    return {
+        key: value for key, value in item.items() if key not in _IMAGE_PAYLOAD_FIELDS
+    }
+
 
 class BytePlusImagesClient(APIMixin):
     """Mixin for BytePlus Images API capabilities.
@@ -60,7 +69,7 @@ class BytePlusImagesClient(APIMixin):
         headers = self._json_headers(extra_headers)
 
         response = await self.http_client.post(
-            f"{config.BASE_URL}{endpoint}",
+            f"{(self.base_url or config.BASE_URL).rstrip('/')}{endpoint}",
             headers=headers,
             json_body=request_body,
         )
@@ -83,7 +92,7 @@ class BytePlusImagesClient(APIMixin):
         headers = self._json_headers(extra_headers)
 
         return self.http_client.stream_post(
-            f"{config.BASE_URL}{endpoint}",
+            f"{(self.base_url or config.BASE_URL).rstrip('/')}{endpoint}",
             headers=headers,
             json_body=request_body,
         )
@@ -131,12 +140,21 @@ class BytePlusImagesClient(APIMixin):
         return FinishReason(reason=None)
 
     def _build_metadata(self, response_data: dict[str, Any]) -> Any:
-        """Build metadata dictionary, extracting seed if present."""
+        """Build metadata without retaining URL or base64 image payloads."""
         metadata = super()._build_metadata(response_data)
+        raw_response = metadata["raw_response"]
+        for field in self._content_fields:
+            items = response_data.get(field)
+            if isinstance(items, list):
+                raw_response[field] = [
+                    image_item_metadata(item)
+                    for item in items
+                    if isinstance(item, dict)
+                ]
         seed = response_data.get("seed")
         if seed is not None:
             metadata["seed"] = seed
         return metadata
 
 
-__all__ = ["BytePlusImagesClient"]
+__all__ = ["BytePlusImagesClient", "image_item_metadata"]
