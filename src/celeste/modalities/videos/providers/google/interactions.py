@@ -93,6 +93,26 @@ class GoogleInteractionsVideosClient(GoogleInteractionsMixin, VideosClient):
         msg = "No video content in response"
         raise ValueError(msg)
 
+    async def _make_request(
+        self,
+        request_body: dict[str, Any],
+        *,
+        endpoint: str | None = None,
+        extra_headers: dict[str, str] | None = None,
+        **parameters: Unpack[VideoParameters],
+    ) -> dict[str, Any]:
+        """Wait for a returned Developer File before exposing its download URI."""
+        response_data = await super()._make_request(
+            request_body,
+            endpoint=endpoint,
+            extra_headers=extra_headers,
+            **parameters,
+        )
+        artifact = self._parse_content(response_data)
+        if artifact.url is not None:
+            await self._wait_until_file_active(artifact.url)
+        return response_data
+
     async def download_content(self, artifact: VideoArtifact) -> VideoArtifact:
         """Download video content from the response URI."""
         if artifact.data is not None:
@@ -103,21 +123,7 @@ class GoogleInteractionsVideosClient(GoogleInteractionsMixin, VideosClient):
             raise ValueError(msg)
 
         headers = self.auth.get_headers()
-        status_url = self._file_status_url(artifact.url)
-        while status_url is not None:
-            status_response = await get_with_auth_safe_redirects(
-                self.http_client,
-                status_url,
-                headers,
-                timeout=DEFAULT_TIMEOUT,
-            )
-            self._handle_error_response(status_response)
-            state = status_response.json().get("state")
-            if state == "ACTIVE":
-                break
-            if state == "FAILED":
-                raise ValueError("Google Files video processing failed")
-            await asyncio.sleep(config.FILE_POLL_INTERVAL)
+        status_url = await self._wait_until_file_active(artifact.url)
 
         download_url = artifact.url
         if status_url is not None and not urlsplit(download_url).path.endswith(
@@ -134,6 +140,42 @@ class GoogleInteractionsVideosClient(GoogleInteractionsMixin, VideosClient):
         )
         self._handle_error_response(response)
         return VideoArtifact(data=response.content, mime_type=artifact.mime_type)
+
+    async def _wait_until_file_active(self, url: str) -> str | None:
+        """Wait until a Developer File is ready and return its metadata URL."""
+        status_url = self._file_status_url(url)
+        if status_url is None:
+            return None
+        headers = self.auth.get_headers()
+
+        try:
+            async with asyncio.timeout(config.FILE_POLL_TIMEOUT):
+                while True:
+                    status_response = await get_with_auth_safe_redirects(
+                        self.http_client,
+                        status_url,
+                        headers,
+                        timeout=DEFAULT_TIMEOUT,
+                    )
+                    self._handle_error_response(status_response)
+                    status_data = status_response.json()
+                    state = status_data.get("state", "STATE_UNSPECIFIED")
+                    if state == "ACTIVE":
+                        return status_url
+                    if state == "FAILED":
+                        error = status_data.get("error", {})
+                        detail = error.get("message", "Unknown error")
+                        raise ValueError(
+                            f"Google Files video processing failed: {detail}"
+                        )
+                    if state not in ("PROCESSING", "STATE_UNSPECIFIED"):
+                        raise ValueError(f"Unexpected Google Files state: {state}")
+                    await asyncio.sleep(config.FILE_POLL_INTERVAL)
+        except TimeoutError as exc:
+            raise TimeoutError(
+                f"Google Files video processing timed out after "
+                f"{config.FILE_POLL_TIMEOUT} seconds"
+            ) from exc
 
     @staticmethod
     def _file_status_url(url: str) -> str | None:

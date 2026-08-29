@@ -20,6 +20,7 @@ from celeste.http import (
     get_http_client,
 )
 from celeste.mime_types import VideoMimeType
+from celeste.modalities.videos.providers.google.client import GoogleVideosClient
 from celeste.modalities.videos.providers.google.interactions import (
     GoogleInteractionsVideosClient,
 )
@@ -118,7 +119,7 @@ async def test_google_files_download_polls_and_drops_auth_on_redirect(
         ),
         httpx.Response(200, content=b"video"),
     ]
-    client = GoogleInteractionsVideosClient(
+    client = GoogleVideosClient(
         model=Model(id="gemini-omni-1.1-flash", display_name="Omni"),
         provider=Provider.GOOGLE,
         auth=AuthHeader(secret=SecretStr("test"), header="x-goog-api-key", prefix=""),
@@ -151,6 +152,83 @@ async def test_google_files_download_polls_and_drops_auth_on_redirect(
             follow_redirects=False,
         ),
     ]
+
+
+async def test_google_generation_waits_for_file_before_returning_uri(
+    transport: AsyncMock,
+) -> None:
+    uri = (
+        "https://generativelanguage.googleapis.com/v1beta/files/abc:download?alt=media"
+    )
+    transport.post.return_value = httpx.Response(
+        200,
+        json={
+            "status": "completed",
+            "steps": [
+                {
+                    "type": "model_output",
+                    "content": [
+                        {"type": "video", "mime_type": "video/mp4", "uri": uri}
+                    ],
+                }
+            ],
+        },
+    )
+    transport.get.side_effect = [
+        httpx.Response(200, json={"state": "PROCESSING"}),
+        httpx.Response(200, json={"state": "ACTIVE"}),
+    ]
+    client = GoogleVideosClient(
+        model=Model(id="gemini-omni-1.1-flash", display_name="Omni"),
+        provider=Provider.GOOGLE,
+        auth=AuthHeader(secret=SecretStr("test"), header="x-goog-api-key", prefix=""),
+    )
+
+    with (
+        patch("celeste.http.httpx.AsyncClient", return_value=transport),
+        patch(
+            "celeste.modalities.videos.providers.google.interactions.asyncio.sleep",
+            new=AsyncMock(),
+        ),
+    ):
+        output = await client.generate("a mountain", resolution="1080p")
+
+    assert output.content.url == uri
+    status_url = "https://generativelanguage.googleapis.com/v1beta/files/abc"
+    assert transport.get.call_args_list == [
+        call(
+            status_url,
+            headers={"x-goog-api-key": "test"},
+            timeout=DEFAULT_TIMEOUT,
+            follow_redirects=False,
+        ),
+        call(
+            status_url,
+            headers={"x-goog-api-key": "test"},
+            timeout=DEFAULT_TIMEOUT,
+            follow_redirects=False,
+        ),
+    ]
+
+
+async def test_google_file_polling_is_bounded(transport: AsyncMock) -> None:
+    transport.get.return_value = httpx.Response(200, json={"state": "PROCESSING"})
+    client = GoogleInteractionsVideosClient(
+        model=Model(id="gemini-omni-1.1-flash", display_name="Omni"),
+        provider=Provider.GOOGLE,
+        auth=AuthHeader(secret=SecretStr("test"), header="x-goog-api-key", prefix=""),
+    )
+    uri = "https://generativelanguage.googleapis.com/v1beta/files/abc"
+
+    with (
+        patch("celeste.http.httpx.AsyncClient", return_value=transport),
+        patch(
+            "celeste.modalities.videos.providers.google.interactions.config.FILE_POLL_TIMEOUT",
+            0,
+        ),
+        pytest.raises(TimeoutError, match="timed out after 0 seconds"),
+    ):
+        await client._wait_until_file_active(uri)
 
 
 @pytest.mark.parametrize(

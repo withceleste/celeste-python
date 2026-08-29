@@ -20,3 +20,4 @@ BASE_URL = "https://generativelanguage.googleapis.com"
 VERTEX_BASE_URL = "https://aiplatform.googleapis.com"
 STORAGE_BASE_URL = "https://storage.googleapis.com/"
 FILE_POLL_INTERVAL = 5
+FILE_POLL_TIMEOUT = 300
