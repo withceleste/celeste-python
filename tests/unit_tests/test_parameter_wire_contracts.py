@@ -154,6 +154,7 @@ def _at(data: dict[str, Any], path: tuple[str, ...]) -> Any:  # noqa: ANN401
         (VIDEOS_VEO, V.ASPECT_RATIO, "16:9", ("parameters", "aspectRatio"), "16:9"),
         (VIDEOS_VEO, V.RESOLUTION, "1080p", ("parameters", "resolution"), "1080p"),
         (VIDEOS_VEO, V.DURATION, 6, ("parameters", "durationSeconds"), 6),
+        (VIDEOS_VEO, V.GENERATE_AUDIO, False, ("parameters", "generateAudio"), False),
         (
             VIDEOS_INTERACTIONS,
             V.ASPECT_RATIO,
@@ -167,6 +168,13 @@ def _at(data: dict[str, Any], path: tuple[str, ...]) -> Any:  # noqa: ANN401
             5,
             ("response_format", "duration"),
             "5s",
+        ),
+        (
+            VIDEOS_INTERACTIONS,
+            V.RESOLUTION,
+            "1080p",
+            ("response_format", "resolution"),
+            "1080p",
         ),
         (
             VIDEOS_INTERACTIONS,

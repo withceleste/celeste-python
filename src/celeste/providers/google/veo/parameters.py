@@ -47,6 +47,22 @@ class ResolutionMapper(ParameterMapper[VideoContent]):
         return request
 
 
+class GenerateAudioMapper(ParameterMapper[VideoContent]):
+    """Map generate_audio to Google Veo parameters.generateAudio field."""
+
+    def map(
+        self,
+        request: dict[str, Any],
+        value: object,
+        model: Model,
+    ) -> dict[str, Any]:
+        """Transform generate_audio into provider request."""
+        validated_value = self._validate_value(value, model)
+        if validated_value is not None:
+            request.setdefault("parameters", {})["generateAudio"] = validated_value
+        return request
+
+
 class DurationSecondsMapper(ParameterMapper[VideoContent]):
     """Map duration to Google Veo parameters.durationSeconds field."""
 
@@ -169,6 +185,7 @@ __all__ = [
     "AspectRatioMapper",
     "DurationSecondsMapper",
     "FirstFrameMapper",
+    "GenerateAudioMapper",
     "LastFrameMapper",
     "ReferenceImagesMapper",
     "ResolutionMapper",

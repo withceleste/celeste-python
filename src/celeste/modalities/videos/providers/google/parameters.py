@@ -16,6 +16,9 @@ from celeste.providers.google.interactions.parameters import (
 from celeste.providers.google.interactions.parameters import (
     ReferenceImagesMapper as _InteractionsReferenceImagesMapper,
 )
+from celeste.providers.google.interactions.parameters import (
+    ResolutionMapper as _InteractionsResolutionMapper,
+)
 from celeste.providers.google.veo.parameters import (
     AspectRatioMapper as _VeoAspectRatioMapper,
 )
@@ -24,6 +27,9 @@ from celeste.providers.google.veo.parameters import (
 )
 from celeste.providers.google.veo.parameters import (
     FirstFrameMapper as _VeoFirstFrameMapper,
+)
+from celeste.providers.google.veo.parameters import (
+    GenerateAudioMapper as _VeoGenerateAudioMapper,
 )
 from celeste.providers.google.veo.parameters import (
     LastFrameMapper as _VeoLastFrameMapper,
@@ -57,6 +63,12 @@ class VeoDurationMapper(_VeoDurationSecondsMapper):
     name = VideoParameter.DURATION
 
 
+class VeoGenerateAudioMapper(_VeoGenerateAudioMapper):
+    """Map generate_audio to Google Veo's generateAudio parameter."""
+
+    name = VideoParameter.GENERATE_AUDIO
+
+
 class VeoReferenceImagesMapper(_VeoReferenceImagesMapper):
     """Map reference_images to Google Veo's referenceImages parameter."""
 
@@ -79,6 +91,7 @@ GOOGLE_VEO_PARAMETER_MAPPERS: list[ParameterMapper[VideoContent]] = [
     VeoAspectRatioMapper(),
     VeoResolutionMapper(),
     VeoDurationMapper(),
+    VeoGenerateAudioMapper(),
     VeoReferenceImagesMapper(),
     VeoFirstFrameMapper(),
     VeoLastFrameMapper(),
@@ -95,6 +108,12 @@ class InteractionsDurationMapper(_InteractionsDurationMapper):
     """Map duration to Google Interactions response_format.duration."""
 
     name = VideoParameter.DURATION
+
+
+class InteractionsResolutionMapper(_InteractionsResolutionMapper):
+    """Map resolution to Google Interactions response_format.resolution."""
+
+    name = VideoParameter.RESOLUTION
 
 
 class InteractionsFirstFrameMapper(_InteractionsFirstFrameMapper):
@@ -118,6 +137,7 @@ class InteractionsReferenceImagesMapper(_InteractionsReferenceImagesMapper):
 GOOGLE_INTERACTIONS_PARAMETER_MAPPERS: list[ParameterMapper[VideoContent]] = [
     InteractionsAspectRatioMapper(),
     InteractionsDurationMapper(),
+    InteractionsResolutionMapper(),
     InteractionsFirstFrameMapper(),
     InteractionsLastFrameMapper(),
     InteractionsReferenceImagesMapper(),

@@ -18,6 +18,7 @@ class VideoParameter(StrEnum):
     REFERENCE_IMAGES = "reference_images"
     FIRST_FRAME = "first_frame"
     LAST_FRAME = "last_frame"
+    GENERATE_AUDIO = "generate_audio"
 
 
 class VideoParameters(Parameters, total=False):
@@ -37,6 +38,9 @@ class VideoParameters(Parameters, total=False):
     ]
     last_frame: Annotated[
         ImageArtifact, Field(description="Image to use as the video's last frame.")
+    ]
+    generate_audio: Annotated[
+        bool, Field(description="Whether to generate an audio track with the video.")
     ]
 
 

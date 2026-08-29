@@ -5,6 +5,7 @@ from typing import Any
 from celeste.artifacts import VideoArtifact
 from celeste.mime_types import VideoMimeType
 from celeste.parameters import ParameterMapper
+from celeste.providers.google.auth import GoogleADC
 from celeste.providers.google.veo import config
 from celeste.providers.google.veo.client import GoogleVeoClient as GoogleVeoMixin
 from celeste.types import VideoContent
@@ -18,6 +19,7 @@ class GoogleVeoVideosClient(GoogleVeoMixin, VideosClient):
     """Google videos client (Veo API)."""
 
     _generate_endpoint = config.GoogleVeoEndpoint.CREATE_VIDEO
+    _edit_endpoint = config.GoogleVeoEndpoint.CREATE_VIDEO
 
     @classmethod
     def parameter_mappers(cls) -> list[ParameterMapper[VideoContent]]:
@@ -25,9 +27,27 @@ class GoogleVeoVideosClient(GoogleVeoMixin, VideosClient):
 
     def _init_request(self, inputs: VideoInput) -> dict[str, Any]:
         """Initialize request from Google Veo API format."""
-        return {
-            "instances": [{"prompt": inputs.prompt}],
-        }
+        instance: dict[str, Any] = {"prompt": inputs.prompt}
+        if inputs.video is not None:
+            mime_type = (inputs.video.mime_type or VideoMimeType.MP4).value
+            if inputs.video.url is not None:
+                uri_field = "gcsUri" if isinstance(self.auth, GoogleADC) else "uri"
+                instance["video"] = {
+                    uri_field: inputs.video.url,
+                    "mimeType": mime_type,
+                }
+            else:
+                encoded = inputs.video.get_base64()
+                if isinstance(self.auth, GoogleADC):
+                    instance["video"] = {
+                        "bytesBase64Encoded": encoded,
+                        "mimeType": mime_type,
+                    }
+                else:
+                    instance["video"] = {
+                        "inlineData": {"data": encoded, "mimeType": mime_type}
+                    }
+        return {"instances": [instance]}
 
     def _parse_content(
         self,

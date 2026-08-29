@@ -1,6 +1,6 @@
 """Google models for videos modality."""
 
-from celeste.constraints import Choice, ImageConstraint, ImagesConstraint, Range
+from celeste.constraints import Bool, Choice, ImageConstraint, ImagesConstraint, Range
 from celeste.core import Modality, Operation, Provider
 from celeste.mime_types import ImageMimeType
 from celeste.models import Model
@@ -20,7 +20,7 @@ GOOGLE_VEO_MODELS: list[Model] = [
         id="veo-3.1-generate-preview",
         provider=Provider.GOOGLE,
         display_name="Veo 3.1 (Preview)",
-        operations={Modality.VIDEOS: {Operation.GENERATE}},
+        operations={Modality.VIDEOS: {Operation.GENERATE, Operation.EDIT}},
         parameter_constraints={
             VideoParameter.ASPECT_RATIO: Choice(options=["16:9", "9:16"]),
             VideoParameter.RESOLUTION: Choice(options=["720p", "1080p", "4k"]),
@@ -41,11 +41,15 @@ GOOGLE_VEO_MODELS: list[Model] = [
         id="veo-3.1-fast-generate-preview",
         provider=Provider.GOOGLE,
         display_name="Veo 3.1 Fast (Preview)",
-        operations={Modality.VIDEOS: {Operation.GENERATE}},
+        operations={Modality.VIDEOS: {Operation.GENERATE, Operation.EDIT}},
         parameter_constraints={
             VideoParameter.ASPECT_RATIO: Choice(options=["16:9", "9:16"]),
             VideoParameter.RESOLUTION: Choice(options=["720p", "1080p", "4k"]),
             VideoParameter.DURATION: Choice(options=[4, 6, 8]),
+            VideoParameter.REFERENCE_IMAGES: ImagesConstraint(
+                supported_mime_types=GOOGLE_SUPPORTED_MIME_TYPES,
+                max_count=3,
+            ),
             VideoParameter.FIRST_FRAME: ImageConstraint(
                 supported_mime_types=GOOGLE_SUPPORTED_MIME_TYPES,
             ),
@@ -63,10 +67,68 @@ GOOGLE_VEO_MODELS: list[Model] = [
             VideoParameter.ASPECT_RATIO: Choice(options=["16:9", "9:16"]),
             VideoParameter.RESOLUTION: Choice(options=["720p", "1080p"]),
             VideoParameter.DURATION: Choice(options=[4, 6, 8]),
+            VideoParameter.FIRST_FRAME: ImageConstraint(
+                supported_mime_types=GOOGLE_SUPPORTED_MIME_TYPES,
+            ),
+            VideoParameter.LAST_FRAME: ImageConstraint(
+                supported_mime_types=GOOGLE_SUPPORTED_MIME_TYPES,
+            ),
+        },
+    ),
+    Model(
+        id="veo-3.1-generate-001",
+        provider=Provider.GOOGLE,
+        display_name="Veo 3.1",
+        operations={Modality.VIDEOS: {Operation.GENERATE, Operation.EDIT}},
+        parameter_constraints={
+            VideoParameter.ASPECT_RATIO: Choice(options=["16:9", "9:16"]),
+            VideoParameter.RESOLUTION: Choice(options=["720p", "1080p", "4k"]),
+            VideoParameter.DURATION: Choice(options=[4, 6, 8]),
+            VideoParameter.GENERATE_AUDIO: Bool(),
             VideoParameter.REFERENCE_IMAGES: ImagesConstraint(
                 supported_mime_types=GOOGLE_SUPPORTED_MIME_TYPES,
                 max_count=3,
             ),
+            VideoParameter.FIRST_FRAME: ImageConstraint(
+                supported_mime_types=GOOGLE_SUPPORTED_MIME_TYPES,
+            ),
+            VideoParameter.LAST_FRAME: ImageConstraint(
+                supported_mime_types=GOOGLE_SUPPORTED_MIME_TYPES,
+            ),
+        },
+    ),
+    Model(
+        id="veo-3.1-fast-generate-001",
+        provider=Provider.GOOGLE,
+        display_name="Veo 3.1 Fast",
+        operations={Modality.VIDEOS: {Operation.GENERATE, Operation.EDIT}},
+        parameter_constraints={
+            VideoParameter.ASPECT_RATIO: Choice(options=["16:9", "9:16"]),
+            VideoParameter.RESOLUTION: Choice(options=["720p", "1080p"]),
+            VideoParameter.DURATION: Choice(options=[4, 6, 8]),
+            VideoParameter.GENERATE_AUDIO: Bool(),
+            VideoParameter.REFERENCE_IMAGES: ImagesConstraint(
+                supported_mime_types=GOOGLE_SUPPORTED_MIME_TYPES,
+                max_count=3,
+            ),
+            VideoParameter.FIRST_FRAME: ImageConstraint(
+                supported_mime_types=GOOGLE_SUPPORTED_MIME_TYPES,
+            ),
+            VideoParameter.LAST_FRAME: ImageConstraint(
+                supported_mime_types=GOOGLE_SUPPORTED_MIME_TYPES,
+            ),
+        },
+    ),
+    Model(
+        id="veo-3.1-lite-generate-001",
+        provider=Provider.GOOGLE,
+        display_name="Veo 3.1 Lite",
+        operations={Modality.VIDEOS: {Operation.GENERATE, Operation.EDIT}},
+        parameter_constraints={
+            VideoParameter.ASPECT_RATIO: Choice(options=["16:9", "9:16"]),
+            VideoParameter.RESOLUTION: Choice(options=["720p", "1080p"]),
+            VideoParameter.DURATION: Choice(options=[4, 6, 8]),
+            VideoParameter.GENERATE_AUDIO: Bool(),
             VideoParameter.FIRST_FRAME: ImageConstraint(
                 supported_mime_types=GOOGLE_SUPPORTED_MIME_TYPES,
             ),
@@ -88,6 +150,34 @@ GOOGLE_OMNI_MODELS: list[Model] = [
             VideoParameter.ASPECT_RATIO: Choice(options=["16:9", "9:16"]),
             VideoParameter.DURATION: Range(min=3, max=10),
             VideoParameter.FIRST_FRAME: ImageConstraint(),
+            VideoParameter.REFERENCE_IMAGES: ImagesConstraint(),
+        },
+    ),
+    Model(
+        id="gemini-omni-1.1-flash",
+        provider=Provider.GOOGLE,
+        display_name="Gemini Omni 1.1 Flash",
+        operations={Modality.VIDEOS: {Operation.GENERATE, Operation.EDIT}},
+        parameter_constraints={
+            VideoParameter.ASPECT_RATIO: Choice(options=["16:9", "9:16"]),
+            VideoParameter.RESOLUTION: Choice(options=["360p", "720p", "1080p", "4k"]),
+            VideoParameter.DURATION: Range(min=3, max=10),
+            VideoParameter.FIRST_FRAME: ImageConstraint(),
+            VideoParameter.LAST_FRAME: ImageConstraint(),
+            VideoParameter.REFERENCE_IMAGES: ImagesConstraint(),
+        },
+    ),
+    Model(
+        id="gemini-omni-1.1-flash-preview",
+        provider=Provider.GOOGLE,
+        display_name="Gemini Omni 1.1 Flash (Cloud Preview)",
+        operations={Modality.VIDEOS: {Operation.GENERATE, Operation.EDIT}},
+        parameter_constraints={
+            VideoParameter.ASPECT_RATIO: Choice(options=["16:9", "9:16"]),
+            VideoParameter.RESOLUTION: Choice(options=["360p", "720p", "1080p", "4k"]),
+            VideoParameter.DURATION: Range(min=3, max=10),
+            VideoParameter.FIRST_FRAME: ImageConstraint(),
+            VideoParameter.LAST_FRAME: ImageConstraint(),
             VideoParameter.REFERENCE_IMAGES: ImagesConstraint(),
         },
     ),

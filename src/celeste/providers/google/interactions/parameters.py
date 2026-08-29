@@ -296,6 +296,25 @@ class AspectRatioMapper[Content](ParameterMapper[Content]):
         return request
 
 
+class ResolutionMapper(ParameterMapper[VideoContent]):
+    """Map resolution to Google Interactions response_format.resolution field."""
+
+    def map(
+        self,
+        request: dict[str, Any],
+        value: object,
+        model: Model,
+    ) -> dict[str, Any]:
+        """Transform resolution into provider request."""
+        validated_value = self._validate_value(value, model)
+        if validated_value is None:
+            return request
+
+        response_format = request.setdefault("response_format", {"type": "video"})
+        response_format["resolution"] = validated_value
+        return request
+
+
 class ImageSizeMapper(ParameterMapper[ImageContent]):
     """Map image_size to Google Interactions response_format.image_size field."""
 
@@ -543,6 +562,7 @@ __all__ = [
     "MaxOutputTokensMapper",
     "MediaContentMapper",
     "ReferenceImagesMapper",
+    "ResolutionMapper",
     "ResponseFormatMapper",
     "SeedMapper",
     "TemperatureMapper",
