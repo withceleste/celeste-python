@@ -51,21 +51,21 @@ class OpenAIImagesClient(OpenAIImagesMixin, ImagesClient):
     def _parse_content(
         self,
         response_data: dict[str, Any],
-    ) -> ImageArtifact:
+    ) -> ImageContent:
         """Parse content from response."""
         data = super()._parse_content(response_data)
-        image_data = data[0]
+        images: list[ImageArtifact] = []
 
-        b64_json = image_data.get("b64_json")
-        if b64_json:
-            return ImageArtifact(data=b64_json)
+        for image_data in data:
+            if b64_json := image_data.get("b64_json"):
+                images.append(ImageArtifact(data=b64_json))
+            elif url := image_data.get("url"):
+                images.append(ImageArtifact(url=url))
+            else:
+                msg = "No image URL or base64 data in response"
+                raise ValueError(msg)
 
-        url = image_data.get("url")
-        if url:
-            return ImageArtifact(url=url)
-
-        msg = "No image URL or base64 data in response"
-        raise ValueError(msg)
+        return images[0] if len(images) == 1 else images
 
     def _stream_class(self) -> type[ImagesStream]:
         """Return the Stream class for this provider."""
