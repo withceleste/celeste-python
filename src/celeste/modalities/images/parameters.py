@@ -16,6 +16,7 @@ class ImageParameter(StrEnum):
     NUM_IMAGES = "num_images"
     PARTIAL_IMAGES = "partial_images"
     QUALITY = "quality"
+    UPSCALE_FACTOR = "upscale_factor"
     WATERMARK = "watermark"
     REFERENCE_IMAGES = "reference_images"
     PROMPT_UPSAMPLING = "prompt_upsampling"
@@ -59,6 +60,9 @@ class ImageParameters(Parameters, total=False):
         int, Field(description="Number of progressive partial outputs to stream.")
     ]
     quality: Annotated[str, Field(description="Output quality tier.")]
+    upscale_factor: Annotated[
+        str, Field(description="Scale multiplier for image upscaling.")
+    ]
     watermark: Annotated[bool, Field(description="Embed a watermark in the output.")]
     reference_images: Annotated[
         list[ImageArtifact],

@@ -49,6 +49,19 @@ GOOGLE_IMAGEN_MODELS: list[Model] = [
     ),
 ]
 
+# Vertex AI Imagen upscale models (GoogleADC only)
+GOOGLE_IMAGEN_UPSCALE_MODELS: list[Model] = [
+    Model(
+        id="imagen-4.0-upscale-preview",
+        provider=Provider.GOOGLE,
+        display_name="Imagen 4 Upscale",
+        operations={Modality.IMAGES: {Operation.UPSCALE}},
+        parameter_constraints={
+            ImageParameter.UPSCALE_FACTOR: Choice(options=["x2", "x3", "x4"]),
+        },
+    ),
+]
+
 # Gemini API models (contents[].parts[] → candidates[])
 GOOGLE_GEMINI_MODELS: list[Model] = [
     Model(
@@ -136,12 +149,16 @@ GOOGLE_GEMINI_MODELS: list[Model] = [
             ImageParameter.ASPECT_RATIO: Choice(
                 options=[
                     "1:1",
+                    "1:4",
+                    "1:8",
                     "2:3",
                     "3:2",
                     "3:4",
+                    "4:1",
                     "4:3",
                     "4:5",
                     "5:4",
+                    "8:1",
                     "9:16",
                     "16:9",
                     "21:9",
@@ -157,11 +174,13 @@ GOOGLE_GEMINI_MODELS: list[Model] = [
 # Unified model list for registration
 MODELS: list[Model] = [
     *GOOGLE_IMAGEN_MODELS,
+    *GOOGLE_IMAGEN_UPSCALE_MODELS,
     *GOOGLE_GEMINI_MODELS,
 ]
 
 __all__ = [
     "GOOGLE_GEMINI_MODELS",
     "GOOGLE_IMAGEN_MODELS",
+    "GOOGLE_IMAGEN_UPSCALE_MODELS",
     "MODELS",
 ]

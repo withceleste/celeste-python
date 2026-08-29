@@ -22,6 +22,9 @@ from celeste.providers.google.imagen.parameters import (
 from celeste.providers.google.imagen.parameters import (
     SampleCountMapper as _ImagenSampleCountMapper,
 )
+from celeste.providers.google.imagen.parameters import (
+    UpscaleFactorMapper as _ImagenUpscaleFactorMapper,
+)
 from celeste.providers.google.interactions.parameters import (
     AspectRatioMapper as _InteractionsAspectRatioMapper,
 )
@@ -61,6 +64,17 @@ GOOGLE_IMAGEN_PARAMETER_MAPPERS: list[ParameterMapper[ImageContent]] = [
     ImagenAspectRatioMapper(),
     ImagenQualityMapper(),
     ImagenNumImagesMapper(),
+]
+
+
+class ImagenUpscaleFactorMapper(_ImagenUpscaleFactorMapper):
+    """Map upscale_factor to Imagen parameters.upscaleConfig.upscaleFactor."""
+
+    name = ImageParameter.UPSCALE_FACTOR
+
+
+GOOGLE_IMAGEN_UPSCALE_PARAMETER_MAPPERS: list[ParameterMapper[ImageContent]] = [
+    ImagenUpscaleFactorMapper(),
 ]
 
 
@@ -130,6 +144,7 @@ GOOGLE_INTERACTIONS_PARAMETER_MAPPERS: list[ParameterMapper[ImageContent]] = [
 
 __all__ = [
     "GOOGLE_IMAGEN_PARAMETER_MAPPERS",
+    "GOOGLE_IMAGEN_UPSCALE_PARAMETER_MAPPERS",
     "GOOGLE_INTERACTIONS_PARAMETER_MAPPERS",
     "GOOGLE_VERTEX_PARAMETER_MAPPERS",
 ]

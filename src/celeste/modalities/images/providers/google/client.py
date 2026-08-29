@@ -9,17 +9,23 @@ from celeste.types import ImageContent
 from ...client import ImagesClient
 from ...io import ImageFinishReason, ImageInput
 from ...parameters import ImageParameters
-from .imagen import GoogleImagenImagesClient
+from .imagen import GoogleImagenImagesClient, GoogleImagenUpscaleImagesClient
 from .interactions import GoogleInteractionsImagesClient
-from .models import GOOGLE_GEMINI_MODELS, GOOGLE_IMAGEN_MODELS
+from .models import (
+    GOOGLE_GEMINI_MODELS,
+    GOOGLE_IMAGEN_MODELS,
+    GOOGLE_IMAGEN_UPSCALE_MODELS,
+)
 from .parameters import (
     GOOGLE_IMAGEN_PARAMETER_MAPPERS,
+    GOOGLE_IMAGEN_UPSCALE_PARAMETER_MAPPERS,
     GOOGLE_INTERACTIONS_PARAMETER_MAPPERS,
     GOOGLE_VERTEX_PARAMETER_MAPPERS,
 )
 from .vertex import GoogleVertexImagesClient
 
 _IMAGEN_MODEL_IDS = frozenset(m.id for m in GOOGLE_IMAGEN_MODELS)
+_IMAGEN_UPSCALE_MODEL_IDS = frozenset(m.id for m in GOOGLE_IMAGEN_UPSCALE_MODELS)
 _GEMINI_MODEL_IDS = frozenset(m.id for m in GOOGLE_GEMINI_MODELS)
 
 
@@ -28,6 +34,7 @@ class GoogleImagesClient(ImagesClient):
 
     _strategy: (
         GoogleImagenImagesClient
+        | GoogleImagenUpscaleImagesClient
         | GoogleInteractionsImagesClient
         | GoogleVertexImagesClient
         | None
@@ -38,7 +45,9 @@ class GoogleImagesClient(ImagesClient):
         super().model_post_init(__context)
 
         StrategyClass: type[ImagesClient]
-        if self.model.id in _IMAGEN_MODEL_IDS:
+        if self.model.id in _IMAGEN_UPSCALE_MODEL_IDS:
+            StrategyClass = GoogleImagenUpscaleImagesClient
+        elif self.model.id in _IMAGEN_MODEL_IDS:
             StrategyClass = GoogleImagenImagesClient
         elif self.model.id in _GEMINI_MODEL_IDS:
             StrategyClass = (
@@ -72,6 +81,7 @@ class GoogleImagesClient(ImagesClient):
             *GOOGLE_INTERACTIONS_PARAMETER_MAPPERS,
             *GOOGLE_VERTEX_PARAMETER_MAPPERS,
             *GOOGLE_IMAGEN_PARAMETER_MAPPERS,
+            *GOOGLE_IMAGEN_UPSCALE_PARAMETER_MAPPERS,
         ]
 
     def _init_request(self, inputs: ImageInput) -> dict[str, Any]:

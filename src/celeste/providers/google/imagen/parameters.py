@@ -61,8 +61,29 @@ class ImageSizeMapper(ParameterMapper[ImageContent]):
         return request
 
 
+class UpscaleFactorMapper(ParameterMapper[ImageContent]):
+    """Map upscale_factor to Google Imagen parameters.upscaleConfig."""
+
+    def map(
+        self,
+        request: dict[str, Any],
+        value: object,
+        model: Model,
+    ) -> dict[str, Any]:
+        """Transform upscale_factor into provider request."""
+        validated_value = self._validate_value(value, model)
+        if validated_value is None:
+            return request
+
+        request.setdefault("parameters", {}).setdefault("upscaleConfig", {})[
+            "upscaleFactor"
+        ] = validated_value
+        return request
+
+
 __all__ = [
     "AspectRatioMapper",
     "ImageSizeMapper",
     "SampleCountMapper",
+    "UpscaleFactorMapper",
 ]
