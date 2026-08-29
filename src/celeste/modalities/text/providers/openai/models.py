@@ -152,6 +152,22 @@ MODELS: list[Model] = [
         },
     ),
     Model(
+        id="chat-latest",
+        provider=Provider.OPENAI,
+        display_name="Chat Latest",
+        operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
+        streaming=True,
+        parameter_constraints={
+            Parameter.TEMPERATURE: Range(min=0.0, max=2.0),
+            Parameter.MAX_TOKENS: Range(min=1, max=128000),
+            TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
+            TextParameter.OUTPUT_SCHEMA: Schema(),
+            TextParameter.IMAGE: ImagesConstraint(),
+            TextParameter.DOCUMENT: DocumentsConstraint(),
+        },
+    ),
+    Model(
         id="gpt-5.1",
         provider=Provider.OPENAI,
         display_name="GPT-5.1",
