@@ -4,6 +4,7 @@ import base64
 from typing import Any
 
 from celeste.artifacts import AudioArtifact
+from celeste.core import Modality, Operation
 from celeste.mime_types import AudioMimeType
 from celeste.parameters import ParameterMapper
 from celeste.providers.google.interactions import config
@@ -13,10 +14,12 @@ from celeste.providers.google.interactions.client import (
 from celeste.providers.google.interactions.streaming import (
     GoogleInteractionsStream as _GoogleInteractionsStream,
 )
+from celeste.providers.google.utils import build_content_part
 from celeste.types import AudioContent
 
 from ...client import AudioClient
 from ...io import AudioChunk, AudioInput
+from ...parameters import AudioParameter
 from ...streaming import AudioStream
 from .parameters import GOOGLE_PARAMETER_MAPPERS, OutputFormatMapper
 
@@ -68,17 +71,36 @@ class GoogleAudioStream(_GoogleInteractionsStream, AudioStream):
 
 
 class GoogleAudioClient(GoogleInteractionsMixin, AudioClient):
-    """Google audio client (Interactions API TTS and music generation)."""
+    """Google audio client (Interactions API TTS, transcription, and music)."""
 
     _speak_endpoint = config.GoogleInteractionsEndpoint.CREATE_INTERACTION
     _generate_endpoint = config.GoogleInteractionsEndpoint.CREATE_INTERACTION
+    _transcribe_endpoint = config.GoogleInteractionsEndpoint.CREATE_INTERACTION
 
     @classmethod
     def parameter_mappers(cls) -> list[ParameterMapper[AudioContent]]:
         return GOOGLE_PARAMETER_MAPPERS
 
     def _init_request(self, inputs: AudioInput) -> dict[str, Any]:
-        """Initialize request with text input."""
+        """Initialize an audio-input transcription or text-input generation request."""
+        if inputs.audio is not None:
+            audio = inputs.audio
+            if isinstance(audio, list):
+                if len(audio) != 1:
+                    msg = "Google transcription requires exactly one AudioArtifact"
+                    raise ValueError(msg)
+                audio = audio[0]
+            if not isinstance(audio, AudioArtifact):
+                msg = "Google transcription requires exactly one AudioArtifact"
+                raise ValueError(msg)
+            constraint = self.model.parameter_constraints.get(AudioParameter.AUDIO)
+            if constraint is not None:
+                constraint(audio)
+            audio_part = build_content_part(audio, "audio")
+            for field in ("sample_rate", "channels"):
+                if audio.metadata.get(field) is not None:
+                    audio_part[field] = audio.metadata[field]
+            return {"input": [audio_part]}
         return {
             "input": inputs.text,
             "response_format": {"type": "audio"},
@@ -87,25 +109,72 @@ class GoogleAudioClient(GoogleInteractionsMixin, AudioClient):
     def _parse_content(
         self,
         response_data: dict[str, Any],
-    ) -> AudioArtifact:
-        """Parse the audio artifact from the model_output step."""
+    ) -> AudioArtifact | str:
+        """Parse transcript text or the final generated audio block."""
         steps = super()._parse_content(response_data)
+        if Operation.TRANSCRIBE in self.model.operations.get(Modality.AUDIO, set()):
+            texts = [
+                part["text"]
+                for step in steps
+                if step.get("type") == "model_output"
+                for part in step.get("content", [])
+                if part.get("type") == "text" and part.get("text") is not None
+            ]
+            if texts:
+                return "".join(texts)
+            msg = "No text content in transcription response"
+            raise ValueError(msg)
+
+        audio_part: dict[str, Any] | None = None
         for step in steps:
             if step.get("type") != "model_output":
                 continue
             for part in step.get("content", []):
-                if part.get("type") != "audio" or not part.get("data"):
-                    continue
-                metadata = {
-                    k: part[k] for k in ("sample_rate", "channels") if part.get(k)
-                }
-                return AudioArtifact(
-                    data=part["data"],
-                    mime_type=_to_audio_mime(part.get("mime_type")),
-                    metadata=metadata,
-                )
+                if part.get("type") == "audio" and (
+                    part.get("data") or part.get("uri")
+                ):
+                    audio_part = part
+        if audio_part is not None:
+            metadata = {
+                k: audio_part[k]
+                for k in ("sample_rate", "channels")
+                if audio_part.get(k)
+            }
+            return AudioArtifact(
+                data=audio_part.get("data"),
+                url=audio_part.get("uri"),
+                mime_type=_to_audio_mime(audio_part.get("mime_type")),
+                metadata=metadata,
+            )
         msg = "No audio content in response"
         raise ValueError(msg)
+
+    def _build_metadata(self, response_data: dict[str, Any]) -> dict[str, Any]:
+        """Preserve annotations or generated text without duplicating primary content."""
+        metadata = super()._build_metadata(response_data)
+        if Operation.TRANSCRIBE in self.model.operations.get(Modality.AUDIO, set()):
+            annotations = [
+                annotation
+                for step in response_data.get("steps", [])
+                if step.get("type") == "model_output"
+                for part in step.get("content", [])
+                if part.get("type") == "text"
+                for annotation in part.get("annotations", [])
+            ]
+            if annotations:
+                metadata["annotations"] = annotations
+            return metadata
+
+        text_blocks = [
+            part
+            for step in response_data.get("steps", [])
+            if step.get("type") == "model_output"
+            for part in step.get("content", [])
+            if part.get("type") == "text"
+        ]
+        if text_blocks:
+            metadata["text_blocks"] = text_blocks
+        return metadata
 
     def _stream_class(self) -> type[AudioStream]:
         """Return the Stream class for this provider."""

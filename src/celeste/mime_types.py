@@ -46,6 +46,9 @@ class AudioMimeType(MimeType):
     M4A = "audio/mp4"
     WMA = "audio/x-ms-wma"
     PCM = "audio/pcm"
+    OPUS = "audio/opus"
+    ALAW = "audio/alaw"
+    MULAW = "audio/mulaw"
 
 
 class DocumentMimeType(MimeType):

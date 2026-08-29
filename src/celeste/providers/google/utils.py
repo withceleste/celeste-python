@@ -21,9 +21,12 @@ def build_media_part(artifact: Artifact) -> dict[str, Any]:
     return {"inline_data": {"mime_type": mime_str, "data": b64}}
 
 
-# The Interactions API names MPEG-4 audio "audio/m4a" and hard-rejects "audio/mp4"
-# (its own supported-values list; generateContent accepts both, so only this builder maps).
-_INTERACTIONS_MIME_LITERALS = {"audio/mp4": "audio/m4a"}
+# The Interactions API calls Celeste's normalized M4A/PCM literals audio/m4a/audio/l16.
+# GenerateContent accepts the Celeste literals, so only this builder maps them.
+_INTERACTIONS_MIME_LITERALS = {
+    "audio/mp4": "audio/m4a",
+    "audio/pcm": "audio/l16",
+}
 
 
 def build_content_part(artifact: Artifact, part_type: str) -> dict[str, Any]:
