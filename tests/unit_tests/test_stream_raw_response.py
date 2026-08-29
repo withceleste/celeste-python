@@ -9,7 +9,10 @@ from celeste.auth import AuthHeader
 from celeste.core import Provider
 from celeste.modalities.text.io import TextInput
 from celeste.modalities.text.protocols.chatcompletions import ChatCompletionsTextStream
-from celeste.modalities.text.protocols.openresponses import OpenResponsesTextStream
+from celeste.modalities.text.protocols.openresponses import (
+    OpenResponsesTextClient,
+    OpenResponsesTextStream,
+)
 from celeste.modalities.text.providers.anthropic.client import AnthropicTextStream
 from celeste.modalities.text.providers.groq.client import GroqTextClient
 from celeste.models import Model
@@ -111,6 +114,47 @@ async def test_openresponses_stream_unwraps_completed_response() -> None:
 
     assert stream.output.metadata["raw_response"] == response
     assert stream.output.usage.input_tokens == 100
+
+
+def test_openresponses_metadata_keeps_only_billable_tool_markers() -> None:
+    client = OpenResponsesTextClient(
+        model=Model(
+            id="test",
+            provider=Provider.OPENAI,
+            display_name="Test",
+        ),
+        provider=Provider.OPENAI,
+        auth=AuthHeader(secret=SecretStr("test")),
+    )
+    metadata = client._build_metadata(
+        {
+            "id": "resp_01",
+            "output": [
+                {
+                    "type": "web_search_call",
+                    "status": "completed",
+                    "action": {"query": "private"},
+                },
+                {
+                    "type": "file_search_call",
+                    "status": "completed",
+                    "results": ["private"],
+                },
+                {
+                    "type": "message",
+                    "content": [{"type": "output_text", "text": "done"}],
+                },
+            ],
+        }
+    )
+
+    assert metadata["raw_response"] == {
+        "id": "resp_01",
+        "output": [
+            {"type": "web_search_call", "status": "completed"},
+            {"type": "file_search_call", "status": "completed"},
+        ],
+    }
 
 
 async def test_chatcompletions_stream_keeps_terminal_usage_event() -> None:

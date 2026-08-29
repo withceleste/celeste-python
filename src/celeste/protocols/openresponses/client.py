@@ -149,5 +149,18 @@ class OpenResponsesClient(APIMixin):
                     return FinishReason(reason="completed")
         return FinishReason(reason=None)
 
+    def _build_metadata(self, response_data: dict[str, Any]) -> dict[str, Any]:
+        """Preserve billable hosted-tool calls after stripping response content."""
+        metadata = super()._build_metadata(response_data)
+        output = [
+            {key: item[key] for key in ("type", "status") if key in item}
+            for item in response_data.get("output", [])
+            if isinstance(item, dict)
+            and item.get("type") in {"file_search_call", "web_search_call"}
+        ]
+        if output:
+            metadata["raw_response"]["output"] = output
+        return metadata
+
 
 __all__ = ["OpenResponsesClient"]
