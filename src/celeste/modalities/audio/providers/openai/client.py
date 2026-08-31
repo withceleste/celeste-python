@@ -3,6 +3,7 @@
 from typing import Any
 
 from celeste.artifacts import AudioArtifact
+from celeste.mime_types import AudioMimeType
 from celeste.parameters import ParameterMapper
 from celeste.providers.openai.audio import config
 from celeste.providers.openai.audio.client import OpenAIAudioClient as OpenAIAudioMixin
@@ -50,7 +51,23 @@ class OpenAIAudioClient(OpenAIAudioMixin, AudioClient):
             if not audio_bytes:
                 msg = "No audio data in response"
                 raise ValueError(msg)
-            return AudioArtifact(data=audio_bytes)
+            content_type = (
+                response_data.get("headers", {})
+                .get("content-type", "")
+                .split(";", 1)[0]
+                .strip()
+                .lower()
+            )
+            try:
+                mime_type = AudioMimeType(content_type)
+            except ValueError:
+                response_format = response_data.get("response_format")
+                mime_type = (
+                    self._map_response_format_to_mime_type(response_format)
+                    if response_format
+                    else None
+                )
+            return AudioArtifact(data=audio_bytes, mime_type=mime_type)
         return super()._parse_content(response_data)
 
     def _parse_finish_reason(self, response_data: dict[str, Any]) -> AudioFinishReason:

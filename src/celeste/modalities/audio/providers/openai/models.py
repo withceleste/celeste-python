@@ -15,6 +15,7 @@ _RESPONSE_FORMAT_OPTIONS = [
     AudioMimeType.OGG,  # Maps to "opus" in OpenAI API
     AudioMimeType.AAC,
     AudioMimeType.FLAC,
+    AudioMimeType.WAV,
 ]
 
 _OPENAI_TRANSCRIBE_MIME_TYPES = [

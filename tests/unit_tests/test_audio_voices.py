@@ -9,6 +9,9 @@ from celeste.modalities.audio.providers.google.models import (
 )
 from celeste.modalities.audio.providers.google.voices import GOOGLE_VOICES
 from celeste.modalities.audio.providers.gradium.voices import GRADIUM_VOICES
+from celeste.modalities.audio.providers.openai.models import (
+    MODELS as OPENAI_AUDIO_MODELS,
+)
 from celeste.modalities.audio.providers.openai.voices import OPENAI_VOICES
 from celeste.modalities.audio.voices import Voice
 
@@ -71,3 +74,31 @@ def test_voice_constraint_still_accepts_name_and_id() -> None:
 
     assert constraint(voice.name) == voice.id
     assert constraint(voice.id) == voice.id
+
+
+@pytest.mark.parametrize(
+    ("model_id", "additional_voices"),
+    [
+        ("tts-1", set()),
+        ("tts-1-hd", set()),
+        ("gpt-4o-mini-tts", {"ballad", "verse", "marin", "cedar"}),
+        ("gpt-4o-mini-tts-2025-12-15", {"ballad", "verse", "marin", "cedar"}),
+    ],
+)
+def test_openai_voice_availability_is_model_specific(
+    model_id: str, additional_voices: set[str]
+) -> None:
+    model = next(model for model in OPENAI_AUDIO_MODELS if model.id == model_id)
+    constraint = model.parameter_constraints[AudioParameter.VOICE]
+    assert isinstance(constraint, VoiceConstraint)
+    assert {voice.id for voice in constraint.voices} == {
+        "alloy",
+        "ash",
+        "coral",
+        "echo",
+        "fable",
+        "onyx",
+        "nova",
+        "sage",
+        "shimmer",
+    } | additional_voices
