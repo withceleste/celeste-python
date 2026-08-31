@@ -4,6 +4,7 @@ import pytest
 from pydantic import BaseModel
 
 from celeste.artifacts import ImageArtifact
+from celeste.exceptions import ValidationError
 from celeste.mime_types import AudioMimeType, ImageMimeType
 from celeste.modalities.audio.parameters import AudioParameter
 from celeste.modalities.audio.providers.elevenlabs import parameters as elevenlabs_audio
@@ -15,6 +16,7 @@ from celeste.modalities.images.parameters import ImageParameter
 from celeste.modalities.images.providers.bfl import parameters as bfl
 from celeste.modalities.images.providers.google import parameters as google_images
 from celeste.modalities.images.providers.topazlabs import parameters as topazlabs
+from celeste.modalities.images.providers.xai import parameters as xai_images
 from celeste.modalities.segmentation.parameters import SegmentationParameter
 from celeste.modalities.segmentation.providers.fal import parameters as fal
 from celeste.modalities.text.parameters import TextParameter
@@ -54,6 +56,7 @@ MOONSHOT = moonshot.MOONSHOT_PARAMETER_MAPPERS
 GROQ = groq.GROQ_PARAMETER_MAPPERS
 BYTEPLUS = byteplus.BYTEPLUS_PARAMETER_MAPPERS
 XAI = xai.XAI_PARAMETER_MAPPERS
+XAI_IMAGES = xai_images.XAI_PARAMETER_MAPPERS
 BFL = bfl.BFL_PARAMETER_MAPPERS
 TOPAZ = topazlabs.TOPAZLABS_PARAMETER_MAPPERS
 FAL = fal.FAL_PARAMETER_MAPPERS
@@ -240,6 +243,7 @@ def _at(data: dict[str, Any], path: tuple[str, ...]) -> Any:  # noqa: ANN401
         (AUDIO_MISTRAL, AP.LANGUAGE, "en", ("language",), "en"),
         (AUDIO_MISTRAL, AP.TEMPERATURE, 0.0, ("temperature",), 0.0),
         (XAI, V.FIRST_FRAME, IMAGE, ("image", "url"), IMAGE.url),
+        (XAI_IMAGES, IP.RESOLUTION, "2k", ("resolution",), "2k"),
         (TOPAZ, IP.OUTPUT_WIDTH, 2048, ("output_width",), 2048),
         (TOPAZ, IP.OUTPUT_HEIGHT, 1536, ("output_height",), 1536),
         (TOPAZ, IP.OUTPUT_FORMAT, "jpeg", ("output_format",), "jpeg"),
@@ -315,6 +319,7 @@ def test_scalar_parameters_use_provider_wire_shape(
         GROQ,
         BYTEPLUS,
         XAI,
+        XAI_IMAGES,
         BFL,
         TOPAZ,
     ],
@@ -473,6 +478,30 @@ def test_bfl_reference_images_follow_primary_image_numbering() -> None:
         [IMAGE],
         {"input_image": "primary"},
     ) == {"input_image": "primary", "input_image_2": IMAGE.url}
+
+
+def test_xai_reference_images_follow_the_primary_edit_image() -> None:
+    request = _map(
+        XAI_IMAGES,
+        IP.REFERENCE_IMAGES,
+        [IMAGE, LOCAL_IMAGE],
+        {"image": {"url": "primary"}},
+    )
+
+    assert request == {
+        "images": [
+            {"url": "primary"},
+            {"url": IMAGE.url},
+            {"url": "data:image/png;base64,ZnJhbWU="},
+        ]
+    }
+
+
+def test_xai_reference_images_require_an_edit_input() -> None:
+    with pytest.raises(
+        ValidationError, match="reference_images requires a primary image edit input"
+    ):
+        _map(XAI_IMAGES, IP.REFERENCE_IMAGES, [IMAGE])
 
 
 def test_chat_completions_reasoning_fields() -> None:

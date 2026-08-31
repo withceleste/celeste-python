@@ -13,6 +13,7 @@ class ImageParameter(StrEnum):
     """Parameter names for images modality."""
 
     ASPECT_RATIO = "aspect_ratio"
+    RESOLUTION = "resolution"
     NUM_IMAGES = "num_images"
     PARTIAL_IMAGES = "partial_images"
     QUALITY = "quality"
@@ -54,6 +55,7 @@ class ImageParameters(Parameters, total=False):
     aspect_ratio: Annotated[
         str, Field(description="Output image dimensions or aspect ratio.")
     ]
+    resolution: Annotated[str, Field(description="Output image resolution tier.")]
     num_images: Annotated[int, Field(description="How many images to return.")]
     partial_images: Annotated[
         int, Field(description="Number of progressive partial outputs to stream.")

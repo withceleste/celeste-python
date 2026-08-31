@@ -6,8 +6,13 @@ Naming convention:
 - The request key should match the provider's expected field name exactly
 """
 
-from celeste.parameters import FieldMapper
+from typing import Any
+
+from celeste.exceptions import ValidationError
+from celeste.models import Model
+from celeste.parameters import FieldMapper, ParameterMapper
 from celeste.types import ImageContent
+from celeste.utils import build_data_url
 
 
 class AspectRatioMapper(FieldMapper[ImageContent]):
@@ -22,6 +27,34 @@ class NumImagesMapper(FieldMapper[ImageContent]):
     field = "n"
 
 
+class ResolutionMapper(FieldMapper[ImageContent]):
+    """Map resolution to xAI resolution field."""
+
+    field = "resolution"
+
+
+class ReferenceImagesMapper(ParameterMapper[ImageContent]):
+    """Map additional edit images to xAI's ordered images field."""
+
+    def map(
+        self, request: dict[str, Any], value: object, model: Model
+    ) -> dict[str, Any]:
+        """Keep the primary edit image first, followed by references."""
+        references = self._validate_value(value, model)
+        if not references:
+            return request
+
+        primary = request.pop("image", None)
+        if primary is None:
+            msg = "reference_images requires a primary image edit input"
+            raise ValidationError(msg)
+        request["images"] = [
+            primary,
+            *({"url": build_data_url(image)} for image in references),
+        ]
+        return request
+
+
 class ResponseFormatMapper(FieldMapper[ImageContent]):
     """Map response_format to xAI response_format field."""
 
@@ -31,5 +64,7 @@ class ResponseFormatMapper(FieldMapper[ImageContent]):
 __all__ = [
     "AspectRatioMapper",
     "NumImagesMapper",
+    "ReferenceImagesMapper",
+    "ResolutionMapper",
     "ResponseFormatMapper",
 ]

@@ -1,10 +1,30 @@
 """xAI models for images modality."""
 
-from celeste.constraints import Choice, Range
+from celeste.constraints import Choice, ImagesConstraint, Range
 from celeste.core import Modality, Operation, Provider
 from celeste.models import Model
 
 from ...parameters import ImageParameter
+
+_ASPECT_RATIOS = [
+    "1:1",
+    "3:4",
+    "4:3",
+    "9:16",
+    "16:9",
+    "2:3",
+    "3:2",
+    "9:19.5",
+    "19.5:9",
+    "9:20",
+    "20:9",
+    "1:2",
+    "2:1",
+    "21:9",
+    "5:2",
+    "auto",
+]
+_RESOLUTIONS = ["1k", "2k"]
 
 MODELS: list[Model] = [
     Model(
@@ -14,24 +34,9 @@ MODELS: list[Model] = [
         operations={Modality.IMAGES: {Operation.GENERATE, Operation.EDIT}},
         parameter_constraints={
             ImageParameter.NUM_IMAGES: Range(min=1, max=10),
-            ImageParameter.ASPECT_RATIO: Choice(
-                options=[
-                    "1:1",
-                    "3:4",
-                    "4:3",
-                    "9:16",
-                    "16:9",
-                    "2:3",
-                    "3:2",
-                    "9:19.5",
-                    "19.5:9",
-                    "9:20",
-                    "20:9",
-                    "1:2",
-                    "2:1",
-                    "auto",
-                ]
-            ),
+            ImageParameter.ASPECT_RATIO: Choice(options=_ASPECT_RATIOS),
+            ImageParameter.RESOLUTION: Choice(options=_RESOLUTIONS),
+            ImageParameter.REFERENCE_IMAGES: ImagesConstraint(max_count=2),
             ImageParameter.OUTPUT_FORMAT: Choice(options=["url", "b64_json"]),
         },
     ),
@@ -42,24 +47,22 @@ MODELS: list[Model] = [
         operations={Modality.IMAGES: {Operation.GENERATE, Operation.EDIT}},
         parameter_constraints={
             ImageParameter.NUM_IMAGES: Range(min=1, max=10),
-            ImageParameter.ASPECT_RATIO: Choice(
-                options=[
-                    "1:1",
-                    "3:4",
-                    "4:3",
-                    "9:16",
-                    "16:9",
-                    "2:3",
-                    "3:2",
-                    "9:19.5",
-                    "19.5:9",
-                    "9:20",
-                    "20:9",
-                    "1:2",
-                    "2:1",
-                    "auto",
-                ]
-            ),
+            ImageParameter.ASPECT_RATIO: Choice(options=_ASPECT_RATIOS),
+            ImageParameter.RESOLUTION: Choice(options=_RESOLUTIONS),
+            ImageParameter.REFERENCE_IMAGES: ImagesConstraint(max_count=2),
+            ImageParameter.OUTPUT_FORMAT: Choice(options=["url", "b64_json"]),
+        },
+    ),
+    Model(
+        id="grok-imagine-image-2.0",
+        provider=Provider.XAI,
+        display_name="Grok Imagine Image 2.0",
+        operations={Modality.IMAGES: {Operation.GENERATE, Operation.EDIT}},
+        parameter_constraints={
+            ImageParameter.NUM_IMAGES: Range(min=1, max=10),
+            ImageParameter.ASPECT_RATIO: Choice(options=_ASPECT_RATIOS),
+            ImageParameter.RESOLUTION: Choice(options=_RESOLUTIONS),
+            ImageParameter.REFERENCE_IMAGES: ImagesConstraint(max_count=2),
             ImageParameter.OUTPUT_FORMAT: Choice(options=["url", "b64_json"]),
         },
     ),
