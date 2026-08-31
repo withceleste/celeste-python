@@ -41,7 +41,7 @@ class GoogleGenerateContentStream:
         return super()._parse_chunk(event_data)  # type: ignore[misc]
 
     def _parse_chunk_content(self, event_data: dict[str, Any]) -> str | None:
-        """Extract content from SSE event."""
+        """Join non-thought text from every Part of the first candidate."""
         candidates = event_data.get("candidates", [])
         if not candidates:
             return None
@@ -50,14 +50,12 @@ class GoogleGenerateContentStream:
         content = candidate.get("content", {})
         parts = content.get("parts", [])
 
-        for p in parts:
-            if p.get("thought"):
-                continue
-            text = p.get("text")
-            if text is not None:
-                return text
-
-        return None
+        texts = [
+            part["text"]
+            for part in parts
+            if not part.get("thought") and part.get("text") is not None
+        ]
+        return "".join(texts) if texts else None
 
     def _parse_chunk_reasoning(self, event_data: dict[str, Any]) -> str | None:
         """Extract thought content from SSE event."""
