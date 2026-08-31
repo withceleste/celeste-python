@@ -7,6 +7,7 @@ class XAIResponsesEndpoint(StrEnum):
     """Endpoints for XAI Responses API."""
 
     CREATE_RESPONSE = "/v1/responses"
+    COMPACT_RESPONSE = "/v1/responses/compact"
     LIST_MODELS = "/v1/models"
     GET_MODEL = "/v1/models/{model_id}"
 
