@@ -5,10 +5,10 @@ from typing import Any
 from celeste.models import Model
 from celeste.parameters import ParameterMapper
 from celeste.providers.bfl.images.parameters import (
-    GuidanceMapper as _GuidanceMapper,
+    AspectRatioMapper as _AspectRatioMapper,
 )
 from celeste.providers.bfl.images.parameters import (
-    HeightMapper as _HeightMapper,
+    GuidanceMapper as _GuidanceMapper,
 )
 from celeste.providers.bfl.images.parameters import (
     OutputFormatMapper as _OutputFormatMapper,
@@ -25,47 +25,14 @@ from celeste.providers.bfl.images.parameters import (
 from celeste.providers.bfl.images.parameters import (
     StepsMapper as _StepsMapper,
 )
-from celeste.providers.bfl.images.parameters import (
-    WidthMapper as _WidthMapper,
-)
 from celeste.providers.bfl.images.utils import add_reference_images
 from celeste.types import ImageContent
 
 from ...parameters import ImageParameter
 
 
-class AspectRatioMapper(ParameterMapper[ImageContent]):
-    """Map aspect_ratio to BFL width/height parameters.
-
-    Converts 'WxH' string to width/height, rounded to nearest multiple of 16.
-    Delegates to provider's WidthMapper and HeightMapper for the actual mapping.
-    """
-
+class AspectRatioMapper(_AspectRatioMapper):
     name = ImageParameter.ASPECT_RATIO
-
-    def map(
-        self,
-        request: dict[str, Any],
-        value: object,
-        model: Model,
-    ) -> dict[str, Any]:
-        """Transform aspect_ratio into provider request."""
-        validated_value = self._validate_value(value, model)
-        if validated_value is None:
-            return request
-
-        parts = validated_value.split("x")
-        width = int(parts[0])
-        height = int(parts[1])
-
-        # Round to nearest multiple of 16 as required by BFL API
-        width = ((width + 8) // 16) * 16
-        height = ((height + 8) // 16) * 16
-
-        # Delegate to provider mappers
-        request = _WidthMapper().map(request, width, model)
-        request = _HeightMapper().map(request, height, model)
-        return request
 
 
 class PromptUpsamplingMapper(_PromptUpsamplingMapper):
