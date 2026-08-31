@@ -5,6 +5,8 @@ import time
 from collections.abc import AsyncIterator
 from typing import Any, ClassVar
 
+import httpx
+
 from celeste.client import APIMixin
 from celeste.core import UsageField
 from celeste.exceptions import StreamingNotSupportedError
@@ -70,8 +72,19 @@ class BFLImagesClient(APIMixin):
         submit_data = submit_response.json()
         polling_url = submit_data.get("polling_url")
 
-        if not polling_url:
+        if not isinstance(polling_url, str) or not polling_url:
             msg = f"No polling_url in {self.provider} response"
+            raise ValueError(msg)
+
+        parsed_url = httpx.URL(polling_url)
+        if (
+            parsed_url.scheme != "https"
+            or parsed_url.host not in {"api.bfl.ai", "api.eu.bfl.ai", "api.us.bfl.ai"}
+            or parsed_url.port not in {None, 443}
+            or parsed_url.username
+            or parsed_url.password
+        ):
+            msg = f"Untrusted polling_url in {self.provider} response"
             raise ValueError(msg)
 
         # Phase 2: Poll for completion
@@ -90,6 +103,7 @@ class BFLImagesClient(APIMixin):
             poll_response = await self.http_client.get(
                 polling_url,
                 headers=poll_headers,
+                follow_redirects=False,
             )
 
             self._handle_error_response(poll_response)
@@ -102,9 +116,15 @@ class BFLImagesClient(APIMixin):
                     **poll_data,
                     "_submit_metadata": submit_data,
                 }
-            elif status in ("Error", "Failed"):
-                error_msg = poll_data.get("error", "Unknown error")
-                msg = f"{self.provider} image generation failed: {error_msg}"
+            elif status in (
+                "Error",
+                "Failed",
+                "Request Moderated",
+                "Content Moderated",
+                "Task not found",
+            ):
+                error_msg = poll_data.get("error") or poll_data.get("details") or status
+                msg = f"{self.provider} image generation failed ({status}): {error_msg}"
                 raise ValueError(msg)
 
             await asyncio.sleep(config.POLLING_INTERVAL)
@@ -142,9 +162,11 @@ class BFLImagesClient(APIMixin):
     def _parse_usage(
         self, response_data: dict[str, Any]
     ) -> dict[str, int | float | None]:
-        """Extract usage data from BFL response."""
-        submit_metadata = response_data.get("_submit_metadata", {})
-        return BFLImagesClient.map_usage_fields(submit_metadata)
+        """Prefer settled credits and retain submission megapixel telemetry."""
+        usage_data = dict(response_data.get("_submit_metadata", {}))
+        if response_data.get("cost") is not None:
+            usage_data["cost"] = response_data["cost"]
+        return BFLImagesClient.map_usage_fields(usage_data)
 
     def _parse_content(self, response_data: dict[str, Any]) -> Any:
         """Parse result from response."""

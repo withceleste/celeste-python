@@ -5,9 +5,12 @@ from unittest.mock import AsyncMock, MagicMock, call, patch
 
 import httpx
 import pytest
+from pydantic import SecretStr
 
 import celeste.http as http_module
-from celeste.core import Modality, Provider
+from celeste.artifacts import ImageArtifact
+from celeste.auth import AuthHeader
+from celeste.core import Modality, Operation, Provider
 from celeste.http import (
     DEFAULT_TIMEOUT,
     MAX_RETRIES,
@@ -16,6 +19,9 @@ from celeste.http import (
     close_all_http_clients,
     get_http_client,
 )
+from celeste.modalities.images.providers.bfl.client import BFLImagesClient
+from celeste.modalities.images.providers.bfl.models import MODELS as BFL_MODELS
+from celeste.models import Model
 
 
 @pytest.fixture
@@ -302,3 +308,160 @@ async def test_ndjson_error_body_remains_readable(transport: AsyncMock) -> None:
         async for _ in HTTPClient().stream_post_ndjson("https://example.com", {}, {}):
             pass
     assert error.value.response.json()["error"]["message"] == "forbidden"
+
+
+@pytest.fixture
+def bfl_client() -> BFLImagesClient:
+    return BFLImagesClient(
+        model=next(model for model in BFL_MODELS if model.id == "flux-2-max"),
+        provider=Provider.BFL,
+        auth=AuthHeader(secret=SecretStr("test-key"), header="x-key", prefix=""),
+    )
+
+
+@pytest.mark.parametrize(
+    ("model", "operation"),
+    [
+        (model, operation)
+        for model in BFL_MODELS
+        for operation in sorted(model.operations[Modality.IMAGES])
+    ],
+    ids=lambda value: value.id if isinstance(value, Model) else value,
+)
+async def test_bfl_polling_preserves_result_and_billing_metadata(
+    transport: AsyncMock,
+    bfl_client: BFLImagesClient,
+    model: Model,
+    operation: Operation,
+) -> None:
+    bfl_client.model = model
+    polling_url = "https://api.eu.bfl.ai/v1/get_result?id=task&region=eu"
+    submitted = {"id": "task", "polling_url": polling_url, "cost": 5, "input_mp": 1}
+    settled: dict[str, Any] = {
+        "id": "task",
+        "status": "Ready",
+        "cost": 2.5,
+        "result": {"sample": "https://delivery.eu.bfl.ai/image.png?signature=test"},
+    }
+    transport.post.return_value = httpx.Response(200, json=submitted)
+    transport.get.side_effect = [
+        httpx.Response(200, json={"status": status})
+        for status in ("Pending", "Reasoning", "Generating")
+    ] + [httpx.Response(200, json=settled)]
+    with (
+        patch("celeste.http.httpx.AsyncClient", return_value=transport),
+        patch("celeste.providers.bfl.images.client.asyncio.sleep", new=AsyncMock()),
+    ):
+        if operation == Operation.EDIT:
+            output = await bfl_client.edit(
+                ImageArtifact(url="https://example.com/input.png"), "edit"
+            )
+        else:
+            output = await bfl_client.generate("generate")
+
+    assert transport.post.call_args.args == (f"https://api.bfl.ai/v1/{model.id}",)
+    assert len(transport.get.call_args_list) == 4
+    assert all(
+        request.args == (polling_url,)
+        and request.kwargs["headers"]["x-key"] == "test-key"
+        and request.kwargs["follow_redirects"] is False
+        for request in transport.get.call_args_list
+    )
+    assert isinstance(output.content, ImageArtifact)
+    assert output.content.url == settled["result"]["sample"]
+    assert (
+        output.finish_reason is not None and output.finish_reason.reason == "COMPLETE"
+    )
+    assert output.usage.billed_units == 2.5
+    assert output.usage.input_mp == 1
+    assert output.metadata["raw_response"]["cost"] == 2.5
+    assert output.metadata["raw_response"]["_submit_metadata"] == submitted
+    assert "result" not in output.metadata["raw_response"]
+
+
+@pytest.mark.parametrize(
+    ("settled", "expected"),
+    [({"cost": 2.5}, 2.5), ({"cost": 0}, 0), ({"cost": None}, 5), ({}, 5)],
+)
+def test_bfl_settled_credits_override_submission_estimates(
+    bfl_client: BFLImagesClient, settled: dict[str, Any], expected: float
+) -> None:
+    submitted = {"cost": 5, "input_mp": 1, "output_mp": 2}
+    assert bfl_client._parse_usage({**settled, "_submit_metadata": submitted}) == {
+        "billed_units": expected,
+        "input_mp": 1,
+        "output_mp": 2,
+    }
+    assert submitted["cost"] == 5
+
+
+@pytest.mark.parametrize(
+    "status",
+    ["Error", "Failed", "Request Moderated", "Content Moderated", "Task not found"],
+)
+async def test_bfl_terminal_failures_stop_polling_with_details(
+    transport: AsyncMock, bfl_client: BFLImagesClient, status: str
+) -> None:
+    transport.post.return_value = httpx.Response(
+        200, json={"polling_url": "https://api.bfl.ai/v1/get_result?id=task"}
+    )
+    transport.get.side_effect = [
+        httpx.Response(200, json={"status": status, "details": {"reason": "blocked"}}),
+        AssertionError("Terminal response must not be polled again"),
+    ]
+    with (
+        patch("celeste.http.httpx.AsyncClient", return_value=transport),
+        patch("celeste.providers.bfl.images.client.asyncio.sleep", new=AsyncMock()),
+        pytest.raises(ValueError, match="blocked") as error,
+    ):
+        await bfl_client.generate("generate")
+    assert status in str(error.value)
+    transport.get.assert_awaited_once()
+
+
+@pytest.mark.parametrize(
+    "polling_url",
+    [
+        None,
+        1,
+        "",
+        "/v1/get_result?id=task",
+        "http://api.bfl.ai/v1/get_result?id=task",
+        "https://api.bfl.ai:8443/v1/get_result?id=task",
+        "https://user:password@api.bfl.ai/v1/get_result?id=task",
+        "https://api.bfl.ai.evil.example/v1/get_result?id=task",
+        "https://api.bfl.ai@evil.example/v1/get_result?id=task",
+        "https://delivery.eu.bfl.ai/image.png",
+    ],
+)
+async def test_bfl_rejects_untrusted_polling_urls_before_sending_credentials(
+    transport: AsyncMock, bfl_client: BFLImagesClient, polling_url: object
+) -> None:
+    transport.post.return_value = httpx.Response(200, json={"polling_url": polling_url})
+    transport.get.side_effect = AssertionError("Untrusted URL must not be requested")
+    with (
+        patch("celeste.http.httpx.AsyncClient", return_value=transport),
+        pytest.raises(ValueError, match="polling_url"),
+    ):
+        await bfl_client.generate("generate")
+    transport.get.assert_not_awaited()
+
+
+@pytest.mark.parametrize("host", ["api.bfl.ai", "api.eu.bfl.ai", "api.us.bfl.ai"])
+async def test_bfl_does_not_follow_authenticated_polling_redirects(
+    transport: AsyncMock, bfl_client: BFLImagesClient, host: str
+) -> None:
+    polling_url = f"https://{host}/v1/get_result?id=task"
+    transport.post.return_value = httpx.Response(200, json={"polling_url": polling_url})
+    transport.get.return_value = httpx.Response(
+        302,
+        request=httpx.Request("GET", polling_url),
+        headers={"Location": "https://delivery.eu.bfl.ai/image.png"},
+    )
+    with (
+        patch("celeste.http.httpx.AsyncClient", return_value=transport),
+        pytest.raises(httpx.HTTPStatusError),
+    ):
+        await bfl_client.generate("generate")
+    transport.get.assert_awaited_once()
+    assert transport.get.call_args.kwargs["follow_redirects"] is False
