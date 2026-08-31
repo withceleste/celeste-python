@@ -5,10 +5,13 @@ from pydantic import SecretStr
 
 from celeste.artifacts import AudioArtifact
 from celeste.auth import AuthHeader
+from celeste.constraints import Choice
 from celeste.core import Modality, Operation, Provider
 from celeste.exceptions import ConstraintViolationError
 from celeste.mime_types import AudioMimeType
+from celeste.modalities.audio.constraints import VoiceConstraint
 from celeste.modalities.audio.io import AudioInput
+from celeste.modalities.audio.parameters import AudioParameter
 from celeste.modalities.audio.providers.google.client import GoogleAudioClient
 from celeste.modalities.audio.providers.google.models import MODELS
 
@@ -32,8 +35,48 @@ def test_google_audio_catalog_streaming_and_transcription_flags() -> None:
         Modality.AUDIO: {Operation.TRANSCRIBE}
     }
 
+    for model in MODELS:
+        if Operation.SPEAK not in model.operations.get(Modality.AUDIO, set()):
+            continue
+        languages = model.parameter_constraints[AudioParameter.LANGUAGE]
+        voices = model.parameter_constraints[AudioParameter.VOICE]
+        assert isinstance(languages, Choice)
+        assert isinstance(voices, VoiceConstraint)
+        assert len(languages.options) == len(set(languages.options)) == 78
+        assert all(voice.languages == set(languages.options) for voice in voices.voices)
 
-def test_transcribe_request_maps_audio_and_language_hint() -> None:
+
+@pytest.mark.parametrize(
+    ("model_id", "language", "wire_language"),
+    [
+        ("gemini-2.5-flash-preview-tts", "bn", "bn"),
+        ("gemini-2.5-pro-preview-tts", "cs", "cs"),
+        ("gemini-3.1-flash-tts-preview", "fil", "fil"),
+        ("gemini-3.1-flash-tts-preview", "cmn", "cmn"),
+        ("gemini-3.1-flash-tts-preview", "nb", "nb"),
+        ("gemini-3.1-flash-tts-preview", "nn", "nn"),
+        ("gemini-3.1-flash-tts-preview", "en", "en-US"),
+    ],
+)
+def test_tts_languages_use_speech_config(
+    model_id: str, language: str, wire_language: str
+) -> None:
+    request = _client(model_id)._build_request(
+        AudioInput(text="test"), language=language
+    )
+
+    assert request["generation_config"] == {
+        "speech_config": [{"language": wire_language}]
+    }
+
+
+@pytest.mark.parametrize(
+    ("language", "wire_language"),
+    [("en", "en-US"), ("cs", "cs-CZ"), ("zh", "cmn-Hans-CN"), ("no", "nb-NO")],
+)
+def test_transcribe_request_maps_audio_and_language_hint(
+    language: str, wire_language: str
+) -> None:
     audio = AudioArtifact(
         data=b"pcm",
         mime_type=AudioMimeType.PCM,
@@ -41,7 +84,7 @@ def test_transcribe_request_maps_audio_and_language_hint() -> None:
     )
 
     request = _client("gemini-3.5-transcribe")._build_request(
-        AudioInput(audio=audio), language="en"
+        AudioInput(audio=audio), language=language
     )
 
     assert request == {
@@ -54,7 +97,9 @@ def test_transcribe_request_maps_audio_and_language_hint() -> None:
                 "channels": 1,
             }
         ],
-        "generation_config": {"transcription_config": {"language_codes": ["en-US"]}},
+        "generation_config": {
+            "transcription_config": {"language_codes": [wire_language]}
+        },
         "model": "gemini-3.5-transcribe",
     }
 

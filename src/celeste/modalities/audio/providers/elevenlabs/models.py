@@ -10,6 +10,41 @@ from ...languages import Language
 from ...parameters import AudioParameter
 from .voices import ELEVENLABS_VOICES
 
+# Keep model language support independent of additions to the shared enum.
+ELEVENLABS_SUPPORTED_LANGUAGES = [
+    Language.ARABIC,
+    Language.CHINESE,
+    Language.CZECH,
+    Language.DANISH,
+    Language.DUTCH,
+    Language.ENGLISH,
+    Language.FILIPINO,
+    Language.FINNISH,
+    Language.FRENCH,
+    Language.GERMAN,
+    Language.GREEK,
+    Language.HINDI,
+    Language.HUNGARIAN,
+    Language.INDONESIAN,
+    Language.ITALIAN,
+    Language.JAPANESE,
+    Language.KOREAN,
+    Language.MALAY,
+    Language.NORWEGIAN,
+    Language.POLISH,
+    Language.PORTUGUESE,
+    Language.ROMANIAN,
+    Language.RUSSIAN,
+    Language.SLOVAK,
+    Language.SPANISH,
+    Language.SWEDISH,
+    Language.TAMIL,
+    Language.THAI,
+    Language.TURKISH,
+    Language.UKRAINIAN,
+    Language.VIETNAMESE,
+]
+
 # Valid output formats for ElevenLabs API (ulaw/alaw excluded: no AudioMimeType label)
 ELEVENLABS_OUTPUT_FORMATS = [
     "mp3_22050_32",
@@ -87,7 +122,7 @@ ELEVENLABS_TTS_MODELS: list[Model] = [
         parameter_constraints={
             AudioParameter.VOICE: VoiceConstraint(voices=ELEVENLABS_VOICES),
             AudioParameter.SPEED: Range(min=0.7, max=1.2),
-            AudioParameter.LANGUAGE: Choice(options=list(Language)),
+            AudioParameter.LANGUAGE: Choice(options=ELEVENLABS_SUPPORTED_LANGUAGES),
             AudioParameter.OUTPUT_FORMAT: Choice(options=ELEVENLABS_OUTPUT_FORMATS),
         },
     ),
@@ -112,7 +147,7 @@ ELEVENLABS_TTS_MODELS: list[Model] = [
         parameter_constraints={
             AudioParameter.VOICE: VoiceConstraint(voices=ELEVENLABS_VOICES),
             AudioParameter.SPEED: Range(min=0.7, max=1.2),
-            AudioParameter.LANGUAGE: Choice(options=list(Language)),
+            AudioParameter.LANGUAGE: Choice(options=ELEVENLABS_SUPPORTED_LANGUAGES),
             AudioParameter.OUTPUT_FORMAT: Choice(options=ELEVENLABS_OUTPUT_FORMATS),
         },
     ),

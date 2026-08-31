@@ -54,6 +54,8 @@ class LanguageMapper(_LanguageMapper):
         "ro": "ro-RO",
         "uk": "uk-UA",
         "ta": "ta-IN",
+    }
+    transcribe_locale_map: ClassVar[dict[str, str]] = locale_map | {
         "zh": "cmn-Hans-CN",
         "cs": "cs-CZ",
         "da": "da-DK",
@@ -80,7 +82,9 @@ class LanguageMapper(_LanguageMapper):
         validated_value = self._validate_value(value, model)
         if validated_value is None:
             return request
-        locale = self.locale_map.get(str(validated_value), str(validated_value))
+        locale = self.transcribe_locale_map.get(
+            str(validated_value), str(validated_value)
+        )
         transcription_config = request.setdefault("generation_config", {}).setdefault(
             "transcription_config", {}
         )

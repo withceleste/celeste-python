@@ -1,8 +1,10 @@
 import pytest
 
+from celeste.constraints import Choice
 from celeste.core import Modality, Operation, Provider
 from celeste.modalities.audio.constraints import VoiceConstraint
 from celeste.modalities.audio.parameters import AudioParameter
+from celeste.modalities.audio.providers.elevenlabs.models import ELEVENLABS_TTS_MODELS
 from celeste.modalities.audio.providers.elevenlabs.voices import ELEVENLABS_VOICES
 from celeste.modalities.audio.providers.google.models import (
     MODELS as GOOGLE_AUDIO_MODELS,
@@ -11,6 +13,18 @@ from celeste.modalities.audio.providers.google.voices import GOOGLE_VOICES
 from celeste.modalities.audio.providers.gradium.voices import GRADIUM_VOICES
 from celeste.modalities.audio.providers.openai.voices import OPENAI_VOICES
 from celeste.modalities.audio.voices import Voice
+
+
+@pytest.mark.parametrize("model_id", ["eleven_turbo_v2_5", "eleven_flash_v2_5"])
+def test_elevenlabs_language_choices_remain_provider_specific(model_id: str) -> None:
+    model = next(model for model in ELEVENLABS_TTS_MODELS if model.id == model_id)
+    languages = model.parameter_constraints[AudioParameter.LANGUAGE]
+
+    assert isinstance(languages, Choice)
+    assert " ".join(languages.options) == (
+        "ar zh cs da nl en fil fi fr de el hi hu id it ja ko ms no pl pt ro ru sk "
+        "es sv ta th tr uk vi"
+    )
 
 
 def test_voice_description_defaults_to_none() -> None:
