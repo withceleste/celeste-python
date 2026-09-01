@@ -3,6 +3,7 @@
 from collections.abc import AsyncIterator
 from typing import Any
 
+import pytest
 from pydantic import SecretStr
 
 from celeste import Model
@@ -84,3 +85,44 @@ async def test_google_stream_replays_native_tool_parts_verbatim() -> None:
 
     assert request["contents"][0] == {"role": "model", "parts": parts}
     assert request["contents"][1]["parts"][0]["functionResponse"]["id"] == "audio-1"
+
+
+@pytest.mark.parametrize("bundled", [False, True])
+async def test_google_vertex_preserves_all_text_parts(bundled: bool) -> None:
+    parts = [
+        {"text": "private thought", "thought": True, "thoughtSignature": "sig"},
+        {"text": "Let me calculate. "},
+        {"executableCode": {"language": "PYTHON", "code": "print(2 + 2)"}},
+        {"codeExecutionResult": {"outcome": "OUTCOME_OK", "output": "4\n"}},
+        {"text": "The answer is 4."},
+    ]
+    other_candidate = {"content": {"parts": [{"text": "ignore alternative"}]}}
+    response = {
+        "candidates": [{"content": {"parts": parts}}, other_candidate],
+    }
+    client = object.__new__(GoogleVertexTextClient)
+    expected = "Let me calculate. The answer is 4."
+    assert client._parse_content(response) == expected
+    assert client._parse_reasoning(response) == ("private thought", parts)
+
+    groups = [parts] if bundled else [[part] for part in parts]
+    events: list[dict[str, Any]] = [
+        {"candidates": [{"content": {"parts": group}}, other_candidate]}
+        for group in groups
+    ]
+    events.append({"candidates": [{"finishReason": "STOP"}]})
+    stream = GoogleVertexTextStream(_async_iter(events))
+    chunks = [chunk async for chunk in stream]
+    assert "".join(chunk.content for chunk in chunks) == expected
+    assert stream.output.content == expected
+    assert stream.output.reasoning == "private thought"
+    assert stream.output.signature == parts
+
+
+def test_google_vertex_non_text_parts_do_not_emit_text() -> None:
+    stream = object.__new__(GoogleVertexTextStream)
+    for parts in ([], [{"thought": True, "text": "private"}], [{"text": None}]):
+        response = {"candidates": [{"content": {"parts": parts}}]}
+        assert object.__new__(GoogleVertexTextClient)._parse_content(response) == ""
+        assert stream._parse_chunk_content(response) is None
+    assert stream._parse_chunk_content({}) is None

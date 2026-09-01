@@ -164,16 +164,14 @@ class GoogleVertexTextClient(GoogleGenerateContentMixin, TextClient):
         self,
         response_data: dict[str, Any],
     ) -> TextContent:
-        """Parse content from response."""
+        """Join non-thought text from every Part of the first candidate."""
         candidates = super()._parse_content(response_data)
         parts = candidates[0].get("content", {}).get("parts", [])
-        for p in parts:
-            if p.get("thought"):
-                continue
-            text = p.get("text")
-            if text is not None:
-                return text
-        return ""
+        return "".join(
+            part["text"]
+            for part in parts
+            if not part.get("thought") and part.get("text") is not None
+        )
 
     def _parse_reasoning(
         self, response_data: dict[str, Any]
