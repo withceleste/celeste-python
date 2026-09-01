@@ -10,6 +10,7 @@ _SUPPORTED_LANGUAGES = {
     Language.ARABIC,
     Language.GERMAN,
     Language.ENGLISH,
+    Language.SPANISH,
     Language.FRENCH,
     Language.HINDI,
     Language.INDONESIAN,
@@ -26,6 +27,15 @@ _SUPPORTED_LANGUAGES = {
     Language.ROMANIAN,
     Language.UKRAINIAN,
     Language.TAMIL,
+    Language.CZECH,
+    Language.DANISH,
+    Language.FILIPINO,
+    Language.FINNISH,
+    Language.GREEK,
+    Language.HUNGARIAN,
+    Language.MALAY,
+    Language.SLOVAK,
+    Language.SWEDISH,
 }
 
 # Snapshot 2026-07-14: 30 prebuilt voices.
