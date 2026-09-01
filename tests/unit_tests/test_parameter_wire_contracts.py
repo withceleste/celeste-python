@@ -4,7 +4,6 @@ import pytest
 from pydantic import BaseModel
 
 from celeste.artifacts import ImageArtifact
-from celeste.exceptions import ValidationError
 from celeste.mime_types import AudioMimeType, ImageMimeType
 from celeste.modalities.audio.parameters import AudioParameter
 from celeste.modalities.audio.providers.elevenlabs import parameters as elevenlabs_audio
@@ -480,7 +479,7 @@ def test_bfl_reference_images_follow_primary_image_numbering() -> None:
     ) == {"input_image": "primary", "input_image_2": IMAGE.url}
 
 
-def test_xai_reference_images_follow_the_primary_edit_image() -> None:
+def test_xai_reference_images_preserve_primary_first_order() -> None:
     request = _map(
         XAI_IMAGES,
         IP.REFERENCE_IMAGES,
@@ -495,13 +494,9 @@ def test_xai_reference_images_follow_the_primary_edit_image() -> None:
             {"url": "data:image/png;base64,ZnJhbWU="},
         ]
     }
-
-
-def test_xai_reference_images_require_an_edit_input() -> None:
-    with pytest.raises(
-        ValidationError, match="reference_images requires a primary image edit input"
-    ):
-        _map(XAI_IMAGES, IP.REFERENCE_IMAGES, [IMAGE])
+    assert _map(XAI_IMAGES, IP.REFERENCE_IMAGES, [IMAGE]) == {
+        "images": [{"url": IMAGE.url}]
+    }
 
 
 def test_chat_completions_reasoning_fields() -> None:

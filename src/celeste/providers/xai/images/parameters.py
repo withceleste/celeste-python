@@ -8,7 +8,6 @@ Naming convention:
 
 from typing import Any
 
-from celeste.exceptions import ValidationError
 from celeste.models import Model
 from celeste.parameters import FieldMapper, ParameterMapper
 from celeste.types import ImageContent
@@ -45,11 +44,8 @@ class ReferenceImagesMapper(ParameterMapper[ImageContent]):
             return request
 
         primary = request.pop("image", None)
-        if primary is None:
-            msg = "reference_images requires a primary image edit input"
-            raise ValidationError(msg)
         request["images"] = [
-            primary,
+            *([primary] if primary is not None else []),
             *({"url": build_data_url(image)} for image in references),
         ]
         return request

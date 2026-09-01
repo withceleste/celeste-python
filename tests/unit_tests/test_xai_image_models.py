@@ -56,10 +56,19 @@ def test_registered_xai_models_build_generation_and_ordered_edits(
         ],
         "resolution": "2k",
     }
+    assert (
+        len(
+            client._build_request(
+                ImageInput(prompt="Five sources", image=image),
+                reference_images=[image] * 4,
+            )["images"]
+        )
+        == 5
+    )
     with pytest.raises(ConstraintViolationError):
         client._build_request(
             ImageInput(prompt="Too many sources", image=image),
-            reference_images=[image, *references],
+            reference_images=[image] * 5,
         )
 
 
@@ -69,9 +78,9 @@ def test_generation_quality_uses_the_existing_raw_parameter_path() -> None:
     )
     assert "quality" not in client.model.supported_parameters
     assert client._build_request(
-        ImageInput(prompt="New image"), extra_body={"quality": "low"}
+        ImageInput(prompt="New image"), extra_body={"quality": "auto"}
     ) == {
         "model": "grok-imagine-image-2.0",
         "prompt": "New image",
-        "quality": "low",
+        "quality": "auto",
     }
