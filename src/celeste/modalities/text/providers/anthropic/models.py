@@ -69,9 +69,7 @@ MODELS: list[Model] = [
             ),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
-            TextParameter.TOOL_CHOICE: Choice(
-                options=[ToolChoice.AUTO, ToolChoice.NONE]
-            ),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
             TextParameter.IMAGE: ImagesConstraint(),
             TextParameter.DOCUMENT: DocumentsConstraint(),
         },
