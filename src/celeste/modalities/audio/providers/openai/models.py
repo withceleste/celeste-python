@@ -91,6 +91,14 @@ MODELS: list[Model] = [
         parameter_constraints=_TRANSCRIBE_CONSTRAINTS,
     ),
     Model(
+        id="gpt-4o-mini-transcribe-2025-12-15",
+        provider=Provider.OPENAI,
+        display_name="GPT-4o Mini Transcribe (2025-12-15)",
+        streaming=False,
+        operations={Modality.AUDIO: {Operation.TRANSCRIBE}},
+        parameter_constraints=_TRANSCRIBE_CONSTRAINTS,
+    ),
+    Model(
         id="gpt-4o-transcribe",
         provider=Provider.OPENAI,
         display_name="GPT-4o Transcribe",
