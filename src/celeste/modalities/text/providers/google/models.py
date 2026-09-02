@@ -259,4 +259,26 @@ MODELS: list[Model] = [
             TextParameter.DOCUMENT: DocumentsConstraint(),
         },
     ),
+    Model(
+        id="gemini-3.8-flash",
+        provider=Provider.GOOGLE,
+        display_name="Gemini 3.8 Flash",
+        operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
+        streaming=True,
+        parameter_constraints={
+            Parameter.MAX_TOKENS: Range(min=1, max=65536),
+            # 3.8 Flash rejects minimal with a validation error (Google model page).
+            TextParameter.THINKING_LEVEL: Choice(options=["low", "medium", "high"]),
+            TextParameter.TOOLS: ToolSupport(
+                tools=[WebSearch, CodeExecution, UrlContext]
+            ),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
+            TextParameter.OUTPUT_SCHEMA: Schema(),
+            # Media input support
+            TextParameter.IMAGE: ImagesConstraint(),
+            TextParameter.VIDEO: VideosConstraint(),
+            TextParameter.AUDIO: AudioConstraint(),
+            TextParameter.DOCUMENT: DocumentsConstraint(),
+        },
+    ),
 ]
