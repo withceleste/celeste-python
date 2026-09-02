@@ -18,6 +18,7 @@ Use domain namespaces for normal app code:
 - `celeste.audio.analyze(...)`
 - `celeste.audio.embed(...)`
 - `celeste.videos.generate(...)`
+- `celeste.videos.enhance_draft(...)`
 - `celeste.videos.analyze(...)`
 - `celeste.videos.embed(...)`
 - `celeste.documents.analyze(...)`
@@ -49,7 +50,7 @@ Core enums live in `src/celeste/core.py`:
 - `Provider`: backend vendor or local provider.
 - `Protocol`: wire-compatible API format such as `openresponses` or `chatcompletions`.
 - `Modality`: output/client family such as text, images, videos, audio, embeddings.
-- `Operation`: action such as generate, edit, analyze, speak, transcribe, embed, upscale.
+- `Operation`: action such as generate, edit, analyze, speak, transcribe, embed, upscale, enhance.
 - `Domain`: resource the user works with, used by namespace routing.
 - `InputType`: optional media input categories.
 - `Parameter`: common parameter names shared across modalities.

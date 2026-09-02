@@ -21,6 +21,7 @@ pytestmark = pytest.mark.slow
             {"duration": 2, "resolution": "480p"},
         ),
         (Provider.XAI, "grok-imagine-video", {"duration": 2}),
+        (Provider.BFL, "flux-3-video", {"duration": 5, "resolution": "720p"}),
     ],
 )
 async def test_generate(
