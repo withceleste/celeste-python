@@ -30,8 +30,15 @@ OPENAI_VOICES = [
     )
 ]
 
-TTS1_VOICES = OPENAI_VOICES
-TTS1_HD_VOICES = OPENAI_VOICES
+# tts-1 and tts-1-hd accept only a subset of the built-in voices.
+# Source: https://developers.openai.com/api/docs/guides/text-to-speech
+TTS1_VOICES = [
+    voice
+    for voice in OPENAI_VOICES
+    if voice.id
+    in ("alloy", "ash", "coral", "echo", "fable", "onyx", "nova", "sage", "shimmer")
+]
+TTS1_HD_VOICES = TTS1_VOICES
 GPT4O_MINI_TTS_VOICES = OPENAI_VOICES
 
 __all__ = [
