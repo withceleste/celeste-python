@@ -46,6 +46,10 @@ GOOGLE_VEO_MODELS: list[Model] = [
             VideoParameter.ASPECT_RATIO: Choice(options=["16:9", "9:16"]),
             VideoParameter.RESOLUTION: Choice(options=["720p", "1080p", "4k"]),
             VideoParameter.DURATION: Choice(options=[4, 6, 8]),
+            VideoParameter.REFERENCE_IMAGES: ImagesConstraint(
+                supported_mime_types=GOOGLE_SUPPORTED_MIME_TYPES,
+                max_count=3,
+            ),
             VideoParameter.FIRST_FRAME: ImageConstraint(
                 supported_mime_types=GOOGLE_SUPPORTED_MIME_TYPES,
             ),
@@ -88,6 +92,19 @@ GOOGLE_OMNI_MODELS: list[Model] = [
             VideoParameter.ASPECT_RATIO: Choice(options=["16:9", "9:16"]),
             VideoParameter.DURATION: Range(min=3, max=10),
             VideoParameter.FIRST_FRAME: ImageConstraint(),
+            VideoParameter.REFERENCE_IMAGES: ImagesConstraint(),
+        },
+    ),
+    Model(
+        id="gemini-omni-1.1-flash",
+        provider=Provider.GOOGLE,
+        display_name="Gemini Omni Flash",
+        operations={Modality.VIDEOS: {Operation.GENERATE, Operation.EDIT}},
+        parameter_constraints={
+            VideoParameter.ASPECT_RATIO: Choice(options=["16:9", "9:16"]),
+            VideoParameter.DURATION: Range(min=3, max=10),
+            VideoParameter.FIRST_FRAME: ImageConstraint(),
+            VideoParameter.LAST_FRAME: ImageConstraint(),
             VideoParameter.REFERENCE_IMAGES: ImagesConstraint(),
         },
     ),

@@ -40,6 +40,15 @@ GOOGLE_SUPPORTED_LANGUAGES = [
     Language.ROMANIAN,
     Language.UKRAINIAN,
     Language.TAMIL,
+    Language.CZECH,
+    Language.DANISH,
+    Language.FILIPINO,
+    Language.FINNISH,
+    Language.GREEK,
+    Language.HUNGARIAN,
+    Language.MALAY,
+    Language.SLOVAK,
+    Language.SWEDISH,
 ]
 
 MODELS: list[Model] = [
