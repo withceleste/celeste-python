@@ -57,7 +57,7 @@ MODELS: list[Model] = [
                 min=512, max=24576, special_values=[-1, 0]
             ),
             # Interactions path (API key): thinking_level; Vertex/ADC: thinking_budget
-            TextParameter.THINKING_LEVEL: Choice(options=["low", "high"]),
+            TextParameter.THINKING_LEVEL: Choice(options=["low", "medium", "high"]),
             TextParameter.TOOLS: ToolSupport(
                 tools=[WebSearch, CodeExecution, UrlContext]
             ),
@@ -84,7 +84,7 @@ MODELS: list[Model] = [
                 min=128, max=32768, special_values=[-1]
             ),
             # Interactions path (API key): thinking_level; Vertex/ADC: thinking_budget
-            TextParameter.THINKING_LEVEL: Choice(options=["low", "high"]),
+            TextParameter.THINKING_LEVEL: Choice(options=["low", "medium", "high"]),
             TextParameter.TOOLS: ToolSupport(
                 tools=[WebSearch, CodeExecution, UrlContext]
             ),
