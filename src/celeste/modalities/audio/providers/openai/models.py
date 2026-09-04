@@ -107,6 +107,14 @@ MODELS: list[Model] = [
         parameter_constraints=_TRANSCRIBE_CONSTRAINTS,
     ),
     Model(
+        id="gpt-4o-transcribe-diarize",
+        provider=Provider.OPENAI,
+        display_name="GPT-4o Transcribe Diarize",
+        streaming=False,
+        operations={Modality.AUDIO: {Operation.TRANSCRIBE}},
+        parameter_constraints=_TRANSCRIBE_CONSTRAINTS,
+    ),
+    Model(
         id="whisper-1",
         provider=Provider.OPENAI,
         display_name="Whisper-1",
