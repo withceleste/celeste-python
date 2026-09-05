@@ -47,11 +47,8 @@ class ElevenLabsTextToSpeechStream:
     def _build_stream_metadata(
         self, raw_events: list[dict[str, Any]]
     ) -> dict[str, Any]:
-        """Filter to keep only metadata events.
-
-        ElevenLabs binary stream has no metadata events.
-        """
-        return super()._build_stream_metadata(raw_events)  # type: ignore[misc]
+        """Exclude audio chunks; the binary stream has no metadata events."""
+        return super()._build_stream_metadata([])  # type: ignore[misc]
 
 
 __all__ = ["ElevenLabsTextToSpeechStream"]

@@ -1,6 +1,7 @@
 """Unit tests for EmbeddingsInput validation."""
 
 import pytest
+from pydantic import ValidationError
 
 from celeste.artifacts import AudioArtifact, ImageArtifact, VideoArtifact
 from celeste.mime_types import AudioMimeType, ImageMimeType, VideoMimeType
@@ -59,18 +60,6 @@ def test_no_input_raises() -> None:
         EmbeddingsInput()
 
 
-def test_batch_text_with_image_raises() -> None:
-    img = ImageArtifact(data=_TEST_PNG_BYTES, mime_type=ImageMimeType.PNG)
-    with pytest.raises(Exception, match="Batch text"):
-        EmbeddingsInput(text=["a", "b"], images=img)
-
-
-def test_batch_text_with_video_raises() -> None:
-    vid = VideoArtifact(data=b"\x00" * 10, mime_type=VideoMimeType.MP4)
-    with pytest.raises(Exception, match="Batch text"):
-        EmbeddingsInput(text=["a", "b"], videos=vid)
-
-
 def test_audio_only() -> None:
     aud = AudioArtifact(data=b"\x00" * 10, mime_type=AudioMimeType.MP3)
     inp = EmbeddingsInput(audio=aud)
@@ -78,7 +67,20 @@ def test_audio_only() -> None:
     assert inp.text is None
 
 
-def test_batch_text_with_audio_raises() -> None:
-    aud = AudioArtifact(data=b"\x00" * 10, mime_type=AudioMimeType.MP3)
-    with pytest.raises(Exception, match="Batch text"):
-        EmbeddingsInput(text=["a", "b"], audio=aud)
+@pytest.mark.parametrize("batch_name", ["text", "images", "videos", "audio"])
+@pytest.mark.parametrize("other_name", ["text", "images", "videos", "audio"])
+def test_batches_cannot_silently_discard_other_inputs(
+    batch_name: str, other_name: str
+) -> None:
+    inputs = {
+        "text": "hello",
+        "images": ImageArtifact(data=_TEST_PNG_BYTES, mime_type=ImageMimeType.PNG),
+        "videos": VideoArtifact(data=b"video", mime_type=VideoMimeType.MP4),
+        "audio": AudioArtifact(data=b"audio", mime_type=AudioMimeType.MP3),
+    }
+    batch = {batch_name: [inputs[batch_name]]}
+    if batch_name == other_name:
+        assert getattr(EmbeddingsInput(**batch), batch_name) == batch[batch_name]
+    else:
+        with pytest.raises(ValidationError, match=f"Batch {batch_name}"):
+            EmbeddingsInput(**batch, **{other_name: inputs[other_name]})

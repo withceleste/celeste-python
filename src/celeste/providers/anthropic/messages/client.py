@@ -1,6 +1,6 @@
 """Anthropic Messages API client mixin."""
 
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from typing import Any, ClassVar
 
 from celeste.client import APIMixin
@@ -72,14 +72,14 @@ class AnthropicMessagesClient(APIMixin):
             )
         return f"{config.BASE_URL}{endpoint}"
 
-    def _build_headers(
+    async def _build_headers(
         self,
         beta_features: list[str] | None = None,
         extra_headers: dict[str, str] | None = None,
     ) -> dict[str, str]:
         """Build Anthropic request headers."""
         headers: dict[str, str] = {
-            **self._json_headers(),
+            **(await self._json_headers()),
             config.HEADER_ANTHROPIC_VERSION: config.ANTHROPIC_VERSION,
         }
         if beta_features:
@@ -129,7 +129,7 @@ class AnthropicMessagesClient(APIMixin):
             request_body["max_tokens"] = self._resolve_max_tokens()
 
         beta_features: list[str] = request_body.pop("_beta_features", [])
-        headers = self._build_headers(
+        headers = await self._build_headers(
             beta_features=beta_features, extra_headers=extra_headers
         )
 
@@ -145,21 +145,21 @@ class AnthropicMessagesClient(APIMixin):
         data: dict[str, Any] = response.json()
         return data
 
-    def _make_stream_request(
+    async def _make_stream_request(
         self,
         request_body: dict[str, Any],
         *,
         endpoint: str | None = None,
         extra_headers: dict[str, str] | None = None,
         **parameters: Any,
-    ) -> AsyncIterator[dict[str, Any]]:
+    ) -> AsyncGenerator[dict[str, Any], None]:
         """Make streaming request to Anthropic Messages API endpoint."""
         # Apply max_tokens default if not set (Anthropic requires it)
         if "max_tokens" not in request_body:
             request_body["max_tokens"] = self._resolve_max_tokens()
 
         beta_features: list[str] = request_body.pop("_beta_features", [])
-        headers = self._build_headers(
+        headers = await self._build_headers(
             beta_features=beta_features, extra_headers=extra_headers
         )
 

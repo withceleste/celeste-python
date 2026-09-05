@@ -53,9 +53,18 @@ class GoogleVertexTextStream(_GoogleGenerateContentStream, TextStream):
         metadata = getattr(self, "_grounding_metadata", None)
         if not metadata:
             return None
+        parts = []
+        for fragments in self._grounding_part_fragments:
+            part = fragments[0]
+            if isinstance(part.get("text"), str):
+                part = {
+                    **part,
+                    "text": "".join(fragment["text"] for fragment in fragments),
+                }
+            parts.append(part)
         return map_grounding_vertex(
             merge_grounding_metadata(metadata),
-            self._aggregate_content(chunks),
+            parts,
         )
 
     def _aggregate_tool_calls(
@@ -198,7 +207,8 @@ class GoogleVertexTextClient(GoogleGenerateContentMixin, TextClient):
         meta = parse_grounding_metadata(response_data)
         if meta is None:
             return None
-        return map_grounding_vertex(meta, self._parse_content(response_data))
+        parts = response_data["candidates"][0].get("content", {}).get("parts", [])
+        return map_grounding_vertex(meta, parts)
 
     def _parse_tool_calls(self, response_data: dict[str, Any]) -> list[ToolCall]:
         """Parse tool calls from Google response."""

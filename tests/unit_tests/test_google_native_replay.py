@@ -126,3 +126,11 @@ def test_google_vertex_non_text_parts_do_not_emit_text() -> None:
         assert object.__new__(GoogleVertexTextClient)._parse_content(response) == ""
         assert stream._parse_chunk_content(response) is None
     assert stream._parse_chunk_content({}) is None
+
+
+async def test_google_stream_joins_thought_parts() -> None:
+    parts = [{"text": text, "thought": True} for text in ("Thinking", " more")]
+    response = {"candidates": [{"content": {"parts": parts}}]}
+    stream = GoogleVertexTextStream(_async_iter([response]))
+    _ = [chunk async for chunk in stream]
+    assert stream.output.reasoning == "Thinking more"

@@ -2,7 +2,8 @@
 
 import warnings
 from abc import ABC, abstractmethod
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
+from functools import partial
 from json import JSONDecodeError
 from typing import Any, ClassVar, Unpack
 
@@ -44,7 +45,7 @@ class APIMixin(ABC):
         class OpenAIResponsesMixin(APIMixin):
             async def _make_request(self, request_body, **parameters):
                 request_body["model"] = self.model.id  # Type-safe!
-                headers = {**self.auth.get_headers(), ...}
+                headers = {**(await self.auth.aget_headers()), ...}
                 return await self.http_client.post(...)
 
         class OpenAITextClient(OpenAIResponsesMixin, TextClient):
@@ -64,11 +65,14 @@ class APIMixin(ABC):
         """HTTP client with connection pooling for this provider."""
         ...
 
-    def _json_headers(
+    async def _json_headers(
         self, extra_headers: dict[str, str] | None = None
     ) -> dict[str, str]:
         """Build standard JSON request headers with auth."""
-        headers = {**self.auth.get_headers(), "Content-Type": ApplicationMimeType.JSON}
+        headers = {
+            **(await self.auth.aget_headers()),
+            "Content-Type": ApplicationMimeType.JSON,
+        }
         if extra_headers:
             headers.update(extra_headers)
         return headers
@@ -341,13 +345,16 @@ class ModalityClient[
             attributes={**request_attrs, "gen_ai.request.stream": True},
         )
         telemetry.add_input_event(span, inputs)
-        sse_iterator = self._make_stream_request(
-            request_body,
-            endpoint=endpoint,
-            extra_headers=extra_headers,
-            **parameters,
+        sse_iterator = enrich_stream_errors(
+            partial(
+                self._make_stream_request,
+                request_body,
+                endpoint=endpoint,
+                extra_headers=extra_headers,
+                **parameters,
+            ),
+            self._handle_error_response,
         )
-        sse_iterator = enrich_stream_errors(sse_iterator, self._handle_error_response)
         sse_iterator = telemetry.bind_first_pull_to_span(sse_iterator, span)
         stream = stream_class(
             sse_iterator,
@@ -418,15 +425,15 @@ class ModalityClient[
         """Make HTTP request(s) and return response data."""
         ...
 
-    def _make_stream_request(
+    async def _make_stream_request(
         self,
         request_body: dict[str, Any],
         *,
         endpoint: str | None = None,
         extra_headers: dict[str, str] | None = None,
         **parameters: Unpack[Params],  # type: ignore[misc]
-    ) -> AsyncIterator[dict[str, Any]]:
-        """Make HTTP streaming request and return async iterator of events."""
+    ) -> AsyncGenerator[dict[str, Any], None]:
+        """Return an unstarted transport generator; the shared stream owns its lifetime."""
         raise StreamingNotSupportedError(model_id=self.model.id)
 
     def _stream_class(self) -> type[Stream[Out, Params, Chunk]]:

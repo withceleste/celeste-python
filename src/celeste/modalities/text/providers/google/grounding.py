@@ -15,8 +15,18 @@ def _byte_offset_to_char_offset(text: str, offset: int) -> int | None:
         return None
 
 
-def map_grounding_vertex(grounding_metadata: dict[str, Any], text: str) -> Grounding:
+def map_grounding_vertex(
+    grounding_metadata: dict[str, Any], parts: list[dict[str, Any]]
+) -> Grounding:
     """Map generateContent groundingMetadata to text grounding."""
+    text_parts: list[tuple[str | None, int]] = []
+    offset = 0
+    for part in parts:
+        text = part.get("text") if not part.get("thought") else None
+        text_parts.append((text, offset))
+        if isinstance(text, str):
+            offset += len(text)
+
     sources: list[GroundingSource] = []
     source_indices: dict[int, int] = {}
     for index, chunk in enumerate(grounding_metadata.get("groundingChunks", [])):
@@ -40,13 +50,22 @@ def map_grounding_vertex(grounding_metadata: dict[str, Any], text: str) -> Groun
         segment = support.get("segment", {})
         if not isinstance(segment, dict):
             continue
-        start = segment.get("startIndex")
+        part_index = segment.get("partIndex", 0)
+        if not isinstance(part_index, int) or not 0 <= part_index < len(text_parts):
+            continue
+        text, offset = text_parts[part_index]
+        if not isinstance(text, str):
+            continue
+        start = segment.get("startIndex", 0)
         end = segment.get("endIndex")
         if not isinstance(start, int) or not isinstance(end, int):
             continue
         start = _byte_offset_to_char_offset(text, start)
         end = _byte_offset_to_char_offset(text, end)
-        if start is None or end is None:
+        if start is None or end is None or start > end:
+            continue
+        cited_text = segment.get("text")
+        if isinstance(cited_text, str) and text[start:end] != cited_text:
             continue
         raw_indices = support.get("groundingChunkIndices", [])
         indices = [
@@ -56,10 +75,10 @@ def map_grounding_vertex(grounding_metadata: dict[str, Any], text: str) -> Groun
         ]
         citations.append(
             Citation(
-                start=start,
-                end=end,
+                start=offset + start,
+                end=offset + end,
                 source_indices=indices,
-                cited_text=segment.get("text"),
+                cited_text=cited_text,
             )
         )
 

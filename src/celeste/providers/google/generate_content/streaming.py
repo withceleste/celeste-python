@@ -20,21 +20,34 @@ class GoogleGenerateContentStream:
 
     _error_type_fields: ClassVar[tuple[str, ...]] = ("status", "code")
     _content_parts: list[dict[str, Any]]
+    _grounding_part_fragments: list[list[dict[str, Any]]]
     _grounding_metadata: list[dict[str, Any]]
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:  # noqa: ANN401
         super().__init__(*args, **kwargs)
         self._content_parts = []
+        self._grounding_part_fragments = []
         self._grounding_metadata = []
 
     def _parse_chunk(self, event_data: dict[str, Any]) -> Any | None:  # noqa: ANN401
         """Capture native Parts and grounding before normal chunk filtering."""
         candidates = event_data.get("candidates", [])
         if candidates:
-            self._content_parts.extend(
-                candidates[0].get("content", {}).get("parts", [])
-            )
-        for candidate in candidates:
+            candidate = candidates[0]
+            parts = candidate.get("content", {}).get("parts", [])
+            self._content_parts.extend(parts)
+            # Treat adjacent SSE text as a continuation; keep in-event Parts distinct.
+            if (
+                self._grounding_part_fragments
+                and parts
+                and isinstance(self._grounding_part_fragments[-1][-1].get("text"), str)
+                and isinstance(parts[0].get("text"), str)
+                and bool(self._grounding_part_fragments[-1][-1].get("thought"))
+                == bool(parts[0].get("thought"))
+            ):
+                self._grounding_part_fragments[-1].append(parts[0])
+                parts = parts[1:]
+            self._grounding_part_fragments.extend([part] for part in parts)
             meta = candidate.get("groundingMetadata")
             if isinstance(meta, dict):
                 self._grounding_metadata.append(meta)
@@ -64,11 +77,10 @@ class GoogleGenerateContentStream:
             return None
 
         parts = candidates[0].get("content", {}).get("parts", [])
-        for p in parts:
-            if p.get("thought") and "text" in p:
-                return p["text"]
-
-        return None
+        return (
+            "".join(p["text"] for p in parts if p.get("thought") and p.get("text"))
+            or None
+        )
 
     def _parse_chunk_usage(
         self, event_data: dict[str, Any]
