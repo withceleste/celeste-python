@@ -67,7 +67,7 @@ class GoogleImagenClient(APIMixin):
         if endpoint is None:
             endpoint = config.GoogleImagenEndpoint.CREATE_IMAGE
 
-        headers = self._json_headers(extra_headers)
+        headers = await self._json_headers(extra_headers)
         response = await self.http_client.post(
             self._build_url(endpoint),
             headers=headers,

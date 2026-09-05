@@ -1,6 +1,7 @@
 """Google GenerateContent API client mixin."""
 
 from collections.abc import AsyncIterator
+from contextlib import aclosing
 from typing import Any, ClassVar
 
 from celeste.client import APIMixin
@@ -70,7 +71,7 @@ class GoogleGenerateContentClient(APIMixin):
         if endpoint is None:
             endpoint = config.GoogleGenerateContentEndpoint.GENERATE_CONTENT
 
-        headers = self._json_headers(extra_headers)
+        headers = await self._json_headers(extra_headers)
         response = await self.http_client.post(
             url=self._build_url(endpoint),
             headers=headers,
@@ -80,7 +81,7 @@ class GoogleGenerateContentClient(APIMixin):
         data: dict[str, Any] = response.json()
         return data
 
-    def _make_stream_request(
+    async def _make_stream_request(
         self,
         request_body: dict[str, Any],
         *,
@@ -92,12 +93,16 @@ class GoogleGenerateContentClient(APIMixin):
         if endpoint is None:
             endpoint = config.GoogleGenerateContentEndpoint.STREAM_GENERATE_CONTENT
 
-        headers = self._json_headers(extra_headers)
-        return self.http_client.stream_post(
-            url=self._build_url(endpoint),
-            headers=headers,
-            json_body=request_body,
-        )
+        headers = await self._json_headers(extra_headers)
+        async with aclosing(
+            self.http_client.stream_post(
+                url=self._build_url(endpoint),
+                headers=headers,
+                json_body=request_body,
+            )
+        ) as events:
+            async for event in events:
+                yield event
 
     @staticmethod
     def map_usage_fields(usage_data: dict[str, Any]) -> dict[str, int | float | None]:

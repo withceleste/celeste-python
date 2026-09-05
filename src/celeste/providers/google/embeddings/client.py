@@ -108,8 +108,8 @@ class GoogleEmbeddingsClient(APIMixin):
         if endpoint is None:
             endpoint = endpoint_template
 
+        headers = await self._json_headers(extra_headers)
         url = self._build_url(endpoint)
-        headers = self._json_headers(extra_headers)
 
         response = await self.http_client.post(
             url,

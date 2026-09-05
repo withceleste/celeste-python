@@ -13,6 +13,10 @@ class Authentication(ABC, BaseModel):
         """Return authentication headers for HTTP requests."""
         ...
 
+    async def aget_headers(self) -> dict[str, str]:
+        """Return headers asynchronously; blocking credential sources override this."""
+        return self.get_headers()
+
 
 class AuthHeader(Authentication):
     """Authentication via HTTP header with configurable header name and prefix.

@@ -67,7 +67,7 @@ class BytePlusVideosClient(APIMixin):
         2. Poll CONTENT_STATUS endpoint until succeeded/failed/canceled
         3. Return response with final status data
         """
-        headers = self._json_headers(extra_headers)
+        headers = await self._json_headers(extra_headers)
 
         if endpoint is None:
             endpoint = config.BytePlusVideosEndpoint.CREATE_VIDEO

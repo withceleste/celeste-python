@@ -24,11 +24,18 @@ class OpenResponsesStream:
     """
 
     _error_type_fields: ClassVar[tuple[str, ...]] = ("code",)
+    _terminal_events: ClassVar[tuple[str, ...]] = (
+        "response.completed",
+        "response.incomplete",
+    )
 
     def _parse_stream_error(self, event_data: dict[str, Any]) -> dict[str, Any] | None:
-        """Detect Responses API error events (flat shape: code/message at root level)."""
+        """Normalize error events and failed terminal responses."""
         if event_data.get("type") == "error":
             return self._build_error_from_value(event_data)  # type: ignore[attr-defined, no-any-return]
+        if event_data.get("type") == "response.failed":
+            error = event_data.get("response", {}).get("error")
+            return self._build_error_from_value(error)  # type: ignore[attr-defined, no-any-return]
         return None
 
     def _parse_chunk_content(self, event_data: dict[str, Any]) -> str | None:
@@ -68,7 +75,7 @@ class OpenResponsesStream:
     ) -> dict[str, int | float | None] | None:
         """Extract and normalize usage from SSE event."""
         event_type = event_data.get("type")
-        if event_type == "response.completed":
+        if event_type in self._terminal_events:
             response_data = event_data.get("response", {})
             usage_data = response_data.get("usage")
             if usage_data:
@@ -78,9 +85,9 @@ class OpenResponsesStream:
     def _aggregate_raw_response(
         self, chunks: list[Any], raw_events: list[dict[str, Any]]
     ) -> dict[str, Any] | None:
-        """Unwrap the final Response object from the response.completed event."""
+        """Unwrap the final Response object from a terminal event."""
         for event in reversed(raw_events):
-            if event.get("type") == "response.completed":
+            if event.get("type") in self._terminal_events:
                 response = event.get("response")
                 return response if isinstance(response, dict) else None
         return None
@@ -90,9 +97,12 @@ class OpenResponsesStream:
     ) -> FinishReason | None:
         """Extract finish reason from SSE event."""
         event_type = event_data.get("type")
-        if event_type == "response.completed":
+        if event_type in self._terminal_events:
             response_data = event_data.get("response", {})
             status = response_data.get("status")
+            if status == "incomplete":
+                details = response_data.get("incomplete_details") or {}
+                return FinishReason(reason=details.get("reason") or "incomplete")
             if status == "completed":
                 return FinishReason(reason="completed")
         return None
@@ -105,7 +115,7 @@ class OpenResponsesStream:
             e
             for e in raw_events
             if "delta" not in e.get("type", "")
-            and e.get("type") != "response.completed"
+            and e.get("type") not in self._terminal_events
         ]
         return super()._build_stream_metadata(filtered)  # type: ignore[misc, no-any-return]
 

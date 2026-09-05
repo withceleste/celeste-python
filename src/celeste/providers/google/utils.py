@@ -3,8 +3,47 @@
 import base64
 from typing import Any
 
+import httpx
+
 from celeste.artifacts import Artifact
+from celeste.auth import Authentication
+from celeste.http import DEFAULT_TIMEOUT, HTTPClient
 from celeste.utils import detect_mime_type
+
+from .auth import GoogleADC
+
+
+async def download_video(
+    http_client: HTTPClient,
+    auth: Authentication,
+    url: str,
+    extra_headers: dict[str, str] | None = None,
+    timeout: float = DEFAULT_TIMEOUT,
+) -> httpx.Response:
+    """Download video, authenticating only the matching Google origin on each hop."""
+    target = httpx.URL(
+        url.replace("gs://", "https://storage.googleapis.com/", 1)
+        if url.startswith("gs://")
+        else url
+    )
+    auth_host = (
+        "storage.googleapis.com"
+        if isinstance(auth, GoogleADC)
+        else "generativelanguage.googleapis.com"
+    )
+    for _ in range(21):
+        headers = {}
+        if (target.scheme, target.host, target.port) == ("https", auth_host, None):
+            headers = {**await auth.aget_headers(), **(extra_headers or {})}
+        response = await http_client.get(
+            str(target), headers=headers, timeout=timeout, follow_redirects=False
+        )
+        if response.next_request is None:
+            return response
+        target = response.next_request.url
+    raise httpx.TooManyRedirects(
+        "Exceeded maximum allowed redirects.", request=response.request
+    )
 
 
 def build_media_part(artifact: Artifact) -> dict[str, Any]:

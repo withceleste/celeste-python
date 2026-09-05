@@ -39,7 +39,7 @@ class FalQueueClient(APIMixin):
     ) -> dict[str, Any]:
         """Submit to fal queue, poll until COMPLETED, return result payload."""
         headers = {
-            **self._json_headers(extra_headers),
+            **(await self._json_headers(extra_headers)),
             "Accept": ApplicationMimeType.JSON,
         }
 
@@ -62,7 +62,7 @@ class FalQueueClient(APIMixin):
             raise ValueError(msg)
 
         poll_headers = self._merge_headers(
-            {**self.auth.get_headers(), "Accept": ApplicationMimeType.JSON},
+            {**(await self.auth.aget_headers()), "Accept": ApplicationMimeType.JSON},
             extra_headers,
         )
         start_time = time.monotonic()

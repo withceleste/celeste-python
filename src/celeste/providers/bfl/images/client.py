@@ -51,7 +51,7 @@ class BFLImagesClient(APIMixin):
         3. Return response with _submit_metadata for usage parsing
         """
         headers = {
-            **self._json_headers(extra_headers),
+            **(await self._json_headers(extra_headers)),
             "Accept": ApplicationMimeType.JSON,
         }
 
@@ -77,7 +77,7 @@ class BFLImagesClient(APIMixin):
         # Phase 2: Poll for completion
         start_time = time.monotonic()
         poll_headers = self._merge_headers(
-            {**self.auth.get_headers(), "Accept": ApplicationMimeType.JSON},
+            {**(await self.auth.aget_headers()), "Accept": ApplicationMimeType.JSON},
             extra_headers,
         )
 

@@ -64,7 +64,7 @@ class GradiumTextToSpeechClient(APIMixin):
         if endpoint is None:
             endpoint = config.GradiumTextToSpeechEndpoint.CREATE_SPEECH
         url = f"{config.BASE_URL}{endpoint}"
-        headers = self._merge_headers(self.auth.get_headers(), extra_headers)
+        headers = self._merge_headers(await self.auth.aget_headers(), extra_headers)
 
         async with ws_connect(url, additional_headers=headers) as ws:
             # 1. Send setup message

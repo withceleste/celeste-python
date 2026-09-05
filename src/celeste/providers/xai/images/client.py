@@ -54,7 +54,7 @@ class XAIImagesClient(APIMixin):
         if endpoint is None:
             endpoint = config.XAIImagesEndpoint.CREATE_IMAGE
 
-        headers = self._json_headers(extra_headers)
+        headers = await self._json_headers(extra_headers)
 
         response = await self.http_client.post(
             f"{config.BASE_URL}{endpoint}",

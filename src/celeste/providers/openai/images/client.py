@@ -6,6 +6,7 @@ Provides shared implementation for capabilities using the OpenAI Images API:
 """
 
 from collections.abc import AsyncIterator
+from contextlib import aclosing
 from typing import Any, ClassVar
 
 from celeste.client import APIMixin
@@ -77,7 +78,7 @@ class OpenAIImagesClient(APIMixin):
         extra_headers: dict[str, str] | None = None,
     ) -> dict[str, Any]:
         """Make JSON request for generate operations."""
-        headers = self._json_headers(extra_headers)
+        headers = await self._json_headers(extra_headers)
 
         response = await self.http_client.post(
             f"{config.BASE_URL}{endpoint}",
@@ -117,7 +118,7 @@ class OpenAIImagesClient(APIMixin):
 
         response = await self.http_client.post_multipart(
             f"{config.BASE_URL}{endpoint}",
-            headers=self._merge_headers(self.auth.get_headers(), extra_headers),
+            headers=self._merge_headers(await self.auth.aget_headers(), extra_headers),
             files=files,
             data=data,
         )
@@ -125,7 +126,7 @@ class OpenAIImagesClient(APIMixin):
         response_data: dict[str, Any] = response.json()
         return response_data
 
-    def _make_stream_request(
+    async def _make_stream_request(
         self,
         request_body: dict[str, Any],
         *,
@@ -150,13 +151,17 @@ class OpenAIImagesClient(APIMixin):
             request_body["images"] = [{"image_url": build_data_url(artifact)}]
             endpoint = config.OpenAIImagesEndpoint.CREATE_EDIT
 
-        headers = self._json_headers(extra_headers)
+        headers = await self._json_headers(extra_headers)
 
-        return self.http_client.stream_post(
-            f"{config.BASE_URL}{endpoint}",
-            headers=headers,
-            json_body=request_body,
-        )
+        async with aclosing(
+            self.http_client.stream_post(
+                f"{config.BASE_URL}{endpoint}",
+                headers=headers,
+                json_body=request_body,
+            )
+        ) as events:
+            async for event in events:
+                yield event
 
     @staticmethod
     def map_usage_fields(usage_data: dict[str, Any]) -> dict[str, int | float | None]:

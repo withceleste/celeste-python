@@ -65,10 +65,13 @@ TOOL_MAPPERS: list[ToolMapper] = [
 
 
 def parse_tool_calls(response_data: dict[str, Any]) -> list[ToolCall]:
-    """Parse tool calls from Responses API output."""
+    """Parse executable tool calls, leaving unfinished items in the raw response."""
     tool_calls: list[ToolCall] = []
     for item in response_data.get("output", []):
-        if item.get("type") != "function_call":
+        if item.get("type") != "function_call" or item.get("status") in (
+            "incomplete",
+            "in_progress",
+        ):
             continue
         raw_args = item.get("arguments")
         if isinstance(raw_args, str):

@@ -99,7 +99,7 @@ class TopazLabsImageClient(APIMixin):
 
         response = await self.http_client.post_multipart(
             f"{config.BASE_URL}{endpoint}",
-            headers=self._merge_headers(self.auth.get_headers(), extra_headers),
+            headers=self._merge_headers(await self.auth.aget_headers(), extra_headers),
             files=files,
             data=data,
         )
@@ -115,7 +115,7 @@ class TopazLabsImageClient(APIMixin):
     ) -> dict[str, Any]:
         """Poll status until Completed or terminal failure."""
         headers = self._merge_headers(
-            {**self.auth.get_headers(), "Accept": ApplicationMimeType.JSON},
+            {**(await self.auth.aget_headers()), "Accept": ApplicationMimeType.JSON},
             extra_headers,
         )
         status_url = (
@@ -155,7 +155,7 @@ class TopazLabsImageClient(APIMixin):
     ) -> dict[str, Any]:
         """Fetch presigned download URL for a completed process."""
         headers = self._merge_headers(
-            {**self.auth.get_headers(), "Accept": ApplicationMimeType.JSON},
+            {**(await self.auth.aget_headers()), "Accept": ApplicationMimeType.JSON},
             extra_headers,
         )
         download_url = (

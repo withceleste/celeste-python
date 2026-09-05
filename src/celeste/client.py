@@ -44,7 +44,7 @@ class APIMixin(ABC):
         class OpenAIResponsesMixin(APIMixin):
             async def _make_request(self, request_body, **parameters):
                 request_body["model"] = self.model.id  # Type-safe!
-                headers = {**self.auth.get_headers(), ...}
+                headers = {**(await self.auth.aget_headers()), ...}
                 return await self.http_client.post(...)
 
         class OpenAITextClient(OpenAIResponsesMixin, TextClient):
@@ -64,11 +64,14 @@ class APIMixin(ABC):
         """HTTP client with connection pooling for this provider."""
         ...
 
-    def _json_headers(
+    async def _json_headers(
         self, extra_headers: dict[str, str] | None = None
     ) -> dict[str, str]:
         """Build standard JSON request headers with auth."""
-        headers = {**self.auth.get_headers(), "Content-Type": ApplicationMimeType.JSON}
+        headers = {
+            **(await self.auth.aget_headers()),
+            "Content-Type": ApplicationMimeType.JSON,
+        }
         if extra_headers:
             headers.update(extra_headers)
         return headers

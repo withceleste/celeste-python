@@ -2,6 +2,7 @@
 
 import json
 from collections.abc import AsyncIterator
+from contextlib import aclosing
 from typing import Any, ClassVar
 
 from celeste.client import APIMixin
@@ -59,7 +60,7 @@ class OllamaGenerateClient(APIMixin):
         if endpoint is None:
             endpoint = config.OllamaGenerateEndpoint.GENERATE
 
-        headers = self._json_headers(extra_headers)
+        headers = await self._json_headers(extra_headers)
 
         response = await self.http_client.post(
             self._build_url(endpoint),
@@ -70,7 +71,7 @@ class OllamaGenerateClient(APIMixin):
         # NDJSON: Ollama returns progress lines, final line has done=true + image
         return json.loads(response.text.strip().splitlines()[-1])
 
-    def _make_stream_request(
+    async def _make_stream_request(
         self,
         request_body: dict[str, Any],
         *,
@@ -82,13 +83,17 @@ class OllamaGenerateClient(APIMixin):
         if endpoint is None:
             endpoint = config.OllamaGenerateEndpoint.GENERATE
 
-        headers = self._json_headers(extra_headers)
+        headers = await self._json_headers(extra_headers)
 
-        return self.http_client.stream_post_ndjson(
-            self._build_url(endpoint),
-            headers=headers,
-            json_body=request_body,
-        )
+        async with aclosing(
+            self.http_client.stream_post_ndjson(
+                self._build_url(endpoint),
+                headers=headers,
+                json_body=request_body,
+            )
+        ) as events:
+            async for event in events:
+                yield event
 
     @staticmethod
     def map_usage_fields(usage_data: dict[str, Any]) -> dict[str, int | float | None]:

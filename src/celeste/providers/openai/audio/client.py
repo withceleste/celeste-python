@@ -92,7 +92,7 @@ class OpenAIAudioClient(APIMixin):
                 request_body, endpoint=endpoint, extra_headers=extra_headers
             )
 
-        headers = self._json_headers(extra_headers)
+        headers = await self._json_headers(extra_headers)
         response = await self.http_client.post(
             f"{config.BASE_URL}{endpoint}",
             headers=headers,
@@ -130,7 +130,7 @@ class OpenAIAudioClient(APIMixin):
 
         response = await self.http_client.post_multipart(
             f"{config.BASE_URL}{endpoint}",
-            headers=self._merge_headers(self.auth.get_headers(), extra_headers),
+            headers=self._merge_headers(await self.auth.aget_headers(), extra_headers),
             files=files,
             data=data,
         )

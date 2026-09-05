@@ -1,5 +1,6 @@
 """Streaming support for Celeste."""
 
+import asyncio
 from abc import ABC, abstractmethod
 from collections.abc import AsyncIterator, Callable, Iterator
 from contextlib import suppress
@@ -29,6 +30,9 @@ async def enrich_stream_errors(
     except httpx.HTTPStatusError as e:
         error_handler(e.response)
         raise  # Unreachable — error_handler always raises for error responses
+    finally:
+        if hasattr(iterator, "aclose"):
+            await iterator.aclose()
 
 
 class Stream[Out: Output, Params: Parameters, Chunk: ChunkBase](ABC):
@@ -60,6 +64,8 @@ class Stream[Out: Output, Params: Parameters, Chunk: ChunkBase](ABC):
         self._sse_iterator = sse_iterator
         self._chunks: list[Chunk] = []
         self._closed = False
+        self._pending: asyncio.Future[dict[str, Any]] | None = None
+        self._close_task: asyncio.Task[None] | None = None
         self._output: Out | None = None
         self._parameters = parameters
         self._transform_output = transform_output
@@ -338,9 +344,20 @@ class Stream[Out: Output, Params: Parameters, Chunk: ChunkBase](ABC):
         """Yield next chunk from stream."""
         if self._closed:
             raise StopAsyncIteration
+        if self._pending is not None:
+            raise RuntimeError("Stream already has a pending next chunk")
 
         try:
-            async for event in self._sse_iterator:
+            while True:
+                self._pending = asyncio.ensure_future(anext(self._sse_iterator))
+                try:
+                    event = await self._pending
+                except StopAsyncIteration:
+                    break
+                finally:
+                    self._pending = None
+                if self._closed:
+                    raise StopAsyncIteration
                 chunk = self._parse_chunk(event)
                 if chunk is not None:
                     self._chunks.append(chunk)
@@ -349,11 +366,11 @@ class Stream[Out: Output, Params: Parameters, Chunk: ChunkBase](ABC):
             # Stream exhausted naturally
             if self._chunks:
                 self._output = self._parse_output(self._chunks, **self._parameters)
-            self._closed = True
-        except Exception:
+        except BaseException:
             await self.aclose()
             raise
 
+        await self.aclose()
         raise StopAsyncIteration
 
     # Iterator protocol (sync)
@@ -416,20 +433,29 @@ class Stream[Out: Output, Params: Parameters, Chunk: ChunkBase](ABC):
 
     async def aclose(self) -> None:
         """Explicitly close stream and cleanup resources."""
-        if self._closed:
-            return
+        task = self._close_task
+        if task is None:
+            if self._closed:
+                return
+            self._closed = True
+            task = asyncio.create_task(self._close_iterator(self._pending))
+            if not task.done():
+                self._close_task = task
+        await asyncio.shield(task)
 
-        self._closed = True
-
-        # Fast path: skip if iterator is currently running
-        if getattr(self._sse_iterator, "ag_running", False):
-            return
-
-        # Close SSE iterator (httpx-sse connection)
-        # Use suppress to handle TOCTOU race between ag_running check and aclose
-        if hasattr(self._sse_iterator, "aclose"):
-            with suppress(RuntimeError):
+    async def _close_iterator(
+        self, pending: asyncio.Future[dict[str, Any]] | None
+    ) -> None:
+        """Stop a pending read before closing the iterator that owns the transport."""
+        try:
+            if pending is not None:
+                pending.cancel()
+                with suppress(asyncio.CancelledError, Exception):
+                    await pending
+            if hasattr(self._sse_iterator, "aclose"):
                 await self._sse_iterator.aclose()
+        finally:
+            self._close_task = None
 
 
 __all__ = ["Stream", "enrich_stream_errors"]

@@ -67,7 +67,7 @@ class XAIVideosClient(APIMixin):
         if endpoint is None:
             endpoint = config.XAIVideosEndpoint.CREATE_VIDEO
 
-        headers = self._json_headers(extra_headers)
+        headers = await self._json_headers(extra_headers)
 
         # Submit video generation request
         response = await self.http_client.post(
