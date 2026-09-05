@@ -120,8 +120,8 @@ class {Provider}{Modality}Client({Modality}Client):
         return self._strategy._build_metadata(response_data)  # type: ignore[union-attr]
 
     # Streaming path — delete if this provider does not stream this modality:
-    # def _make_stream_request(self, request_body, *, endpoint=None, extra_headers=None, **parameters):
-    #     return self._strategy._make_stream_request(
+    # async def _make_stream_request(self, request_body, *, endpoint=None, extra_headers=None, **parameters):
+    #     return await self._strategy._make_stream_request(
     #         request_body, endpoint=endpoint, extra_headers=extra_headers, **parameters
     #     )
     #

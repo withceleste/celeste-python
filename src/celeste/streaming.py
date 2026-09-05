@@ -2,8 +2,8 @@
 
 import asyncio
 from abc import ABC, abstractmethod
-from collections.abc import AsyncIterator, Callable, Iterator
-from contextlib import suppress
+from collections.abc import AsyncGenerator, AsyncIterator, Awaitable, Callable, Iterator
+from contextlib import aclosing, suppress
 from types import TracebackType
 from typing import Any, ClassVar, Self, Unpack
 
@@ -20,19 +20,17 @@ from celeste.types import RawUsage, ToolActivity
 
 
 async def enrich_stream_errors(
-    iterator: AsyncIterator[dict[str, Any]],
+    factory: Callable[[], Awaitable[AsyncGenerator[dict[str, Any], None]]],
     error_handler: Callable[[httpx.Response], None],
 ) -> AsyncIterator[dict[str, Any]]:
-    """Wrap stream iterator to enrich HTTP errors with provider-specific messages."""
+    """Lazily create and close the transport iterator, enriching HTTP errors."""
     try:
-        async for event in iterator:
-            yield event
+        async with aclosing(await factory()) as iterator:
+            async for event in iterator:
+                yield event
     except httpx.HTTPStatusError as e:
         error_handler(e.response)
         raise  # Unreachable — error_handler always raises for error responses
-    finally:
-        if hasattr(iterator, "aclose"):
-            await iterator.aclose()
 
 
 class Stream[Out: Output, Params: Parameters, Chunk: ChunkBase](ABC):

@@ -7,7 +7,7 @@ Provides shared implementation for capabilities using the OpenAI Videos API:
 import asyncio
 import base64
 import logging
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from typing import Any, ClassVar
 
 from celeste.client import APIMixin
@@ -58,14 +58,14 @@ class OpenAIVideosClient(APIMixin):
             request_body["stream"] = True
         return request_body
 
-    def _make_stream_request(
+    async def _make_stream_request(
         self,
         request_body: dict[str, Any],
         *,
         endpoint: str | None = None,
         extra_headers: dict[str, str] | None = None,
         **parameters: Any,
-    ) -> AsyncIterator[dict[str, Any]]:
+    ) -> AsyncGenerator[dict[str, Any], None]:
         """OpenAI Videos API does not support SSE streaming in this client."""
         raise StreamingNotSupportedError(model_id=self.model.id)
 

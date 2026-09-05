@@ -5,8 +5,7 @@ Provides shared implementation for capabilities using the OpenAI Images API:
 - image-edit (edits endpoint)
 """
 
-from collections.abc import AsyncIterator
-from contextlib import aclosing
+from collections.abc import AsyncGenerator
 from typing import Any, ClassVar
 
 from celeste.client import APIMixin
@@ -133,7 +132,7 @@ class OpenAIImagesClient(APIMixin):
         endpoint: str | None = None,
         extra_headers: dict[str, str] | None = None,
         **parameters: Any,
-    ) -> AsyncIterator[dict[str, Any]]:
+    ) -> AsyncGenerator[dict[str, Any], None]:
         """Make streaming request to OpenAI Images API.
 
         Streaming is only supported for gpt-image-1.
@@ -153,15 +152,11 @@ class OpenAIImagesClient(APIMixin):
 
         headers = await self._json_headers(extra_headers)
 
-        async with aclosing(
-            self.http_client.stream_post(
-                f"{config.BASE_URL}{endpoint}",
-                headers=headers,
-                json_body=request_body,
-            )
-        ) as events:
-            async for event in events:
-                yield event
+        return self.http_client.stream_post(
+            f"{config.BASE_URL}{endpoint}",
+            headers=headers,
+            json_body=request_body,
+        )
 
     @staticmethod
     def map_usage_fields(usage_data: dict[str, Any]) -> dict[str, int | float | None]:

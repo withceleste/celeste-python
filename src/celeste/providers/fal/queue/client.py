@@ -2,7 +2,7 @@
 
 import asyncio
 import time
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from typing import Any
 
 from celeste.client import APIMixin
@@ -99,14 +99,14 @@ class FalQueueClient(APIMixin):
 
             await asyncio.sleep(config.POLLING_INTERVAL)
 
-    def _make_stream_request(
+    async def _make_stream_request(
         self,
         request_body: dict[str, Any],
         *,
         endpoint: str | None = None,
         extra_headers: dict[str, str] | None = None,
         **parameters: Any,
-    ) -> AsyncIterator[dict[str, Any]]:
+    ) -> AsyncGenerator[dict[str, Any], None]:
         """fal queue does not support SSE streaming in this client."""
         raise StreamingNotSupportedError(model_id=self.model.id)
 

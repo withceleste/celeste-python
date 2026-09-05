@@ -2,7 +2,8 @@
 
 import base64
 import json
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
+from contextlib import aclosing
 from typing import Any
 
 from websockets.asyncio.client import connect as ws_connect
@@ -18,7 +19,7 @@ class GradiumTextToSpeechClient(APIMixin):
     """Mixin for Gradium Text-to-Speech API.
 
     Provides shared implementation for speech generation via WebSocket:
-    - _make_stream_request() - WebSocket streaming (yields events)
+    - _make_stream_request() - Returns WebSocket streaming events
     - _parse_usage() - Returns empty dict (TTS doesn't return usage)
     - _map_output_format_to_mime_type() - Map format string to AudioMimeType
 
@@ -38,33 +39,24 @@ class GradiumTextToSpeechClient(APIMixin):
         endpoint: str | None = None,
         extra_headers: dict[str, str] | None = None,
         **parameters: Any,
-    ) -> AsyncIterator[dict[str, Any]]:
-        """Execute WebSocket TTS flow as async generator.
+    ) -> AsyncGenerator[dict[str, Any], None]:
+        """Return the WebSocket audio generator."""
+        if endpoint is None:
+            endpoint = config.GradiumTextToSpeechEndpoint.CREATE_SPEECH
+        headers = self._merge_headers(await self.auth.aget_headers(), extra_headers)
+        return self._stream_audio(f"{config.BASE_URL}{endpoint}", headers, request_body)
 
-        Yields events in streaming format:
-        - {"data": bytes} for audio chunks
-        - {"finish_reason": "stop"} at end
-
-        Args:
-            request_body: Request with text, voice_id, output_format, json_config.
-            endpoint: WebSocket endpoint path (defaults to config).
-            **parameters: Additional parameters (unused).
-
-        Yields:
-            Event dicts with audio data or finish_reason.
-
-        Raises:
-            ValueError: If connection fails or error received.
-        """
+    async def _stream_audio(
+        self,
+        url: str,
+        headers: dict[str, str],
+        request_body: dict[str, Any],
+    ) -> AsyncGenerator[dict[str, Any], None]:
+        """Yield audio and finish events from the WebSocket TTS flow."""
         voice_id = request_body.get("voice_id", config.DEFAULT_VOICE_ID)
         output_format = request_body.get("output_format", "wav")
         text = request_body.get("text", "")
         json_config = request_body.get("json_config")
-
-        if endpoint is None:
-            endpoint = config.GradiumTextToSpeechEndpoint.CREATE_SPEECH
-        url = f"{config.BASE_URL}{endpoint}"
-        headers = self._merge_headers(await self.auth.aget_headers(), extra_headers)
 
         async with ws_connect(url, additional_headers=headers) as ws:
             # 1. Send setup message
@@ -154,11 +146,17 @@ class GradiumTextToSpeechClient(APIMixin):
         audio_chunks: list[bytes] = []
         output_format = request_body.get("output_format", "wav")
 
-        async for event in self._make_stream_request(
-            request_body, endpoint=endpoint, extra_headers=extra_headers, **parameters
-        ):
-            if "data" in event:
-                audio_chunks.append(event["data"])
+        async with aclosing(
+            await self._make_stream_request(
+                request_body,
+                endpoint=endpoint,
+                extra_headers=extra_headers,
+                **parameters,
+            )
+        ) as events:
+            async for event in events:
+                if "data" in event:
+                    audio_chunks.append(event["data"])
 
         return {
             "audio_bytes": b"".join(audio_chunks),

@@ -1,7 +1,6 @@
 """ElevenLabs TextToSpeech API client mixin."""
 
-from collections.abc import AsyncGenerator, AsyncIterator
-from contextlib import aclosing
+from collections.abc import AsyncGenerator
 from typing import Any
 
 import httpx
@@ -84,7 +83,7 @@ class ElevenLabsTextToSpeechClient(APIMixin):
         endpoint: str | None = None,
         extra_headers: dict[str, str] | None = None,
         **parameters: Any,
-    ) -> AsyncIterator[dict[str, Any]]:
+    ) -> AsyncGenerator[dict[str, Any], None]:
         """Make HTTP streaming request returning binary audio chunks.
 
         ElevenLabs streams binary audio data, not JSON SSE events.
@@ -112,15 +111,11 @@ class ElevenLabsTextToSpeechClient(APIMixin):
         if output_format:
             url = f"{url}?output_format={output_format}"
 
-        async with aclosing(
-            self._stream_binary_audio(
-                url,
-                headers=headers,
-                json_body=request_body,
-            )
-        ) as events:
-            async for event in events:
-                yield event
+        return self._stream_binary_audio(
+            url,
+            headers=headers,
+            json_body=request_body,
+        )
 
     async def _stream_binary_audio(
         self,

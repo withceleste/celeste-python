@@ -1,7 +1,6 @@
 """{Provider} {Api} API client mixin."""
 
-from collections.abc import AsyncIterator
-from contextlib import aclosing
+from collections.abc import AsyncGenerator
 from typing import Any, ClassVar
 
 from celeste.client import APIMixin
@@ -100,18 +99,18 @@ class {Provider}{Api}Client(APIMixin):
         endpoint: str | None = None,
         extra_headers: dict[str, str] | None = None,
         **parameters: Any,
-    ) -> AsyncIterator[dict[str, Any]]:
+    ) -> AsyncGenerator[dict[str, Any], None]:
         """Make streaming request to {Provider} {Api} API.
 
         If this API does not support streaming, replace this implementation with:
-            def _make_stream_request(
+            async def _make_stream_request(
                 self,
                 request_body: dict[str, Any],
                 *,
                 endpoint: str | None = None,
                 extra_headers: dict[str, str] | None = None,
                 **parameters: Any,
-            ) -> AsyncIterator[dict[str, Any]]:
+            ) -> AsyncGenerator[dict[str, Any], None]:
                 \"\"\"{Provider} {Api} does not support SSE streaming in this client.\"\"\"
                 raise StreamingNotSupportedError(model_id=self.model.id)
         """
@@ -120,15 +119,11 @@ class {Provider}{Api}Client(APIMixin):
 
         headers = await self._json_headers(extra_headers)
 
-        async with aclosing(
-            self.http_client.stream_post(
-                f"{config.BASE_URL}{endpoint}",
-                headers=headers,
-                json_body=request_body,
-            )
-        ) as events:
-            async for event in events:
-                yield event
+        return self.http_client.stream_post(
+            f"{config.BASE_URL}{endpoint}",
+            headers=headers,
+            json_body=request_body,
+        )
 
     @staticmethod
     def map_usage_fields(usage_data: dict[str, Any]) -> dict[str, int | float | None]:
