@@ -124,4 +124,13 @@ MODELS: list[Model] = [
             AudioParameter.REFERENCE_IMAGES: ImagesConstraint(max_count=10),
         },
     ),
+    Model(
+        id="lyria-3.5",
+        provider=Provider.GOOGLE,
+        display_name="Google Lyria 3.5 (Preview)",
+        operations={Modality.AUDIO: {Operation.GENERATE}},
+        parameter_constraints={
+            AudioParameter.REFERENCE_IMAGES: ImagesConstraint(max_count=10),
+        },
+    ),
 ]
