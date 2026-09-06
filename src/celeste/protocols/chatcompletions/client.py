@@ -1,6 +1,6 @@
 """Chat Completions protocol client."""
 
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from typing import Any, ClassVar
 
 from celeste.client import APIMixin
@@ -80,7 +80,7 @@ class ChatCompletionsClient(APIMixin):
         if endpoint is None:
             endpoint = self._default_endpoint
 
-        headers = self._json_headers(extra_headers)
+        headers = await self._json_headers(extra_headers)
 
         response = await self.http_client.post(
             self._build_url(endpoint),
@@ -91,19 +91,19 @@ class ChatCompletionsClient(APIMixin):
         data: dict[str, Any] = response.json()
         return data
 
-    def _make_stream_request(
+    async def _make_stream_request(
         self,
         request_body: dict[str, Any],
         *,
         endpoint: str | None = None,
         extra_headers: dict[str, str] | None = None,
         **parameters: Any,
-    ) -> AsyncIterator[dict[str, Any]]:
+    ) -> AsyncGenerator[dict[str, Any], None]:
         """Make streaming request to Chat Completions API endpoint."""
         if endpoint is None:
             endpoint = self._default_endpoint
 
-        headers = self._json_headers(extra_headers)
+        headers = await self._json_headers(extra_headers)
 
         return self.http_client.stream_post(
             self._build_url(endpoint, streaming=True),

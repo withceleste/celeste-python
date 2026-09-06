@@ -49,11 +49,10 @@ class GradiumTextToSpeechStream:
     def _build_stream_metadata(
         self, raw_events: list[dict[str, Any]]
     ) -> dict[str, Any]:
-        """Filter to keep only metadata events.
-
-        Gradium WebSocket stream has no metadata events.
-        """
-        return super()._build_stream_metadata(raw_events)  # type: ignore[misc]
+        """Retain finish events without duplicating binary audio content."""
+        return super()._build_stream_metadata(  # type: ignore[misc]
+            [e for e in raw_events if "data" not in e]
+        )
 
 
 __all__ = ["GradiumTextToSpeechStream"]

@@ -1,6 +1,6 @@
 """Google text client (Interactions API; GoogleADC auth uses Vertex GenerateContent)."""
 
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from typing import Any, Unpack
 
 from celeste.grounding import Grounding
@@ -110,15 +110,15 @@ class GoogleTextClient(TextClient):
             **parameters,
         )
 
-    def _make_stream_request(
+    async def _make_stream_request(
         self,
         request_body: dict[str, Any],
         *,
         endpoint: str | None = None,
         extra_headers: dict[str, str] | None = None,
         **parameters: Unpack[TextParameters],
-    ) -> AsyncIterator[dict[str, Any]]:
-        return self._strategy._make_stream_request(  # type: ignore[union-attr]
+    ) -> AsyncGenerator[dict[str, Any], None]:
+        return await self._strategy._make_stream_request(  # type: ignore[union-attr]
             request_body,
             endpoint=endpoint,
             extra_headers=extra_headers,

@@ -2,7 +2,7 @@
 
 import asyncio
 import logging
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from typing import Any, ClassVar
 
 from celeste.client import APIMixin
@@ -10,6 +10,7 @@ from celeste.exceptions import StreamingNotSupportedError
 from celeste.io import FinishReason
 
 from ..auth import GoogleADC
+from ..utils import download_video
 from . import config
 
 logger = logging.getLogger(__name__)
@@ -73,7 +74,7 @@ class GoogleVeoClient(APIMixin):
         Vertex AI uses POST to fetchPredictOperation with operationName in body.
         AI Studio uses GET to /v1beta/{operation_name}.
         """
-        headers = self._json_headers(extra_headers)
+        headers = await self._json_headers(extra_headers)
         poll_url = self._build_poll_url(operation_name)
 
         if isinstance(self.auth, GoogleADC):
@@ -94,14 +95,14 @@ class GoogleVeoClient(APIMixin):
         data: dict[str, Any] = response.json()
         return data
 
-    def _make_stream_request(
+    async def _make_stream_request(
         self,
         request_body: dict[str, Any],
         *,
         endpoint: str | None = None,
         extra_headers: dict[str, str] | None = None,
         **parameters: Any,
-    ) -> AsyncIterator[dict[str, Any]]:
+    ) -> AsyncGenerator[dict[str, Any], None]:
         """Veo API does not support SSE streaming in this client."""
         raise StreamingNotSupportedError(model_id=self.model.id)
 
@@ -117,7 +118,7 @@ class GoogleVeoClient(APIMixin):
         if endpoint is None:
             endpoint = config.GoogleVeoEndpoint.CREATE_VIDEO
 
-        headers = self._json_headers(extra_headers)
+        headers = await self._json_headers(extra_headers)
 
         logger.info(f"Initiating video generation with model {self.model.id}")
         response = await self.http_client.post(
@@ -167,9 +168,8 @@ class GoogleVeoClient(APIMixin):
                 msg = "No videos in response"
                 raise ValueError(msg)
             video = videos[0]
-            # Normalize Vertex key "videoGcsUri" to "uri" for consistency
-            if "videoGcsUri" in video:
-                video["uri"] = video.pop("videoGcsUri")
+            if "gcsUri" in video:
+                return {**video, "uri": video["gcsUri"]}
             return video
 
         generated_samples = response.get("generateVideoResponse", {}).get(
@@ -213,19 +213,12 @@ class GoogleVeoClient(APIMixin):
         Returns:
             Raw video bytes.
         """
-        download_url = url
-        if download_url.startswith("gs://"):
-            download_url = download_url.replace("gs://", config.STORAGE_BASE_URL, 1)
-
-        logger.info(f"Downloading video from: {download_url}")
-
-        headers = self._merge_headers(self.auth.get_headers(), extra_headers)
-
-        response = await self.http_client.get(
-            download_url,
-            headers=headers,
+        response = await download_video(
+            self.http_client,
+            self.auth,
+            url,
+            extra_headers,
             timeout=config.DEFAULT_TIMEOUT,
-            follow_redirects=True,
         )
 
         self._handle_error_response(response)

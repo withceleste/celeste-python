@@ -1,8 +1,10 @@
 """Google Cloud authentication using ADC."""
 
+import asyncio
+from threading import Lock
 from typing import Any, ClassVar
 
-from pydantic import ConfigDict
+from pydantic import ConfigDict, PrivateAttr
 
 from celeste.auth import Authentication
 from celeste.exceptions import MissingDependencyError
@@ -29,6 +31,11 @@ class GoogleADC(Authentication):
     _credentials: Any = None
     _auth_request: Any = None
     _project: str | None = None
+    _refresh_lock: Lock = PrivateAttr(default_factory=Lock)
+
+    async def aget_headers(self) -> dict[str, str]:
+        """Discover and refresh credentials without blocking the event loop."""
+        return await asyncio.to_thread(self.get_headers)
 
     def get_headers(self) -> dict[str, str]:
         """Return OAuth Bearer token header with quota project."""
@@ -46,14 +53,17 @@ class GoogleADC(Authentication):
         except ImportError as e:
             raise MissingDependencyError(library="google-auth", extra="gcp") from e
 
-        if self._credentials is None:
-            self._credentials, self._project = google.auth.default(scopes=self.scopes)
-            self._auth_request = google.auth.transport.requests.Request()
+        with self._refresh_lock:
+            if self._credentials is None:
+                self._credentials, self._project = google.auth.default(
+                    scopes=self.scopes
+                )
+                self._auth_request = google.auth.transport.requests.Request()
 
-        if not self._credentials.valid:
-            self._credentials.refresh(self._auth_request)
+            if not self._credentials.valid:
+                self._credentials.refresh(self._auth_request)
 
-        return self._credentials.token, self.project_id or self._project
+            return self._credentials.token, self.project_id or self._project
 
     @property
     def resolved_project_id(self) -> str | None:
