@@ -72,7 +72,7 @@ class GroqAudioClient(APIMixin):
 
         response = await self.http_client.post_multipart(
             f"{config.BASE_URL}{endpoint}",
-            headers=self._merge_headers(self.auth.get_headers(), extra_headers),
+            headers=self._merge_headers(await self.auth.aget_headers(), extra_headers),
             files=files,
             data=data,
         )
