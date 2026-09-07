@@ -2,6 +2,8 @@
 
 from typing import Any
 
+from celeste.constraints import ImagesConstraint
+from celeste.exceptions import ConstraintViolationError
 from celeste.models import Model
 from celeste.parameters import ParameterMapper
 from celeste.providers.bfl.images.parameters import (
@@ -105,6 +107,19 @@ class ReferenceImagesMapper(ParameterMapper[ImageContent]):
         validated_value = self._validate_value(value, model)
         if validated_value is None:
             return request
+
+        constraint = model.parameter_constraints.get(self.name)
+        if (
+            "input_image" in request
+            and isinstance(constraint, ImagesConstraint)
+            and constraint.max_count is not None
+            and len(validated_value) + 1 > constraint.max_count
+        ):
+            msg = (
+                f"{model.id} supports at most {constraint.max_count} input images, "
+                "including the primary edit image"
+            )
+            raise ConstraintViolationError(msg)
 
         return add_reference_images(request, validated_value)
 
