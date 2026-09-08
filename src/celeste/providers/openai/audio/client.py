@@ -58,6 +58,9 @@ class OpenAIAudioClient(APIMixin):
         )
         request_body["model"] = self.model.id
         if "file" in request_body:
+            if self.model.id == "gpt-4o-transcribe-diarize":
+                request_body.setdefault("chunking_strategy", "auto")
+                request_body.setdefault("response_format", "diarized_json")
             request_body.setdefault("response_format", "json")
         elif streaming:
             request_body["stream"] = True
