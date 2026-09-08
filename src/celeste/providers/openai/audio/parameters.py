@@ -91,7 +91,8 @@ class LanguageMapper[Content](ParameterMapper[Content]):
         validated_value = self._validate_value(value, model)
         if validated_value is None:
             return request
-        request["language"] = validated_value
+        field = "languages[]" if model.id == "gpt-transcribe" else "language"
+        request[field] = validated_value
         return request
 
 
