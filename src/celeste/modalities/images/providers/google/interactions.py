@@ -27,6 +27,25 @@ class GoogleInteractionsImagesClient(GoogleInteractionsMixin, ImagesClient):
     def parameter_mappers(cls) -> list[ParameterMapper[ImageContent]]:
         return GOOGLE_INTERACTIONS_PARAMETER_MAPPERS
 
+    def _build_metadata(self, response_data: dict[str, Any]) -> dict[str, Any]:
+        """Retain text positions and executed search counts without image payloads."""
+        metadata = super()._build_metadata(response_data)
+        steps = response_data.get("steps", [])
+        metadata["text_blocks"] = [
+            {**part, "step_index": i, "part_index": j}
+            for i, step in enumerate(steps)
+            if step.get("type") == "model_output"
+            for j, part in enumerate(step.get("content", []))
+            if part.get("type") == "text"
+        ]
+        if "steps" in response_data:
+            metadata["raw_response"]["grounding_query_count"] = sum(
+                len(step.get("arguments", {}).get("queries") or [])
+                for step in steps
+                if step.get("type") == "google_search_call"
+            )
+        return metadata
+
     def _init_request(self, inputs: ImageInput) -> dict[str, Any]:
         """Initialize request for Gemini image generation/edit."""
         parts: list[dict[str, Any]] = []
@@ -53,7 +72,7 @@ class GoogleInteractionsImagesClient(GoogleInteractionsMixin, ImagesClient):
             for step in steps
             if step.get("type") == "model_output"
             for part in step.get("content", [])
-            if part.get("type") == "image"
+            if part.get("type") == "image" and (part.get("data") or part.get("uri"))
         )
         return {**usage, UsageField.NUM_IMAGES: num_images}
 
@@ -65,17 +84,33 @@ class GoogleInteractionsImagesClient(GoogleInteractionsMixin, ImagesClient):
         steps = super()._parse_content(response_data)
         artifacts: list[ImageArtifact] = []
 
-        for step in steps:
+        for i, step in enumerate(steps):
             if step.get("type") != "model_output":
                 continue
-            for part in step.get("content", []):
+            for j, part in enumerate(step.get("content", [])):
                 if part.get("type") != "image":
                     continue
                 base64_data = part.get("data")
-                if not base64_data:
+                uri = part.get("uri")
+                if not base64_data and not uri:
                     continue
-                mime_type = ImageMimeType(part.get("mime_type", "image/png"))
-                artifacts.append(ImageArtifact(data=base64_data, mime_type=mime_type))
+                mime_value = part.get("mime_type")
+                artifacts.append(
+                    ImageArtifact(
+                        data=base64_data,
+                        url=uri,
+                        mime_type=ImageMimeType(mime_value) if mime_value else None,
+                        metadata={
+                            **{
+                                k: v
+                                for k, v in part.items()
+                                if k not in {"data", "uri", "mime_type", "type"}
+                            },
+                            "step_index": i,
+                            "part_index": j,
+                        },
+                    )
+                )
 
         if not artifacts:
             return ImageArtifact()
