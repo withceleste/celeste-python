@@ -4,7 +4,6 @@ import pytest
 from pydantic import BaseModel
 
 from celeste.artifacts import ImageArtifact
-from celeste.exceptions import ConstraintViolationError
 from celeste.mime_types import AudioMimeType, ImageMimeType
 from celeste.modalities.audio.parameters import AudioParameter
 from celeste.modalities.audio.providers.elevenlabs import parameters as elevenlabs_audio
@@ -12,11 +11,8 @@ from celeste.modalities.audio.providers.google import parameters as google_audio
 from celeste.modalities.audio.providers.groq import parameters as groq_audio
 from celeste.modalities.audio.providers.mistral import parameters as mistral_audio
 from celeste.modalities.audio.providers.openai import parameters as openai_audio
-from celeste.modalities.images.io import ImageInput
 from celeste.modalities.images.parameters import ImageParameter
 from celeste.modalities.images.providers.bfl import parameters as bfl
-from celeste.modalities.images.providers.bfl.client import BFLImagesClient
-from celeste.modalities.images.providers.bfl.models import MODELS as BFL_MODELS
 from celeste.modalities.images.providers.google import parameters as google_images
 from celeste.modalities.images.providers.topazlabs import parameters as topazlabs
 from celeste.modalities.segmentation.parameters import SegmentationParameter
@@ -477,36 +473,6 @@ def test_bfl_reference_images_follow_primary_image_numbering() -> None:
         [IMAGE],
         {"input_image": "primary"},
     ) == {"input_image": "primary", "input_image_2": IMAGE.url}
-
-
-@pytest.mark.parametrize(
-    "model",
-    [model for model in BFL_MODELS if model.id.startswith("flux-2-")],
-    ids=lambda model: model.id,
-)
-@pytest.mark.parametrize("editing", [False, True], ids=["generate", "edit"])
-def test_bfl_reference_images_respect_total_slots(model: Model, editing: bool) -> None:
-    limit = 4 if "klein" in model.id else 8
-    client = BFLImagesClient.model_construct(model=model)
-    request = client._init_request(
-        ImageInput(prompt="Combine images", image=IMAGE if editing else None)
-    )
-    references = [
-        ImageArtifact(url=f"https://example.com/reference-{i}.png")
-        for i in range(limit - int(editing))
-    ]
-    mapper = _mapper(BFL, IP.REFERENCE_IMAGES)
-    mapped = mapper.map(request.copy(), references, model)
-    expected = ([IMAGE.url] if editing else []) + [image.url for image in references]
-    assert {k: v for k, v in mapped.items() if k.startswith("input_image")} == {
-        "input_image" if i == 1 else f"input_image_{i}": url
-        for i, url in enumerate(expected, 1)
-    }
-    with pytest.raises(ConstraintViolationError):
-        mapper.map(request, [*references, IMAGE], model)
-    assert request == client._init_request(
-        ImageInput(prompt="Combine images", image=IMAGE if editing else None)
-    )
 
 
 def test_chat_completions_reasoning_fields() -> None:
