@@ -68,7 +68,7 @@ class AnthropicMessagesClient(APIMixin):
         if isinstance(self.auth, GoogleADC):
             return self.auth.build_url(
                 self._get_vertex_endpoint(endpoint, streaming=streaming),
-                model_id=self.model.id,
+                model_id=config.VERTEX_MODEL_IDS.get(self.model.id, self.model.id),
             )
         return f"{config.BASE_URL}{endpoint}"
 
@@ -103,7 +103,13 @@ class AnthropicMessagesClient(APIMixin):
         request_body = super()._build_request(
             inputs, extra_body=extra_body, streaming=streaming, **parameters
         )
-        request_body["model"] = self.model.id
+        if isinstance(self.auth, GoogleADC):
+            request_body.pop("model", None)
+            request_body.setdefault(
+                "anthropic_version", config.VERTEX_ANTHROPIC_VERSION
+            )
+        else:
+            request_body["model"] = self.model.id
         if streaming:
             request_body["stream"] = True
         return request_body
@@ -206,7 +212,7 @@ class AnthropicMessagesClient(APIMixin):
         Returns raw content array that modality clients extract from.
         """
         content = response_data.get("content", [])
-        if not content:
+        if not content and response_data.get("stop_reason") != "refusal":
             msg = "No content in response"
             raise ValueError(msg)
         return content

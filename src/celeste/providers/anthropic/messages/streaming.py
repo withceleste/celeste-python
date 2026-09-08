@@ -61,7 +61,7 @@ class AnthropicMessagesStream:
                 self._content_blocks[idx] = {
                     "type": "text",
                     "text": block.get("text", ""),
-                    "citations": [],
+                    "citations": list(block.get("citations") or []),
                 }
         elif event_type == "content_block_delta":
             delta = event_data.get("delta", {})

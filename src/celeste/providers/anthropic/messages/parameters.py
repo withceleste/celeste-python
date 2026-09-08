@@ -176,7 +176,7 @@ class ToolChoiceMapper(ParameterMapper[TextContent]):
 
 
 class OutputFormatMapper(ParameterMapper[TextContent]):
-    """Map output_schema to Anthropic output_format field.
+    """Map output_schema to Anthropic output_config.format field.
 
     Handles both single BaseModel and list[BaseModel] types.
     Anthropic supports top-level arrays, $ref, and $defs natively.
@@ -208,13 +208,10 @@ class OutputFormatMapper(ParameterMapper[TextContent]):
                 mode="serialization",
             )
 
-        request["output_format"] = {
+        request.setdefault("output_config", {})["format"] = {
             "type": "json_schema",
             "schema": schema,
         }
-
-        # Signal that structured outputs beta header is needed
-        request.setdefault("_beta_features", []).append("structured-outputs")
 
         return request
 
