@@ -1,6 +1,7 @@
 """Text streaming primitives."""
 
 from celeste.streaming import Stream
+from celeste.types import TextContent
 
 from .io import TextChunk, TextFinishReason, TextOutput, TextUsage
 from .parameters import TextParameters
@@ -15,7 +16,7 @@ class TextStream(Stream[TextOutput, TextParameters, TextChunk]):
     _output_class = TextOutput
     _empty_content = ""
 
-    def _aggregate_content(self, chunks: list[TextChunk]) -> str:
+    def _aggregate_content(self, chunks: list[TextChunk]) -> TextContent:
         """Aggregate content from chunks into raw text."""
         return "".join(chunk.content for chunk in chunks)
 
