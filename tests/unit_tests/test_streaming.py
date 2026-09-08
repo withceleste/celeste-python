@@ -2,15 +2,13 @@
 
 from collections.abc import AsyncIterator
 from typing import Any, ClassVar
-from unittest.mock import Mock
 
-import httpx
 import pytest
 
 from celeste.exceptions import StreamEventError, StreamNotExhaustedError
 from celeste.io import Chunk, Output
 from celeste.parameters import Parameters
-from celeste.streaming import Stream, enrich_stream_errors
+from celeste.streaming import Stream
 
 
 class TextOutput(Output[str]):
@@ -224,38 +222,3 @@ async def test_midstream_error_preserves_already_yielded_chunks() -> None:
             chunks.append(chunk)
 
     assert [chunk.content for chunk in chunks] == ["partial"]
-
-
-async def test_enrich_stream_errors_delegates_http_response() -> None:
-    response = httpx.Response(
-        401,
-        request=httpx.Request("POST", "https://example.test/v1/chat"),
-    )
-
-    async def failing_events() -> AsyncIterator[dict[str, Any]]:
-        raise httpx.HTTPStatusError(
-            "unauthorized",
-            request=response.request,
-            response=response,
-        )
-        yield {}
-
-    handler = Mock(side_effect=RuntimeError("enriched provider error"))
-
-    with pytest.raises(RuntimeError, match="enriched provider error"):
-        _ = [event async for event in enrich_stream_errors(failing_events(), handler)]
-    handler.assert_called_once_with(response)
-
-
-async def test_enrich_stream_errors_passes_successful_events_through() -> None:
-    source_events = [{"delta": "Hello"}, {"delta": " world"}]
-
-    result = [
-        event
-        async for event in enrich_stream_errors(
-            events(*source_events),
-            Mock(),
-        )
-    ]
-
-    assert result == source_events

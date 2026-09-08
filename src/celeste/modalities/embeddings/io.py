@@ -16,22 +16,19 @@ class EmbeddingsInput(Input):
 
     @model_validator(mode="after")
     def _validate_inputs(self) -> "EmbeddingsInput":
-        if (
-            self.text is None
-            and self.images is None
-            and self.videos is None
-            and self.audio is None
-        ):
+        inputs = {
+            "text": self.text,
+            "images": self.images,
+            "videos": self.videos,
+            "audio": self.audio,
+        }
+        provided = {name: value for name, value in inputs.items() if value is not None}
+        if not provided:
             msg = "At least one of text, images, videos, or audio must be provided"
             raise ValueError(msg)
-        if isinstance(self.text, list) and (
-            self.images is not None or self.videos is not None or self.audio is not None
-        ):
-            msg = (
-                "Batch text (list[str]) cannot be combined with images, videos,"
-                " or audio"
-            )
-            raise ValueError(msg)
+        for name, value in provided.items():
+            if isinstance(value, list) and len(provided) > 1:
+                raise ValueError(f"Batch {name} cannot be combined with other inputs")
         return self
 
 

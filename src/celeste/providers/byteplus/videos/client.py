@@ -3,7 +3,7 @@
 import asyncio
 import logging
 import time
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from typing import Any, ClassVar
 
 from celeste.client import APIMixin
@@ -67,7 +67,7 @@ class BytePlusVideosClient(APIMixin):
         2. Poll CONTENT_STATUS endpoint until succeeded/failed/canceled
         3. Return response with final status data
         """
-        headers = self._json_headers(extra_headers)
+        headers = await self._json_headers(extra_headers)
 
         if endpoint is None:
             endpoint = config.BytePlusVideosEndpoint.CREATE_VIDEO
@@ -126,14 +126,14 @@ class BytePlusVideosClient(APIMixin):
 
             await asyncio.sleep(config.POLLING_INTERVAL)
 
-    def _make_stream_request(
+    async def _make_stream_request(
         self,
         request_body: dict[str, Any],
         *,
         endpoint: str | None = None,
         extra_headers: dict[str, str] | None = None,
         **parameters: Any,
-    ) -> AsyncIterator[dict[str, Any]]:
+    ) -> AsyncGenerator[dict[str, Any], None]:
         """BytePlus Videos API does not support SSE streaming in this client."""
         raise StreamingNotSupportedError(model_id=self.model.id)
 

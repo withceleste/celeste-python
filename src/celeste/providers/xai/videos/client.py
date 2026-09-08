@@ -1,7 +1,7 @@
 """xAI Videos API client mixin."""
 
 import asyncio
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from typing import Any, ClassVar
 
 from celeste.client import APIMixin
@@ -44,14 +44,14 @@ class XAIVideosClient(APIMixin):
         request_body["model"] = self.model.id
         return request_body
 
-    def _make_stream_request(
+    async def _make_stream_request(
         self,
         request_body: dict[str, Any],
         *,
         endpoint: str | None = None,
         extra_headers: dict[str, str] | None = None,
         **parameters: Any,
-    ) -> AsyncIterator[dict[str, Any]]:
+    ) -> AsyncGenerator[dict[str, Any], None]:
         """xAI Videos API does not support SSE streaming."""
         raise StreamingNotSupportedError(model_id=self.model.id)
 
@@ -67,7 +67,7 @@ class XAIVideosClient(APIMixin):
         if endpoint is None:
             endpoint = config.XAIVideosEndpoint.CREATE_VIDEO
 
-        headers = self._json_headers(extra_headers)
+        headers = await self._json_headers(extra_headers)
 
         # Submit video generation request
         response = await self.http_client.post(

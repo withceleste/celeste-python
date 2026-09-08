@@ -1,6 +1,6 @@
 """ElevenLabs TextToSpeech API client mixin."""
 
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from typing import Any
 
 import httpx
@@ -59,7 +59,7 @@ class ElevenLabsTextToSpeechClient(APIMixin):
             endpoint = config.ElevenLabsTextToSpeechEndpoint.CREATE_SPEECH
         endpoint = endpoint.format(voice_id=voice_id)
 
-        headers = self._json_headers(extra_headers)
+        headers = await self._json_headers(extra_headers)
 
         url = f"{config.BASE_URL}{endpoint}"
         if output_format:
@@ -76,14 +76,14 @@ class ElevenLabsTextToSpeechClient(APIMixin):
             "headers": dict(response.headers),
         }
 
-    def _make_stream_request(
+    async def _make_stream_request(
         self,
         request_body: dict[str, Any],
         *,
         endpoint: str | None = None,
         extra_headers: dict[str, str] | None = None,
         **parameters: Any,
-    ) -> AsyncIterator[dict[str, Any]]:
+    ) -> AsyncGenerator[dict[str, Any], None]:
         """Make HTTP streaming request returning binary audio chunks.
 
         ElevenLabs streams binary audio data, not JSON SSE events.
@@ -105,7 +105,7 @@ class ElevenLabsTextToSpeechClient(APIMixin):
             endpoint = config.ElevenLabsTextToSpeechEndpoint.STREAM_SPEECH
         endpoint = endpoint.format(voice_id=voice_id)
 
-        headers = self._json_headers(extra_headers)
+        headers = await self._json_headers(extra_headers)
 
         url = f"{config.BASE_URL}{endpoint}"
         if output_format:
@@ -122,7 +122,7 @@ class ElevenLabsTextToSpeechClient(APIMixin):
         url: str,
         headers: dict[str, str],
         json_body: dict[str, Any],
-    ) -> AsyncIterator[dict[str, Any]]:
+    ) -> AsyncGenerator[dict[str, Any], None]:
         """Stream binary audio data and yield as dict events.
 
         Wraps httpx streaming to yield dicts compatible with Stream interface.
