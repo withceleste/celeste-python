@@ -2,13 +2,14 @@
 
 from typing import Any, Unpack
 
+from celeste.constraints import ImagesConstraint
 from celeste.parameters import ParameterMapper
 from celeste.providers.google.auth import GoogleADC
 from celeste.types import ImageContent
 
 from ...client import ImagesClient
 from ...io import ImageFinishReason, ImageInput
-from ...parameters import ImageParameters
+from ...parameters import ImageParameter, ImageParameters
 from .imagen import GoogleImagenImagesClient
 from .interactions import GoogleInteractionsImagesClient
 from .models import GOOGLE_GEMINI_MODELS, GOOGLE_IMAGEN_MODELS
@@ -82,6 +83,17 @@ class GoogleImagesClient(ImagesClient):
         inputs: ImageInput,
         **parameters: Unpack[ImageParameters],
     ) -> dict[str, Any]:
+        references = parameters.get("reference_images")
+        constraint = self.model.parameter_constraints.get(
+            ImageParameter.REFERENCE_IMAGES
+        )
+        if (
+            inputs.image is not None
+            and references is not None
+            and isinstance(constraint, ImagesConstraint)
+        ):
+            # The primary edit image consumes one of the model's total image slots.
+            constraint([inputs.image, *constraint(references)])
         return self._strategy._build_request(inputs, **parameters)  # type: ignore[union-attr]
 
     def _transform_output(
