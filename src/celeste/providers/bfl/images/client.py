@@ -90,6 +90,7 @@ class BFLImagesClient(APIMixin):
             poll_response = await self.http_client.get(
                 polling_url,
                 headers=poll_headers,
+                follow_redirects=False,
             )
 
             self._handle_error_response(poll_response)
@@ -102,9 +103,15 @@ class BFLImagesClient(APIMixin):
                     **poll_data,
                     "_submit_metadata": submit_data,
                 }
-            elif status in ("Error", "Failed"):
-                error_msg = poll_data.get("error", "Unknown error")
-                msg = f"{self.provider} image generation failed: {error_msg}"
+            elif status in (
+                "Error",
+                "Failed",
+                "Request Moderated",
+                "Content Moderated",
+                "Task not found",
+            ):
+                error_msg = poll_data.get("error") or poll_data.get("details") or status
+                msg = f"{self.provider} image generation failed ({status}): {error_msg}"
                 raise ValueError(msg)
 
             await asyncio.sleep(config.POLLING_INTERVAL)
@@ -143,8 +150,10 @@ class BFLImagesClient(APIMixin):
         self, response_data: dict[str, Any]
     ) -> dict[str, int | float | None]:
         """Extract usage data from BFL response."""
-        submit_metadata = response_data.get("_submit_metadata", {})
-        return BFLImagesClient.map_usage_fields(submit_metadata)
+        usage_data = dict(response_data.get("_submit_metadata") or {})
+        if response_data.get("cost") is not None:
+            usage_data["cost"] = response_data["cost"]
+        return BFLImagesClient.map_usage_fields(usage_data)
 
     def _parse_content(self, response_data: dict[str, Any]) -> Any:
         """Parse result from response."""
