@@ -1,8 +1,10 @@
 """Google parameter mappers for audio modality."""
 
-from typing import ClassVar
+from typing import Any, ClassVar
 
+from celeste.core import Modality, Operation
 from celeste.mime_types import AudioMimeType
+from celeste.models import Model
 from celeste.parameters import ParameterMapper
 from celeste.providers.google.interactions.parameters import (
     AudioMimeTypeMapper as _AudioMimeTypeMapper,
@@ -53,6 +55,35 @@ class LanguageMapper(_LanguageMapper):
         "uk": "uk-UA",
         "ta": "ta-IN",
     }
+    transcribe_locale_map: ClassVar[dict[str, str]] = locale_map | {
+        "zh": "cmn-Hans-CN",
+        "cs": "cs-CZ",
+        "da": "da-DK",
+        "fil": "fil-PH",
+        "fi": "fi-FI",
+        "el": "el-GR",
+        "hu": "hu-HU",
+        "ms": "ms-MY",
+        "no": "nb-NO",
+        "sk": "sk-SK",
+        "sv": "sv-SE",
+    }
+
+    def map(
+        self, request: dict[str, Any], value: object, model: Model
+    ) -> dict[str, Any]:
+        """Route transcription language hints to transcription_config."""
+        if Operation.TRANSCRIBE not in model.operations.get(Modality.AUDIO, set()):
+            return super().map(request, value, model)
+        language = self._validate_value(value, model)
+        if language is not None:
+            config = request.setdefault("generation_config", {}).setdefault(
+                "transcription_config", {}
+            )
+            config["language_codes"] = [
+                self.transcribe_locale_map.get(str(language), str(language))
+            ]
+        return request
 
 
 class OutputFormatMapper(_AudioMimeTypeMapper):
