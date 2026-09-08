@@ -1,6 +1,6 @@
 """OpenAI models for images modality."""
 
-from celeste.constraints import Choice, Range
+from celeste.constraints import Choice, ImageConstraint, ImagesConstraint, Range
 from celeste.core import Modality, Operation, Provider
 from celeste.models import Model
 
@@ -20,6 +20,8 @@ MODELS: list[Model] = [
             ),
             ImageParameter.QUALITY: Choice(options=["low", "medium", "high", "auto"]),
             ImageParameter.NUM_IMAGES: Range(min=1, max=10),
+            ImageParameter.REFERENCE_IMAGES: ImagesConstraint(max_count=16),
+            ImageParameter.MASK: ImageConstraint(),
             ImageParameter.OUTPUT_FORMAT: Choice(options=["png", "jpeg", "webp"]),
             ImageParameter.BACKGROUND: Choice(
                 options=["transparent", "opaque", "auto"]
@@ -41,6 +43,8 @@ MODELS: list[Model] = [
             ),
             ImageParameter.QUALITY: Choice(options=["low", "medium", "high", "auto"]),
             ImageParameter.NUM_IMAGES: Range(min=1, max=10),
+            ImageParameter.REFERENCE_IMAGES: ImagesConstraint(max_count=16),
+            ImageParameter.MASK: ImageConstraint(),
             ImageParameter.OUTPUT_FORMAT: Choice(options=["png", "jpeg", "webp"]),
             ImageParameter.BACKGROUND: Choice(
                 options=["transparent", "opaque", "auto"]
@@ -61,6 +65,8 @@ MODELS: list[Model] = [
             ),
             ImageParameter.QUALITY: Choice(options=["low", "medium", "high", "auto"]),
             ImageParameter.NUM_IMAGES: Range(min=1, max=10),
+            ImageParameter.REFERENCE_IMAGES: ImagesConstraint(max_count=16),
+            ImageParameter.MASK: ImageConstraint(),
             ImageParameter.OUTPUT_FORMAT: Choice(options=["png", "jpeg", "webp"]),
             ImageParameter.BACKGROUND: Choice(
                 options=["transparent", "opaque", "auto"]
@@ -91,6 +97,8 @@ MODELS: list[Model] = [
             ),
             ImageParameter.QUALITY: Choice(options=["low", "medium", "high", "auto"]),
             ImageParameter.NUM_IMAGES: Range(min=1, max=10),
+            ImageParameter.REFERENCE_IMAGES: ImagesConstraint(max_count=16),
+            ImageParameter.MASK: ImageConstraint(),
             ImageParameter.OUTPUT_FORMAT: Choice(options=["png", "jpeg", "webp"]),
             ImageParameter.BACKGROUND: Choice(
                 options=["transparent", "opaque", "auto"]

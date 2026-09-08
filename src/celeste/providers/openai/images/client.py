@@ -8,10 +8,12 @@ Provides shared implementation for capabilities using the OpenAI Images API:
 from collections.abc import AsyncGenerator
 from typing import Any, ClassVar
 
+from celeste.artifacts import ImageArtifact
 from celeste.client import APIMixin
 from celeste.core import UsageField
+from celeste.exceptions import ConstraintViolationError
 from celeste.io import FinishReason
-from celeste.utils import build_data_url, detect_mime_type
+from celeste.utils import build_data_url
 
 from . import config
 
@@ -42,6 +44,26 @@ class OpenAIImagesClient(APIMixin):
             inputs, extra_body=extra_body, streaming=streaming, **parameters
         )
         request_body["model"] = self.model.id
+        if image := request_body.pop("image", None):
+            request_body["images"] = [image, *request_body.get("images", [])]
+        if images := request_body.get("images"):
+            if len(images) > 16:
+                msg = (
+                    "OpenAI edits accept at most 16 images, including the primary image"
+                )
+                raise ConstraintViolationError(msg)
+            request_body["images"] = [
+                {"image_url": build_data_url(image)}
+                if isinstance(image, ImageArtifact)
+                else image
+                for image in images
+            ]
+        if mask := request_body.get("mask"):
+            if not request_body.get("images"):
+                msg = "An image mask requires a primary or reference image"
+                raise ConstraintViolationError(msg)
+            if isinstance(mask, ImageArtifact):
+                request_body["mask"] = {"image_url": build_data_url(mask)}
         if streaming:
             request_body["stream"] = True
         return request_body
@@ -55,28 +77,11 @@ class OpenAIImagesClient(APIMixin):
         **parameters: Any,
     ) -> dict[str, Any]:
         """Make HTTP request to OpenAI Images API."""
-        if endpoint is None:
+        if request_body.get("images"):
+            endpoint = config.OpenAIImagesEndpoint.CREATE_EDIT
+        elif endpoint is None:
             endpoint = config.OpenAIImagesEndpoint.CREATE_IMAGE
 
-        # Edit endpoint requires multipart/form-data
-        if endpoint == config.OpenAIImagesEndpoint.CREATE_EDIT:
-            return await self._make_multipart_request(
-                request_body, endpoint, extra_headers=extra_headers
-            )
-
-        # Generate uses JSON
-        return await self._make_json_request(
-            request_body, endpoint, extra_headers=extra_headers
-        )
-
-    async def _make_json_request(
-        self,
-        request_body: dict[str, Any],
-        endpoint: str,
-        *,
-        extra_headers: dict[str, str] | None = None,
-    ) -> dict[str, Any]:
-        """Make JSON request for generate operations."""
         headers = await self._json_headers(extra_headers)
 
         response = await self.http_client.post(
@@ -88,43 +93,6 @@ class OpenAIImagesClient(APIMixin):
         data: dict[str, Any] = response.json()
         return data
 
-    async def _make_multipart_request(
-        self,
-        request_body: dict[str, Any],
-        endpoint: str,
-        *,
-        extra_headers: dict[str, str] | None = None,
-    ) -> dict[str, Any]:
-        """Make multipart request for edit operations."""
-        image_artifact = request_body.pop("image")
-
-        # Get image bytes from artifact
-        image_bytes = image_artifact.get_bytes()
-
-        # Detect MIME type if not explicitly set
-        mime = image_artifact.mime_type or detect_mime_type(image_bytes)
-        mime_str = mime.value if mime else "application/octet-stream"
-
-        files = {"image": ("image", image_bytes, mime_str)}
-        # Model is already in request_body from _build_request()
-        model = request_body.pop("model")
-        data = {"model": model}
-
-        # Add remaining fields as form data
-        for key, value in request_body.items():
-            if value is not None:
-                data[key] = str(value)
-
-        response = await self.http_client.post_multipart(
-            f"{config.BASE_URL}{endpoint}",
-            headers=self._merge_headers(await self.auth.aget_headers(), extra_headers),
-            files=files,
-            data=data,
-        )
-        self._handle_error_response(response)
-        response_data: dict[str, Any] = response.json()
-        return response_data
-
     async def _make_stream_request(
         self,
         request_body: dict[str, Any],
@@ -133,22 +101,14 @@ class OpenAIImagesClient(APIMixin):
         extra_headers: dict[str, str] | None = None,
         **parameters: Any,
     ) -> AsyncGenerator[dict[str, Any], None]:
-        """Make streaming request to OpenAI Images API.
-
-        Streaming is only supported for gpt-image-1.
-        """
-        if endpoint is None:
+        """Make streaming request to OpenAI Images API."""
+        if request_body.get("images"):
+            endpoint = config.OpenAIImagesEndpoint.CREATE_EDIT
+        elif endpoint is None:
             endpoint = config.OpenAIImagesEndpoint.CREATE_IMAGE
 
         if "partial_images" not in request_body:
             request_body["partial_images"] = 1
-
-        # Serialize ImageArtifact for JSON streaming edit
-        # Non-streaming uses multipart; streaming uses JSON with images array
-        if "image" in request_body and hasattr(request_body["image"], "get_base64"):
-            artifact = request_body.pop("image")
-            request_body["images"] = [{"image_url": build_data_url(artifact)}]
-            endpoint = config.OpenAIImagesEndpoint.CREATE_EDIT
 
         headers = await self._json_headers(extra_headers)
 
