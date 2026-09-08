@@ -41,7 +41,7 @@ class OpenAIImagesClient(OpenAIImagesMixin, ImagesClient):
         return OPENAI_PARAMETER_MAPPERS
 
     def _init_request(self, inputs: ImageInput) -> dict[str, Any]:
-        """Keep the primary artifact for the shared JSON request builder."""
+        """Keep the primary artifact for edit request encoding."""
         request: dict[str, Any] = {"prompt": inputs.prompt}
         if inputs.image is not None:
             request["image"] = inputs.image

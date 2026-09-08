@@ -13,7 +13,7 @@ from celeste.client import APIMixin
 from celeste.core import UsageField
 from celeste.exceptions import ConstraintViolationError
 from celeste.io import FinishReason
-from celeste.utils import build_data_url
+from celeste.utils import build_data_url, detect_mime_type
 
 from . import config
 
@@ -46,24 +46,12 @@ class OpenAIImagesClient(APIMixin):
         request_body["model"] = self.model.id
         if image := request_body.pop("image", None):
             request_body["images"] = [image, *request_body.get("images", [])]
-        if images := request_body.get("images"):
-            if len(images) > 16:
-                msg = (
-                    "OpenAI edits accept at most 16 images, including the primary image"
-                )
-                raise ConstraintViolationError(msg)
-            request_body["images"] = [
-                {"image_url": build_data_url(image)}
-                if isinstance(image, ImageArtifact)
-                else image
-                for image in images
-            ]
-        if mask := request_body.get("mask"):
-            if not request_body.get("images"):
-                msg = "An image mask requires a primary or reference image"
-                raise ConstraintViolationError(msg)
-            if isinstance(mask, ImageArtifact):
-                request_body["mask"] = {"image_url": build_data_url(mask)}
+        if len(request_body.get("images", [])) > 16:
+            msg = "OpenAI edits accept at most 16 images, including the primary image"
+            raise ConstraintViolationError(msg)
+        if request_body.get("mask") and not request_body.get("images"):
+            msg = "An image mask requires a primary or reference image"
+            raise ConstraintViolationError(msg)
         if streaming:
             request_body["stream"] = True
         return request_body
@@ -77,8 +65,18 @@ class OpenAIImagesClient(APIMixin):
         **parameters: Any,
     ) -> dict[str, Any]:
         """Make HTTP request to OpenAI Images API."""
-        if request_body.get("images"):
+        if images := request_body.get("images"):
             endpoint = config.OpenAIImagesEndpoint.CREATE_EDIT
+            uploads = [*images]
+            if mask := request_body.get("mask"):
+                uploads.append(mask)
+            if all(
+                isinstance(image, ImageArtifact) and (image.data or image.path)
+                for image in uploads
+            ):
+                return await self._make_multipart_request(
+                    request_body, endpoint, extra_headers=extra_headers
+                )
         elif endpoint is None:
             endpoint = config.OpenAIImagesEndpoint.CREATE_IMAGE
 
@@ -87,11 +85,55 @@ class OpenAIImagesClient(APIMixin):
         response = await self.http_client.post(
             f"{config.BASE_URL}{endpoint}",
             headers=headers,
-            json_body=request_body,
+            json_body=self._encode_image_references(request_body),
         )
         self._handle_error_response(response)
         data: dict[str, Any] = response.json()
         return data
+
+    @staticmethod
+    def _encode_image_references(request_body: dict[str, Any]) -> dict[str, Any]:
+        """Encode artifacts for the JSON edit contract, preserving explicit references."""
+        body = request_body.copy()
+        if images := body.get("images"):
+            body["images"] = [
+                {"image_url": build_data_url(image)}
+                if isinstance(image, ImageArtifact)
+                else image
+                for image in images
+            ]
+        if isinstance(mask := body.get("mask"), ImageArtifact):
+            body["mask"] = {"image_url": build_data_url(mask)}
+        return body
+
+    async def _make_multipart_request(
+        self,
+        request_body: dict[str, Any],
+        endpoint: str,
+        *,
+        extra_headers: dict[str, str] | None = None,
+    ) -> dict[str, Any]:
+        """Upload local edit images and mask without JSON data-URL size limits."""
+        body = request_body.copy()
+        uploads = [("image[]", image) for image in body.pop("images")]
+        if mask := body.pop("mask", None):
+            uploads.append(("mask", mask))
+        files = []
+        for field, image in uploads:
+            data = image.get_bytes()
+            mime = image.mime_type or detect_mime_type(data)
+            files.append(
+                (field, ("image", data, str(mime or "application/octet-stream")))
+            )
+        response = await self.http_client.post_multipart(
+            f"{config.BASE_URL}{endpoint}",
+            headers=self._merge_headers(await self.auth.aget_headers(), extra_headers),
+            files=files,
+            data={key: str(value) for key, value in body.items() if value is not None},
+        )
+        self._handle_error_response(response)
+        response_data: dict[str, Any] = response.json()
+        return response_data
 
     async def _make_stream_request(
         self,
@@ -115,7 +157,7 @@ class OpenAIImagesClient(APIMixin):
         return self.http_client.stream_post(
             f"{config.BASE_URL}{endpoint}",
             headers=headers,
-            json_body=request_body,
+            json_body=self._encode_image_references(request_body),
         )
 
     @staticmethod
