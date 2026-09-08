@@ -6,6 +6,7 @@ from celeste.artifacts import ImageArtifact
 from celeste.core import UsageField
 from celeste.mime_types import ImageMimeType
 from celeste.parameters import ParameterMapper
+from celeste.providers.google.auth import GoogleADC
 from celeste.providers.google.generate_content import config
 from celeste.providers.google.generate_content.client import (
     GoogleGenerateContentClient as GoogleGenerateContentMixin,
@@ -30,6 +31,8 @@ class GoogleVertexImagesClient(GoogleGenerateContentMixin, ImagesClient):
     def _build_metadata(self, response_data: dict[str, Any]) -> dict[str, Any]:
         """Retain ordered text and candidate safety/grounding without image payloads."""
         metadata = super()._build_metadata(response_data)
+        if isinstance(self.auth, GoogleADC):
+            metadata["raw_response"]["vertex_location"] = self.auth.location
         candidates = response_data.get("candidates", [])
         metadata["text_blocks"] = [
             {**part, "candidate_index": i, "part_index": j}
