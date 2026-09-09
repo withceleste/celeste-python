@@ -3,7 +3,11 @@
 import asyncio
 import json
 import logging
+import math
+import time
 from collections.abc import AsyncGenerator, Awaitable, Callable
+from datetime import UTC
+from email.utils import parsedate_to_datetime
 from typing import Any
 
 import httpx
@@ -23,9 +27,11 @@ RETRYABLE_STATUS = frozenset({408, 429, 500, 502, 503, 504})
 
 async def _retry_request(
     send: Callable[[], Awaitable[httpx.Response]],
+    timeout: float,
 ) -> httpx.Response:
-    """Retry `send` on transient failures (network errors + retryable status) with backoff, then fail hard."""
+    """Retry transient failures, honoring Retry-After within the request timeout."""
     for attempt in range(MAX_RETRIES):
+        delay = RETRY_BASE_DELAY * 2**attempt
         try:
             response = await send()
         except (httpx.TimeoutException, httpx.NetworkError):
@@ -33,7 +39,23 @@ async def _retry_request(
         else:
             if response.status_code not in RETRYABLE_STATUS:
                 return response
-        await asyncio.sleep(RETRY_BASE_DELAY * 2**attempt)
+            if retry_after := response.headers.get("retry-after"):
+                try:
+                    retry_delay = float(retry_after)
+                except ValueError:
+                    try:
+                        date = parsedate_to_datetime(retry_after)
+                        retry_delay = (
+                            date.replace(tzinfo=date.tzinfo or UTC).timestamp()
+                            - time.time()
+                        )
+                    except (ValueError, OverflowError):
+                        retry_delay = 0
+                if math.isfinite(retry_delay):
+                    if retry_delay > timeout:
+                        return response
+                    delay = max(delay, retry_delay)
+        await asyncio.sleep(delay)
     return await send()
 
 
@@ -120,7 +142,8 @@ class HTTPClient:
                 headers=headers,
                 json=json_body,
                 timeout=timeout,
-            )
+            ),
+            timeout=timeout,
         )
 
     async def post_multipart(
@@ -158,7 +181,8 @@ class HTTPClient:
                 files=files,
                 data=data,
                 timeout=timeout,
-            )
+            ),
+            timeout=timeout,
         )
 
     async def get(
@@ -193,7 +217,8 @@ class HTTPClient:
                 headers=headers or {},
                 timeout=timeout,
                 follow_redirects=follow_redirects,
-            )
+            ),
+            timeout=timeout,
         )
 
     async def stream_post(
