@@ -11,7 +11,12 @@ from celeste.providers.google.auth import GoogleADC
 
 from . import config
 
-_NATIVE_REPLAY_BLOCK_TYPES = {"thinking", "redacted_thinking", "server_tool_use"}
+_NATIVE_REPLAY_BLOCK_TYPES = {
+    "thinking",
+    "redacted_thinking",
+    "server_tool_use",
+    "compaction",
+}
 
 
 def needs_native_replay(blocks: list[dict[str, Any]]) -> bool:
