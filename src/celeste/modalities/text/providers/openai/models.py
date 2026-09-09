@@ -102,24 +102,6 @@ MODELS: list[Model] = [
         },
     ),
     Model(
-        id="gpt-5.2-codex",
-        provider=Provider.OPENAI,
-        display_name="GPT-5.2 Codex",
-        operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
-        streaming=True,
-        parameter_constraints={
-            Parameter.MAX_TOKENS: Range(min=1, max=128000),
-            TextParameter.THINKING_BUDGET: Choice(
-                options=["low", "medium", "high", "xhigh"]
-            ),
-            TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
-            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
-            TextParameter.OUTPUT_SCHEMA: Schema(),
-            TextParameter.IMAGE: ImagesConstraint(),
-            TextParameter.DOCUMENT: DocumentsConstraint(),
-        },
-    ),
-    Model(
         id="gpt-5.3-codex",
         provider=Provider.OPENAI,
         display_name="GPT-5.3 Codex",
@@ -134,21 +116,6 @@ MODELS: list[Model] = [
             TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.IMAGE: ImagesConstraint(),
-        },
-    ),
-    Model(
-        id="gpt-5.2-chat-latest",
-        provider=Provider.OPENAI,
-        display_name="GPT-5.2 Instant",
-        operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
-        streaming=True,
-        parameter_constraints={
-            Parameter.TEMPERATURE: Range(min=0.0, max=2.0),
-            Parameter.MAX_TOKENS: Range(min=1, max=16384),
-            TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
-            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
-            TextParameter.IMAGE: ImagesConstraint(),
-            TextParameter.DOCUMENT: DocumentsConstraint(),
         },
     ),
     Model(
@@ -171,25 +138,6 @@ MODELS: list[Model] = [
         id="gpt-5.1",
         provider=Provider.OPENAI,
         display_name="GPT-5.1",
-        operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
-        streaming=True,
-        parameter_constraints={
-            Parameter.MAX_TOKENS: Range(min=1, max=128000),
-            TextParameter.THINKING_BUDGET: Choice(
-                options=["minimal", "low", "medium", "high"]
-            ),
-            TextParameter.VERBOSITY: Choice(options=["low", "medium", "high"]),
-            TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
-            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
-            TextParameter.OUTPUT_SCHEMA: Schema(),
-            TextParameter.IMAGE: ImagesConstraint(),
-            TextParameter.DOCUMENT: DocumentsConstraint(),
-        },
-    ),
-    Model(
-        id="gpt-5.1-codex",
-        provider=Provider.OPENAI,
-        display_name="GPT-5.1 Codex",
         operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
         streaming=True,
         parameter_constraints={
