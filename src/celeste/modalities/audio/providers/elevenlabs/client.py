@@ -1,5 +1,6 @@
 """ElevenLabs audio client (dispatches TTS and STT wire backends)."""
 
+from collections.abc import AsyncGenerator
 from typing import Any, Unpack
 
 from celeste.parameters import ParameterMapper
@@ -109,15 +110,15 @@ class ElevenLabsAudioClient(AudioClient):
     def _build_metadata(self, response_data: dict[str, Any]) -> dict[str, Any]:
         return self._strategy._build_metadata(response_data)  # type: ignore[union-attr]
 
-    def _make_stream_request(
+    async def _make_stream_request(
         self,
         request_body: dict[str, Any],
         *,
         endpoint: str | None = None,
         extra_headers: dict[str, str] | None = None,
         **parameters: Unpack[AudioParameters],
-    ) -> Any:
-        return self._strategy._make_stream_request(  # type: ignore[union-attr]
+    ) -> AsyncGenerator[dict[str, Any], None]:
+        return await self._strategy._make_stream_request(  # type: ignore[union-attr]
             request_body, endpoint=endpoint, extra_headers=extra_headers, **parameters
         )
 

@@ -57,7 +57,7 @@ MODELS: list[Model] = [
                 min=512, max=24576, special_values=[-1, 0]
             ),
             # Interactions path (API key): thinking_level; Vertex/ADC: thinking_budget
-            TextParameter.THINKING_LEVEL: Choice(options=["low", "high"]),
+            TextParameter.THINKING_LEVEL: Choice(options=["low", "medium", "high"]),
             TextParameter.TOOLS: ToolSupport(
                 tools=[WebSearch, CodeExecution, UrlContext]
             ),
@@ -84,7 +84,7 @@ MODELS: list[Model] = [
                 min=128, max=32768, special_values=[-1]
             ),
             # Interactions path (API key): thinking_level; Vertex/ADC: thinking_budget
-            TextParameter.THINKING_LEVEL: Choice(options=["low", "high"]),
+            TextParameter.THINKING_LEVEL: Choice(options=["low", "medium", "high"]),
             TextParameter.TOOLS: ToolSupport(
                 tools=[WebSearch, CodeExecution, UrlContext]
             ),
@@ -246,6 +246,28 @@ MODELS: list[Model] = [
         parameter_constraints={
             Parameter.MAX_TOKENS: Range(min=1, max=65536),
             # 3.7 Flash rejects minimal with a validation error (Google model page).
+            TextParameter.THINKING_LEVEL: Choice(options=["low", "medium", "high"]),
+            TextParameter.TOOLS: ToolSupport(
+                tools=[WebSearch, CodeExecution, UrlContext]
+            ),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
+            TextParameter.OUTPUT_SCHEMA: Schema(),
+            # Media input support
+            TextParameter.IMAGE: ImagesConstraint(),
+            TextParameter.VIDEO: VideosConstraint(),
+            TextParameter.AUDIO: AudioConstraint(),
+            TextParameter.DOCUMENT: DocumentsConstraint(),
+        },
+    ),
+    Model(
+        id="gemini-3.8-flash",
+        provider=Provider.GOOGLE,
+        display_name="Gemini 3.8 Flash",
+        operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
+        streaming=True,
+        parameter_constraints={
+            Parameter.MAX_TOKENS: Range(min=1, max=65536),
+            # 3.8 Flash rejects minimal with a validation error (Google model page).
             TextParameter.THINKING_LEVEL: Choice(options=["low", "medium", "high"]),
             TextParameter.TOOLS: ToolSupport(
                 tools=[WebSearch, CodeExecution, UrlContext]
