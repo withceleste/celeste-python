@@ -152,6 +152,38 @@ async def test_retry_exhaustion_reraises_transport_error(
     assert transport.post.call_count == MAX_RETRIES + 1
 
 
+@pytest.mark.parametrize(
+    ("retry_after", "delays"),
+    [
+        ("2", [2.0]),
+        ("Thu, 01 Jan 1970 00:00:02 GMT", [2.0]),
+        ("0", [0.5]),
+        ("-1", [0.5]),
+        ("Wed, 31 Dec 1969 23:59:59 GMT", [0.5]),
+        ("invalid", [0.5]),
+        ("NaN", [0.5]),
+        ("inf", [0.5]),
+        ("4", []),
+    ],
+)
+async def test_retry_after(
+    transport: AsyncMock, retry_after: str, delays: list[float]
+) -> None:
+    transport.post.side_effect = [
+        httpx.Response(429, headers={"Retry-After": retry_after}),
+        httpx.Response(200),
+    ]
+    with (
+        patch("celeste.http.httpx.AsyncClient", return_value=transport),
+        patch("time.time", return_value=0),
+        patch("celeste.http.asyncio.sleep", new_callable=AsyncMock) as sleep,
+    ):
+        response = await HTTPClient().post("https://example.com", {}, {}, timeout=3)
+    assert sleep.await_args_list == [call(delay) for delay in delays]
+    assert response.status_code == (200 if delays else 429)
+    assert transport.post.call_count == (2 if delays else 1)
+
+
 def test_registry_is_keyed_by_provider_and_modality() -> None:
     openai_text = get_http_client(Provider.OPENAI, Modality.TEXT)
     assert get_http_client(Provider.OPENAI, Modality.TEXT) is openai_text
