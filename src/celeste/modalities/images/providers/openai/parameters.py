@@ -4,6 +4,7 @@ from celeste.parameters import ParameterMapper
 from celeste.providers.openai.images.parameters import (
     BackgroundMapper as _BackgroundMapper,
 )
+from celeste.providers.openai.images.parameters import MaskMapper as _MaskMapper
 from celeste.providers.openai.images.parameters import (
     ModerationMapper as _ModerationMapper,
 )
@@ -21,6 +22,9 @@ from celeste.providers.openai.images.parameters import (
 )
 from celeste.providers.openai.images.parameters import (
     QualityMapper as _QualityMapper,
+)
+from celeste.providers.openai.images.parameters import (
+    ReferenceImagesMapper as _ReferenceImagesMapper,
 )
 from celeste.providers.openai.images.parameters import (
     SizeMapper as _SizeMapper,
@@ -78,6 +82,18 @@ class OutputCompressionMapper(_OutputCompressionMapper):
     name = ImageParameter.OUTPUT_COMPRESSION
 
 
+class ReferenceImagesMapper(_ReferenceImagesMapper):
+    """Map reference images to OpenAI edit inputs."""
+
+    name = ImageParameter.REFERENCE_IMAGES
+
+
+class MaskMapper(_MaskMapper):
+    """Map the mask to OpenAI edit inputs."""
+
+    name = ImageParameter.MASK
+
+
 OPENAI_PARAMETER_MAPPERS: list[ParameterMapper[ImageContent]] = [
     AspectRatioMapper(),
     PartialImagesMapper(),
@@ -87,6 +103,8 @@ OPENAI_PARAMETER_MAPPERS: list[ParameterMapper[ImageContent]] = [
     BackgroundMapper(),
     SafetyToleranceMapper(),
     OutputCompressionMapper(),
+    ReferenceImagesMapper(),
+    MaskMapper(),
 ]
 
 __all__ = ["OPENAI_PARAMETER_MAPPERS"]
