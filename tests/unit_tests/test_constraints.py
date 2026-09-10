@@ -170,6 +170,22 @@ def test_dimensions_enforce_multiples() -> None:
         constraint("20x32")
 
 
+def test_dimensions_edge_bound_and_special_values() -> None:
+    constraint = Dimensions(
+        min_pixels=100,
+        max_pixels=10_000,
+        min_aspect_ratio=0.5,
+        max_aspect_ratio=2,
+        max_edge=40,
+        special_values=["adaptive"],
+    )
+    assert constraint("adaptive") == "adaptive"
+    assert constraint("40x20") == "40x20"
+    for value in ("41x30", "30x41"):
+        with pytest.raises(ConstraintViolationError, match="at most 40"):
+            constraint(value)
+
+
 @pytest.mark.parametrize("value", [1, "20", "axb", "0x20", "5x5", "10x100"])
 def test_dimensions_reject_invalid_values(value: object) -> None:
     constraint = Dimensions(
