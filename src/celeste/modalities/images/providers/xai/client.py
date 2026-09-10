@@ -36,22 +36,28 @@ class XAIImagesClient(XAIImagesMixin, ImagesClient):
     def _parse_content(
         self,
         response_data: dict[str, Any],
-    ) -> ImageArtifact:
+    ) -> ImageContent:
         """Parse content from response."""
         data = super()._parse_content(response_data)
-        image_data = data[0]
+        images: list[ImageArtifact] = []
 
-        # xAI returns either b64_json or url
-        b64_json = image_data.get("b64_json")
-        if b64_json:
-            return ImageArtifact(data=b64_json)
+        for image_data in data:
+            artifact = ImageArtifact(
+                data=image_data.get("b64_json"),
+                url=image_data.get("url"),
+                mime_type=image_data.get("mime_type"),
+                metadata={
+                    key: value
+                    for key, value in image_data.items()
+                    if key not in {"b64_json", "url", "mime_type"}
+                },
+            )
+            if not artifact.has_content:
+                msg = "No image URL or base64 data in response"
+                raise ValueError(msg)
+            images.append(artifact)
 
-        url = image_data.get("url")
-        if url:
-            return ImageArtifact(url=url)
-
-        msg = "No image URL or base64 data in response"
-        raise ValueError(msg)
+        return images[0] if len(images) == 1 else images
 
 
 __all__ = ["XAIImagesClient"]
