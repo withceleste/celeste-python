@@ -42,10 +42,38 @@ class HeightMapper(ParameterMapper[ImageContent]):
         return request
 
 
-class PromptUpsamplingMapper(FieldMapper[ImageContent]):
-    """Map prompt_upsampling to BFL prompt_upsampling field."""
+class AspectRatioMapper(ParameterMapper[ImageContent]):
+    """Map native ratios or validated pixel dimensions for the BFL family."""
 
-    field = "prompt_upsampling"
+    def map(
+        self, request: dict[str, Any], value: object, model: Model
+    ) -> dict[str, Any]:
+        validated_value = self._validate_value(value, model)
+        if validated_value is None:
+            return request
+        if model.id in ("flux-kontext-pro", "flux-kontext-max", "flux-pro-1.1-ultra"):
+            request["aspect_ratio"] = validated_value
+        else:
+            width, height = validated_value.split("x")
+            request = WidthMapper().map(request, width, model)
+            request = HeightMapper().map(request, height, model)
+        return request
+
+
+class PromptUpsamplingMapper(ParameterMapper[ImageContent]):
+    """Map the prompt control supported by each BFL family."""
+
+    def map(
+        self, request: dict[str, Any], value: object, model: Model
+    ) -> dict[str, Any]:
+        validated_value = self._validate_value(value, model)
+        if validated_value is None or model.id.startswith("flux-2-klein-"):
+            return request
+        if model.id in ("flux-2-max", "flux-2-pro", "flux-2-pro-preview"):
+            request["disable_pup"] = not validated_value
+        else:
+            request["prompt_upsampling"] = validated_value
+        return request
 
 
 class SeedMapper(FieldMapper[ImageContent]):
@@ -79,6 +107,7 @@ class GuidanceMapper(FieldMapper[ImageContent]):
 
 
 __all__ = [
+    "AspectRatioMapper",
     "GuidanceMapper",
     "HeightMapper",
     "OutputFormatMapper",
