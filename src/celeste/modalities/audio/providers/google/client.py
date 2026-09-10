@@ -4,6 +4,7 @@ import base64
 from typing import Any
 
 from celeste.artifacts import AudioArtifact
+from celeste.core import Modality, Operation
 from celeste.mime_types import AudioMimeType
 from celeste.parameters import ParameterMapper
 from celeste.providers.google.interactions import config
@@ -13,10 +14,12 @@ from celeste.providers.google.interactions.client import (
 from celeste.providers.google.interactions.streaming import (
     GoogleInteractionsStream as _GoogleInteractionsStream,
 )
+from celeste.providers.google.utils import build_content_part
 from celeste.types import AudioContent
 
 from ...client import AudioClient
 from ...io import AudioChunk, AudioInput
+from ...parameters import AudioParameter
 from ...streaming import AudioStream
 from .parameters import GOOGLE_PARAMETER_MAPPERS, OutputFormatMapper
 
@@ -68,17 +71,33 @@ class GoogleAudioStream(_GoogleInteractionsStream, AudioStream):
 
 
 class GoogleAudioClient(GoogleInteractionsMixin, AudioClient):
-    """Google audio client (Interactions API TTS and music generation)."""
+    """Google audio client (Interactions API speech, transcription, and music)."""
 
     _speak_endpoint = config.GoogleInteractionsEndpoint.CREATE_INTERACTION
     _generate_endpoint = config.GoogleInteractionsEndpoint.CREATE_INTERACTION
+    _transcribe_endpoint = config.GoogleInteractionsEndpoint.CREATE_INTERACTION
 
     @classmethod
     def parameter_mappers(cls) -> list[ParameterMapper[AudioContent]]:
         return GOOGLE_PARAMETER_MAPPERS
 
     def _init_request(self, inputs: AudioInput) -> dict[str, Any]:
-        """Initialize request with text input."""
+        """Initialize a transcription or audio generation request."""
+        if inputs.audio is not None:
+            audio = inputs.audio
+            if isinstance(audio, list) and len(audio) == 1:
+                audio = audio[0]
+            if not isinstance(audio, AudioArtifact):
+                msg = "Google transcription requires exactly one AudioArtifact"
+                raise ValueError(msg)
+            self.model.parameter_constraints[AudioParameter.AUDIO](audio)
+            part = build_content_part(audio, "audio")
+            if audio.mime_type == AudioMimeType.PCM:
+                part["mime_type"] = "audio/l16"
+            for field in ("sample_rate", "channels"):
+                if audio.metadata.get(field) is not None:
+                    part[field] = audio.metadata[field]
+            return {"input": [part]}
         return {
             "input": inputs.text,
             "response_format": {"type": "audio"},
@@ -87,9 +106,21 @@ class GoogleAudioClient(GoogleInteractionsMixin, AudioClient):
     def _parse_content(
         self,
         response_data: dict[str, Any],
-    ) -> AudioArtifact:
-        """Parse the final generated audio block from model_output steps."""
+    ) -> AudioArtifact | str:
+        """Parse transcript text or the final generated audio block."""
         steps = super()._parse_content(response_data)
+        if Operation.TRANSCRIBE in self.model.operations.get(Modality.AUDIO, set()):
+            texts = [
+                part["text"]
+                for step in steps
+                if step.get("type") == "model_output"
+                for part in step.get("content", [])
+                if part.get("type") == "text" and part.get("text") is not None
+            ]
+            if texts:
+                return "".join(texts)
+            msg = "No text content in transcription response"
+            raise ValueError(msg)
         audio_part: dict[str, Any] | None = None
         for step in steps:
             if step.get("type") != "model_output":
@@ -113,7 +144,7 @@ class GoogleAudioClient(GoogleInteractionsMixin, AudioClient):
         raise ValueError(msg)
 
     def _build_metadata(self, response_data: dict[str, Any]) -> dict[str, Any]:
-        """Retain ordered lyrics and structure without copying audio payloads."""
+        """Retain ordered text and annotations without copying audio payloads."""
         metadata = super()._build_metadata(response_data)
         text_blocks = [
             part
