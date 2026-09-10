@@ -23,6 +23,13 @@ BASE_URL = "https://api.anthropic.com"
 
 # Required
 ANTHROPIC_VERSION = "2023-06-01"
+VERTEX_ANTHROPIC_VERSION = "vertex-2023-10-16"
+VERTEX_MODEL_IDS = {
+    "claude-sonnet-4-5": "claude-sonnet-4-5@20250929",
+    "claude-haiku-4-5": "claude-haiku-4-5@20251001",
+    "claude-opus-4-1": "claude-opus-4-1@20250805",
+    "claude-opus-4-5": "claude-opus-4-5@20251101",
+}
 CONTENT_TYPE_JSON = "application/json"
 
 # Header

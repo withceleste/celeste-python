@@ -190,7 +190,6 @@ MODELS: list[Model] = [
             Parameter.TEMPERATURE: Range(min=0.0, max=1.0, step=0.01),
             Parameter.MAX_TOKENS: Range(min=1, max=32000),
             TextParameter.THINKING_BUDGET: Range(min=1024, max=32000),
-            TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
             TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
             TextParameter.IMAGE: ImagesConstraint(),
