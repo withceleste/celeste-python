@@ -88,24 +88,43 @@ class GoogleAudioClient(GoogleInteractionsMixin, AudioClient):
         self,
         response_data: dict[str, Any],
     ) -> AudioArtifact:
-        """Parse the audio artifact from the model_output step."""
+        """Parse the final generated audio block from model_output steps."""
         steps = super()._parse_content(response_data)
+        audio_part: dict[str, Any] | None = None
         for step in steps:
             if step.get("type") != "model_output":
                 continue
             for part in step.get("content", []):
                 if part.get("type") != "audio" or not part.get("data"):
                     continue
-                metadata = {
-                    k: part[k] for k in ("sample_rate", "channels") if part.get(k)
-                }
-                return AudioArtifact(
-                    data=part["data"],
-                    mime_type=_to_audio_mime(part.get("mime_type")),
-                    metadata=metadata,
-                )
+                audio_part = part
+        if audio_part is not None:
+            metadata = {
+                k: audio_part[k]
+                for k in ("sample_rate", "channels")
+                if audio_part.get(k)
+            }
+            return AudioArtifact(
+                data=audio_part["data"],
+                mime_type=_to_audio_mime(audio_part.get("mime_type")),
+                metadata=metadata,
+            )
         msg = "No audio content in response"
         raise ValueError(msg)
+
+    def _build_metadata(self, response_data: dict[str, Any]) -> dict[str, Any]:
+        """Retain ordered lyrics and structure without copying audio payloads."""
+        metadata = super()._build_metadata(response_data)
+        text_blocks = [
+            part
+            for step in response_data.get("steps", [])
+            if step.get("type") == "model_output"
+            for part in step.get("content", [])
+            if part.get("type") == "text"
+        ]
+        if text_blocks:
+            metadata["text_blocks"] = text_blocks
+        return metadata
 
     def _stream_class(self) -> type[AudioStream]:
         """Return the Stream class for this provider."""

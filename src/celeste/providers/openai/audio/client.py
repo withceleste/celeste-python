@@ -11,6 +11,7 @@ from celeste.mime_types import AudioMimeType
 from celeste.utils import detect_mime_type
 
 from . import config
+from .parameters import ResponseFormatMapper
 
 _MIME_TO_EXT: dict[str, str] = {
     AudioMimeType.FLAC: "flac",
@@ -99,8 +100,18 @@ class OpenAIAudioClient(APIMixin):
             json_body=request_body,
         )
         self._handle_error_response(response)
+        content_type = (
+            response.headers.get("content-type", "").split(";", 1)[0].strip().lower()
+        )
         return {
             "audio_bytes": response.content,
+            "mime_type": (
+                AudioMimeType(content_type)
+                if content_type in AudioMimeType
+                else self._map_response_format_to_mime_type(
+                    request_body.get("response_format")
+                )
+            ),
             "headers": dict(response.headers),
         }
 
@@ -195,15 +206,9 @@ class OpenAIAudioClient(APIMixin):
         self, response_format: str | None
     ) -> AudioMimeType:
         """Map OpenAI response_format to AudioMimeType."""
-        format_map: dict[str, AudioMimeType] = {
-            "mp3": AudioMimeType.MP3,
-            "opus": AudioMimeType.OGG,
-            "aac": AudioMimeType.AAC,
-            "flac": AudioMimeType.FLAC,
-            "wav": AudioMimeType.WAV,
-            "pcm": AudioMimeType.WAV,
-        }
-        return format_map.get(response_format or "", AudioMimeType.MP3)
+        return ResponseFormatMapper._mime_map.get(
+            response_format or "", AudioMimeType.MP3
+        )
 
 
 __all__ = ["OpenAIAudioClient"]
