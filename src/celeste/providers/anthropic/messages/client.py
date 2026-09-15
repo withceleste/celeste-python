@@ -11,7 +11,12 @@ from celeste.providers.google.auth import GoogleADC
 
 from . import config
 
-_NATIVE_REPLAY_BLOCK_TYPES = {"thinking", "redacted_thinking", "server_tool_use"}
+_NATIVE_REPLAY_BLOCK_TYPES = {
+    "thinking",
+    "redacted_thinking",
+    "server_tool_use",
+    "compaction",
+}
 
 
 def needs_native_replay(blocks: list[dict[str, Any]]) -> bool:
@@ -68,7 +73,7 @@ class AnthropicMessagesClient(APIMixin):
         if isinstance(self.auth, GoogleADC):
             return self.auth.build_url(
                 self._get_vertex_endpoint(endpoint, streaming=streaming),
-                model_id=config.VERTEX_MODEL_IDS.get(self.model.id, self.model.id),
+                model_id=self.model.id,
             )
         return f"{config.BASE_URL}{endpoint}"
 
@@ -103,13 +108,7 @@ class AnthropicMessagesClient(APIMixin):
         request_body = super()._build_request(
             inputs, extra_body=extra_body, streaming=streaming, **parameters
         )
-        if isinstance(self.auth, GoogleADC):
-            request_body.pop("model", None)
-            request_body.setdefault(
-                "anthropic_version", config.VERTEX_ANTHROPIC_VERSION
-            )
-        else:
-            request_body["model"] = self.model.id
+        request_body["model"] = self.model.id
         if streaming:
             request_body["stream"] = True
         return request_body

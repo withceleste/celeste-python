@@ -217,7 +217,8 @@ class OutputFormatMapper(ParameterMapper[TextContent]):
 
     def parse_output(self, content: TextContent, value: object | None) -> TextContent:
         """Parse JSON to BaseModel using Pydantic's TypeAdapter."""
-        if value is None:
+        # Empty refusals and tool-only turns have no JSON result to validate.
+        if value is None or content == "":
             return content if isinstance(content, str) else json.dumps(content)
 
         # If content is already a BaseModel, return it unchanged
