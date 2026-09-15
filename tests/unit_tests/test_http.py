@@ -1,3 +1,4 @@
+import asyncio
 from collections.abc import AsyncIterator, Generator
 from types import SimpleNamespace
 from typing import Any
@@ -153,6 +154,15 @@ async def test_retry_exhaustion_reraises_transport_error(
 
 
 @pytest.mark.parametrize(
+    ("operation", "arguments"),
+    [
+        ("post", {"headers": {}, "json_body": {}}),
+        ("post_multipart", {"headers": {}, "files": {}, "data": {}}),
+        ("get", {}),
+    ],
+)
+@pytest.mark.parametrize("status", [429, 503])
+@pytest.mark.parametrize(
     ("retry_after", "delays"),
     [
         ("2", [2.0]),
@@ -163,14 +173,22 @@ async def test_retry_exhaustion_reraises_transport_error(
         ("invalid", [0.5]),
         ("NaN", [0.5]),
         ("inf", [0.5]),
+        ("", [0.5]),
+        ("3", [3.0]),
         ("4", []),
     ],
 )
 async def test_retry_after(
-    transport: AsyncMock, retry_after: str, delays: list[float]
+    transport: AsyncMock,
+    operation: str,
+    arguments: dict[str, Any],
+    status: int,
+    retry_after: str,
+    delays: list[float],
 ) -> None:
-    transport.post.side_effect = [
-        httpx.Response(429, headers={"Retry-After": retry_after}),
+    send = transport.get if operation == "get" else transport.post
+    send.side_effect = [
+        httpx.Response(status, headers={"Retry-After": retry_after}),
         httpx.Response(200),
     ]
     with (
@@ -178,10 +196,38 @@ async def test_retry_after(
         patch("time.time", return_value=0),
         patch("celeste.http.asyncio.sleep", new_callable=AsyncMock) as sleep,
     ):
-        response = await HTTPClient().post("https://example.com", {}, {}, timeout=3)
+        async with HTTPClient() as client:
+            response = await getattr(client, operation)(
+                "https://example.com", **arguments, timeout=3
+            )
     assert sleep.await_args_list == [call(delay) for delay in delays]
-    assert response.status_code == (200 if delays else 429)
-    assert transport.post.call_count == (2 if delays else 1)
+    assert response.status_code == (200 if delays else status)
+    assert send.call_count == (2 if delays else 1)
+
+
+async def test_retry_after_preserves_attempt_limit(transport: AsyncMock) -> None:
+    response = httpx.Response(429, headers={"Retry-After": "2"})
+    transport.post.return_value = response
+    with (
+        patch("celeste.http.httpx.AsyncClient", return_value=transport),
+        patch("celeste.http.asyncio.sleep", new_callable=AsyncMock) as sleep,
+    ):
+        async with HTTPClient() as client:
+            assert await client.post("https://example.com", {}, {}) is response
+    assert transport.post.call_count == MAX_RETRIES + 1
+    assert sleep.await_args_list == [call(2.0)] * MAX_RETRIES
+
+
+async def test_cancellation_during_retry_wait_propagates(transport: AsyncMock) -> None:
+    transport.post.return_value = httpx.Response(503, headers={"Retry-After": "2"})
+    with (
+        patch("celeste.http.httpx.AsyncClient", return_value=transport),
+        patch("celeste.http.asyncio.sleep", side_effect=asyncio.CancelledError),
+        pytest.raises(asyncio.CancelledError),
+    ):
+        async with HTTPClient() as client:
+            await client.post("https://example.com", {}, {})
+    assert transport.post.call_count == 1
 
 
 def test_registry_is_keyed_by_provider_and_modality() -> None:
