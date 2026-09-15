@@ -14,25 +14,38 @@ from celeste.providers.byteplus.images.streaming import (
     BytePlusImagesStream as _BytePlusImagesStream,
 )
 from celeste.types import ImageContent
+from celeste.utils.mime import detect_mime_type
 
 from ...client import ImagesClient
-from ...io import (
-    ImageChunk,
-    ImageInput,
-    ImageUsage,
-)
+from ...io import ImageChunk, ImageInput
 from ...parameters import ImageParameters
 from ...streaming import ImagesStream
 from .parameters import BYTEPLUS_PARAMETER_MAPPERS
 
 
+def _image_artifact(image_data: dict[str, Any]) -> ImageArtifact:
+    """Retain one delivered image and its native non-payload metadata."""
+    artifact = ImageArtifact(
+        url=image_data.get("url") or None,
+        data=image_data.get("b64_json") or None,
+        metadata={
+            key: value
+            for key, value in image_data.items()
+            if key not in {"url", "b64_json"}
+        },
+    )
+    try:
+        artifact.mime_type = ImageMimeType(f"image/{image_data.get('output_format')}")
+    except ValueError:
+        if artifact.data:
+            detected = detect_mime_type(artifact.data)
+            if isinstance(detected, ImageMimeType):
+                artifact.mime_type = detected
+    return artifact
+
+
 class BytePlusImagesStream(_BytePlusImagesStream, ImagesStream):
     """BytePlus streaming for images modality."""
-
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
-        super().__init__(*args, **kwargs)
-        self._completed_usage: ImageUsage | None = None
-        self._completed_event_data: dict[str, Any] | None = None
 
     def _parse_chunk(self, event_data: dict[str, Any]) -> ImageChunk | None:
         """Parse one SSE event into a typed chunk."""
@@ -47,47 +60,32 @@ class BytePlusImagesStream(_BytePlusImagesStream, ImagesStream):
             )
 
         # Handle completed event (usage only)
-        usage = self._get_chunk_usage(event_data)
-        if usage is not None:
-            self._completed_usage = usage
-            self._completed_event_data = event_data
-            return None
+        if event_data.get("type") == "image_generation.completed":
+            return ImageChunk(
+                content=ImageArtifact(),
+                usage=self._get_chunk_usage(event_data),
+                finish_reason=self._get_chunk_finish_reason(event_data),
+                metadata={"event_data": event_data},
+            )
 
         # Handle partial succeeded (image content)
         content = self._parse_chunk_content(event_data)
         if not content:
             return None
 
-        content_type = self._parse_chunk_content_type(event_data)
-        if content_type == "url":
-            artifact = ImageArtifact(url=content, mime_type=ImageMimeType.PNG)
-        else:  # b64_json
-            artifact = ImageArtifact(data=content)
-
         return ImageChunk(
-            content=artifact,
+            content=_image_artifact(event_data),
             finish_reason=self._get_chunk_finish_reason(event_data),
             usage=None,
             metadata={"event_data": event_data},
         )
 
-    def _aggregate_content(self, chunks: list[ImageChunk]) -> ImageArtifact:
-        """Aggregate image content from chunks."""
-        return chunks[-1].content
-
-    def _aggregate_usage(self, chunks: list[ImageChunk]) -> ImageUsage:
-        """Override: Use usage from completed event."""
-        if self._completed_usage is not None:
-            return self._completed_usage
-        return super()._aggregate_usage(chunks)
-
-    def _aggregate_event_data(self, chunks: list[ImageChunk]) -> list[dict[str, Any]]:
-        """Prepend completed_event_data, then delegate to base."""
-        events: list[dict[str, Any]] = []
-        if self._completed_event_data is not None:
-            events.append(self._completed_event_data)
-        events.extend(super()._aggregate_event_data(chunks))
-        return events
+    def _aggregate_content(self, chunks: list[ImageChunk]) -> ImageContent:
+        """Retain every delivered image, excluding failure/completion placeholders."""
+        artifacts = [chunk.content for chunk in chunks if chunk.content.has_content]
+        if not artifacts:
+            return ImageArtifact()
+        return artifacts[0] if len(artifacts) == 1 else artifacts
 
 
 class BytePlusImagesClient(BytePlusImagesMixin, ImagesClient):
@@ -109,27 +107,18 @@ class BytePlusImagesClient(BytePlusImagesMixin, ImagesClient):
     def _parse_content(
         self,
         response_data: dict[str, Any],
-    ) -> ImageArtifact:
+    ) -> ImageContent:
         """Parse content from response."""
         content = super()._parse_content(response_data)
-        if not content:
-            msg = "No image content found in BytePlus response"
+        artifacts = [
+            _image_artifact(image_data)
+            for image_data in content
+            if image_data.get("url") or image_data.get("b64_json")
+        ]
+        if not artifacts:
+            msg = "No image URL or base64 data in BytePlus response"
             raise ValidationError(msg)
-
-        image_data = content[0]
-        if image_data.get("url"):
-            return ImageArtifact(
-                url=image_data["url"],
-                mime_type=ImageMimeType.PNG,
-            )
-        if image_data.get("b64_json"):
-            return ImageArtifact(
-                data=image_data["b64_json"],
-                mime_type=ImageMimeType.PNG,
-            )
-
-        msg = "No image URL or base64 data in BytePlus response"
-        raise ValidationError(msg)
+        return artifacts[0] if len(artifacts) == 1 else artifacts
 
     async def _make_request(
         self,
