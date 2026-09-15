@@ -39,11 +39,28 @@ class GoogleInteractionsImagesClient(GoogleInteractionsMixin, ImagesClient):
             if part.get("type") == "text"
         ]
         if "steps" in response_data:
-            metadata["raw_response"]["grounding_query_count"] = sum(
-                len(step.get("arguments", {}).get("queries") or [])
-                for step in steps
-                if step.get("type") == "google_search_call"
-            )
+            query_count = 0
+            for step in steps:
+                if step.get("type") != "google_search_call":
+                    continue
+                arguments = step.get("arguments")
+                if not isinstance(arguments, dict):
+                    break
+                queries = arguments.get("queries")
+                if isinstance(queries, list) and all(
+                    isinstance(query, str) and query.strip() for query in queries
+                ):
+                    query_count += len(queries)
+                elif (
+                    queries is None
+                    and isinstance(query := arguments.get("query"), str)
+                    and query.strip()
+                ):
+                    query_count += 1
+                else:
+                    break
+            else:
+                metadata["raw_response"]["grounding_query_count"] = query_count
         return metadata
 
     def _init_request(self, inputs: ImageInput) -> dict[str, Any]:
