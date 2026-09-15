@@ -1,8 +1,9 @@
 """Unit tests for Google images provider Interactions/Vertex dispatch and wire shape."""
 
+import pytest
 from pydantic import SecretStr
 
-from celeste import Model
+from celeste import Model, create_client
 from celeste.artifacts import ImageArtifact
 from celeste.auth import AuthHeader
 from celeste.core import Modality, Operation, Provider
@@ -45,6 +46,25 @@ def test_google_adc_auth_dispatches_to_vertex_strategy() -> None:
     assert isinstance(client._strategy, GoogleVertexImagesClient)
     assert client._generate_endpoint == client._strategy._generate_endpoint
     assert client._edit_endpoint == client._strategy._edit_endpoint
+
+
+@pytest.mark.parametrize("use_adc", [False, True], ids=["api-key", "adc"])
+def test_create_client_rejects_unknown_google_images_model(use_adc: bool) -> None:
+    model = Model(
+        id="unknown-google-image-model",
+        provider=Provider.GOOGLE,
+        display_name="Unknown Google image model",
+        operations={Modality.IMAGES: {Operation.GENERATE}},
+    )
+    auth = GoogleADC(project_id="p") if use_adc else _api_key_auth()
+
+    with pytest.raises(ValueError, match="Unknown Google images model"):
+        create_client(
+            modality=Modality.IMAGES,
+            provider=Provider.GOOGLE,
+            model=model,
+            auth=auth,
+        )
 
 
 def test_interactions_init_request_generate_is_text_only() -> None:

@@ -1,4 +1,4 @@
-"""Google images client (Imagen by model; Gemini models use Interactions or Vertex by auth)."""
+"""Google images client (Interactions or Vertex selected by auth)."""
 
 from typing import Any, Unpack
 
@@ -9,47 +9,35 @@ from celeste.types import ImageContent
 from ...client import ImagesClient
 from ...io import ImageFinishReason, ImageInput
 from ...parameters import ImageParameters
-from .imagen import GoogleImagenImagesClient
 from .interactions import GoogleInteractionsImagesClient
-from .models import GOOGLE_GEMINI_MODELS, GOOGLE_IMAGEN_MODELS
+from .models import MODELS
 from .parameters import (
-    GOOGLE_IMAGEN_PARAMETER_MAPPERS,
     GOOGLE_INTERACTIONS_PARAMETER_MAPPERS,
     GOOGLE_VERTEX_PARAMETER_MAPPERS,
 )
 from .vertex import GoogleVertexImagesClient
 
-_IMAGEN_MODEL_IDS = frozenset(m.id for m in GOOGLE_IMAGEN_MODELS)
-_GEMINI_MODEL_IDS = frozenset(m.id for m in GOOGLE_GEMINI_MODELS)
+_MODEL_IDS = frozenset(m.id for m in MODELS)
 
 
 class GoogleImagesClient(ImagesClient):
-    """Google images client (selects the Imagen, Interactions, or Vertex backend)."""
+    """Google images client (selects the Interactions or Vertex backend)."""
 
-    _strategy: (
-        GoogleImagenImagesClient
-        | GoogleInteractionsImagesClient
-        | GoogleVertexImagesClient
-        | None
-    ) = None
+    _strategy: GoogleInteractionsImagesClient | GoogleVertexImagesClient | None = None
 
     def model_post_init(self, __context: object) -> None:
         """Initialize the backend client based on model id and auth type."""
         super().model_post_init(__context)
 
-        StrategyClass: type[ImagesClient]
-        if self.model.id in _IMAGEN_MODEL_IDS:
-            StrategyClass = GoogleImagenImagesClient
-        elif self.model.id in _GEMINI_MODEL_IDS:
-            StrategyClass = (
-                GoogleVertexImagesClient
-                if isinstance(self.auth, GoogleADC)
-                else GoogleInteractionsImagesClient
-            )
-        else:
+        if self.model.id not in _MODEL_IDS:
             msg = f"Unknown Google images model: {self.model.id}"
             raise ValueError(msg)
 
+        StrategyClass = (
+            GoogleVertexImagesClient
+            if isinstance(self.auth, GoogleADC)
+            else GoogleInteractionsImagesClient
+        )
         strategy = StrategyClass(
             modality=self.modality,
             model=self.model,
@@ -71,7 +59,6 @@ class GoogleImagesClient(ImagesClient):
         return [
             *GOOGLE_INTERACTIONS_PARAMETER_MAPPERS,
             *GOOGLE_VERTEX_PARAMETER_MAPPERS,
-            *GOOGLE_IMAGEN_PARAMETER_MAPPERS,
         ]
 
     def _init_request(self, inputs: ImageInput) -> dict[str, Any]:
