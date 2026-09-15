@@ -40,6 +40,40 @@ ELEVENLABS_OUTPUT_FORMATS = [
     "opus_48000_192",
 ]
 
+_TTS_V2_5_LANGUAGES = [
+    Language.ARABIC,
+    Language.CHINESE,
+    Language.CZECH,
+    Language.DANISH,
+    Language.DUTCH,
+    Language.ENGLISH,
+    Language.FILIPINO,
+    Language.FINNISH,
+    Language.FRENCH,
+    Language.GERMAN,
+    Language.GREEK,
+    Language.HINDI,
+    Language.HUNGARIAN,
+    Language.INDONESIAN,
+    Language.ITALIAN,
+    Language.JAPANESE,
+    Language.KOREAN,
+    Language.MALAY,
+    Language.NORWEGIAN,
+    Language.POLISH,
+    Language.PORTUGUESE,
+    Language.ROMANIAN,
+    Language.RUSSIAN,
+    Language.SLOVAK,
+    Language.SPANISH,
+    Language.SWEDISH,
+    Language.TAMIL,
+    Language.THAI,
+    Language.TURKISH,
+    Language.UKRAINIAN,
+    Language.VIETNAMESE,
+]
+
 _SCRIBE_MIME_TYPES = [
     AudioMimeType.FLAC,
     AudioMimeType.MP3,
@@ -87,7 +121,7 @@ ELEVENLABS_TTS_MODELS: list[Model] = [
         parameter_constraints={
             AudioParameter.VOICE: VoiceConstraint(voices=ELEVENLABS_VOICES),
             AudioParameter.SPEED: Range(min=0.7, max=1.2),
-            AudioParameter.LANGUAGE: Choice(options=list(Language)),
+            AudioParameter.LANGUAGE: Choice(options=_TTS_V2_5_LANGUAGES),
             AudioParameter.OUTPUT_FORMAT: Choice(options=ELEVENLABS_OUTPUT_FORMATS),
         },
     ),
@@ -112,7 +146,7 @@ ELEVENLABS_TTS_MODELS: list[Model] = [
         parameter_constraints={
             AudioParameter.VOICE: VoiceConstraint(voices=ELEVENLABS_VOICES),
             AudioParameter.SPEED: Range(min=0.7, max=1.2),
-            AudioParameter.LANGUAGE: Choice(options=list(Language)),
+            AudioParameter.LANGUAGE: Choice(options=_TTS_V2_5_LANGUAGES),
             AudioParameter.OUTPUT_FORMAT: Choice(options=ELEVENLABS_OUTPUT_FORMATS),
         },
     ),

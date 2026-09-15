@@ -47,10 +47,10 @@ class AnthropicMessagesStream:
                 )
                 captured["input_json"] = ""
                 self._content_blocks[idx] = captured
-            elif block_type == "redacted_thinking" or (
+            elif block_type in {"redacted_thinking", "compaction"} or (
                 isinstance(block_type, str) and block_type.endswith("_tool_result")
             ):
-                self._content_blocks[idx] = block
+                self._content_blocks[idx] = dict(block)
             elif block_type == "thinking":
                 self._content_blocks[idx] = {
                     "type": "thinking",
@@ -71,6 +71,11 @@ class AnthropicMessagesStream:
             if delta_type == "input_json_delta":
                 if block and block.get("type") in {"server_tool_use", "tool_use"}:
                     block["input_json"] += delta.get("partial_json", "")
+            elif delta_type == "compaction_delta":
+                if block and block.get("type") == "compaction":
+                    for key in ("content", "encrypted_content"):
+                        if key in delta:
+                            block[key] = delta[key]
             elif delta_type in {"thinking_delta", "signature_delta"}:
                 key = delta_type.removesuffix("_delta")
                 if block and block.get("type") == "thinking":

@@ -17,6 +17,24 @@ from ...parameters import TextParameter
 
 MODELS: list[Model] = [
     Model(
+        id="gpt-6-astra",
+        provider=Provider.OPENAI,
+        display_name="GPT-6 Astra",
+        operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
+        streaming=True,
+        parameter_constraints={
+            Parameter.MAX_TOKENS: Range(min=1, max=128000),
+            TextParameter.THINKING_BUDGET: Choice(
+                options=["low", "medium", "high", "xhigh", "max"]
+            ),
+            TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
+            TextParameter.OUTPUT_SCHEMA: Schema(),
+            TextParameter.IMAGE: ImagesConstraint(),
+            TextParameter.DOCUMENT: DocumentsConstraint(),
+        },
+    ),
+    Model(
         id="gpt-4o",
         provider=Provider.OPENAI,
         display_name="GPT-4o",
@@ -73,7 +91,7 @@ MODELS: list[Model] = [
         parameter_constraints={
             Parameter.MAX_TOKENS: Range(min=1, max=128000),
             TextParameter.THINKING_BUDGET: Choice(
-                options=["minimal", "low", "medium", "high", "xhigh"]
+                options=["none", "low", "medium", "high", "xhigh"]
             ),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
             TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
@@ -90,31 +108,10 @@ MODELS: list[Model] = [
         streaming=True,
         parameter_constraints={
             Parameter.MAX_TOKENS: Range(min=1, max=128000),
-            TextParameter.THINKING_BUDGET: Choice(
-                options=["minimal", "low", "medium", "high", "xhigh"]
-            ),
+            TextParameter.THINKING_BUDGET: Choice(options=["medium", "high", "xhigh"]),
             TextParameter.VERBOSITY: Choice(options=["low", "medium", "high"]),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
             TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
-            TextParameter.OUTPUT_SCHEMA: Schema(),
-            TextParameter.IMAGE: ImagesConstraint(),
-            TextParameter.DOCUMENT: DocumentsConstraint(),
-        },
-    ),
-    Model(
-        id="gpt-5.2-codex",
-        provider=Provider.OPENAI,
-        display_name="GPT-5.2 Codex",
-        operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
-        streaming=True,
-        parameter_constraints={
-            Parameter.MAX_TOKENS: Range(min=1, max=128000),
-            TextParameter.THINKING_BUDGET: Choice(
-                options=["low", "medium", "high", "xhigh"]
-            ),
-            TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
-            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
-            TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.IMAGE: ImagesConstraint(),
             TextParameter.DOCUMENT: DocumentsConstraint(),
         },
@@ -134,21 +131,6 @@ MODELS: list[Model] = [
             TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.IMAGE: ImagesConstraint(),
-        },
-    ),
-    Model(
-        id="gpt-5.2-chat-latest",
-        provider=Provider.OPENAI,
-        display_name="GPT-5.2 Instant",
-        operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
-        streaming=True,
-        parameter_constraints={
-            Parameter.TEMPERATURE: Range(min=0.0, max=2.0),
-            Parameter.MAX_TOKENS: Range(min=1, max=16384),
-            TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
-            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
-            TextParameter.IMAGE: ImagesConstraint(),
-            TextParameter.DOCUMENT: DocumentsConstraint(),
         },
     ),
     Model(
@@ -176,26 +158,7 @@ MODELS: list[Model] = [
         parameter_constraints={
             Parameter.MAX_TOKENS: Range(min=1, max=128000),
             TextParameter.THINKING_BUDGET: Choice(
-                options=["minimal", "low", "medium", "high"]
-            ),
-            TextParameter.VERBOSITY: Choice(options=["low", "medium", "high"]),
-            TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
-            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
-            TextParameter.OUTPUT_SCHEMA: Schema(),
-            TextParameter.IMAGE: ImagesConstraint(),
-            TextParameter.DOCUMENT: DocumentsConstraint(),
-        },
-    ),
-    Model(
-        id="gpt-5.1-codex",
-        provider=Provider.OPENAI,
-        display_name="GPT-5.1 Codex",
-        operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
-        streaming=True,
-        parameter_constraints={
-            Parameter.MAX_TOKENS: Range(min=1, max=128000),
-            TextParameter.THINKING_BUDGET: Choice(
-                options=["minimal", "low", "medium", "high"]
+                options=["none", "low", "medium", "high"]
             ),
             TextParameter.VERBOSITY: Choice(options=["low", "medium", "high"]),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
@@ -321,7 +284,7 @@ MODELS: list[Model] = [
         parameter_constraints={
             Parameter.MAX_TOKENS: Range(min=1, max=128000),
             TextParameter.THINKING_BUDGET: Choice(
-                options=["minimal", "low", "medium", "high", "xhigh"]
+                options=["none", "low", "medium", "high", "xhigh"]
             ),
             TextParameter.VERBOSITY: Choice(options=["low", "medium", "high"]),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
@@ -355,7 +318,7 @@ MODELS: list[Model] = [
         parameter_constraints={
             Parameter.MAX_TOKENS: Range(min=1, max=128000),
             TextParameter.THINKING_BUDGET: Choice(
-                options=["minimal", "low", "medium", "high"]
+                options=["none", "low", "medium", "high", "xhigh"]
             ),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
             TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
@@ -373,7 +336,7 @@ MODELS: list[Model] = [
         parameter_constraints={
             Parameter.MAX_TOKENS: Range(min=1, max=128000),
             TextParameter.THINKING_BUDGET: Choice(
-                options=["minimal", "low", "medium", "high"]
+                options=["none", "low", "medium", "high", "xhigh"]
             ),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
             TextParameter.OUTPUT_SCHEMA: Schema(),
@@ -390,7 +353,7 @@ MODELS: list[Model] = [
         parameter_constraints={
             Parameter.MAX_TOKENS: Range(min=1, max=128000),
             TextParameter.THINKING_BUDGET: Choice(
-                options=["minimal", "low", "medium", "high", "xhigh"]
+                options=["none", "low", "medium", "high", "xhigh"]
             ),
             TextParameter.VERBOSITY: Choice(options=["low", "medium", "high"]),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
@@ -408,13 +371,10 @@ MODELS: list[Model] = [
         streaming=True,
         parameter_constraints={
             Parameter.MAX_TOKENS: Range(min=1, max=128000),
-            TextParameter.THINKING_BUDGET: Choice(
-                options=["minimal", "low", "medium", "high", "xhigh"]
-            ),
+            TextParameter.THINKING_BUDGET: Choice(options=["medium", "high", "xhigh"]),
             TextParameter.VERBOSITY: Choice(options=["low", "medium", "high"]),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
             TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
-            TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.IMAGE: ImagesConstraint(),
             TextParameter.DOCUMENT: DocumentsConstraint(),
         },
