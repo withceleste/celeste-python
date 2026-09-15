@@ -90,7 +90,6 @@ class BFLImagesClient(APIMixin):
             poll_response = await self.http_client.get(
                 polling_url,
                 headers=poll_headers,
-                follow_redirects=False,
             )
 
             self._handle_error_response(poll_response)
