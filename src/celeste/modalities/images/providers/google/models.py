@@ -1,53 +1,12 @@
 """Google models for images modality."""
 
-from celeste.constraints import Choice, ImagesConstraint, Range
+from celeste.constraints import Choice, ImagesConstraint
 from celeste.core import Modality, Operation, Provider
 from celeste.models import Model
 
 from ...parameters import ImageParameter
 
-# Imagen API models (instances[].prompt → predictions[])
-GOOGLE_IMAGEN_MODELS: list[Model] = [
-    # Imagen 4 models (text-to-image) - Current GA
-    Model(
-        id="imagen-4.0-generate-001",
-        provider=Provider.GOOGLE,
-        display_name="Imagen 4",
-        operations={Modality.IMAGES: {Operation.GENERATE}},
-        parameter_constraints={
-            ImageParameter.NUM_IMAGES: Range(min=1, max=4),
-            ImageParameter.ASPECT_RATIO: Choice(
-                options=["1:1", "3:4", "4:3", "9:16", "16:9"]
-            ),
-            ImageParameter.QUALITY: Choice(options=["1K", "2K"]),
-        },
-    ),
-    Model(
-        id="imagen-4.0-fast-generate-001",
-        provider=Provider.GOOGLE,
-        display_name="Imagen 4 Fast",
-        operations={Modality.IMAGES: {Operation.GENERATE}},
-        parameter_constraints={
-            ImageParameter.NUM_IMAGES: Range(min=1, max=4),
-            ImageParameter.ASPECT_RATIO: Choice(
-                options=["1:1", "3:4", "4:3", "9:16", "16:9"]
-            ),
-        },
-    ),
-    Model(
-        id="imagen-4.0-ultra-generate-001",
-        provider=Provider.GOOGLE,
-        display_name="Imagen 4 Ultra",
-        operations={Modality.IMAGES: {Operation.GENERATE}},
-        parameter_constraints={
-            ImageParameter.NUM_IMAGES: Range(min=1, max=4),
-            ImageParameter.ASPECT_RATIO: Choice(
-                options=["1:1", "3:4", "4:3", "9:16", "16:9"]
-            ),
-            ImageParameter.QUALITY: Choice(options=["1K", "2K"]),
-        },
-    ),
-]
+GOOGLE_IMAGEN_MODELS: list[Model] = []
 
 # Gemini API models (contents[].parts[] → candidates[])
 GOOGLE_GEMINI_MODELS: list[Model] = [
