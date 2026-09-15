@@ -75,7 +75,7 @@ class ThinkingLevelMapper(_ThinkingLevelMapper):
 
 
 class OutputSchemaMapper(_OutputFormatMapper):
-    """Map output_schema to Anthropic's output_format parameter."""
+    """Map output_schema to Anthropic's output_config.format parameter."""
 
     name = TextParameter.OUTPUT_SCHEMA
 

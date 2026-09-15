@@ -176,7 +176,7 @@ class ToolChoiceMapper(ParameterMapper[TextContent]):
 
 
 class OutputFormatMapper(ParameterMapper[TextContent]):
-    """Map output_schema to Anthropic output_format field.
+    """Map output_schema to Anthropic output_config.format field.
 
     Handles both single BaseModel and list[BaseModel] types.
     Anthropic supports top-level arrays, $ref, and $defs natively.
@@ -208,19 +208,17 @@ class OutputFormatMapper(ParameterMapper[TextContent]):
                 mode="serialization",
             )
 
-        request["output_format"] = {
+        request.setdefault("output_config", {})["format"] = {
             "type": "json_schema",
             "schema": schema,
         }
-
-        # Signal that structured outputs beta header is needed
-        request.setdefault("_beta_features", []).append("structured-outputs")
 
         return request
 
     def parse_output(self, content: TextContent, value: object | None) -> TextContent:
         """Parse JSON to BaseModel using Pydantic's TypeAdapter."""
-        if value is None:
+        # Empty refusals and tool-only turns have no JSON result to validate.
+        if value is None or content == "":
             return content if isinstance(content, str) else json.dumps(content)
 
         # If content is already a BaseModel, return it unchanged

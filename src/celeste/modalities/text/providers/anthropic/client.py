@@ -247,13 +247,9 @@ class AnthropicTextClient(AnthropicMessagesMixin, TextClient):
         """Parse content from response."""
         content = super()._parse_content(response_data)
 
-        text_content = ""
-        for content_block in content:
-            if content_block.get("type") == "text":
-                text_content = content_block.get("text") or ""
-                break
-
-        return text_content
+        return "".join(
+            block.get("text") or "" for block in content if block.get("type") == "text"
+        )
 
     def _parse_reasoning(
         self, response_data: dict[str, Any]
