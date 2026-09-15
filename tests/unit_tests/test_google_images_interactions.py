@@ -6,9 +6,12 @@ from pydantic import SecretStr
 from celeste import Model, create_client
 from celeste.artifacts import ImageArtifact
 from celeste.auth import AuthHeader
+from celeste.constraints import ImagesConstraint
 from celeste.core import Modality, Operation, Provider
+from celeste.exceptions import ConstraintViolationError
 from celeste.mime_types import ImageMimeType
 from celeste.modalities.images.io import ImageInput
+from celeste.modalities.images.parameters import ImageParameter
 from celeste.modalities.images.providers.google.client import GoogleImagesClient
 from celeste.modalities.images.providers.google.interactions import (
     GoogleInteractionsImagesClient,
@@ -46,6 +49,40 @@ def test_google_adc_auth_dispatches_to_vertex_strategy() -> None:
     assert isinstance(client._strategy, GoogleVertexImagesClient)
     assert client._generate_endpoint == client._strategy._generate_endpoint
     assert client._edit_endpoint == client._strategy._edit_endpoint
+
+
+@pytest.mark.parametrize("use_adc", [False, True], ids=["api-key", "adc"])
+@pytest.mark.parametrize(
+    ("primary", "reference_count", "rejected"),
+    [(False, 2, False), (False, 3, True), (True, 1, False), (True, 2, True)],
+)
+def test_reference_limit_counts_primary_image(
+    use_adc: bool, primary: bool, reference_count: int, rejected: bool
+) -> None:
+    model = _model().model_copy(
+        update={
+            "parameter_constraints": {
+                ImageParameter.REFERENCE_IMAGES: ImagesConstraint(max_count=2)
+            }
+        }
+    )
+    client = create_client(
+        modality=Modality.IMAGES,
+        model=model,
+        auth=GoogleADC(project_id="p") if use_adc else _api_key_auth(),
+    )
+    image = ImageArtifact(data=b"ref", mime_type=ImageMimeType.PNG)
+    inputs = ImageInput(prompt="combine", image=image if primary else None)
+    references = [image] * reference_count
+    if rejected:
+        with pytest.raises(ConstraintViolationError, match="at most 2"):
+            client._build_request(inputs, reference_images=references)
+        return
+    request = client._build_request(inputs, reference_images=references)
+    parts = (
+        request["contents"][0]["parts"] if use_adc else request["input"][0]["content"]
+    )
+    assert len(parts) == reference_count + int(primary) + 1
 
 
 @pytest.mark.parametrize("use_adc", [False, True], ids=["api-key", "adc"])
