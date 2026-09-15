@@ -15,6 +15,7 @@ _RESPONSE_FORMAT_OPTIONS = [
     AudioMimeType.OGG,  # Maps to "opus" in OpenAI API
     AudioMimeType.AAC,
     AudioMimeType.FLAC,
+    AudioMimeType.WAV,
 ]
 
 _OPENAI_TRANSCRIBE_MIME_TYPES = [
@@ -81,6 +82,14 @@ MODELS: list[Model] = [
             AudioParameter.SPEED: Range(min=0.25, max=4.0),
             AudioParameter.OUTPUT_FORMAT: Choice(options=_RESPONSE_FORMAT_OPTIONS),
         },
+    ),
+    Model(
+        id="gpt-transcribe",
+        provider=Provider.OPENAI,
+        display_name="GPT Transcribe",
+        streaming=False,
+        operations={Modality.AUDIO: {Operation.TRANSCRIBE}},
+        parameter_constraints=_TRANSCRIBE_CONSTRAINTS,
     ),
     Model(
         id="gpt-4o-mini-transcribe",

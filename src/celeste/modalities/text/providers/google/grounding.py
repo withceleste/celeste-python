@@ -108,13 +108,14 @@ def map_grounding_interactions(steps: list[dict[str, Any]]) -> Grounding | None:
     sources: list[GroundingSource] = []
     source_indices: dict[str, int] = {}
     citations: list[Citation] = []
+    offset = 0
     for step in steps:
         if step.get("type") != "model_output":
             continue
         for part in step.get("content", []):
             if part.get("type") != "text":
                 continue
-            part_text = part.get("text", "")
+            part_text = part.get("text") or ""
             for annotation in part.get("annotations", []):
                 if annotation.get("type") != "url_citation":
                     continue
@@ -137,16 +138,17 @@ def map_grounding_interactions(steps: list[dict[str, Any]]) -> Grounding | None:
                     continue
                 start = _byte_offset_to_char_offset(part_text, start)
                 end = _byte_offset_to_char_offset(part_text, end)
-                if start is None or end is None:
+                if start is None or end is None or start > end:
                     continue
                 citations.append(
                     Citation(
-                        start=start,
-                        end=end,
+                        start=offset + start,
+                        end=offset + end,
                         source_indices=[source_indices[url]],
                         cited_text=part_text[start:end] or None,
                     )
                 )
+            offset += len(part_text)
 
     if not queries and not sources and not citations:
         return None

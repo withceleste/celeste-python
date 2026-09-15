@@ -139,7 +139,6 @@ MODELS: list[Model] = [
                 max_pixels=4_624_220,
                 min_aspect_ratio=1 / 16,
                 max_aspect_ratio=16,
-                multiple_of=16,
                 presets={
                     "1K 1:1": "1024x1024",
                     "1K 4:3": "1152x864",
