@@ -17,6 +17,24 @@ from ...parameters import TextParameter
 
 MODELS: list[Model] = [
     Model(
+        id="gpt-6-astra",
+        provider=Provider.OPENAI,
+        display_name="GPT-6 Astra",
+        operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
+        streaming=True,
+        parameter_constraints={
+            Parameter.MAX_TOKENS: Range(min=1, max=128000),
+            TextParameter.THINKING_BUDGET: Choice(
+                options=["low", "medium", "high", "xhigh", "max"]
+            ),
+            TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
+            TextParameter.OUTPUT_SCHEMA: Schema(),
+            TextParameter.IMAGE: ImagesConstraint(),
+            TextParameter.DOCUMENT: DocumentsConstraint(),
+        },
+    ),
+    Model(
         id="gpt-4o",
         provider=Provider.OPENAI,
         display_name="GPT-4o",
