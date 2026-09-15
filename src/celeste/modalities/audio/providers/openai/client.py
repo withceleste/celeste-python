@@ -50,7 +50,9 @@ class OpenAIAudioClient(OpenAIAudioMixin, AudioClient):
             if not audio_bytes:
                 msg = "No audio data in response"
                 raise ValueError(msg)
-            return AudioArtifact(data=audio_bytes)
+            return AudioArtifact(
+                data=audio_bytes, mime_type=response_data.get("mime_type")
+            )
         return super()._parse_content(response_data)
 
     def _parse_finish_reason(self, response_data: dict[str, Any]) -> AudioFinishReason:

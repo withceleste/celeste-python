@@ -22,6 +22,3 @@ BASE_URL = "https://generativelanguage.googleapis.com"
 # Polling Configuration
 POLL_INTERVAL = 10  # seconds
 DEFAULT_TIMEOUT = 300.0  # 5 minutes for long-running operations
-
-# Storage Configuration
-STORAGE_BASE_URL = "https://storage.googleapis.com/"

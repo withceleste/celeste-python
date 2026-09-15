@@ -2,7 +2,7 @@
 
 import asyncio
 import time
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from typing import Any, ClassVar
 
 from celeste.client import APIMixin
@@ -99,7 +99,7 @@ class TopazLabsImageClient(APIMixin):
 
         response = await self.http_client.post_multipart(
             f"{config.BASE_URL}{endpoint}",
-            headers=self._merge_headers(self.auth.get_headers(), extra_headers),
+            headers=self._merge_headers(await self.auth.aget_headers(), extra_headers),
             files=files,
             data=data,
         )
@@ -115,7 +115,7 @@ class TopazLabsImageClient(APIMixin):
     ) -> dict[str, Any]:
         """Poll status until Completed or terminal failure."""
         headers = self._merge_headers(
-            {**self.auth.get_headers(), "Accept": ApplicationMimeType.JSON},
+            {**(await self.auth.aget_headers()), "Accept": ApplicationMimeType.JSON},
             extra_headers,
         )
         status_url = (
@@ -155,7 +155,7 @@ class TopazLabsImageClient(APIMixin):
     ) -> dict[str, Any]:
         """Fetch presigned download URL for a completed process."""
         headers = self._merge_headers(
-            {**self.auth.get_headers(), "Accept": ApplicationMimeType.JSON},
+            {**(await self.auth.aget_headers()), "Accept": ApplicationMimeType.JSON},
             extra_headers,
         )
         download_url = (
@@ -167,14 +167,14 @@ class TopazLabsImageClient(APIMixin):
         download_data: dict[str, Any] = response.json()
         return download_data
 
-    def _make_stream_request(
+    async def _make_stream_request(
         self,
         request_body: dict[str, Any],
         *,
         endpoint: str | None = None,
         extra_headers: dict[str, str] | None = None,
         **parameters: Any,
-    ) -> AsyncIterator[dict[str, Any]]:
+    ) -> AsyncGenerator[dict[str, Any], None]:
         """Topaz Labs Image API does not support SSE streaming in this client."""
         raise StreamingNotSupportedError(model_id=self.model.id)
 

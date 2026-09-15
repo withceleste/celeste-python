@@ -14,6 +14,7 @@ from celeste.modalities.videos.providers.google.interactions import (
     GoogleInteractionsVideosClient,
 )
 from celeste.modalities.videos.providers.google.veo import GoogleVeoVideosClient
+from celeste.providers.google.auth import GoogleADC
 
 IMAGE = ImageArtifact(data=b"img", mime_type=ImageMimeType.PNG)
 
@@ -40,6 +41,23 @@ def test_veo_model_dispatches_to_veo_strategy() -> None:
     assert isinstance(client._strategy, GoogleVeoVideosClient)
     assert client._generate_endpoint == client._strategy._generate_endpoint
     assert client._edit_endpoint == client._strategy._edit_endpoint
+
+
+@pytest.mark.parametrize(
+    "video", [{"gcsUri": "gs://bucket/result.mp4"}, {"bytesBase64Encoded": "dmlk"}]
+)
+def test_vertex_veo_parses_video_without_mutating_response(video: dict) -> None:
+    client = GoogleVideosClient(
+        model=_model("veo-3.1-generate-preview"),
+        provider=Provider.GOOGLE,
+        auth=GoogleADC(project_id="test"),
+    )
+    response = {"response": {"videos": [{**video, "mimeType": "video/mp4"}]}}
+    artifact = client._parse_content(response)
+    assert isinstance(artifact, VideoArtifact)
+    assert artifact.url == video.get("gcsUri")
+    assert artifact.data == (b"vid" if "bytesBase64Encoded" in video else None)
+    assert response["response"]["videos"][0] == {**video, "mimeType": "video/mp4"}
 
 
 def test_omni_model_dispatches_to_interactions_strategy() -> None:

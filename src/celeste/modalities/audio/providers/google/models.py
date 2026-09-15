@@ -6,9 +6,8 @@ from celeste.mime_types import AudioMimeType
 from celeste.models import Model
 
 from ...constraints import VoiceConstraint
-from ...languages import Language
 from ...parameters import AudioParameter
-from .voices import GOOGLE_VOICES
+from .voices import GOOGLE_SUPPORTED_LANGUAGES, GOOGLE_VOICES
 
 # Supported output formats for Google TTS
 GOOGLE_SUPPORTED_FORMATS = [
@@ -16,30 +15,6 @@ GOOGLE_SUPPORTED_FORMATS = [
     AudioMimeType.WAV,
     AudioMimeType.OGG,
     AudioMimeType.PCM,
-]
-
-# Supported languages for Google TTS (subset of Language enum)
-GOOGLE_SUPPORTED_LANGUAGES = [
-    Language.ARABIC,
-    Language.GERMAN,
-    Language.ENGLISH,
-    Language.SPANISH,
-    Language.FRENCH,
-    Language.HINDI,
-    Language.INDONESIAN,
-    Language.ITALIAN,
-    Language.JAPANESE,
-    Language.KOREAN,
-    Language.PORTUGUESE,
-    Language.RUSSIAN,
-    Language.DUTCH,
-    Language.POLISH,
-    Language.THAI,
-    Language.TURKISH,
-    Language.VIETNAMESE,
-    Language.ROMANIAN,
-    Language.UKRAINIAN,
-    Language.TAMIL,
 ]
 
 MODELS: list[Model] = [
@@ -92,6 +67,15 @@ MODELS: list[Model] = [
         id="lyria-3-pro-preview",
         provider=Provider.GOOGLE,
         display_name="Google Lyria 3 Pro (Preview)",
+        operations={Modality.AUDIO: {Operation.GENERATE}},
+        parameter_constraints={
+            AudioParameter.REFERENCE_IMAGES: ImagesConstraint(max_count=10),
+        },
+    ),
+    Model(
+        id="lyria-3.5",
+        provider=Provider.GOOGLE,
+        display_name="Google Lyria 3.5 (Preview)",
         operations={Modality.AUDIO: {Operation.GENERATE}},
         parameter_constraints={
             AudioParameter.REFERENCE_IMAGES: ImagesConstraint(max_count=10),

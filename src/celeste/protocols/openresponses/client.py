@@ -1,6 +1,6 @@
 """OpenResponses protocol client."""
 
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from typing import Any, ClassVar
 
 from celeste.client import APIMixin
@@ -80,7 +80,7 @@ class OpenResponsesClient(APIMixin):
         if endpoint is None:
             endpoint = self._default_endpoint
 
-        headers = self._json_headers(extra_headers)
+        headers = await self._json_headers(extra_headers)
 
         response = await self.http_client.post(
             self._build_url(endpoint),
@@ -91,19 +91,19 @@ class OpenResponsesClient(APIMixin):
         data: dict[str, Any] = response.json()
         return data
 
-    def _make_stream_request(
+    async def _make_stream_request(
         self,
         request_body: dict[str, Any],
         *,
         endpoint: str | None = None,
         extra_headers: dict[str, str] | None = None,
         **parameters: Any,
-    ) -> AsyncIterator[dict[str, Any]]:
+    ) -> AsyncGenerator[dict[str, Any], None]:
         """Make streaming request to Responses API endpoint."""
         if endpoint is None:
             endpoint = self._default_endpoint
 
-        headers = self._json_headers(extra_headers)
+        headers = await self._json_headers(extra_headers)
 
         return self.http_client.stream_post(
             self._build_url(endpoint, streaming=True),
@@ -142,12 +142,28 @@ class OpenResponsesClient(APIMixin):
     def _parse_finish_reason(self, response_data: dict[str, Any]) -> FinishReason:
         """Extract finish reason from Responses API response."""
         status = response_data.get("status")
+        if status == "incomplete":
+            details = response_data.get("incomplete_details") or {}
+            return FinishReason(reason=details.get("reason") or "incomplete")
         if status == "completed":
             output_items = response_data.get("output", [])
             for item in output_items:
                 if item.get("type") == "message" and item.get("status") == "completed":
                     return FinishReason(reason="completed")
         return FinishReason(reason=None)
+
+    def _build_metadata(self, response_data: dict[str, Any]) -> dict[str, Any]:
+        """Preserve hosted-tool billing markers without retaining response content."""
+        metadata = super()._build_metadata(response_data)
+        output = [
+            {key: item[key] for key in ("type", "status") if key in item}
+            for item in response_data.get("output") or []
+            if isinstance(item, dict)
+            and item.get("type") in {"file_search_call", "web_search_call"}
+        ]
+        if output:
+            metadata["raw_response"]["output"] = output
+        return metadata
 
 
 __all__ = ["OpenResponsesClient"]

@@ -7,7 +7,7 @@ Provides shared implementation for capabilities using the OpenAI Videos API:
 import asyncio
 import base64
 import logging
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from typing import Any, ClassVar
 
 from celeste.client import APIMixin
@@ -58,14 +58,14 @@ class OpenAIVideosClient(APIMixin):
             request_body["stream"] = True
         return request_body
 
-    def _make_stream_request(
+    async def _make_stream_request(
         self,
         request_body: dict[str, Any],
         *,
         endpoint: str | None = None,
         extra_headers: dict[str, str] | None = None,
         **parameters: Any,
-    ) -> AsyncIterator[dict[str, Any]]:
+    ) -> AsyncGenerator[dict[str, Any], None]:
         """OpenAI Videos API does not support SSE streaming in this client."""
         raise StreamingNotSupportedError(model_id=self.model.id)
 
@@ -93,7 +93,9 @@ class OpenAIVideosClient(APIMixin):
             logger.info("Sending multipart request to OpenAI with input_reference")
             response = await self.http_client.post_multipart(
                 f"{config.BASE_URL}{endpoint}",
-                headers=self._merge_headers(self.auth.get_headers(), extra_headers),
+                headers=self._merge_headers(
+                    await self.auth.aget_headers(), extra_headers
+                ),
                 files=files,
                 data=data,
             )
@@ -101,7 +103,7 @@ class OpenAIVideosClient(APIMixin):
             logger.info(f"Sending request to OpenAI: {request_body}")
             response = await self.http_client.post(
                 f"{config.BASE_URL}{endpoint}",
-                headers=self._json_headers(extra_headers),
+                headers=await self._json_headers(extra_headers),
                 json_body=request_body,
             )
 
@@ -112,7 +114,7 @@ class OpenAIVideosClient(APIMixin):
         logger.info(f"Created video job: {video_id}")
 
         # Poll for completion
-        poll_headers = self._json_headers(extra_headers)
+        poll_headers = await self._json_headers(extra_headers)
         for _ in range(config.MAX_POLLS):
             status_response = await self.http_client.get(
                 f"{config.BASE_URL}{endpoint}/{video_id}",

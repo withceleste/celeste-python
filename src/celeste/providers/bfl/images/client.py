@@ -2,7 +2,7 @@
 
 import asyncio
 import time
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from typing import Any, ClassVar
 
 from celeste.client import APIMixin
@@ -51,7 +51,7 @@ class BFLImagesClient(APIMixin):
         3. Return response with _submit_metadata for usage parsing
         """
         headers = {
-            **self._json_headers(extra_headers),
+            **(await self._json_headers(extra_headers)),
             "Accept": ApplicationMimeType.JSON,
         }
 
@@ -77,7 +77,7 @@ class BFLImagesClient(APIMixin):
         # Phase 2: Poll for completion
         start_time = time.monotonic()
         poll_headers = self._merge_headers(
-            {**self.auth.get_headers(), "Accept": ApplicationMimeType.JSON},
+            {**(await self.auth.aget_headers()), "Accept": ApplicationMimeType.JSON},
             extra_headers,
         )
 
@@ -109,14 +109,14 @@ class BFLImagesClient(APIMixin):
 
             await asyncio.sleep(config.POLLING_INTERVAL)
 
-    def _make_stream_request(
+    async def _make_stream_request(
         self,
         request_body: dict[str, Any],
         *,
         endpoint: str | None = None,
         extra_headers: dict[str, str] | None = None,
         **parameters: Any,
-    ) -> AsyncIterator[dict[str, Any]]:
+    ) -> AsyncGenerator[dict[str, Any], None]:
         """BFL Images API does not support SSE streaming in this client."""
         raise StreamingNotSupportedError(model_id=self.model.id)
 

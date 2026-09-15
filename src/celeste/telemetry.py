@@ -554,15 +554,16 @@ async def bind_first_pull_to_span(
 
     task = asyncio.create_task(_first(), context=ctx)
     try:
-        first = await task
-    except StopAsyncIteration:
-        return
-    except BaseException:
-        task.cancel()
-        raise
-    yield first
-    async for event in inner:
-        yield event
+        try:
+            first = await task
+        except StopAsyncIteration:
+            return
+        yield first
+        async for event in inner:
+            yield event
+    finally:
+        if hasattr(inner, "aclose"):
+            await inner.aclose()
 
 
 __all__ = [

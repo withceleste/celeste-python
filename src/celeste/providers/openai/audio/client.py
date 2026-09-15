@@ -1,6 +1,6 @@
 """OpenAI Audio API client mixin."""
 
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from typing import Any, ClassVar
 
 from celeste.artifacts import AudioArtifact
@@ -11,6 +11,7 @@ from celeste.mime_types import AudioMimeType
 from celeste.utils import detect_mime_type
 
 from . import config
+from .parameters import ResponseFormatMapper
 
 _MIME_TO_EXT: dict[str, str] = {
     AudioMimeType.FLAC: "flac",
@@ -63,14 +64,14 @@ class OpenAIAudioClient(APIMixin):
             request_body["stream"] = True
         return request_body
 
-    def _make_stream_request(
+    async def _make_stream_request(
         self,
         request_body: dict[str, Any],
         *,
         endpoint: str | None = None,
         extra_headers: dict[str, str] | None = None,
         **parameters: Any,
-    ) -> AsyncIterator[dict[str, Any]]:
+    ) -> AsyncGenerator[dict[str, Any], None]:
         """OpenAI Audio speech endpoint does not support SSE streaming in this client."""
         raise StreamingNotSupportedError(model_id=self.model.id)
 
@@ -92,15 +93,25 @@ class OpenAIAudioClient(APIMixin):
                 request_body, endpoint=endpoint, extra_headers=extra_headers
             )
 
-        headers = self._json_headers(extra_headers)
+        headers = await self._json_headers(extra_headers)
         response = await self.http_client.post(
             f"{config.BASE_URL}{endpoint}",
             headers=headers,
             json_body=request_body,
         )
         self._handle_error_response(response)
+        content_type = (
+            response.headers.get("content-type", "").split(";", 1)[0].strip().lower()
+        )
         return {
             "audio_bytes": response.content,
+            "mime_type": (
+                AudioMimeType(content_type)
+                if content_type in AudioMimeType
+                else self._map_response_format_to_mime_type(
+                    request_body.get("response_format")
+                )
+            ),
             "headers": dict(response.headers),
         }
 
@@ -130,7 +141,7 @@ class OpenAIAudioClient(APIMixin):
 
         response = await self.http_client.post_multipart(
             f"{config.BASE_URL}{endpoint}",
-            headers=self._merge_headers(self.auth.get_headers(), extra_headers),
+            headers=self._merge_headers(await self.auth.aget_headers(), extra_headers),
             files=files,
             data=data,
         )
@@ -195,15 +206,9 @@ class OpenAIAudioClient(APIMixin):
         self, response_format: str | None
     ) -> AudioMimeType:
         """Map OpenAI response_format to AudioMimeType."""
-        format_map: dict[str, AudioMimeType] = {
-            "mp3": AudioMimeType.MP3,
-            "opus": AudioMimeType.OGG,
-            "aac": AudioMimeType.AAC,
-            "flac": AudioMimeType.FLAC,
-            "wav": AudioMimeType.WAV,
-            "pcm": AudioMimeType.WAV,
-        }
-        return format_map.get(response_format or "", AudioMimeType.MP3)
+        return ResponseFormatMapper._mime_map.get(
+            response_format or "", AudioMimeType.MP3
+        )
 
 
 __all__ = ["OpenAIAudioClient"]

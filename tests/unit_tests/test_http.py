@@ -38,19 +38,19 @@ def isolated_registry() -> Generator[None]:
 
 async def test_client_is_lazy_reused_and_closed(transport: AsyncMock) -> None:
     client = HTTPClient(max_connections=7, max_keepalive_connections=3)
-    assert client._client is None
+    assert not client._clients
 
     with patch("celeste.http.httpx.AsyncClient", return_value=transport) as constructor:
         await client.post("https://example.com/one", {}, {})
         await client.post("https://example.com/two", {}, {})
-        created = client._client
+        created = await client._get_client()
         await client.aclose()
 
     assert constructor.call_count == 1
     limits = constructor.call_args.kwargs["limits"]
     assert (limits.max_connections, limits.max_keepalive_connections) == (7, 3)
     assert created is transport
-    assert client._client is None
+    assert not client._clients
     transport.aclose.assert_awaited_once()
 
 
@@ -165,22 +165,30 @@ async def test_close_all_continues_after_a_client_failure() -> None:
     failing_transport = AsyncMock(spec=httpx.AsyncClient)
     healthy_transport = AsyncMock(spec=httpx.AsyncClient)
     failing_transport.aclose.side_effect = RuntimeError("close failed")
-    failing._client = failing_transport
-    healthy._client = healthy_transport
+    with patch(
+        "celeste.http.httpx.AsyncClient",
+        side_effect=[failing_transport, healthy_transport],
+    ):
+        await failing._get_client()
+        await healthy._get_client()
 
     await close_all_http_clients()
 
     failing_transport.aclose.assert_awaited_once()
     healthy_transport.aclose.assert_awaited_once()
-    assert not http_module._http_clients
+    assert not failing._clients
+    assert not healthy._clients
 
 
-def test_clear_registry_does_not_close_clients() -> None:
+async def test_clear_registry_does_not_close_clients() -> None:
     client = get_http_client(Provider.OPENAI, Modality.TEXT)
-    client._client = AsyncMock(spec=httpx.AsyncClient)
+    transport = AsyncMock(spec=httpx.AsyncClient)
+    with patch("celeste.http.httpx.AsyncClient", return_value=transport):
+        await client._get_client()
     clear_http_clients()
-    client._client.aclose.assert_not_called()
+    transport.aclose.assert_not_called()
     assert not http_module._http_clients
+    await client.aclose()
 
 
 async def test_context_manager_closes_on_exception(transport: AsyncMock) -> None:
@@ -193,7 +201,7 @@ async def test_context_manager_closes_on_exception(transport: AsyncMock) -> None
             assert entered is client
             await client.post("https://example.com", {}, {})
             raise RuntimeError("boom")
-    assert client._client is None
+    assert not client._clients
     transport.aclose.assert_awaited_once()
 
 

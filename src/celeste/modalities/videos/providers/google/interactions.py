@@ -9,7 +9,7 @@ from celeste.providers.google.interactions import config
 from celeste.providers.google.interactions.client import (
     GoogleInteractionsClient as GoogleInteractionsMixin,
 )
-from celeste.providers.google.utils import build_content_part
+from celeste.providers.google.utils import build_content_part, download_video
 from celeste.types import VideoContent
 
 from ...client import VideosClient
@@ -69,10 +69,7 @@ class GoogleInteractionsVideosClient(GoogleInteractionsMixin, VideosClient):
             msg = "Artifact has no URL or data to download"
             raise ValueError(msg)
 
-        headers = self.auth.get_headers()
-        response = await self.http_client.get(
-            artifact.url, headers=headers, follow_redirects=True
-        )
+        response = await download_video(self.http_client, self.auth, artifact.url)
         self._handle_error_response(response)
         return VideoArtifact(data=response.content, mime_type=artifact.mime_type)
 

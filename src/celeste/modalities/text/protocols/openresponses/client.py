@@ -123,9 +123,9 @@ class OpenResponsesTextStream(_OpenResponsesStream, TextStream):
         self._response_data: dict[str, Any] | None = None
 
     def _parse_chunk(self, event_data: dict[str, Any]) -> TextChunk | None:
-        """Parse one SSE event into a typed chunk (captures response.completed)."""
+        """Parse one SSE event into a typed chunk, retaining the terminal response."""
         event_type = event_data.get("type")
-        if event_type == "response.completed":
+        if event_type in self._terminal_events:
             response = event_data.get("response")
             if isinstance(response, dict):
                 self._response_data = response

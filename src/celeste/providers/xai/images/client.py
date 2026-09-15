@@ -1,6 +1,6 @@
 """xAI Images API client mixin."""
 
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from typing import Any, ClassVar
 
 from celeste.client import APIMixin
@@ -54,7 +54,7 @@ class XAIImagesClient(APIMixin):
         if endpoint is None:
             endpoint = config.XAIImagesEndpoint.CREATE_IMAGE
 
-        headers = self._json_headers(extra_headers)
+        headers = await self._json_headers(extra_headers)
 
         response = await self.http_client.post(
             f"{config.BASE_URL}{endpoint}",
@@ -65,14 +65,14 @@ class XAIImagesClient(APIMixin):
         data: dict[str, Any] = response.json()
         return data
 
-    def _make_stream_request(
+    async def _make_stream_request(
         self,
         request_body: dict[str, Any],
         *,
         endpoint: str | None = None,
         extra_headers: dict[str, str] | None = None,
         **parameters: Any,
-    ) -> AsyncIterator[dict[str, Any]]:
+    ) -> AsyncGenerator[dict[str, Any], None]:
         """xAI Images does not support SSE streaming."""
         raise StreamingNotSupportedError(model_id=self.model.id)
 

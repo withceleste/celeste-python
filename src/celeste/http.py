@@ -3,7 +3,7 @@
 import asyncio
 import json
 import logging
-from collections.abc import AsyncIterator, Awaitable, Callable
+from collections.abc import AsyncGenerator, Awaitable, Callable
 from typing import Any
 
 import httpx
@@ -38,7 +38,11 @@ async def _retry_request(
 
 
 class HTTPClient:
-    """Async HTTP client with persistent connection pooling."""
+    """Pool connections per loop and close them during async-generator shutdown.
+
+    asyncio.run/Runner perform this shutdown automatically. Manually managed loops
+    must await aclose() or loop.shutdown_asyncgens() before loop.close().
+    """
 
     def __init__(
         self,
@@ -51,8 +55,10 @@ class HTTPClient:
             max_connections: Maximum total connections in pool.
             max_keepalive_connections: Maximum idle keepalive connections.
         """
-        self._client: httpx.AsyncClient | None = None
-        self._client_loop: int | None = None
+        self._clients: dict[
+            asyncio.AbstractEventLoop,
+            tuple[httpx.AsyncClient, AsyncGenerator[httpx.AsyncClient, None]],
+        ] = {}
         self._max_connections = max_connections
         self._max_keepalive_connections = max_keepalive_connections
 
@@ -60,19 +66,25 @@ class HTTPClient:
         """Get or create httpx.AsyncClient with connection pooling."""
         current_loop = asyncio.get_running_loop()
 
-        # Recreate client if event loop changed (prevents "Event loop is closed" errors)
-        if self._client is not None and self._client_loop != id(current_loop):
-            self._client = None
+        if current_loop not in self._clients:
+            lifetime = self._client_lifetime()
+            self._clients[current_loop] = (await anext(lifetime), lifetime)
 
-        if self._client is None:
-            limits = httpx.Limits(
-                max_connections=self._max_connections,
-                max_keepalive_connections=self._max_keepalive_connections,
-            )
-            self._client = httpx.AsyncClient(limits=limits)  # nosec B113
-            self._client_loop = id(current_loop)
+        return self._clients[current_loop][0]
 
-        return self._client
+    async def _client_lifetime(self) -> AsyncGenerator[httpx.AsyncClient, None]:
+        """Register cleanup on the owning loop before handing out its client."""
+        loop = asyncio.get_running_loop()
+        limits = httpx.Limits(
+            max_connections=self._max_connections,
+            max_keepalive_connections=self._max_keepalive_connections,
+        )
+        client = httpx.AsyncClient(limits=limits)  # nosec B113
+        try:
+            yield client
+        finally:
+            self._clients.pop(loop, None)
+            await client.aclose()
 
     async def post(
         self,
@@ -190,7 +202,7 @@ class HTTPClient:
         headers: dict[str, str],
         json_body: dict[str, Any],
         timeout: float = DEFAULT_TIMEOUT,
-    ) -> AsyncIterator[dict[str, Any]]:
+    ) -> AsyncGenerator[dict[str, Any], None]:
         """Stream POST request using Server-Sent Events.
 
         Args:
@@ -227,7 +239,7 @@ class HTTPClient:
         headers: dict[str, str],
         json_body: dict[str, Any],
         timeout: float = DEFAULT_TIMEOUT,
-    ) -> AsyncIterator[dict[str, Any]]:
+    ) -> AsyncGenerator[dict[str, Any], None]:
         """Stream POST request using NDJSON (newline-delimited JSON).
 
         Unlike SSE (stream_post), NDJSON returns one JSON object per line.
@@ -258,10 +270,10 @@ class HTTPClient:
                     yield json.loads(line)
 
     async def aclose(self) -> None:
-        """Close HTTP client and cleanup all connections."""
-        if self._client is not None:
-            await self._client.aclose()
-            self._client = None
+        """Close connections owned by the current event loop."""
+        entry = self._clients.pop(asyncio.get_running_loop(), None)
+        if entry is not None:
+            await entry[1].aclose()
 
     async def __aenter__(self) -> "HTTPClient":
         """Enter async context manager."""
@@ -272,7 +284,7 @@ class HTTPClient:
         await self.aclose()
 
 
-# Module-level registry of shared HTTPClient instances
+# Shared wrappers stay registered while other threads may be creating their pools.
 _http_clients: dict[tuple[Provider | Protocol, Modality], HTTPClient] = {}
 
 
@@ -288,19 +300,17 @@ def get_http_client(provider: Provider | Protocol, modality: Modality) -> HTTPCl
     """
     key = (provider, modality)
     if key not in _http_clients:
-        _http_clients[key] = HTTPClient()
+        return _http_clients.setdefault(key, HTTPClient())
     return _http_clients[key]
 
 
 async def close_all_http_clients() -> None:
-    """Close all HTTP clients gracefully and clear registry."""
+    """Close this event loop's HTTP clients, leaving other loops' pools intact."""
     for key, client in list(_http_clients.items()):
         try:
             await client.aclose()
         except Exception as e:
             logger.warning(f"Failed to close HTTP client for {key}: {e}")
-
-    _http_clients.clear()
 
 
 def clear_http_clients() -> None:
