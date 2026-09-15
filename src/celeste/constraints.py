@@ -132,12 +132,17 @@ class Dimensions(Constraint):
     max_aspect_ratio: float
     presets: dict[str, str] | None = None
     multiple_of: int | None = Field(default=None, gt=0)
+    max_edge: int | None = Field(default=None, gt=0)
+    special_values: list[str] | None = None
 
     def __call__(self, value: str) -> str:
         """Validate dimension string against pixel and aspect ratio bounds."""
         if not isinstance(value, str):
             msg = f"Must be string, got {type(value).__name__}"
             raise ConstraintViolationError(msg)
+
+        if self.special_values and value in self.special_values:
+            return value
 
         # Check if value is a preset key
         if self.presets and value in self.presets:
@@ -169,6 +174,10 @@ class Dimensions(Constraint):
 
         if self.multiple_of and (width % self.multiple_of or height % self.multiple_of):
             msg = f"Width and height must be multiples of {self.multiple_of}"
+            raise ConstraintViolationError(msg)
+
+        if self.max_edge is not None and max(width, height) > self.max_edge:
+            msg = f"Width and height must be at most {self.max_edge}"
             raise ConstraintViolationError(msg)
 
         # Validate total pixels
