@@ -127,7 +127,8 @@ class HTTPClient:
         self,
         url: str,
         headers: dict[str, str],
-        files: dict[str, tuple[str, bytes, str]],
+        files: dict[str, tuple[str, bytes, str]]
+        | list[tuple[str, tuple[str, bytes, str]]],
         data: dict[str, str],
         timeout: float = DEFAULT_TIMEOUT,
     ) -> httpx.Response:

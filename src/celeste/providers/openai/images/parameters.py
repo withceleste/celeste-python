@@ -58,14 +58,28 @@ class NumImagesMapper(FieldMapper[ImageContent]):
     field = "n"
 
 
+class ReferenceImagesMapper(FieldMapper[ImageContent]):
+    """Collect references for the shared JSON edit request builder."""
+
+    field = "images"
+
+
+class MaskMapper(FieldMapper[ImageContent]):
+    """Collect the mask for the shared JSON edit request builder."""
+
+    field = "mask"
+
+
 __all__ = [
     "BackgroundMapper",
+    "MaskMapper",
     "ModerationMapper",
     "NumImagesMapper",
     "OutputCompressionMapper",
     "OutputFormatMapper",
     "PartialImagesMapper",
     "QualityMapper",
+    "ReferenceImagesMapper",
     "SizeMapper",
     "StyleMapper",
 ]

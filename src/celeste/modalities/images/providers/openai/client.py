@@ -41,10 +41,9 @@ class OpenAIImagesClient(OpenAIImagesMixin, ImagesClient):
         return OPENAI_PARAMETER_MAPPERS
 
     def _init_request(self, inputs: ImageInput) -> dict[str, Any]:
-        """Initialize request, keeping ImageArtifact for multipart handling."""
+        """Keep the primary artifact for edit request encoding."""
         request: dict[str, Any] = {"prompt": inputs.prompt}
         if inputs.image is not None:
-            # Keep as ImageArtifact - _make_multipart_request handles encoding
             request["image"] = inputs.image
         return request
 
