@@ -19,6 +19,24 @@ from ...parameters import TextParameter
 
 MODELS: list[Model] = [
     Model(
+        id="gemini-robotics-er-2-preview",
+        provider=Provider.GOOGLE,
+        display_name="Gemini Robotics ER 2 Preview",
+        operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
+        streaming=True,
+        parameter_constraints={
+            Parameter.MAX_TOKENS: Range(min=1, max=65536),
+            TextParameter.TOOLS: ToolSupport(
+                tools=[WebSearch, CodeExecution, UrlContext]
+            ),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
+            TextParameter.OUTPUT_SCHEMA: Schema(),
+            TextParameter.IMAGE: ImagesConstraint(),
+            TextParameter.VIDEO: VideosConstraint(),
+            TextParameter.AUDIO: AudioConstraint(),
+        },
+    ),
+    Model(
         id="gemini-2.5-flash",
         provider=Provider.GOOGLE,
         display_name="Gemini 2.5 Flash",
