@@ -23,7 +23,7 @@ Copy the template, replace the `{placeholders}`, strip the `.template` extension
 | Module functions, multi-backend file | backend-token suffix on every function | `map_grounding_vertex`, `map_grounding_interactions` |
 | Public module-level data constants | `{PROVIDER}_...`; `MODELS` is the sole bare contract name | `GOOGLE_VOICES`, `GOOGLE_SUPPORTED_MIME_TYPES` |
 
-The prefix is always the `Provider` enum name, never a brand or model family (`Google`, not `Gemini`). A family token may follow the provider prefix only when parallel same-kind constants partition the data (`GOOGLE_IMAGEN_MODELS` / `GOOGLE_GEMINI_MODELS`). The backend token is the backend file name (`imagen.py` → `Imagen`, `vertex.py` → `Vertex`, `interactions.py` → `Interactions`). Wire helper functions, protocol base clients, and module-private names (`_IMAGEN_MODEL_IDS`) keep their real names.
+The prefix is always the `Provider` enum name, never a brand or model family (`Google`, not `Gemini`). A family token may follow the provider prefix only when parallel same-kind constants partition the data (`GOOGLE_VEO_MODELS` / `GOOGLE_OMNI_MODELS`). The backend token is the backend file name (`veo.py` → `Veo`, `vertex.py` → `Vertex`, `interactions.py` → `Interactions`). Wire helper functions, protocol base clients, and module-private names (`_VEO_MODEL_IDS`) keep their real names.
 
 ## Notes
 

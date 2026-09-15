@@ -39,7 +39,6 @@ GOOGLE_VERTEX = google_text.GOOGLE_VERTEX_PARAMETER_MAPPERS
 GOOGLE_INTERACTIONS = google_text.GOOGLE_INTERACTIONS_PARAMETER_MAPPERS
 IMAGES_VERTEX = google_images.GOOGLE_VERTEX_PARAMETER_MAPPERS
 IMAGES_INTERACTIONS = google_images.GOOGLE_INTERACTIONS_PARAMETER_MAPPERS
-IMAGES_IMAGEN = google_images.GOOGLE_IMAGEN_PARAMETER_MAPPERS
 AUDIO_GOOGLE = google_audio.GOOGLE_PARAMETER_MAPPERS
 AUDIO_GROQ = groq_audio.GROQ_PARAMETER_MAPPERS
 AUDIO_OPENAI = openai_audio.OPENAI_PARAMETER_MAPPERS
@@ -127,9 +126,6 @@ def _at(data: dict[str, Any], path: tuple[str, ...]) -> Any:  # noqa: ANN401
         ),
         (IMAGES_VERTEX, IP.ASPECT_RATIO, "16:9", (*IC, "aspectRatio"), "16:9"),
         (IMAGES_VERTEX, IP.QUALITY, "2K", (*IC, "imageSize"), "2K"),
-        (IMAGES_IMAGEN, IP.ASPECT_RATIO, "16:9", ("parameters", "aspectRatio"), "16:9"),
-        (IMAGES_IMAGEN, IP.QUALITY, "2K", ("parameters", "imageSize"), "2K"),
-        (IMAGES_IMAGEN, IP.NUM_IMAGES, 2, ("parameters", "sampleCount"), 2),
         (
             AUDIO_GOOGLE,
             AP.VOICE,
@@ -300,7 +296,6 @@ def test_scalar_parameters_use_provider_wire_shape(
     [
         GOOGLE_VERTEX,
         IMAGES_VERTEX,
-        IMAGES_IMAGEN,
         AUDIO_GOOGLE,
         AUDIO_GROQ,
         AUDIO_OPENAI,

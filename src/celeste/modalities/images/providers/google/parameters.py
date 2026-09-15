@@ -13,15 +13,6 @@ from celeste.providers.google.generate_content.parameters import (
 from celeste.providers.google.generate_content.parameters import (
     ThinkingLevelMapper as _VertexThinkingLevelMapper,
 )
-from celeste.providers.google.imagen.parameters import (
-    AspectRatioMapper as _ImagenAspectRatioMapper,
-)
-from celeste.providers.google.imagen.parameters import (
-    ImageSizeMapper as _ImagenImageSizeMapper,
-)
-from celeste.providers.google.imagen.parameters import (
-    SampleCountMapper as _ImagenSampleCountMapper,
-)
 from celeste.providers.google.interactions.parameters import (
     AspectRatioMapper as _InteractionsAspectRatioMapper,
 )
@@ -37,31 +28,6 @@ from celeste.providers.google.interactions.parameters import (
 from celeste.types import ImageContent
 
 from ...parameters import ImageParameter
-
-
-class ImagenAspectRatioMapper(_ImagenAspectRatioMapper):
-    """Map aspect_ratio to Imagen parameters.aspectRatio."""
-
-    name = ImageParameter.ASPECT_RATIO
-
-
-class ImagenQualityMapper(_ImagenImageSizeMapper):
-    """Map quality to Imagen parameters.imageSize."""
-
-    name = ImageParameter.QUALITY
-
-
-class ImagenNumImagesMapper(_ImagenSampleCountMapper):
-    """Map num_images to Imagen parameters.sampleCount."""
-
-    name = ImageParameter.NUM_IMAGES
-
-
-GOOGLE_IMAGEN_PARAMETER_MAPPERS: list[ParameterMapper[ImageContent]] = [
-    ImagenAspectRatioMapper(),
-    ImagenQualityMapper(),
-    ImagenNumImagesMapper(),
-]
 
 
 class VertexAspectRatioMapper(_VertexAspectRatioMapper[ImageContent]):
@@ -129,7 +95,6 @@ GOOGLE_INTERACTIONS_PARAMETER_MAPPERS: list[ParameterMapper[ImageContent]] = [
 
 
 __all__ = [
-    "GOOGLE_IMAGEN_PARAMETER_MAPPERS",
     "GOOGLE_INTERACTIONS_PARAMETER_MAPPERS",
     "GOOGLE_VERTEX_PARAMETER_MAPPERS",
 ]

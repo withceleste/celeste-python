@@ -8,7 +8,6 @@ This document contains the official API reference documentation links for all pr
 |----------|-----|---------------------|-----------------|
 | **Google** | GenerateContent | [GenerateContent API Reference](https://ai.google.dev/api/generate-content) | ✅ |
 | **Google** | Embeddings | [Embeddings API Reference](https://ai.google.dev/api/embeddings) | ✅ |
-| **Google** | Imagen | [Imagen API Reference](https://ai.google.dev/gemini-api/docs/imagen) | ✅ |
 | **Google** | Interactions | [Interactions API Reference](https://ai.google.dev/api/interactions-api) | — |
 | **Google** | Veo | [Veo API Reference](https://ai.google.dev/gemini-api/docs/video) | ✅ |
 | **OpenAI** | Responses | [Responses API Reference](https://platform.openai.com/docs/api-reference/responses) | ✅ |
@@ -41,8 +40,8 @@ This document contains the official API reference documentation links for all pr
 
 ## Summary
 
-- **Total APIs:** 32 provider-API combinations
-- **Validated:** 21 ✅ · 11 pending (—)
+- **Total APIs:** 31 provider-API combinations
+- **Validated:** 20 ✅ · 11 pending (—)
 - **Naming convention:** Method names only (Provider column provides context)
 - **Link strategy:** Specific method/endpoint pages when available, general API reference pages otherwise
 

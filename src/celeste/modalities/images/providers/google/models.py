@@ -6,10 +6,7 @@ from celeste.models import Model
 
 from ...parameters import ImageParameter
 
-GOOGLE_IMAGEN_MODELS: list[Model] = []
-
-# Gemini API models (contents[].parts[] → candidates[])
-GOOGLE_GEMINI_MODELS: list[Model] = [
+MODELS: list[Model] = [
     Model(
         id="gemini-2.5-flash-image",
         provider=Provider.GOOGLE,
@@ -113,14 +110,4 @@ GOOGLE_GEMINI_MODELS: list[Model] = [
     ),
 ]
 
-# Unified model list for registration
-MODELS: list[Model] = [
-    *GOOGLE_IMAGEN_MODELS,
-    *GOOGLE_GEMINI_MODELS,
-]
-
-__all__ = [
-    "GOOGLE_GEMINI_MODELS",
-    "GOOGLE_IMAGEN_MODELS",
-    "MODELS",
-]
+__all__ = ["MODELS"]

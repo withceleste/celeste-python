@@ -18,8 +18,6 @@ from celeste.providers.google.embeddings import config as embeddings_config
 from celeste.providers.google.embeddings.client import GoogleEmbeddingsClient
 from celeste.providers.google.generate_content import config as generate_config
 from celeste.providers.google.generate_content.client import GoogleGenerateContentClient
-from celeste.providers.google.imagen import config as imagen_config
-from celeste.providers.google.imagen.client import GoogleImagenClient
 from celeste.providers.google.veo import config as veo_config
 from celeste.providers.google.veo.client import GoogleVeoClient
 from celeste.providers.mistral.chat import config as mistral_config
@@ -102,12 +100,6 @@ def test_vertex_url_requires_project() -> None:
             "api.anthropic.com/v1/messages",
         ),
         (
-            GoogleImagenClient,
-            imagen_config.GoogleImagenEndpoint.CREATE_IMAGE,
-            "imagen-4.0-generate-001",
-            "generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict",
-        ),
-        (
             GoogleEmbeddingsClient,
             embeddings_config.GoogleEmbeddingsEndpoint.EMBED_CONTENT,
             "gemini-embedding-2",
@@ -153,12 +145,6 @@ def test_api_key_routes_directly(
             anthropic_config.AnthropicMessagesEndpoint.CREATE_MESSAGE,
             "claude-sonnet-4-5",
             ("projects/test-project", "publishers/anthropic", "rawPredict"),
-        ),
-        (
-            GoogleImagenClient,
-            imagen_config.GoogleImagenEndpoint.CREATE_IMAGE,
-            "imagen-4.0-generate-001",
-            ("projects/test-project", "publishers/google", "imagen-4.0-generate-001"),
         ),
         (
             GoogleVeoClient,
