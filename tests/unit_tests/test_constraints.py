@@ -157,6 +157,46 @@ def test_dimensions_parse_presets_and_bounds() -> None:
     assert constraint("10X20") == "10x20"
 
 
+def test_dimensions_enforce_axis_bounds() -> None:
+    constraint = Dimensions(
+        min_pixels=1,
+        max_pixels=10_000,
+        min_aspect_ratio=0.01,
+        max_aspect_ratio=100,
+        min_dimension=10,
+        max_dimension=30,
+    )
+    assert constraint("10x30") == "10x30"
+    assert constraint("30x10") == "30x10"
+    for value in ("9x20", "20x9", "31x20", "20x31"):
+        with pytest.raises(ConstraintViolationError):
+            constraint(value)
+
+
+@pytest.mark.parametrize(
+    ("bounds", "valid", "invalid"),
+    [
+        ({"min_dimension": 10}, "10x30", "9x30"),
+        ({"max_dimension": 30}, "9x30", "9x31"),
+    ],
+)
+def test_dimensions_allow_independent_axis_bounds(
+    bounds: dict[str, int], valid: str, invalid: str
+) -> None:
+    constraint = Dimensions(
+        min_pixels=1,
+        max_pixels=10_000,
+        min_aspect_ratio=0.01,
+        max_aspect_ratio=100,
+        presets={"preset": valid},
+        **bounds,
+    )
+    assert constraint(valid) == valid
+    assert constraint("preset") == valid
+    with pytest.raises(ConstraintViolationError):
+        constraint(invalid)
+
+
 def test_dimensions_enforce_multiples() -> None:
     constraint = Dimensions(
         min_pixels=100,

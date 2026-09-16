@@ -13,7 +13,24 @@ from celeste.providers.google.auth import GoogleADC
     [
         (Provider.OPENAI, "gpt-image-1-mini", {}),
         (Provider.BYTEPLUS, "seedream-4-0-250828", {}),
-        (Provider.BFL, "flux-2-pro", {}),
+        (
+            Provider.BFL,
+            "flux-2-pro",
+            {"aspect_ratio": "520x512", "prompt_upsampling": False},
+        ),
+        (Provider.BFL, "flux-2-klein-4b", {"aspect_ratio": "256x1024"}),
+        (Provider.BFL, "flux-kontext-pro", {"aspect_ratio": "4:1"}),
+        (Provider.BFL, "flux-pro-1.1-ultra", {"aspect_ratio": "1:1"}),
+        (
+            Provider.BFL,
+            "flux-dev",
+            {
+                "aspect_ratio": "256x256",
+                "steps": 1,
+                "guidance": 1.5,
+                "output_format": "webp",
+            },
+        ),
         (Provider.XAI, "grok-imagine-image", {}),
     ],
 )
