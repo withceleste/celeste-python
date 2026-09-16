@@ -29,10 +29,7 @@ async def _retry_request(
     send: Callable[[], Awaitable[httpx.Response]],
     timeout: float,
 ) -> httpx.Response:
-    """Retry transient failures, bounding Retry-After by the per-attempt timeout.
-
-    The timeout is not a deadline for the entire retry sequence.
-    """
+    """Retry transient failures, bounding Retry-After by the per-attempt timeout."""
     for attempt in range(MAX_RETRIES):
         delay = RETRY_BASE_DELAY * 2**attempt
         try:
