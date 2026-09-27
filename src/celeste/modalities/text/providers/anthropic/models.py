@@ -93,6 +93,26 @@ MODELS: list[Model] = [
         },
     ),
     Model(
+        id="claude-opus-5-5",
+        provider=Provider.ANTHROPIC,
+        display_name="Claude Opus 5.5",
+        operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
+        streaming=False,
+        parameter_constraints={
+            Parameter.MAX_TOKENS: Range(min=1, max=128000),
+            TextParameter.THINKING_LEVEL: Choice(
+                options=["low", "medium", "high", "xhigh", "max"]
+            ),
+            TextParameter.OUTPUT_SCHEMA: Schema(),
+            TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
+            TextParameter.TOOL_CHOICE: Choice(
+                options=[ToolChoice.AUTO, ToolChoice.NONE]
+            ),
+            TextParameter.IMAGE: ImagesConstraint(),
+            TextParameter.DOCUMENT: DocumentsConstraint(),
+        },
+    ),
+    Model(
         id="claude-opus-5",
         provider=Provider.ANTHROPIC,
         display_name="Claude Opus 5",
@@ -277,6 +297,7 @@ DYNAMIC_FILTERING_MODELS = frozenset(
         "claude-mythos-5-1",
         "claude-fable-5",
         "claude-mythos-5",
+        "claude-opus-5-5",
         "claude-opus-5",
         "claude-opus-4-8",
         "claude-opus-4-7",
