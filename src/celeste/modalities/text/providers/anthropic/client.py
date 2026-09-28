@@ -47,6 +47,11 @@ class AnthropicTextStream(_AnthropicMessagesStream, TextStream):
                 id=block["id"],
                 name=block["name"],
                 arguments=block.get("input", {}),
+                **(
+                    {"toolset_name": block["toolset_name"]}
+                    if block.get("toolset_name")
+                    else {}
+                ),
             )
             for block in self._aggregate_content_blocks()
             if block.get("type") == "tool_use"
@@ -141,13 +146,26 @@ class AnthropicTextClient(AnthropicMessagesMixin, TextClient):
                 continue
 
             if isinstance(message, ToolResult):
-                pending_tool_results.append(
-                    {
-                        "type": "tool_result",
-                        "tool_use_id": message.tool_call_id,
-                        "content": content_to_text(message.content),
-                    }
+                tool_result: dict[str, Any] = {
+                    "type": "tool_result",
+                    "tool_use_id": message.tool_call_id,
+                    "content": content_to_text(message.content),
+                }
+                # A toolset member result must echo its paired tool_use's toolset_name.
+                toolset_name = next(
+                    (
+                        block["toolset_name"]
+                        for turn in messages
+                        for block in turn["content"]
+                        if block.get("type") == "tool_use"
+                        and block.get("id") == message.tool_call_id
+                        and block.get("toolset_name")
+                    ),
+                    None,
                 )
+                if toolset_name:
+                    tool_result["toolset_name"] = toolset_name
+                pending_tool_results.append(tool_result)
                 continue
 
             # Flush pending tool results as a single user message
@@ -175,14 +193,16 @@ class AnthropicTextClient(AnthropicMessagesMixin, TextClient):
                     content_blocks.extend(content_to_blocks(content))
                 if message.tool_calls:
                     for tc in message.tool_calls:
-                        content_blocks.append(
-                            {
-                                "type": "tool_use",
-                                "id": tc.id,
-                                "name": tc.name,
-                                "input": tc.arguments,
-                            }
-                        )
+                        tool_use: dict[str, Any] = {
+                            "type": "tool_use",
+                            "id": tc.id,
+                            "name": tc.name,
+                            "input": tc.arguments,
+                        }
+                        toolset_name = getattr(tc, "toolset_name", None)
+                        if toolset_name:
+                            tool_use["toolset_name"] = toolset_name
+                        content_blocks.append(tool_use)
                 messages.append({"role": "assistant", "content": content_blocks})
             else:
                 messages.append({"role": role, "content": content_to_blocks(content)})
@@ -268,7 +288,14 @@ class AnthropicTextClient(AnthropicMessagesMixin, TextClient):
         """Parse tool calls from Anthropic response."""
         return [
             ToolCall(
-                id=block["id"], name=block["name"], arguments=block.get("input", {})
+                id=block["id"],
+                name=block["name"],
+                arguments=block.get("input", {}),
+                **(
+                    {"toolset_name": block["toolset_name"]}
+                    if block.get("toolset_name")
+                    else {}
+                ),
             )
             for block in response_data.get("content", [])
             if block.get("type") == "tool_use"
