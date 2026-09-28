@@ -38,6 +38,7 @@ class DeepSeekTextClient(DeepSeekChatMixin, ChatCompletionsTextClient):
                 isinstance(source, Message)
                 and source.role == Role.ASSISTANT
                 and source.reasoning is not None
+                and source.tool_calls is not None
             ):
                 serialized["reasoning_content"] = source.reasoning
         return request

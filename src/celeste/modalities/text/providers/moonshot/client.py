@@ -9,7 +9,6 @@ from celeste.providers.moonshot.chat.client import (
 from celeste.providers.moonshot.chat.streaming import (
     MoonshotChatStream as _MoonshotChatStream,
 )
-from celeste.tools import ToolResult
 from celeste.types import Message, Role, TextContent
 
 from ...io import TextInput
@@ -41,8 +40,6 @@ class MoonshotTextClient(MoonshotChatMixin, ChatCompletionsTextClient):
                 and source.reasoning is not None
             ):
                 serialized["reasoning_content"] = source.reasoning
-            elif isinstance(source, ToolResult) and source.name:
-                serialized["name"] = source.name
         return request
 
     @classmethod

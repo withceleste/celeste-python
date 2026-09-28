@@ -12,10 +12,7 @@ from celeste.providers.google.interactions.streaming import (
     GoogleInteractionsStream as _GoogleInteractionsStream,
 )
 from celeste.providers.google.interactions.streaming import reconstruct_steps
-from celeste.providers.google.interactions.tools import (
-    is_native_replay_step,
-    tool_calls_from_steps,
-)
+from celeste.providers.google.interactions.tools import tool_calls_from_steps
 from celeste.providers.google.utils import build_content_part
 from celeste.tools import ToolCall, ToolResult
 from celeste.types import (
@@ -71,11 +68,11 @@ class GoogleInteractionsTextStream(_GoogleInteractionsStream, TextStream):
     def _aggregate_signature(
         self, chunks: list, raw_events: list[dict[str, Any]]
     ) -> list[dict[str, Any]]:
-        """Extract signature-carrying steps from reconstructed steps."""
+        """Extract thought steps (for signature continuity) from reconstructed steps."""
         return [
             step
             for step in reconstruct_steps(raw_events)
-            if is_native_replay_step(step)
+            if step.get("type") == "thought"
         ]
 
 
@@ -178,16 +175,14 @@ class GoogleInteractionsTextClient(GoogleInteractionsMixin, TextClient):
     def _parse_reasoning(
         self, response_data: dict[str, Any]
     ) -> tuple[str | None, list[dict[str, Any]]]:
-        """Parse thought steps and signature-carrying steps from Google response."""
+        """Parse thought steps from Google response."""
         steps = response_data.get("steps", [])
         reasoning_parts: list[str] = []
         signature_blocks: list[dict[str, Any]] = []
         for step in steps:
-            if not is_native_replay_step(step):
-                continue
-            signature_blocks.append(step)
             if step.get("type") != "thought":
                 continue
+            signature_blocks.append(step)
             for part in step.get("summary", []) or []:
                 if part.get("type") == "text" and part.get("text"):
                     reasoning_parts.append(part["text"])

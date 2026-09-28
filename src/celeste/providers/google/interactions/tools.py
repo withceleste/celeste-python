@@ -15,15 +15,6 @@ from celeste.tools import (
 )
 
 
-def is_native_replay_step(step: dict[str, Any]) -> bool:
-    """Return whether a stateless turn must resend this step verbatim."""
-    step_type = step.get("type") or ""
-    return step_type == "thought" or (
-        step_type.endswith(("_call", "_result"))
-        and step_type not in {"function_call", "function_result"}
-    )
-
-
 def tool_calls_from_steps(steps: list[dict[str, Any]]) -> list[ToolCall]:
     """Extract tool calls from a completed or reconstructed steps array."""
     tool_calls: list[ToolCall] = []
@@ -95,6 +86,5 @@ __all__ = [
     "CodeExecutionMapper",
     "UrlContextMapper",
     "WebSearchMapper",
-    "is_native_replay_step",
     "tool_calls_from_steps",
 ]

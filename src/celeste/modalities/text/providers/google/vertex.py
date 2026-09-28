@@ -133,13 +133,7 @@ class GoogleVertexTextClient(GoogleGenerateContentMixin, TextClient):
                                 "functionResponse": {
                                     "id": msg.tool_call_id,
                                     "name": msg.name,
-                                    # A dict result is the response, keeping keys like
-                                    # safety_acknowledgement top-level.
-                                    "response": response
-                                    if isinstance(
-                                        response := tool_result_object(msg), dict
-                                    )
-                                    else {"result": response},
+                                    "response": {"result": tool_result_object(msg)},
                                 }
                             }
                         ],

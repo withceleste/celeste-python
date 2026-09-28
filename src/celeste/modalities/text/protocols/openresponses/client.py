@@ -84,10 +84,6 @@ def _serialize_messages(
             )
         elif msg.role == Role.ASSISTANT and (msg.tool_calls or msg.signature):
             sig_blocks = msg.signature
-            if sig_blocks and any(b.get("type") != "reasoning" for b in sig_blocks):
-                # A signature beyond reasoning items is the full original turn.
-                items.extend(sig_blocks)
-                continue
             if sig_blocks:
                 items.extend(sig_blocks)
             if msg.content:

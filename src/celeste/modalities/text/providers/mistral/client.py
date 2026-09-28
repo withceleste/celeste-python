@@ -10,9 +10,8 @@ from celeste.providers.mistral.chat.streaming import (
 from celeste.providers.mistral.chat.streaming import (
     _extract_thinking_text,
 )
-from celeste.types import Message, Role, TextContent
+from celeste.types import TextContent
 
-from ...io import TextInput
 from ...protocols.chatcompletions.client import (
     ChatCompletionsTextClient,
 )
@@ -33,31 +32,6 @@ class MistralTextClient(MistralChatMixin, ChatCompletionsTextClient):
     @classmethod
     def parameter_mappers(cls) -> list[ParameterMapper[TextContent]]:
         return MISTRAL_PARAMETER_MAPPERS
-
-    def _init_request(self, inputs: TextInput) -> dict[str, Any]:
-        request = super()._init_request(inputs)
-        for source, serialized in zip(
-            inputs.messages or [], request["messages"], strict=False
-        ):
-            if (
-                isinstance(source, Message)
-                and source.role == Role.ASSISTANT
-                and source.reasoning is not None
-            ):
-                # Reasoning models need their ThinkChunk replayed on later turns.
-                content = serialized.get("content") or []
-                serialized["content"] = [
-                    {
-                        "type": "thinking",
-                        "thinking": [{"type": "text", "text": source.reasoning}],
-                    },
-                    *(
-                        [{"type": "text", "text": content}]
-                        if isinstance(content, str)
-                        else content
-                    ),
-                ]
-        return request
 
     def _parse_content(
         self,

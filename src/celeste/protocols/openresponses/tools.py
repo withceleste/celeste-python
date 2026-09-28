@@ -124,13 +124,6 @@ def parse_reasoning(
     return text, signature_blocks
 
 
-def native_replay_output(output: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Return the full output when a stateless turn must resend every item in order."""
-    if any(item.get("type") not in {"message", "function_call"} for item in output):
-        return output
-    return []
-
-
 def parse_annotations(output: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Extract URL citation annotations from Responses API output items."""
     annotations: list[dict[str, Any]] = []
@@ -151,7 +144,6 @@ __all__ = [
     "CodeExecutionMapper",
     "WebSearchMapper",
     "XSearchMapper",
-    "native_replay_output",
     "parse_annotations",
     "parse_content",
     "parse_reasoning",
