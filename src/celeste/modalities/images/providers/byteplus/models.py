@@ -55,6 +55,7 @@ MODELS: list[Model] = [
         provider=Provider.BYTEPLUS,
         display_name="Seedream 4.5",
         operations={Modality.IMAGES: {Operation.GENERATE}},
+        streaming=True,
         parameter_constraints={
             ImageParameter.ASPECT_RATIO: Dimensions(
                 min_pixels=2560 * 1440,  # 3,686,400
