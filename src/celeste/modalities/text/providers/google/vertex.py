@@ -131,9 +131,20 @@ class GoogleVertexTextClient(GoogleGenerateContentMixin, TextClient):
                         "parts": [
                             {
                                 "functionResponse": {
-                                    "id": msg.tool_call_id,
+                                    # id is optional; echo only one Google sent.
+                                    **(
+                                        {"id": msg.tool_call_id}
+                                        if msg.tool_call_id
+                                        else {}
+                                    ),
                                     "name": msg.name,
-                                    "response": {"result": tool_result_object(msg)},
+                                    # A dict result is the response, keeping keys like
+                                    # safety_acknowledgement top-level.
+                                    "response": response
+                                    if isinstance(
+                                        response := tool_result_object(msg), dict
+                                    )
+                                    else {"result": response},
                                 }
                             }
                         ],
@@ -156,7 +167,7 @@ class GoogleVertexTextClient(GoogleGenerateContentMixin, TextClient):
                         msg_parts.append(
                             {
                                 "functionCall": {
-                                    "id": tc.id,
+                                    **({"id": tc.id} if tc.id else {}),
                                     "name": tc.name,
                                     "args": tc.arguments,
                                 }
