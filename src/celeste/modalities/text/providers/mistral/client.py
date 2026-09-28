@@ -35,6 +35,7 @@ class MistralTextClient(MistralChatMixin, ChatCompletionsTextClient):
         return MISTRAL_PARAMETER_MAPPERS
 
     def _init_request(self, inputs: TextInput) -> dict[str, Any]:
+        """Initialize request, replaying each reasoning turn's ThinkChunk."""
         request = super()._init_request(inputs)
         for source, serialized in zip(
             inputs.messages or [], request["messages"], strict=False
