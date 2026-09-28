@@ -104,10 +104,20 @@ MODELS: list[Model] = [
         provider=Provider.OPENAI,
         display_name="GPT Image 2.5 Sunburst",
         operations={Modality.IMAGES: {Operation.GENERATE, Operation.EDIT}},
-        streaming=False,
+        streaming=True,
         parameter_constraints={
+            ImageParameter.PARTIAL_IMAGES: Range(min=0, max=3),
             ImageParameter.ASPECT_RATIO: Choice(
-                options=["1024x1024", "1536x1024", "1024x1536", "auto"]
+                options=[
+                    "1024x1024",
+                    "1536x1024",
+                    "1024x1536",
+                    "2048x2048",
+                    "2048x1152",
+                    "3840x2160",
+                    "2160x3840",
+                    "auto",
+                ]
             ),
             ImageParameter.QUALITY: Choice(
                 options=["low", "medium", "high", "xhigh", "max", "auto"]
