@@ -36,7 +36,7 @@ def tool_calls_from_parts(parts: list[dict[str, Any]]) -> list[ToolCall]:
             continue
         tool_calls.append(
             ToolCall(
-                id=function_call["id"],
+                id=function_call.get("id") or "",
                 name=function_call["name"],
                 arguments=function_call.get("args", {}),
             )
