@@ -51,7 +51,7 @@ MODELS: list[Model] = [
         provider=Provider.XAI,
         display_name="Grok 4.7",
         operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
-        streaming=False,
+        streaming=True,
         parameter_constraints={
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0),
             TextParameter.THINKING_BUDGET: Choice(
