@@ -55,6 +55,17 @@ MODELS: list[Model] = [
         },
     ),
     Model(
+        id="gemini-3.8-flash-lite-tts",
+        provider=Provider.GOOGLE,
+        display_name="Google TTS Gemini 3.8 Flash-Lite",
+        streaming=True,
+        operations={Modality.AUDIO: {Operation.SPEAK}},
+        parameter_constraints={
+            AudioParameter.VOICE: VoiceConstraint(voices=GOOGLE_VOICES),
+            AudioParameter.OUTPUT_FORMAT: Choice(options=GOOGLE_SUPPORTED_FORMATS),
+        },
+    ),
+    Model(
         id="lyria-3-clip-preview",
         provider=Provider.GOOGLE,
         display_name="Google Lyria 3 Clip (Preview)",
