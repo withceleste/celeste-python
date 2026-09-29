@@ -54,8 +54,9 @@ MODELS: list[Model] = [
         provider=Provider.OPENAI,
         display_name="GPT Image 1.5",
         operations={Modality.IMAGES: {Operation.GENERATE, Operation.EDIT}},
-        streaming=False,
+        streaming=True,
         parameter_constraints={
+            ImageParameter.PARTIAL_IMAGES: Range(min=0, max=3),
             ImageParameter.ASPECT_RATIO: Choice(
                 options=["1024x1024", "1536x1024", "1024x1536", "auto"]
             ),
