@@ -88,7 +88,9 @@ MODELS: list[Model] = [
         streaming=True,
         parameter_constraints={
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0),
-            TextParameter.THINKING_BUDGET: Choice(options=["low", "medium", "high"]),
+            TextParameter.THINKING_BUDGET: Choice(
+                options=["low", "medium", "high", "xhigh"]
+            ),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch, XSearch, CodeExecution]),
             TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
             TextParameter.OUTPUT_SCHEMA: Schema(),
@@ -104,7 +106,7 @@ MODELS: list[Model] = [
         parameter_constraints={
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0),
             TextParameter.THINKING_BUDGET: Choice(
-                options=["none", "low", "medium", "high"]
+                options=["none", "low", "medium", "high", "xhigh"]
             ),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch, XSearch, CodeExecution]),
             TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
