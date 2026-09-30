@@ -269,6 +269,41 @@ class HTTPClient:
                 if line:
                     yield json.loads(line)
 
+    async def stream_post_bytes(
+        self,
+        url: str,
+        headers: dict[str, str],
+        json_body: dict[str, Any],
+        timeout: float = DEFAULT_TIMEOUT,
+    ) -> AsyncGenerator[bytes, None]:
+        """Stream POST request as raw response bytes.
+
+        Unlike stream_post and stream_post_ndjson, the body is not parsed, so
+        providers can decode binary stream framings themselves.
+
+        Args:
+            url: API endpoint URL.
+            headers: HTTP headers (including authentication).
+            json_body: JSON request body.
+            timeout: Timeout in seconds (default: DEFAULT_TIMEOUT).
+
+        Yields:
+            Response body chunks, with content-encoding decoded.
+        """
+        client = await self._get_client()
+        async with client.stream(
+            "POST",
+            url,
+            json=json_body,
+            headers=headers,
+            timeout=timeout,
+        ) as response:
+            if not response.is_success:
+                await response.aread()
+                response.raise_for_status()
+            async for chunk in response.aiter_bytes():
+                yield chunk
+
     async def aclose(self) -> None:
         """Close connections owned by the current event loop."""
         entry = self._clients.pop(asyncio.get_running_loop(), None)
