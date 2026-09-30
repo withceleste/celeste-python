@@ -508,6 +508,12 @@ class _TracedStream:
         """Access final Output after stream exhaustion."""
         return self._inner.output
 
+    def __getattr__(self, name: str) -> Any:
+        """Delegate public stream-specific methods, such as LiveStream.send, to the inner stream."""
+        if name.startswith("_"):
+            raise AttributeError(name)
+        return getattr(self._inner, name)
+
     async def aclose(self) -> None:
         """Close the inner stream and finalize the span."""
         await self._inner.aclose()

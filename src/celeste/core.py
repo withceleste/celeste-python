@@ -46,6 +46,7 @@ class Modality(StrEnum):
     VIDEOS = "videos"
     AUDIO = "audio"
     SEGMENTATION = "segmentation"
+    LIVE = "live"
 
 
 class Operation(StrEnum):
@@ -63,6 +64,7 @@ class Operation(StrEnum):
     EMBED = "embed"
     UPSCALE = "upscale"
     SEGMENT = "segment"
+    CONNECT = "connect"
 
 
 class InputType(StrEnum):
@@ -116,6 +118,7 @@ class Domain(StrEnum):
     AUDIO = "audio"
     VIDEOS = "videos"
     DOCUMENTS = "documents"
+    LIVE = "live"
 
 
 # (Domain, Operation) → Modality inference
@@ -137,6 +140,7 @@ DOMAIN_OPERATION_TO_MODALITY: dict[tuple[Domain, Operation], Modality] = {
     (Domain.VIDEOS, Operation.ANALYZE): Modality.TEXT,
     (Domain.VIDEOS, Operation.EMBED): Modality.EMBEDDINGS,
     (Domain.DOCUMENTS, Operation.ANALYZE): Modality.TEXT,
+    (Domain.LIVE, Operation.CONNECT): Modality.LIVE,
 }
 
 

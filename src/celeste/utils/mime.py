@@ -87,8 +87,18 @@ def build_data_url(artifact: Artifact) -> str:
     return f"data:{mime.value};base64,{encoded}"
 
 
+def split_sample_rate(mime_type: str) -> tuple[str, int | None]:
+    """Split "audio/pcm;rate=24000" into the MIME type and its sample rate."""
+    mime, *params = (part.strip() for part in mime_type.split(";"))
+    rate = next(
+        (int(p.removeprefix("rate=")) for p in params if p.startswith("rate=")), None
+    )
+    return mime, rate
+
+
 __all__ = [
     "build_data_url",
     "detect_mime_type",
     "detect_mime_type_from_path",
+    "split_sample_rate",
 ]

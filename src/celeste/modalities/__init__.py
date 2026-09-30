@@ -1,5 +1,13 @@
 """Celeste modalities."""
 
-from celeste.modalities import audio, embeddings, images, segmentation, text, videos
+from celeste.modalities import (
+    audio,
+    embeddings,
+    images,
+    live,
+    segmentation,
+    text,
+    videos,
+)
 
-__all__ = ["audio", "embeddings", "images", "segmentation", "text", "videos"]
+__all__ = ["audio", "embeddings", "images", "live", "segmentation", "text", "videos"]

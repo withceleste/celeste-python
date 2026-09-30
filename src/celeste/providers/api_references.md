@@ -9,10 +9,12 @@ This document contains the official API reference documentation links for all pr
 | **Google** | GenerateContent | [GenerateContent API Reference](https://ai.google.dev/api/generate-content) | ✅ |
 | **Google** | Embeddings | [Embeddings API Reference](https://ai.google.dev/api/embeddings) | ✅ |
 | **Google** | Interactions | [Interactions API Reference](https://ai.google.dev/api/interactions-api) | — |
+| **Google** | Live | [Live API Reference](https://ai.google.dev/api/live) | ✅ |
 | **Google** | Veo | [Veo API Reference](https://ai.google.dev/gemini-api/docs/video) | ✅ |
 | **OpenAI** | Responses | [Responses API Reference](https://platform.openai.com/docs/api-reference/responses) | ✅ |
 | **OpenAI** | Images | [Images API Reference](https://platform.openai.com/docs/api-reference/images) | ✅ |
 | **OpenAI** | Audio | [Audio API Reference](https://platform.openai.com/docs/api-reference/audio) | ✅ |
+| **OpenAI** | Live | [Live API Reference](https://developers.openai.com/api/reference/resources/live/primary-websocket) | ✅ |
 | **OpenAI** | Videos | [Videos API Reference](https://platform.openai.com/docs/api-reference/videos) | ✅ |
 | **Anthropic** | Messages | [Messages API Reference](https://docs.anthropic.com/claude/reference/messages) | ✅ |
 | **Cohere** | Chat | [Chat API Reference](https://docs.cohere.com/reference/chat) | ✅ |
@@ -40,8 +42,8 @@ This document contains the official API reference documentation links for all pr
 
 ## Summary
 
-- **Total APIs:** 31 provider-API combinations
-- **Validated:** 20 ✅ · 11 pending (—)
+- **Total APIs:** 33 provider-API combinations
+- **Validated:** 22 ✅ · 11 pending (—)
 - **Naming convention:** Method names only (Provider column provides context)
 - **Link strategy:** Specific method/endpoint pages when available, general API reference pages otherwise
 

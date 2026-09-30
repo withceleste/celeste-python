@@ -92,15 +92,16 @@ embeddings = await celeste.text.embed(["lorep ipsum", "dolor sit amet"], model="
 
 ## Operations by Domain
 
-| Action | Text | Images | Audio | Video |
-| :--- | :---: | :---: | :---: | :---: |
-| **Generate** | ✓ | ✓ | ○ | ✓ |
-| **Edit** | — | ✓ | — | — |
-| **Analyze** | — | ✓ | ✓ | ✓ |
-| **Upscale** | — | ○ | — | ○ |
-| **Speak** | — | — | ✓ | — |
-| **Transcribe** | — | — | ✓ | — |
-| **Embed** | ✓ | ○ | — | ○ |
+| Action | Text | Images | Audio | Video | Live |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| **Generate** | ✓ | ✓ | ○ | ✓ | — |
+| **Edit** | — | ✓ | — | — | — |
+| **Analyze** | — | ✓ | ✓ | ✓ | — |
+| **Upscale** | — | ○ | — | ○ | — |
+| **Speak** | — | — | ✓ | — | — |
+| **Transcribe** | — | — | ✓ | — | — |
+| **Embed** | ✓ | ○ | — | ○ | — |
+| **Connect** | — | — | — | — | ✓ |
 
 <sub>✓ Available · ○ Planned</sub>
 
