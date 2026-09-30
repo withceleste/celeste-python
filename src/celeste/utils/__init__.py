@@ -5,6 +5,7 @@ from celeste.utils.mime import (
     build_data_url,
     detect_mime_type,
     detect_mime_type_from_path,
+    split_sample_rate,
 )
 
 __all__ = [
@@ -12,4 +13,5 @@ __all__ = [
     "detect_mime_type",
     "detect_mime_type_from_path",
     "get_image_dimensions",
+    "split_sample_rate",
 ]

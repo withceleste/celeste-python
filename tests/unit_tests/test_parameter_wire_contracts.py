@@ -17,6 +17,9 @@ from celeste.modalities.images.parameters import ImageParameter
 from celeste.modalities.images.providers.bfl import parameters as bfl
 from celeste.modalities.images.providers.google import parameters as google_images
 from celeste.modalities.images.providers.topazlabs import parameters as topazlabs
+from celeste.modalities.live.parameters import LiveParameter
+from celeste.modalities.live.providers.google import parameters as google_live
+from celeste.modalities.live.providers.openai import parameters as openai_live
 from celeste.modalities.segmentation.parameters import SegmentationParameter
 from celeste.modalities.segmentation.providers.fal import parameters as fal
 from celeste.modalities.text.parameters import TextParameter
@@ -58,6 +61,8 @@ XAI = xai.XAI_PARAMETER_MAPPERS
 BFL = bfl.BFL_PARAMETER_MAPPERS
 TOPAZ = topazlabs.TOPAZLABS_PARAMETER_MAPPERS
 FAL = fal.FAL_PARAMETER_MAPPERS
+LIVE_GOOGLE = google_live.GOOGLE_PARAMETER_MAPPERS
+LIVE_OPENAI = openai_live.OPENAI_PARAMETER_MAPPERS
 T, IP, V, AP, SP = (
     TextParameter,
     ImageParameter,
@@ -108,6 +113,80 @@ def _at(data: dict[str, Any], path: tuple[str, ...]) -> Any:  # noqa: ANN401
 
 
 SCALAR_PARAMETER_CASES = [
+    (
+        LIVE_GOOGLE,
+        LiveParameter.VOICE,
+        "Kore",
+        (*GC, "speechConfig", "voiceConfig", "prebuiltVoiceConfig", "voiceName"),
+        "Kore",
+    ),
+    (
+        LIVE_GOOGLE,
+        LiveParameter.THINKING_LEVEL,
+        "LOW",
+        TC,
+        {"thinkingLevel": "LOW"},
+    ),
+    (
+        LIVE_GOOGLE,
+        LiveParameter.TEMPERATURE,
+        0.2,
+        (*GC, "temperature"),
+        0.2,
+    ),
+    (
+        LIVE_GOOGLE,
+        LiveParameter.MAX_TOKENS,
+        80,
+        (*GC, "maxOutputTokens"),
+        80,
+    ),
+    (LIVE_GOOGLE, LiveParameter.SEED, 7, (*GC, "seed"), 7),
+    (
+        LIVE_GOOGLE,
+        LiveParameter.REFERENCE_IMAGES,
+        [LOCAL_IMAGE],
+        ("clientContent", "turns"),
+        [
+            {
+                "role": "user",
+                "parts": [
+                    {"inline_data": {"mime_type": "image/png", "data": "ZnJhbWU="}}
+                ],
+            }
+        ],
+    ),
+    (
+        LIVE_GOOGLE,
+        LiveParameter.TOOLS,
+        [{"name": "weather"}],
+        ("tools",),
+        [{"functionDeclarations": [{"name": "weather", "behavior": "NON_BLOCKING"}]}],
+    ),
+    (
+        LIVE_OPENAI,
+        LiveParameter.VOICE,
+        "marin",
+        ("audio", "output", "voice"),
+        "marin",
+    ),
+    (
+        LIVE_OPENAI,
+        LiveParameter.AUDIO_FORMAT,
+        "audio/pcm;rate=16000",
+        ("audio", "format"),
+        {"type": "audio/pcm", "rate": 16000},
+    ),
+    (
+        LIVE_OPENAI,
+        LiveParameter.TOOLS,
+        [{"name": "weather"}],
+        ("delegation",),
+        {
+            "type": "responses",
+            "responses": {"tools": [{"type": "function", "name": "weather"}]},
+        },
+    ),
     (GOOGLE_VERTEX, T.TEMPERATURE, 0.2, (*GC, "temperature"), 0.2),
     (GOOGLE_VERTEX, T.MAX_TOKENS, 80, (*GC, "maxOutputTokens"), 80),
     (GOOGLE_VERTEX, T.SEED, 7, (*GC, "seed"), 7),
@@ -447,6 +526,8 @@ def test_scalar_parameters_use_provider_wire_shape(
         XAI,
         BFL,
         TOPAZ,
+        LIVE_GOOGLE,
+        LIVE_OPENAI,
     ],
 )
 def test_none_omits_every_optional_parameter(

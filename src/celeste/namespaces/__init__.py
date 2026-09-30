@@ -23,6 +23,7 @@ from celeste.namespaces.domains import (
     AudioNamespace,
     DocumentsNamespace,
     ImagesNamespace,
+    LiveNamespace,
     TextNamespace,
     VideosNamespace,
 )
@@ -33,16 +34,19 @@ images = ImagesNamespace()
 audio = AudioNamespace()
 videos = VideosNamespace()
 documents = DocumentsNamespace()
+live = LiveNamespace()
 
 __all__ = [
     "AudioNamespace",
     "DocumentsNamespace",
     "ImagesNamespace",
+    "LiveNamespace",
     "TextNamespace",
     "VideosNamespace",
     "audio",
     "documents",
     "images",
+    "live",
     "text",
     "videos",
 ]

@@ -46,6 +46,8 @@ class AudioMimeType(MimeType):
     M4A = "audio/mp4"
     WMA = "audio/x-ms-wma"
     PCM = "audio/pcm"
+    PCMU = "audio/pcmu"
+    PCMA = "audio/pcma"
 
 
 class DocumentMimeType(MimeType):

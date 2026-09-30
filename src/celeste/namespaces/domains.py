@@ -19,6 +19,8 @@ from celeste.modalities.embeddings.parameters import EmbeddingsParameters
 from celeste.modalities.images.io import ImageOutput
 from celeste.modalities.images.parameters import ImageParameters
 from celeste.modalities.images.streaming import ImagesStream
+from celeste.modalities.live.parameters import LiveParameters
+from celeste.modalities.live.streaming import LiveStream
 from celeste.modalities.segmentation.io import SegmentationOutput
 from celeste.modalities.segmentation.parameters import SegmentationParameters
 from celeste.modalities.text.io import TextOutput
@@ -1606,10 +1608,53 @@ class DocumentsNamespace:
         return StreamDocumentsNamespace()
 
 
+class LiveNamespace:
+    """celeste.live.* namespace."""
+
+    def connect(
+        self,
+        *,
+        messages: list[Message | ToolResult] | None = None,
+        model: str,
+        provider: Provider | None = None,
+        api_key: str | SecretStr | None = None,
+        auth: Authentication | None = None,
+        base_url: str | None = None,
+        extra_body: dict[str, Any] | None = None,
+        **parameters: Unpack[LiveParameters],
+    ) -> LiveStream:
+        """Open a livestream: send inputs and receive chunks concurrently.
+
+        Args:
+            messages: Conversation history seeded when connecting.
+            model: Model ID to use (required).
+            provider: Optional provider override.
+            api_key: Optional API key override.
+            auth: Optional Authentication object (e.g., GoogleADC for Vertex AI).
+            base_url: Custom base URL for proxy endpoints.
+            extra_body: Additional provider-specific session configuration.
+            **parameters: Additional model parameters (e.g., voice).
+
+        Returns:
+            LiveStream to use as `async with ... as livestream`.
+        """
+        client = create_client(
+            modality=Modality.LIVE,
+            operation=Operation.CONNECT,
+            model=model,
+            provider=provider,
+            api_key=api_key,
+            auth=auth,
+            base_url=base_url,
+        )
+        return client.connect(messages=messages, extra_body=extra_body, **parameters)
+
+
 __all__ = [
     "AudioNamespace",
     "DocumentsNamespace",
     "ImagesNamespace",
+    "LiveNamespace",
     "TextNamespace",
     "VideosNamespace",
 ]

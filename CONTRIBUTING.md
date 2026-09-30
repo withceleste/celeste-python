@@ -87,6 +87,16 @@ The steps above assume a new provider. For a new wire API on an existing one (e.
 8. Tests: dispatch-selection asserts on `client._strategy`, per-backend `_init_request` payload tests, and wire-contract matrix rows for the new mapper list. The delegation guard (`tests/unit_tests/test_dispatcher_delegation.py`) picks the new dispatcher up automatically from the registry — no new rows.
 9. Before calling it done, run the provider's integration tests (`make integration-test`) — they are the only check that proves wire fields against the live API. Sort failures into billing / auth / pre-existing before treating any as a code defect; when the API reference and live serving disagree, live serving wins.
 
+### Adding a modality
+
+1. Copy `templates/modalities/{modality_slug}/` into `src/celeste/modalities/<modality>/`, then add each provider through the steps above (route 4 in `templates/README.md`).
+2. Add the `Modality`, `Domain`, and `Operation` members and the `DOMAIN_OPERATION_TO_MODALITY` row in `src/celeste/core.py`.
+3. Register in this order: `_CLIENT_MAP`, the model loop, and `__all__` in `src/celeste/__init__.py`, then `src/celeste/modalities/__init__.py`. New members, rows, and entries go last; import lists and `__all__` stay sorted.
+4. Add the domain namespace in `src/celeste/namespaces/domains.py` and export it from `src/celeste/namespaces/__init__.py`.
+5. Aggregate the provider catalogs in `src/celeste/modalities/<modality>/models.py`.
+6. Add each wire API's docs link to `src/celeste/providers/api_references.md`.
+7. Tests: every new mapper list gets wire-contract matrix rows and joins the `test_none_omits_every_optional_parameter` list in `tests/unit_tests/test_parameter_wire_contracts.py`; integration tests live in `tests/integration_tests/<modality>/` with an `__init__.py`.
+
 ## Model catalog rules
 
 - `Model.streaming` means celeste's adapter transport streams this model — not the vendor's advertised capability.
