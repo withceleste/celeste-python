@@ -296,7 +296,27 @@ async def test_ndjson_stream_parses_nonempty_lines(transport: AsyncMock) -> None
     assert events == [{"value": 1}, {"value": 2}]
 
 
-async def test_ndjson_error_body_remains_readable(transport: AsyncMock) -> None:
+async def test_bytes_stream_yields_raw_chunks(transport: AsyncMock) -> None:
+    response = httpx.Response(
+        200,
+        content=_iterate([b"\x00\x01", b"\x02"]),
+        request=httpx.Request("POST", "https://example.com"),
+    )
+    transport.stream = MagicMock(return_value=AsyncResponseContext(response))
+    with patch("celeste.http.httpx.AsyncClient", return_value=transport):
+        chunks = [
+            chunk
+            async for chunk in HTTPClient().stream_post_bytes(
+                "https://example.com", {}, {}
+            )
+        ]
+    assert chunks == [b"\x00\x01", b"\x02"]
+
+
+@pytest.mark.parametrize("operation", ["stream_post_ndjson", "stream_post_bytes"])
+async def test_stream_error_body_remains_readable(
+    transport: AsyncMock, operation: str
+) -> None:
     response = httpx.Response(
         403,
         content=b'{"error": {"message": "forbidden"}}',
@@ -307,6 +327,6 @@ async def test_ndjson_error_body_remains_readable(transport: AsyncMock) -> None:
         patch("celeste.http.httpx.AsyncClient", return_value=transport),
         pytest.raises(httpx.HTTPStatusError) as error,
     ):
-        async for _ in HTTPClient().stream_post_ndjson("https://example.com", {}, {}):
+        async for _ in getattr(HTTPClient(), operation)("https://example.com", {}, {}):
             pass
     assert error.value.response.json()["error"]["message"] == "forbidden"
