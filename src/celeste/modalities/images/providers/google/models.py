@@ -38,12 +38,16 @@ MODELS: list[Model] = [
             ImageParameter.ASPECT_RATIO: Choice(
                 options=[
                     "1:1",
+                    "1:4",
+                    "1:8",
                     "2:3",
                     "3:2",
                     "3:4",
+                    "4:1",
                     "4:3",
                     "4:5",
                     "5:4",
+                    "8:1",
                     "9:16",
                     "16:9",
                     "21:9",
@@ -107,7 +111,7 @@ MODELS: list[Model] = [
                     "21:9",
                 ]
             ),
-            ImageParameter.QUALITY: Choice(options=["1K"]),
+            ImageParameter.QUALITY: Choice(options=["512", "1K"]),
             ImageParameter.REFERENCE_IMAGES: ImagesConstraint(max_count=14),
             ImageParameter.THINKING_LEVEL: Choice(options=["minimal", "high"]),
         },
