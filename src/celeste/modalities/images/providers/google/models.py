@@ -111,7 +111,7 @@ MODELS: list[Model] = [
                     "21:9",
                 ]
             ),
-            ImageParameter.QUALITY: Choice(options=["1K"]),
+            ImageParameter.QUALITY: Choice(options=["512", "1K"]),
             ImageParameter.REFERENCE_IMAGES: ImagesConstraint(max_count=14),
             ImageParameter.THINKING_LEVEL: Choice(options=["minimal", "high"]),
         },
