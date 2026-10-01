@@ -89,6 +89,17 @@ _SCRIBE_CONSTRAINTS = {
 
 ELEVENLABS_TTS_MODELS: list[Model] = [
     Model(
+        id="eleven_v4",
+        provider=Provider.ELEVENLABS,
+        display_name="Eleven v4",
+        streaming=True,
+        operations={Modality.AUDIO: {Operation.SPEAK}},
+        parameter_constraints={
+            AudioParameter.VOICE: VoiceConstraint(voices=ELEVENLABS_VOICES),
+            AudioParameter.OUTPUT_FORMAT: Choice(options=ELEVENLABS_OUTPUT_FORMATS),
+        },
+    ),
+    Model(
         id="eleven_v3",
         provider=Provider.ELEVENLABS,
         display_name="Eleven v3 (Alpha)",
