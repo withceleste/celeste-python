@@ -166,6 +166,14 @@ ELEVENLABS_TTS_MODELS: list[Model] = [
 
 ELEVENLABS_STT_MODELS: list[Model] = [
     Model(
+        id="scribe_v2_medical",
+        provider=Provider.ELEVENLABS,
+        display_name="Scribe v2 Medical",
+        streaming=False,
+        operations={Modality.AUDIO: {Operation.TRANSCRIBE}},
+        parameter_constraints=_SCRIBE_CONSTRAINTS,
+    ),
+    Model(
         id="scribe_v2",
         provider=Provider.ELEVENLABS,
         display_name="Scribe v2",
