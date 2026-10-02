@@ -144,6 +144,27 @@ MODELS: list[Model] = [
         },
     ),
     Model(
+        id="gemini-3.1-pro-preview-customtools",
+        provider=Provider.GOOGLE,
+        display_name="Gemini 3.1 Pro Custom Tools",
+        operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
+        streaming=True,
+        parameter_constraints={
+            Parameter.MAX_TOKENS: Range(min=1, max=65536),
+            TextParameter.THINKING_LEVEL: Choice(options=["low", "medium", "high"]),
+            TextParameter.TOOLS: ToolSupport(
+                tools=[WebSearch, CodeExecution, UrlContext]
+            ),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
+            TextParameter.OUTPUT_SCHEMA: Schema(),
+            # Media input support
+            TextParameter.IMAGE: ImagesConstraint(),
+            TextParameter.VIDEO: VideosConstraint(),
+            TextParameter.AUDIO: AudioConstraint(),
+            TextParameter.DOCUMENT: DocumentsConstraint(),
+        },
+    ),
+    Model(
         id="gemini-3.1-flash-lite",
         provider=Provider.GOOGLE,
         display_name="Gemini 3.1 Flash Lite",
