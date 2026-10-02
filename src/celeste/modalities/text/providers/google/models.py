@@ -281,4 +281,30 @@ MODELS: list[Model] = [
             TextParameter.DOCUMENT: DocumentsConstraint(),
         },
     ),
+    Model(
+        id="gemma-4-31b-it",
+        provider=Provider.GOOGLE,
+        display_name="Gemma 4 31B IT",
+        operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
+        streaming=True,
+        parameter_constraints={
+            TextParameter.THINKING_LEVEL: Choice(options=["minimal", "high"]),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
+            # Media input support
+            TextParameter.IMAGE: ImagesConstraint(),
+        },
+    ),
+    Model(
+        id="gemma-4-26b-a4b-it",
+        provider=Provider.GOOGLE,
+        display_name="Gemma 4 26B A4B IT",
+        operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
+        streaming=True,
+        parameter_constraints={
+            TextParameter.THINKING_LEVEL: Choice(options=["minimal", "high"]),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
+            # Media input support
+            TextParameter.IMAGE: ImagesConstraint(),
+        },
+    ),
 ]
