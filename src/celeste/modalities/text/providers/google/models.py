@@ -281,4 +281,26 @@ MODELS: list[Model] = [
             TextParameter.DOCUMENT: DocumentsConstraint(),
         },
     ),
+    Model(
+        id="gemini-robotics-er-2-preview",
+        provider=Provider.GOOGLE,
+        display_name="Gemini Robotics ER 2 Preview",
+        operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
+        streaming=True,
+        parameter_constraints={
+            Parameter.MAX_TOKENS: Range(min=1, max=65536),
+            TextParameter.THINKING_LEVEL: Choice(
+                options=["minimal", "low", "medium", "high"]
+            ),
+            TextParameter.TOOLS: ToolSupport(
+                tools=[WebSearch, CodeExecution, UrlContext]
+            ),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
+            TextParameter.OUTPUT_SCHEMA: Schema(),
+            # Media input support
+            TextParameter.IMAGE: ImagesConstraint(),
+            TextParameter.VIDEO: VideosConstraint(),
+            TextParameter.AUDIO: AudioConstraint(),
+        },
+    ),
 ]
