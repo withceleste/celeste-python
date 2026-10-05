@@ -42,7 +42,9 @@ ELEVENLABS_OUTPUT_FORMATS = [
 
 _TTS_V2_5_LANGUAGES = [
     Language.ARABIC,
+    Language.BULGARIAN,
     Language.CHINESE,
+    Language.CROATIAN,
     Language.CZECH,
     Language.DANISH,
     Language.DUTCH,
