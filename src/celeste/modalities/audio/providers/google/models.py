@@ -65,7 +65,13 @@ MODELS: list[Model] = [
         parameter_constraints={
             AudioParameter.VOICE: VoiceConstraint(voices=GOOGLE_VOICES),
             AudioParameter.OUTPUT_FORMAT: Choice(
-                options=[AudioMimeType.WAV, AudioMimeType.OGG, AudioMimeType.PCM]
+                options=[
+                    AudioMimeType.WAV,
+                    AudioMimeType.OGG,
+                    AudioMimeType.PCM,
+                    AudioMimeType.PCMU,
+                    AudioMimeType.PCMA,
+                ]
             ),
         },
     ),
@@ -78,7 +84,13 @@ MODELS: list[Model] = [
         parameter_constraints={
             AudioParameter.VOICE: VoiceConstraint(voices=GOOGLE_VOICES),
             AudioParameter.OUTPUT_FORMAT: Choice(
-                options=[AudioMimeType.WAV, AudioMimeType.OGG, AudioMimeType.PCM]
+                options=[
+                    AudioMimeType.WAV,
+                    AudioMimeType.OGG,
+                    AudioMimeType.PCM,
+                    AudioMimeType.PCMU,
+                    AudioMimeType.PCMA,
+                ]
             ),
         },
     ),
