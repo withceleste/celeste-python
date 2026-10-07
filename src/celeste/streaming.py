@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 from collections.abc import AsyncGenerator, AsyncIterator, Awaitable, Callable, Iterator
 from contextlib import aclosing, suppress
 from types import TracebackType
-from typing import Any, ClassVar, Self, Unpack
+from typing import Any, ClassVar, Self, Unpack, cast
 
 import httpx
 from anyio.from_thread import start_blocking_portal
@@ -263,7 +263,7 @@ class Stream[Out: Output, Params: Parameters, Chunk: ChunkBase](ABC):
         """Reconstruct the final response dict; providers override for wrapped/split wires."""
         for event in reversed(raw_events):
             if isinstance(event.get("usage"), dict):
-                return event
+                return cast(dict[str, Any], event)
         return None
 
     def _usage_from_raw_response(self, raw_response: dict[str, Any]) -> Usage | None:
@@ -317,15 +317,17 @@ class Stream[Out: Output, Params: Parameters, Chunk: ChunkBase](ABC):
     def _aggregate_usage(self, chunks: list[Chunk]) -> Usage:
         """Aggregate usage across chunks (last chunk with usage wins)."""
         for chunk in reversed(chunks):
-            if chunk.usage:
-                return chunk.usage
+            usage = cast(Usage | None, chunk.usage)
+            if usage:
+                return usage
         return self._usage_class()
 
     def _aggregate_finish_reason(self, chunks: list[Chunk]) -> FinishReason | None:
         """Aggregate finish reason across chunks (last chunk with finish_reason wins)."""
         for chunk in reversed(chunks):
-            if chunk.finish_reason:
-                return chunk.finish_reason
+            finish_reason = cast(FinishReason | None, chunk.finish_reason)
+            if finish_reason:
+                return finish_reason
         return None
 
     def _aggregate_event_data(self, chunks: list[Chunk]) -> list[dict[str, Any]]:
