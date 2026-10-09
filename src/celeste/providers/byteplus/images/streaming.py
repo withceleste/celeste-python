@@ -14,7 +14,6 @@ class BytePlusImagesStream:
     - _parse_chunk_content(event_data) - Extract image content from SSE event
     - _parse_chunk_usage(event_data) - Extract and normalize usage from SSE event
     - _parse_chunk_finish_reason(event_data) - Extract finish reason from SSE event
-    - _parse_chunk_content_type(event_data) - Get content type ("url" or "b64_json")
     - _parse_chunk_error(event_data) - Get error info for failed events
 
     Handles all image streaming event types:
@@ -37,18 +36,6 @@ class BytePlusImagesStream:
             if url:
                 return url
             return event_data.get("b64_json") or None
-
-        return None
-
-    def _parse_chunk_content_type(self, event_data: dict[str, Any]) -> str | None:
-        """Get content type for the event ("url" or "b64_json")."""
-        event_type = event_data.get("type")
-
-        if event_type == "image_generation.partial_succeeded":
-            if event_data.get("url"):
-                return "url"
-            if event_data.get("b64_json"):
-                return "b64_json"
 
         return None
 
