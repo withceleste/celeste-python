@@ -8,7 +8,7 @@ from pydantic import BaseModel, TypeAdapter
 from celeste.models import Model
 from celeste.parameters import FieldMapper, ParameterMapper
 from celeste.structured_outputs import RefResolvingJsonSchemaGenerator
-from celeste.types import TextContent
+from celeste.types import OutputSchema, TextContent
 
 
 class TemperatureMapper(FieldMapper[TextContent]):
@@ -89,7 +89,9 @@ class ResponseFormatMapper(ParameterMapper[TextContent]):
         }
         return request
 
-    def parse_output(self, content: TextContent, value: object | None) -> TextContent:
+    def parse_output(
+        self, content: TextContent, value: OutputSchema | None
+    ) -> TextContent:
         """Parse JSON to BaseModel using Pydantic's TypeAdapter."""
         if value is None:
             return content

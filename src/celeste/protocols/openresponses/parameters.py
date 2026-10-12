@@ -10,7 +10,7 @@ from celeste.models import Model
 from celeste.parameters import FieldMapper, ParameterMapper
 from celeste.structured_outputs import StrictJsonSchemaGenerator
 from celeste.tools import Tool, ToolMapper
-from celeste.types import TextContent
+from celeste.types import OutputSchema, TextContent
 
 from .tools import TOOL_MAPPERS
 
@@ -74,7 +74,9 @@ class TextFormatMapper(ParameterMapper[TextContent]):
         }
         return request
 
-    def parse_output(self, content: TextContent, value: object | None) -> TextContent:
+    def parse_output(
+        self, content: TextContent, value: OutputSchema | None
+    ) -> TextContent:
         """Parse JSON string to BaseModel using Pydantic's TypeAdapter."""
         if value is None:
             return content
