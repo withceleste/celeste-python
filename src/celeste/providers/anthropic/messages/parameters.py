@@ -10,7 +10,7 @@ from celeste.models import Model
 from celeste.parameters import FieldMapper, ParameterMapper
 from celeste.structured_outputs import StrictJsonSchemaGenerator
 from celeste.tools import Tool
-from celeste.types import TextContent
+from celeste.types import OutputSchema, TextContent
 
 from .tools import TOOL_MAPPERS
 
@@ -215,7 +215,9 @@ class OutputFormatMapper(ParameterMapper[TextContent]):
 
         return request
 
-    def parse_output(self, content: TextContent, value: object | None) -> TextContent:
+    def parse_output(
+        self, content: TextContent, value: OutputSchema | None
+    ) -> TextContent:
         """Parse JSON to BaseModel using Pydantic's TypeAdapter."""
         # Empty refusals and tool-only turns have no JSON result to validate.
         if value is None or content == "":

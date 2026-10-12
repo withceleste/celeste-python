@@ -136,7 +136,7 @@ class Payload(BaseModel):
 
 @pytest.mark.parametrize("value", [Payload, list[Payload]])
 def test_schema_accepts_pydantic_models(value: object) -> None:
-    assert Schema()(value) == value  # type: ignore[arg-type]
+    assert Schema()(value) == value
 
 
 @pytest.mark.parametrize("value", [str, list[str]])

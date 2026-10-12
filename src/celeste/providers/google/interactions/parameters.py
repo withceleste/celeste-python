@@ -11,7 +11,13 @@ from celeste.models import Model
 from celeste.parameters import ParameterMapper
 from celeste.providers.google.utils import build_content_part
 from celeste.tools import Tool
-from celeste.types import AudioContent, ImageContent, TextContent, VideoContent
+from celeste.types import (
+    AudioContent,
+    ImageContent,
+    OutputSchema,
+    TextContent,
+    VideoContent,
+)
 
 from .tools import TOOL_MAPPERS
 
@@ -210,7 +216,9 @@ class ResponseFormatMapper(ParameterMapper[TextContent]):
         }
         return request
 
-    def parse_output(self, content: TextContent, value: object | None) -> TextContent:
+    def parse_output(
+        self, content: TextContent, value: OutputSchema | None
+    ) -> TextContent:
         """Parse JSON to BaseModel using Pydantic's TypeAdapter."""
         if value is None:
             return content
