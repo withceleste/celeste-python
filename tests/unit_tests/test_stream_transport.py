@@ -1,6 +1,7 @@
 """Stream termination and HTTP body cleanup."""
 
 import asyncio
+import json
 from collections.abc import AsyncIterator
 from typing import Any
 
@@ -8,7 +9,10 @@ import httpx
 import pytest
 from pydantic import BaseModel
 
+from celeste import Modality, Provider, create_client
+from celeste.auth import AuthHeader
 from celeste.exceptions import StreamEventError, StreamNotExhaustedError
+from celeste.modalities.text.io import TextOutput
 
 from ._http_helpers import _mock_http, _sse, _text_client
 
@@ -137,3 +141,75 @@ async def test_stream_close_reaches_http_body_before_returning(mode: str) -> Non
             await anext(stream)
         with pytest.raises(StreamNotExhaustedError):
             _ = stream.output
+
+
+async def test_terminal_event_closes_http_body_before_eof() -> None:
+    events = [
+        {
+            "event_type": "step.start",
+            "index": 0,
+            "step": {"type": "function_call", "id": "call_1", "name": "lookup"},
+        },
+        {
+            "event_type": "step.delta",
+            "index": 0,
+            "delta": {"type": "arguments_delta", "arguments": '{"city":'},
+        },
+        {
+            "event_type": "step.delta",
+            "index": 0,
+            "delta": {"type": "arguments_delta", "arguments": '"Paris"}'},
+        },
+        {"event_type": "step.stop", "index": 0},
+        {
+            "event_type": "interaction.completed",
+            "interaction": {
+                "status": "requires_action",
+                "usage": {
+                    "total_input_tokens": 10,
+                    "total_output_tokens": 2,
+                    "total_tokens": 12,
+                },
+            },
+        },
+    ]
+
+    class Body(httpx.AsyncByteStream):
+        closed = False
+
+        async def __aiter__(self) -> AsyncIterator[bytes]:
+            for event in events:
+                yield f"data: {json.dumps(event)}\n\n".encode()
+            await asyncio.Event().wait()
+
+        async def aclose(self) -> None:
+            self.closed = True
+
+    client = create_client(
+        modality=Modality.TEXT,
+        provider=Provider.GOOGLE,
+        model="gemini-2.5-flash",
+        auth=AuthHeader(secret="test", header="x-goog-api-key", prefix=""),  # nosec B106
+    )
+
+    async def consume() -> TextOutput:
+        stream = client.stream.generate("hello")
+        _ = [chunk async for chunk in stream]
+        return stream.output
+
+    body = Body()
+    async with _mock_http(
+        lambda _: httpx.Response(
+            200,
+            headers={"content-type": "text/event-stream"},
+            stream=body,
+        )
+    ):
+        output = await asyncio.wait_for(consume(), 2)
+        assert body.closed
+    assert output.usage.total_tokens == 12
+    assert output.finish_reason is not None
+    assert output.finish_reason.reason == "requires_action"
+    assert [(call.name, call.arguments) for call in output.tool_calls] == [
+        ("lookup", {"city": "Paris"})
+    ]

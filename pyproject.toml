@@ -175,6 +175,7 @@ module = [
     "celeste.modalities.live.providers.*",
     "celeste.providers.*.client",
     "celeste.providers.*.*",
+    "celeste.protocols.*.parameters",
     "celeste.namespaces.domains",
 ]
 disable_error_code = ["override", "return-value", "arg-type", "assignment", "no-any-return", "attr-defined"]
