@@ -24,7 +24,7 @@ MODELS: list[Model] = [
         streaming=True,
         parameter_constraints={
             Parameter.MAX_TOKENS: Range(min=1, max=128000),
-            TextParameter.THINKING_BUDGET: Choice(
+            TextParameter.THINKING_LEVEL: Choice(
                 options=["low", "medium", "high", "xhigh", "max"]
             ),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
@@ -42,7 +42,7 @@ MODELS: list[Model] = [
         streaming=True,
         parameter_constraints={
             Parameter.MAX_TOKENS: Range(min=1, max=128000),
-            TextParameter.THINKING_BUDGET: Choice(
+            TextParameter.THINKING_LEVEL: Choice(
                 options=["low", "medium", "high", "xhigh", "max"]
             ),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
@@ -60,7 +60,7 @@ MODELS: list[Model] = [
         streaming=True,
         parameter_constraints={
             Parameter.MAX_TOKENS: Range(min=1, max=128000),
-            TextParameter.THINKING_BUDGET: Choice(
+            TextParameter.THINKING_LEVEL: Choice(
                 options=["none", "low", "medium", "high", "xhigh", "max"]
             ),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
@@ -78,7 +78,7 @@ MODELS: list[Model] = [
         streaming=True,
         parameter_constraints={
             Parameter.MAX_TOKENS: Range(min=1, max=128000),
-            TextParameter.THINKING_BUDGET: Choice(
+            TextParameter.THINKING_LEVEL: Choice(
                 options=["none", "low", "medium", "high", "xhigh", "max"]
             ),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
@@ -128,7 +128,7 @@ MODELS: list[Model] = [
         streaming=True,
         parameter_constraints={
             Parameter.MAX_TOKENS: Range(min=1, max=128000),
-            TextParameter.THINKING_BUDGET: Choice(
+            TextParameter.THINKING_LEVEL: Choice(
                 options=["minimal", "low", "medium", "high"]
             ),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
@@ -145,7 +145,7 @@ MODELS: list[Model] = [
         streaming=True,
         parameter_constraints={
             Parameter.MAX_TOKENS: Range(min=1, max=128000),
-            TextParameter.THINKING_BUDGET: Choice(
+            TextParameter.THINKING_LEVEL: Choice(
                 options=["none", "low", "medium", "high", "xhigh"]
             ),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
@@ -163,7 +163,7 @@ MODELS: list[Model] = [
         streaming=True,
         parameter_constraints={
             Parameter.MAX_TOKENS: Range(min=1, max=128000),
-            TextParameter.THINKING_BUDGET: Choice(options=["medium", "high", "xhigh"]),
+            TextParameter.THINKING_LEVEL: Choice(options=["medium", "high", "xhigh"]),
             TextParameter.VERBOSITY: Choice(options=["low", "medium", "high"]),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
             TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
@@ -179,7 +179,7 @@ MODELS: list[Model] = [
         streaming=True,
         parameter_constraints={
             Parameter.MAX_TOKENS: Range(min=1, max=128000),
-            TextParameter.THINKING_BUDGET: Choice(
+            TextParameter.THINKING_LEVEL: Choice(
                 options=["low", "medium", "high", "xhigh"]
             ),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
@@ -212,7 +212,7 @@ MODELS: list[Model] = [
         streaming=True,
         parameter_constraints={
             Parameter.MAX_TOKENS: Range(min=1, max=128000),
-            TextParameter.THINKING_BUDGET: Choice(
+            TextParameter.THINKING_LEVEL: Choice(
                 options=["none", "low", "medium", "high"]
             ),
             TextParameter.VERBOSITY: Choice(options=["low", "medium", "high"]),
@@ -231,7 +231,7 @@ MODELS: list[Model] = [
         streaming=True,
         parameter_constraints={
             Parameter.MAX_TOKENS: Range(min=1, max=128000),
-            TextParameter.THINKING_BUDGET: Choice(
+            TextParameter.THINKING_LEVEL: Choice(
                 options=["minimal", "low", "medium", "high"]
             ),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
@@ -249,7 +249,7 @@ MODELS: list[Model] = [
         streaming=True,
         parameter_constraints={
             Parameter.MAX_TOKENS: Range(min=1, max=128000),
-            TextParameter.THINKING_BUDGET: Choice(
+            TextParameter.THINKING_LEVEL: Choice(
                 options=["minimal", "low", "medium", "high"]
             ),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
@@ -266,7 +266,7 @@ MODELS: list[Model] = [
         streaming=True,
         parameter_constraints={
             Parameter.MAX_TOKENS: Range(min=1, max=128000),
-            TextParameter.THINKING_BUDGET: Choice(
+            TextParameter.THINKING_LEVEL: Choice(
                 options=["none", "low", "medium", "high", "xhigh", "max"]
             ),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
@@ -284,7 +284,7 @@ MODELS: list[Model] = [
         streaming=True,
         parameter_constraints={
             Parameter.MAX_TOKENS: Range(min=1, max=128000),
-            TextParameter.THINKING_BUDGET: Choice(
+            TextParameter.THINKING_LEVEL: Choice(
                 options=["none", "low", "medium", "high", "xhigh", "max"]
             ),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
@@ -302,7 +302,7 @@ MODELS: list[Model] = [
         streaming=True,
         parameter_constraints={
             Parameter.MAX_TOKENS: Range(min=1, max=128000),
-            TextParameter.THINKING_BUDGET: Choice(
+            TextParameter.THINKING_LEVEL: Choice(
                 options=["none", "low", "medium", "high", "xhigh", "max"]
             ),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
@@ -320,7 +320,7 @@ MODELS: list[Model] = [
         streaming=True,
         parameter_constraints={
             Parameter.MAX_TOKENS: Range(min=1, max=128000),
-            TextParameter.THINKING_BUDGET: Choice(
+            TextParameter.THINKING_LEVEL: Choice(
                 options=["none", "low", "medium", "high", "xhigh", "max"]
             ),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
@@ -338,7 +338,7 @@ MODELS: list[Model] = [
         streaming=True,
         parameter_constraints={
             Parameter.MAX_TOKENS: Range(min=1, max=128000),
-            TextParameter.THINKING_BUDGET: Choice(
+            TextParameter.THINKING_LEVEL: Choice(
                 options=["none", "low", "medium", "high", "xhigh"]
             ),
             TextParameter.VERBOSITY: Choice(options=["low", "medium", "high"]),
@@ -357,7 +357,7 @@ MODELS: list[Model] = [
         streaming=False,
         parameter_constraints={
             Parameter.MAX_TOKENS: Range(min=1, max=128000),
-            TextParameter.THINKING_BUDGET: Choice(options=["medium", "high", "xhigh"]),
+            TextParameter.THINKING_LEVEL: Choice(options=["medium", "high", "xhigh"]),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
             TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
             TextParameter.OUTPUT_SCHEMA: Schema(),
@@ -372,7 +372,7 @@ MODELS: list[Model] = [
         streaming=True,
         parameter_constraints={
             Parameter.MAX_TOKENS: Range(min=1, max=128000),
-            TextParameter.THINKING_BUDGET: Choice(
+            TextParameter.THINKING_LEVEL: Choice(
                 options=["none", "low", "medium", "high", "xhigh"]
             ),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
@@ -390,7 +390,7 @@ MODELS: list[Model] = [
         streaming=True,
         parameter_constraints={
             Parameter.MAX_TOKENS: Range(min=1, max=128000),
-            TextParameter.THINKING_BUDGET: Choice(
+            TextParameter.THINKING_LEVEL: Choice(
                 options=["none", "low", "medium", "high", "xhigh"]
             ),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
@@ -407,7 +407,7 @@ MODELS: list[Model] = [
         streaming=True,
         parameter_constraints={
             Parameter.MAX_TOKENS: Range(min=1, max=128000),
-            TextParameter.THINKING_BUDGET: Choice(
+            TextParameter.THINKING_LEVEL: Choice(
                 options=["none", "low", "medium", "high", "xhigh"]
             ),
             TextParameter.VERBOSITY: Choice(options=["low", "medium", "high"]),
@@ -426,7 +426,7 @@ MODELS: list[Model] = [
         streaming=True,
         parameter_constraints={
             Parameter.MAX_TOKENS: Range(min=1, max=128000),
-            TextParameter.THINKING_BUDGET: Choice(options=["medium", "high", "xhigh"]),
+            TextParameter.THINKING_LEVEL: Choice(options=["medium", "high", "xhigh"]),
             TextParameter.VERBOSITY: Choice(options=["low", "medium", "high"]),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
             TextParameter.TOOL_CHOICE: ToolChoiceSupport(),

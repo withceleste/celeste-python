@@ -7,9 +7,9 @@ MODELS: list[tuple[Provider, str, dict[str, int | str]]] = [
     (Provider.ANTHROPIC, "claude-haiku-4-5", {"thinking_budget": 1024}),
     (Provider.COHERE, "command-a-plus-05-2026", {"thinking_budget": 1024}),
     (Provider.GOOGLE, "gemini-2.5-flash-lite", {"thinking_level": "high"}),
-    (Provider.MISTRAL, "mistral-small-2603", {"thinking_budget": "high"}),
-    (Provider.OPENAI, "gpt-5-nano", {"thinking_budget": "low"}),
-    (Provider.XAI, "grok-3-mini", {"thinking_budget": "low"}),
+    (Provider.MISTRAL, "mistral-small-2603", {"thinking_level": "high"}),
+    (Provider.OPENAI, "gpt-5-nano", {"thinking_level": "low"}),
+    (Provider.XAI, "grok-3-mini", {"thinking_level": "low"}),
 ]
 
 

@@ -36,7 +36,7 @@ MODELS: list[Model] = [
         operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
         streaming=True,
         parameter_constraints={
-            TextParameter.THINKING_BUDGET: Choice(
+            TextParameter.THINKING_LEVEL: Choice(
                 options=["low", "medium", "high", "xhigh"]
             ),
             TextParameter.TOOLS: ToolSupport(
@@ -54,7 +54,7 @@ MODELS: list[Model] = [
         streaming=True,
         parameter_constraints={
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0),
-            TextParameter.THINKING_BUDGET: Choice(
+            TextParameter.THINKING_LEVEL: Choice(
                 options=["low", "medium", "high", "xhigh"]
             ),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch, XSearch, CodeExecution]),
@@ -71,7 +71,7 @@ MODELS: list[Model] = [
         streaming=True,
         parameter_constraints={
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0),
-            TextParameter.THINKING_BUDGET: Choice(
+            TextParameter.THINKING_LEVEL: Choice(
                 options=["low", "medium", "high", "xhigh"]
             ),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch, XSearch, CodeExecution]),
@@ -88,7 +88,7 @@ MODELS: list[Model] = [
         streaming=True,
         parameter_constraints={
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0),
-            TextParameter.THINKING_BUDGET: Choice(
+            TextParameter.THINKING_LEVEL: Choice(
                 options=["low", "medium", "high", "xhigh"]
             ),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch, XSearch, CodeExecution]),
@@ -105,7 +105,7 @@ MODELS: list[Model] = [
         streaming=True,
         parameter_constraints={
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0),
-            TextParameter.THINKING_BUDGET: Choice(
+            TextParameter.THINKING_LEVEL: Choice(
                 options=["none", "low", "medium", "high", "xhigh"]
             ),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch, XSearch, CodeExecution]),
@@ -151,7 +151,7 @@ MODELS: list[Model] = [
         parameter_constraints={
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0),
             Parameter.MAX_TOKENS: Range(min=1, max=16000),
-            TextParameter.THINKING_BUDGET: Choice(options=["low", "high"]),
+            TextParameter.THINKING_LEVEL: Choice(options=["low", "high"]),
             TextParameter.TOOLS: ToolSupport(tools=[]),
             TextParameter.OUTPUT_SCHEMA: Schema(),
         },
