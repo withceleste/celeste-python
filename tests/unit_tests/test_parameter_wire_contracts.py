@@ -31,6 +31,7 @@ from celeste.modalities.text.protocols.chatcompletions.client import (
 from celeste.modalities.text.providers.anthropic import parameters as anthropic
 from celeste.modalities.text.providers.google import parameters as google_text
 from celeste.modalities.text.providers.groq import parameters as groq
+from celeste.modalities.text.providers.meta import parameters as meta
 from celeste.modalities.text.providers.moonshot import parameters as moonshot
 from celeste.modalities.text.providers.openai import parameters as openai
 from celeste.modalities.videos.parameters import VideoParameter
@@ -52,6 +53,7 @@ AUDIO_MISTRAL = mistral_audio.MISTRAL_PARAMETER_MAPPERS
 VIDEOS_VEO = google_videos.GOOGLE_VEO_PARAMETER_MAPPERS
 VIDEOS_INTERACTIONS = google_videos.GOOGLE_INTERACTIONS_PARAMETER_MAPPERS
 OPEN = openai.OPENAI_PARAMETER_MAPPERS
+META = meta.META_PARAMETER_MAPPERS
 CHAT = chat.CHATCOMPLETIONS_PARAMETER_MAPPERS
 ANTHROPIC = anthropic.ANTHROPIC_PARAMETER_MAPPERS
 MOONSHOT = moonshot.MOONSHOT_PARAMETER_MAPPERS
@@ -298,6 +300,7 @@ SCALAR_PARAMETER_CASES = [
     (OPEN, T.MAX_TOKENS, 90, ("max_output_tokens",), 90),
     (OPEN, T.THINKING_BUDGET, "high", ("reasoning", "effort"), "high"),
     (OPEN, T.VERBOSITY, "low", ("text", "verbosity"), "low"),
+    (META, T.THINKING_LEVEL, "max", ("reasoning", "effort"), "max"),
     (CHAT, T.TEMPERATURE, 0.6, ("temperature",), 0.6),
     (CHAT, T.MAX_TOKENS, 100, ("max_tokens",), 100),
     (CHAT, T.THINKING_BUDGET, "high", ("reasoning_effort",), "high"),
