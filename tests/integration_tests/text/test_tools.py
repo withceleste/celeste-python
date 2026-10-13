@@ -16,6 +16,7 @@ WEB_SEARCH_MODELS = [
     (Provider.ANTHROPIC, "claude-haiku-4-5"),
     (Provider.GOOGLE, "gemini-2.5-flash-lite"),
     (Provider.GROQ, "openai/gpt-oss-20b"),
+    (Provider.META, "muse-spark-1.3"),
     (Provider.OPENAI, "gpt-4o-mini"),
     (Provider.XAI, "grok-4.20-0309-non-reasoning"),
 ]
@@ -26,6 +27,7 @@ FUNCTION_TOOL_MODELS = [
     (Provider.GOOGLE, "gemini-2.5-flash-lite", True),
     (Provider.GROQ, "llama-3.1-8b-instant", False),
     (Provider.HUGGINGFACE, "Qwen/Qwen3-4B-Instruct-2507", False),
+    (Provider.META, "muse-spark-1.3", False),
     (Provider.MISTRAL, "mistral-tiny", True),
     (Provider.MOONSHOT, "kimi-k2.6", False),
     (Provider.OPENAI, "gpt-4o-mini", True),
@@ -48,7 +50,7 @@ async def test_web_search(provider: Provider, model: str) -> None:
     client = create_client(modality=Modality.TEXT, provider=provider, model=model)
 
     output = await client.generate(
-        prompt="When was Python 3.12 released?", tools=[WebSearch()], max_tokens=500
+        prompt="When was Python 3.12 released?", tools=[WebSearch()], max_tokens=2000
     )
 
     assert isinstance(output, TextOutput)
@@ -64,7 +66,7 @@ async def test_stream_web_search(provider: Provider, model: str) -> None:
     stream = client.stream.generate(
         prompt="When was Python 3.12 released?",
         tools=[WebSearch()],
-        max_tokens=500,
+        max_tokens=2000,
     )
     chunks = [chunk async for chunk in stream]
 
@@ -87,7 +89,7 @@ async def test_function_tool_call(
     output = await client.generate(
         prompt="Use get_weather to check the weather in Paris.",
         tools=[WEATHER_TOOL],
-        max_tokens=500,
+        max_tokens=2000,
         **parameters,
     )
 

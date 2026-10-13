@@ -39,11 +39,12 @@ This document contains the official API reference documentation links for all pr
 | **HuggingFace** | Chat Completions (router) | [Chat Completion API Reference](https://huggingface.co/docs/inference-providers/tasks/chat-completion) | — |
 | **Ollama** | Responses (OpenAI-compatible) | [API Reference](https://docs.ollama.com/api) | — |
 | **OpenRouter** | Responses | [API Reference](https://openrouter.ai/docs/api/api-reference) | — |
+| **Meta** | Responses | [Responses API Reference](https://dev.meta.ai/docs/api-reference/responses/create-response) | — |
 
 ## Summary
 
-- **Total APIs:** 33 provider-API combinations
-- **Validated:** 22 ✅ · 11 pending (—)
+- **Total APIs:** 34 provider-API combinations
+- **Validated:** 22 ✅ · 12 pending (—)
 - **Naming convention:** Method names only (Provider column provides context)
 - **Link strategy:** Specific method/endpoint pages when available, general API reference pages otherwise
 
