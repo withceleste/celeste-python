@@ -92,13 +92,14 @@ def parse_tool_calls(response_data: dict[str, Any]) -> list[ToolCall]:
 
 
 def parse_content(output: list[dict[str, Any]]) -> str:
-    """Extract text from Responses API output items."""
-    for item in output:
-        if item.get("type") == "message":
-            for part in item.get("content", []):
-                if part.get("type") == "output_text":
-                    return part.get("text") or ""
-    return ""
+    """Join the text of every output_text part across all message items."""
+    return "".join(
+        part.get("text") or ""
+        for item in output
+        if item.get("type") == "message"
+        for part in item.get("content", [])
+        if part.get("type") == "output_text"
+    )
 
 
 def parse_reasoning(
@@ -132,8 +133,9 @@ def native_replay_output(output: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
 
 def parse_annotations(output: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Extract URL citation annotations from Responses API output items."""
+    """Extract URL citation annotations, indexed into the joined parse_content text."""
     annotations: list[dict[str, Any]] = []
+    offset = 0
     for item in output:
         if item.get("type") != "message":
             continue
@@ -142,7 +144,12 @@ def parse_annotations(output: list[dict[str, Any]]) -> list[dict[str, Any]]:
                 continue
             for annotation in part.get("annotations", []):
                 if isinstance(annotation, dict):
-                    annotations.append(annotation)
+                    shifted = dict(annotation)
+                    for key in ("start_index", "end_index"):
+                        if isinstance(shifted.get(key), int):
+                            shifted[key] += offset
+                    annotations.append(shifted)
+            offset += len(part.get("text") or "")
     return annotations
 
 
