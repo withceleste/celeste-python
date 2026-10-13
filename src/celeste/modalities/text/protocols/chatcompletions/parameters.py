@@ -33,10 +33,10 @@ class MaxTokensMapper(_MaxTokensMapper):
     name = TextParameter.MAX_TOKENS
 
 
-class ThinkingBudgetMapper(FieldMapper[TextContent]):
-    """Map thinking_budget to Chat Completions reasoning_effort."""
+class ThinkingLevelMapper(FieldMapper[TextContent]):
+    """Map thinking_level to Chat Completions reasoning_effort."""
 
-    name = TextParameter.THINKING_BUDGET
+    name = TextParameter.THINKING_LEVEL
     field = "reasoning_effort"
 
 
@@ -61,10 +61,10 @@ class ToolChoiceMapper(_ToolChoiceMapper):
 CHATCOMPLETIONS_PARAMETER_MAPPERS: list[ParameterMapper[TextContent]] = [
     TemperatureMapper(),
     MaxTokensMapper(),
-    ThinkingBudgetMapper(),
+    ThinkingLevelMapper(),
     OutputSchemaMapper(),
     ToolsMapper(),
     ToolChoiceMapper(),
 ]
 
-__all__ = ["CHATCOMPLETIONS_PARAMETER_MAPPERS", "ThinkingBudgetMapper"]
+__all__ = ["CHATCOMPLETIONS_PARAMETER_MAPPERS", "ThinkingLevelMapper"]

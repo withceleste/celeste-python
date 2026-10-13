@@ -19,16 +19,16 @@ class VerbosityMapper(_VerbosityMapper):
     name = TextParameter.VERBOSITY
 
 
-class ThinkingBudgetMapper(_ReasoningEffortMapper):
-    """Map thinking_budget to OpenAI's reasoning.effort parameter."""
+class ThinkingLevelMapper(_ReasoningEffortMapper):
+    """Map thinking_level to OpenAI's reasoning.effort parameter."""
 
-    name = TextParameter.THINKING_BUDGET
+    name = TextParameter.THINKING_LEVEL
 
 
 OPENAI_PARAMETER_MAPPERS: list[ParameterMapper[TextContent]] = [
     *OPENRESPONSES_PARAMETER_MAPPERS,
     VerbosityMapper(),
-    ThinkingBudgetMapper(),
+    ThinkingLevelMapper(),
 ]
 
 __all__ = ["OPENAI_PARAMETER_MAPPERS"]

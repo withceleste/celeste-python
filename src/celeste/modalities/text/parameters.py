@@ -49,10 +49,7 @@ class TextParameters(Parameters, total=False):
 
     # Text-specific parameters
     thinking_budget: Annotated[
-        int | str,
-        Field(
-            description="Reasoning budget — integer token count, or a preset tier for models that accept one."
-        ),
+        int, Field(description="Reasoning budget as an integer token count.")
     ]
     thinking_level: Annotated[str, Field(description="Model reasoning depth.")]
     output_schema: Annotated[
