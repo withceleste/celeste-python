@@ -252,6 +252,30 @@ async def test_sse_stream_forwards_arguments_and_skips_control_messages(
     )
 
 
+async def test_sse_stream_close_closes_the_event_iterator(
+    transport: AsyncMock,
+) -> None:
+    closed = []
+
+    async def aiter_sse() -> AsyncIterator[SimpleNamespace]:
+        try:
+            yield SimpleNamespace(data='{"delta": "hello"}')
+            yield SimpleNamespace(data='{"delta": "!"}')
+        finally:
+            closed.append(True)
+
+    source = _event_source([])
+    source.aiter_sse.return_value = aiter_sse()
+    with (
+        patch("celeste.http.httpx.AsyncClient", return_value=transport),
+        patch("celeste.http.aconnect_sse", return_value=source),
+    ):
+        stream = HTTPClient().stream_post("https://example.com", {}, {})
+        assert await anext(stream) == {"delta": "hello"}
+        await stream.aclose()
+    assert closed == [True]
+
+
 async def test_sse_error_body_remains_readable(transport: AsyncMock) -> None:
     response = httpx.Response(
         401,

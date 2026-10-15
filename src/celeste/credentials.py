@@ -77,6 +77,7 @@ class Credentials(BaseSettings):
     gradium_api_key: SecretStr | None = Field(None, alias="GRADIUM_API_KEY")
     openrouter_api_key: SecretStr | None = Field(None, alias="OPENROUTER_API_KEY")
     fal_key: SecretStr | None = Field(None, alias="FAL_KEY")
+    model_api_key: SecretStr | None = Field(None, alias="MODEL_API_KEY")
 
     model_config = {
         "env_file": find_dotenv(),

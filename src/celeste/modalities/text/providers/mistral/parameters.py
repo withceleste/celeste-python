@@ -13,36 +13,12 @@ from ...parameters import TextParameter
 from ...protocols.chatcompletions.parameters import (
     MaxTokensMapper,
     TemperatureMapper,
+    ThinkingLevelMapper,
     ToolsMapper,
 )
 from ...protocols.chatcompletions.parameters import (
     ToolChoiceMapper as _ToolChoiceMapper,
 )
-
-
-class ThinkingBudgetMapper(ParameterMapper[TextContent]):
-    """Map thinking_budget to Mistral reasoning controls."""
-
-    name = TextParameter.THINKING_BUDGET
-
-    def map(
-        self,
-        request: dict[str, Any],
-        value: object,
-        model: Model,
-    ) -> dict[str, Any]:
-        """Transform thinking_budget into provider request."""
-        validated_value = self._validate_value(value, model)
-        if validated_value is None:
-            return request
-
-        if isinstance(validated_value, str):
-            request["reasoning_effort"] = validated_value
-            return request
-
-        request["prompt_mode"] = None if validated_value == 0 else "reasoning"
-
-        return request
 
 
 class OutputSchemaMapper(_ResponseFormatMapper):
@@ -78,7 +54,7 @@ class ToolChoiceMapper(_ToolChoiceMapper):
 MISTRAL_PARAMETER_MAPPERS: list[ParameterMapper[TextContent]] = [
     TemperatureMapper(),
     MaxTokensMapper(),
-    ThinkingBudgetMapper(),
+    ThinkingLevelMapper(),
     OutputSchemaMapper(),
     ToolsMapper(),
     ToolChoiceMapper(),

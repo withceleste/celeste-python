@@ -116,6 +116,37 @@ MODELS: list[Model] = [
             ImageParameter.THINKING_LEVEL: Choice(options=["minimal", "high"]),
         },
     ),
+    Model(
+        id="gemini-nano-banana-2.1",
+        provider=Provider.GOOGLE,
+        display_name="Nano Banana 2.1",
+        operations={Modality.IMAGES: {Operation.GENERATE, Operation.EDIT}},
+        parameter_constraints={
+            ImageParameter.ASPECT_RATIO: Choice(
+                options=[
+                    "1:1",
+                    "1:4",
+                    "1:8",
+                    "2:3",
+                    "3:2",
+                    "3:4",
+                    "4:1",
+                    "4:3",
+                    "4:5",
+                    "5:4",
+                    "8:1",
+                    "9:16",
+                    "16:9",
+                    "21:9",
+                ]
+            ),
+            ImageParameter.QUALITY: Choice(options=["1K", "2K", "4K"]),
+            ImageParameter.REFERENCE_IMAGES: ImagesConstraint(max_count=14),
+            ImageParameter.THINKING_LEVEL: Choice(
+                options=["minimal", "medium", "high"]
+            ),
+        },
+    ),
 ]
 
 __all__ = ["MODELS"]

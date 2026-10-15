@@ -27,7 +27,7 @@ class WebSearch(Tool):
 
     Config mapping per provider:
     - allowed_domains → Anthropic: allowed_domains, OpenAI: filters.allowed_domains
-    - blocked_domains → Anthropic: blocked_domains, Google: exclude_domains
+    - blocked_domains → Anthropic: blocked_domains, Google Vertex/Live: exclude_domains
     - max_uses → Anthropic: max_uses
     """
 

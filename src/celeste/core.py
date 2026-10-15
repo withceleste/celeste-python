@@ -28,6 +28,7 @@ class Provider(StrEnum):
     OLLAMA = "ollama"
     OPENROUTER = "openrouter"
     FAL = "fal"
+    META = "meta"
 
 
 class Protocol(StrEnum):

@@ -7,10 +7,11 @@ Catalog constraints define model support; custom models without constraints are 
 from enum import StrEnum
 from typing import Annotated
 
-from pydantic import BaseModel, Field
+from pydantic import Field
 
 from celeste.parameters import Parameters
 from celeste.tools import ToolChoiceOption, ToolDefinition
+from celeste.types import OutputSchema
 
 
 class TextParameter(StrEnum):
@@ -48,14 +49,11 @@ class TextParameters(Parameters, total=False):
 
     # Text-specific parameters
     thinking_budget: Annotated[
-        int | str,
-        Field(
-            description="Reasoning budget — integer token count, or a preset tier for models that accept one."
-        ),
+        int, Field(description="Reasoning budget as an integer token count.")
     ]
     thinking_level: Annotated[str, Field(description="Model reasoning depth.")]
     output_schema: Annotated[
-        type[BaseModel],
+        OutputSchema,
         Field(description="Pydantic model constraining the output shape."),
     ]
     tools: Annotated[

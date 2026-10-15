@@ -20,6 +20,8 @@ uv run pre-commit install --hook-type pre-push
 > Pre-commit runs linting, formatting, type checking, and security scans.
 > Pre-push additionally runs the full unit test suite with coverage.
 
+`uv.lock` is committed and CI installs it with `uv sync --locked`. A change to dependencies in `pyproject.toml` ships with the regenerated `uv.lock` (`uv lock`) in the same PR. `uv lock --upgrade` moves every pin to the latest allowed version.
+
 ## Local checks
 
 ```bash

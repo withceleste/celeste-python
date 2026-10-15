@@ -62,7 +62,9 @@ from celeste.parameters import ParameterMapper
 #         request["response_format"] = {"type": "json_object"}
 #         return request
 #
-#     def parse_output(self, content: TextContent, value: object | None) -> TextContent:
+#     def parse_output(
+#         self, content: TextContent, value: OutputSchema | None
+#     ) -> TextContent:
 #         """Parse JSON string to typed output via Pydantic TypeAdapter."""
 #         if value is None:
 #             return content

@@ -6,8 +6,6 @@ Model `parameter_constraints` validates parameter values when defined; unconstra
 
 from enum import StrEnum
 
-from pydantic import BaseModel
-
 from celeste.parameters import Parameters
 
 
@@ -41,9 +39,9 @@ class {Modality}Parameters(Parameters, total=False):
     seed: int
 
     # {Modality}-specific parameters (customize as needed)
-    # thinking_budget: int | str
+    # thinking_budget: int
     # thinking_level: str
-    # output_schema: type[BaseModel]
+    # output_schema: OutputSchema
     # tools: list[ToolDefinition]
     # verbosity: str
 

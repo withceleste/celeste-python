@@ -83,10 +83,9 @@ class AnthropicMessagesClient(APIMixin):
         extra_headers: dict[str, str] | None = None,
     ) -> dict[str, str]:
         """Build Anthropic request headers."""
-        headers: dict[str, str] = {
-            **(await self._json_headers()),
-            config.HEADER_ANTHROPIC_VERSION: config.ANTHROPIC_VERSION,
-        }
+        headers = await self._json_headers()
+        if not isinstance(self.auth, GoogleADC):
+            headers[config.HEADER_ANTHROPIC_VERSION] = config.ANTHROPIC_VERSION
         if beta_features:
             beta_values = [
                 getattr(config, f"BETA_{f.upper().replace('-', '_')}")
@@ -104,11 +103,18 @@ class AnthropicMessagesClient(APIMixin):
         streaming: bool = False,
         **parameters: Any,
     ) -> dict[str, Any]:
-        """Build request with model ID and streaming flag."""
+        """Build request with the route's model/version envelope and streaming flag."""
         request_body = super()._build_request(
             inputs, extra_body=extra_body, streaming=streaming, **parameters
         )
-        request_body["model"] = self.model.id
+        if isinstance(self.auth, GoogleADC):
+            request_body["anthropic_version"] = config.VERTEX_ANTHROPIC_VERSION
+            # Google Cloud serves only basic web search, without dynamic filtering.
+            for tool in request_body.get("tools", []):
+                if tool.get("type") == "web_search_20260209":
+                    tool["type"] = "web_search_20250305"
+        else:
+            request_body["model"] = self.model.id
         if streaming:
             request_body["stream"] = True
         return request_body

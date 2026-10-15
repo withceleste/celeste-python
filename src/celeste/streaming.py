@@ -62,6 +62,7 @@ class Stream[Out: Output, Params: Parameters, Chunk: ChunkBase](ABC):
         self._sse_iterator = sse_iterator
         self._chunks: list[Chunk] = []
         self._closed = False
+        self._terminated = False
         self._pending: asyncio.Future[dict[str, Any]] | None = None
         self._close_task: asyncio.Task[None] | None = None
         self._output: Out | None = None
@@ -135,6 +136,10 @@ class Stream[Out: Output, Params: Parameters, Chunk: ChunkBase](ABC):
     def _wrap_chunk_content(self, raw_content: Any) -> Any:  # noqa: ANN401
         """Wrap raw content into chunk content type. Override for type transformation."""
         return raw_content
+
+    def _is_terminal_event(self, event_data: dict[str, Any]) -> bool:
+        """Check if this event ends the stream. Override in provider mixin."""
+        return False
 
     def _parse_chunk(self, event: dict[str, Any]) -> Chunk | None:
         """Parse SSE event into Chunk (returns None to filter lifecycle events)."""
@@ -364,7 +369,7 @@ class Stream[Out: Output, Params: Parameters, Chunk: ChunkBase](ABC):
             raise RuntimeError("Stream already has a pending next chunk")
 
         try:
-            while True:
+            while not self._terminated:
                 self._pending = asyncio.ensure_future(anext(self._sse_iterator))
                 try:
                     event = await self._pending
@@ -375,11 +380,12 @@ class Stream[Out: Output, Params: Parameters, Chunk: ChunkBase](ABC):
                 if self._closed:
                     raise StopAsyncIteration
                 chunk = self._parse_chunk(event)
+                self._terminated = self._is_terminal_event(event)
                 if chunk is not None:
                     self._chunks.append(chunk)
                     return chunk
 
-            # Stream exhausted naturally
+            # Stream exhausted naturally or by its terminal event
             if self._chunks:
                 self._output = self._parse_output(self._chunks, **self._parameters)
         except BaseException:
