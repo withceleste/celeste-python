@@ -64,6 +64,8 @@ class OutputFormatMapper(_AudioMimeTypeMapper):
         AudioMimeType.WAV: "audio/wav",
         AudioMimeType.OGG: "audio/ogg_opus",
         AudioMimeType.PCM: "audio/l16",
+        AudioMimeType.PCMU: "audio/mulaw",
+        AudioMimeType.PCMA: "audio/alaw",
     }
 
 
