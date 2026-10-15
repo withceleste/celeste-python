@@ -49,9 +49,14 @@ class GoogleAudioStream(_GoogleInteractionsStream, AudioStream):
         if delta.get("type") != "audio" or not delta.get("data"):
             return None
         if not self._audio_meta:
+            mime_type = _to_audio_mime(delta.get("mime_type"))
             self._audio_meta = {
                 "mime_type": delta.get("mime_type"),
-                "sample_rate": delta.get("sample_rate"),
+                "sample_rate": (
+                    8000
+                    if mime_type in (AudioMimeType.PCMU, AudioMimeType.PCMA)
+                    else delta.get("sample_rate")
+                ),
                 "channels": delta.get("channels"),
             }
         return base64.b64decode(delta["data"])
@@ -99,15 +104,19 @@ class GoogleAudioClient(GoogleInteractionsMixin, AudioClient):
                     continue
                 audio_part = part
         if audio_part is not None:
+            mime_type = _to_audio_mime(audio_part.get("mime_type"))
             metadata = {
-                k: audio_part[k]
-                for k in ("sample_rate", "channels")
-                if audio_part.get(k)
+                "sample_rate": (
+                    8000
+                    if mime_type in (AudioMimeType.PCMU, AudioMimeType.PCMA)
+                    else audio_part.get("sample_rate")
+                ),
+                "channels": audio_part.get("channels"),
             }
             return AudioArtifact(
                 data=audio_part["data"],
-                mime_type=_to_audio_mime(audio_part.get("mime_type")),
-                metadata=metadata,
+                mime_type=mime_type,
+                metadata={k: v for k, v in metadata.items() if v},
             )
         msg = "No audio content in response"
         raise ValueError(msg)
