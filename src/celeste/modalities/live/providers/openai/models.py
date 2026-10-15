@@ -2,7 +2,7 @@
 
 from celeste.constraints import AudioConstraint, Choice, ToolSupport
 from celeste.core import Modality, Operation, Provider
-from celeste.mime_types import AudioMimeType
+from celeste.mime_types import G711_SAMPLE_RATE, AudioMimeType
 from celeste.modalities.audio.constraints import VoiceConstraint
 from celeste.models import Model
 from celeste.tools import WebSearch
@@ -13,8 +13,8 @@ from .voices import OPENAI_LIVE_VOICES
 OPENAI_AUDIO_FORMATS = [
     {"type": AudioMimeType.PCM, "rate": 24000},
     {"type": AudioMimeType.PCM, "rate": 16000},
-    {"type": AudioMimeType.PCMU, "rate": 8000},
-    {"type": AudioMimeType.PCMA, "rate": 8000},
+    {"type": AudioMimeType.PCMU, "rate": G711_SAMPLE_RATE},
+    {"type": AudioMimeType.PCMA, "rate": G711_SAMPLE_RATE},
 ]
 
 MODELS: list[Model] = [

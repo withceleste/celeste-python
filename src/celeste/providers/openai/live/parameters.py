@@ -3,7 +3,7 @@
 from typing import Any
 
 from celeste.exceptions import InvalidToolError
-from celeste.mime_types import AudioMimeType
+from celeste.mime_types import G711_SAMPLE_RATE, AudioMimeType
 from celeste.models import Model
 from celeste.parameters import ParameterMapper
 from celeste.protocols.openresponses.parameters import ToolsMapper as _ToolsMapper
@@ -38,7 +38,7 @@ class AudioFormatMapper[Content](ParameterMapper[Content]):
             mime, rate = split_sample_rate(value)
             if rate is None:
                 rate = (
-                    8000
+                    G711_SAMPLE_RATE
                     if mime in (AudioMimeType.PCMU, AudioMimeType.PCMA)
                     else DEFAULT_AUDIO_FORMAT["rate"]
                 )

@@ -50,6 +50,9 @@ class AudioMimeType(MimeType):
     PCMA = "audio/pcma"
 
 
+G711_SAMPLE_RATE = 8000
+
+
 class DocumentMimeType(MimeType):
     """Standard MIME types for documents."""
 
@@ -64,6 +67,7 @@ class DocumentMimeType(MimeType):
 
 
 __all__ = [
+    "G711_SAMPLE_RATE",
     "ApplicationMimeType",
     "AudioMimeType",
     "DocumentMimeType",
