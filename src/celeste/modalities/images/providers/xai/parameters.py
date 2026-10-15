@@ -8,6 +8,9 @@ from celeste.providers.xai.images.parameters import (
     NumImagesMapper as _NumImagesMapper,
 )
 from celeste.providers.xai.images.parameters import (
+    ResolutionMapper as _ResolutionMapper,
+)
+from celeste.providers.xai.images.parameters import (
     ResponseFormatMapper as _ResponseFormatMapper,
 )
 from celeste.types import ImageContent
@@ -33,10 +36,17 @@ class OutputFormatMapper(_ResponseFormatMapper):
     name = ImageParameter.OUTPUT_FORMAT
 
 
+class QualityMapper(_ResolutionMapper):
+    """Map quality to xAI's resolution parameter."""
+
+    name = ImageParameter.QUALITY
+
+
 XAI_PARAMETER_MAPPERS: list[ParameterMapper[ImageContent]] = [
     AspectRatioMapper(),
     NumImagesMapper(),
     OutputFormatMapper(),
+    QualityMapper(),
 ]
 
 __all__ = ["XAI_PARAMETER_MAPPERS"]
