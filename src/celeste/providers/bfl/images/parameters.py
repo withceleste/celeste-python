@@ -20,7 +20,12 @@ class AspectRatioMapper(ParameterMapper[ImageContent]):
         validated_value = self._validate_value(value, model)
         if validated_value is None:
             return request
-        if model.id in ("flux-kontext-pro", "flux-kontext-max", "flux-pro-1.1-ultra"):
+        if model.id in (
+            "flux-kontext-pro",
+            "flux-kontext-max",
+            "flux-pro-1.1-ultra",
+            "flux-3-image",
+        ):
             request["aspect_ratio"] = validated_value
         else:
             width, height = validated_value.split("x")

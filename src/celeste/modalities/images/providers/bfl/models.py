@@ -21,6 +21,26 @@ MODELS: list[Model] = [
         display_name="FLUX 3 Image",
         operations={Modality.IMAGES: {Operation.GENERATE}},
         parameter_constraints={
+            ImageParameter.ASPECT_RATIO: Choice(
+                options=[
+                    "21:9",
+                    "2:1",
+                    "16:9",
+                    "3:2",
+                    "7:5",
+                    "4:3",
+                    "5:4",
+                    "1:1",
+                    "4:5",
+                    "3:4",
+                    "5:7",
+                    "2:3",
+                    "9:16",
+                    "1:2",
+                    "9:21",
+                    "auto",
+                ]
+            ),
             ImageParameter.QUALITY: Choice(options=["768sq", "1k", "1.5k", "2k", "4k"]),
             ImageParameter.SAFETY_TOLERANCE: Range(min=0, max=7),
         },
