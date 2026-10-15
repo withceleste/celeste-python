@@ -269,13 +269,6 @@ SCALAR_PARAMETER_CASES = [
     ),
     (
         GOOGLE_INTERACTIONS,
-        T.TEMPERATURE,
-        0.2,
-        ("generation_config", "temperature"),
-        0.2,
-    ),
-    (
-        GOOGLE_INTERACTIONS,
         T.MAX_TOKENS,
         80,
         ("generation_config", "max_output_tokens"),

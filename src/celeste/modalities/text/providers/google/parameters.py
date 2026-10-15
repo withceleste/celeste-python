@@ -35,9 +35,6 @@ from celeste.providers.google.interactions.parameters import (
     SeedMapper as _InteractionsSeedMapper,
 )
 from celeste.providers.google.interactions.parameters import (
-    TemperatureMapper as _InteractionsTemperatureMapper,
-)
-from celeste.providers.google.interactions.parameters import (
     ThinkingLevelMapper as _InteractionsThinkingLevelMapper,
 )
 from celeste.providers.google.interactions.parameters import (
@@ -111,12 +108,6 @@ GOOGLE_VERTEX_PARAMETER_MAPPERS: list[ParameterMapper[TextContent]] = [
 ]
 
 
-class InteractionsTemperatureMapper(_InteractionsTemperatureMapper):
-    """Map temperature to Google's generation_config.temperature parameter."""
-
-    name = TextParameter.TEMPERATURE
-
-
 class InteractionsMaxTokensMapper(_InteractionsMaxOutputTokensMapper):
     """Map max_tokens to Google's generation_config.max_output_tokens parameter."""
 
@@ -154,7 +145,6 @@ class InteractionsSeedMapper(_InteractionsSeedMapper):
 
 
 GOOGLE_INTERACTIONS_PARAMETER_MAPPERS: list[ParameterMapper[TextContent]] = [
-    InteractionsTemperatureMapper(),
     InteractionsMaxTokensMapper(),
     InteractionsSeedMapper(),
     InteractionsThinkingLevelMapper(),
