@@ -23,6 +23,7 @@ BASE_URL = "https://api.anthropic.com"
 
 # Required
 ANTHROPIC_VERSION = "2023-06-01"
+VERTEX_ANTHROPIC_VERSION = "vertex-2023-10-16"
 CONTENT_TYPE_JSON = "application/json"
 
 # Header
