@@ -481,21 +481,42 @@ SCALAR_PARAMETER_CASES = [
             [IMAGE] * (total - int(editing)),
             (),
             {
-                "input_image": "primary" if editing else IMAGE.url,
-                **{f"input_image_{n}": IMAGE.url for n in range(2, total + 1)},
+                field: "primary" if editing else IMAGE.url,
+                **{f"{field}_{n}": IMAGE.url for n in range(2, total + 1)},
             }
             if total == limit
             else ConstraintViolationError,
             get_model(model_id, provider=Provider.BFL),
-            {"input_image": "primary"} if editing else None,
+            {field: "primary"} if editing else None,
         )
-        for model_id, limit in (
-            ("flux-2-pro", 8),
-            ("flux-2-klein-4b", 5),
-            ("flux-kontext-pro", 4),
+        for model_id, field, limit in (
+            ("flux-2-pro", "input_image", 8),
+            ("flux-2-klein-4b", "input_image", 5),
+            ("flux-kontext-pro", "input_image", 4),
+            ("flux-dev", "image_prompt", 1),
         )
         for editing in (False, True)
         for total in (limit, limit + 1)
+    ]
+    + [
+        (
+            BFL,
+            IP.REFERENCE_IMAGES,
+            [IMAGE] * (total - int(editing)),
+            (),
+            {
+                "images": [
+                    *["primary"] * int(editing),
+                    *[IMAGE.url] * (total - int(editing)),
+                ]
+            }
+            if total == 10
+            else ConstraintViolationError,
+            get_model("flux-3-image", provider=Provider.BFL),
+            {"images": ["primary"]} if editing else None,
+        )
+        for editing in (False, True)
+        for total in (10, 11)
     ],
 )
 def test_scalar_parameters_use_provider_wire_shape(
@@ -687,12 +708,16 @@ def test_byteplus_images_have_semantic_roles(
 
 
 def test_bfl_reference_images_follow_primary_image_numbering() -> None:
-    assert _map(BFL, IP.REFERENCE_IMAGES, [IMAGE]) == {"input_image": IMAGE.url}
+    model = Model(id="flux-2-pro", display_name="Wire test")
+    assert _map(BFL, IP.REFERENCE_IMAGES, [IMAGE], model=model) == {
+        "input_image": IMAGE.url
+    }
     assert _map(
         BFL,
         IP.REFERENCE_IMAGES,
         [IMAGE],
         {"input_image": "primary"},
+        model,
     ) == {"input_image": "primary", "input_image_2": IMAGE.url}
 
 
