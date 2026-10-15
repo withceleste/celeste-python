@@ -1,6 +1,6 @@
 """xAI models for images modality."""
 
-from celeste.constraints import Choice, Range
+from celeste.constraints import Choice, ImagesConstraint, Range
 from celeste.core import Modality, Operation, Provider
 from celeste.models import Model
 
@@ -34,7 +34,9 @@ MODELS: list[Model] = [
                     "auto",
                 ]
             ),
+            ImageParameter.QUALITY: Choice(options=["1k", "2k", "1.5k"]),
             ImageParameter.OUTPUT_FORMAT: Choice(options=["url", "b64_json"]),
+            ImageParameter.REFERENCE_IMAGES: ImagesConstraint(max_count=4),
         },
     ),
     Model(
@@ -64,7 +66,9 @@ MODELS: list[Model] = [
                     "auto",
                 ]
             ),
+            ImageParameter.QUALITY: Choice(options=["1k", "2k"]),
             ImageParameter.OUTPUT_FORMAT: Choice(options=["url", "b64_json"]),
+            ImageParameter.REFERENCE_IMAGES: ImagesConstraint(max_count=4),
         },
     ),
     Model(
@@ -94,7 +98,9 @@ MODELS: list[Model] = [
                     "auto",
                 ]
             ),
+            ImageParameter.QUALITY: Choice(options=["1k", "2k", "1.5k"]),
             ImageParameter.OUTPUT_FORMAT: Choice(options=["url", "b64_json"]),
+            ImageParameter.REFERENCE_IMAGES: ImagesConstraint(max_count=2),
         },
     ),
 ]

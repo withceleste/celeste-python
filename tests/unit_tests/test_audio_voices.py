@@ -23,7 +23,7 @@ def test_voice_description_defaults_to_none() -> None:
     ("voices", "expected_count"),
     [
         (GRADIUM_VOICES, 66),
-        (ELEVENLABS_VOICES, 21),
+        (ELEVENLABS_VOICES, 19),
         (GOOGLE_VOICES, 30),
         (OPENAI_VOICES, 13),
     ],

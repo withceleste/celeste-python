@@ -6,7 +6,7 @@ from celeste.artifacts import ImageArtifact
 from celeste.parameters import ParameterMapper
 from celeste.providers.bfl.images import config
 from celeste.providers.bfl.images.client import BFLImagesClient as BFLImagesMixin
-from celeste.providers.bfl.images.utils import encode_image
+from celeste.providers.bfl.images.utils import add_input_images
 from celeste.types import ImageContent
 
 from ...client import ImagesClient
@@ -28,7 +28,7 @@ class BFLImagesClient(BFLImagesMixin, ImagesClient):
         """Build request with prompt and (optional) input image."""
         request: dict[str, Any] = {"prompt": inputs.prompt}
         if inputs.image is not None:
-            request["input_image"] = encode_image(inputs.image)
+            add_input_images(request, [inputs.image], self.model.id)
         return request
 
     def _parse_content(

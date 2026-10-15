@@ -4,8 +4,8 @@ from celeste.core import Provider
 
 from ...voices import Voice
 
-# Snapshot 2026-07-14: 21 default voices from GET /v2/voices?voice_type=default.
-# Source: https://elevenlabs.io/docs/api-reference/voices/search
+# Snapshot 2026-10-15: 19 default voice replacements from GET /v1/shared-voices.
+# Source: https://elevenlabs.io/docs/help-center/product/voices/my-voices/what-are-default-voices
 ELEVENLABS_VOICES = [
     Voice(
         id=voice_id,
@@ -15,109 +15,99 @@ ELEVENLABS_VOICES = [
     )
     for voice_id, name, description in [
         (
-            "pNInz6obpgDQGcFmaJgB",
-            "Adam - Dominant, Firm",
-            "A bright tenor pitch that immediately cuts through. The delivery is brash and openly confident, speaking with unwavering certainty and a slightly aggressive self-assurance.",
+            "BFd5oBc2DDna33pSi4Gf",
+            "Alicia - Polished Global Anchor",
+            "Authoritative, refined British female RP. Impeccable diction and a sophisticated tone ideal for corporate narration and prestige news.",
         ),
         (
-            "Xb7hH8MSUJpSbSDYk0k2",
-            "Alice - Clear, Engaging Educator",
-            "Clear and engaging, friendly woman with a British accent suitable for e-learning.",
+            "jSuBIjxMKhqIfb0wCK1F",
+            "Baxter - Dry Calm Aussie",
+            "Medium low male tone with an Australian/New Zealand accent. Grounded and steady for documentary style narration.",
         ),
         (
-            "hpp4J3VqNfWAUOO0d1Us",
-            "Bella - Professional, Bright, Warm",
-            "This voice is warm, bright, and professional, characterized by a Standard American accent and a polished, narrative quality. It features a medium-high pitch with crisp diction and a deliberate, rhythmic pace that makes it highly intelligible and engaging for long-form listening.",
+            "AaOhDHYJ1XLZk74lXhdE",
+            "Caleb - Trusted Guide",
+            'Down-to-earth with a slight smile in the tone. It\u2019s a grounded, mid-range voice that works perfectly for "slice of life" stories or relatable brand messaging.',
         ),
         (
-            "pqHfZKP75CvOlQylNhV4",
-            "Bill - Wise, Mature, Balanced",
-            "Friendly and comforting voice ready to narrate your stories.",
+            "gOupLcAkjEnguROwi4oS",
+            "Darian - Warm Grounded Storyteller",
+            "Warm, grounded male baritone. Natural and confident for storytelling and brand reads.",
         ),
         (
-            "nPczCjzI2devNBz1zQrb",
-            "Brian - Deep, Resonant and Comforting",
-            "Middle-aged man with a resonant and comforting tone. Great for narrations and advertisements.",
+            "l7kNoIfnJKPg7779LI2t",
+            "Eddie - Natural and Helpful",
+            "Clear, melodic male tenor. Patient and exceptionally polite, designed for instructional IVR systems and supportive customer-facing tutorials.",
         ),
         (
-            "N2lVS1w4EtoT3dr4eOWO",
-            "Callum - Husky Trickster",
-            "Deceptively gravelly, yet unsettling edge.",
+            "WQP7cQUF5aAS6Axh5yaa",
+            "Elara - Crisp Pro Narrator",
+            "Clean, bright female tone. Polished and clear for professional narration and product demos.",
         ),
         (
-            "IKne3meq5aSn9XLyUdCD",
-            "Charlie - Deep, Confident, Energetic",
-            "A young Australian male with a confident and energetic voice.",
+            "6WwXjDDEMyNmFG95zycZ",
+            "Eldrin - Crisp British Baritone",
+            "Gritty mid range baritone with a modern British accent. Clear, controlled, and trustworthy for narration and explainers.",
         ),
         (
-            "iP95p4xoKVk53GoZ742B",
-            "Chris - Charming, Down-to-Earth",
-            "Natural and real, this down-to-earth voice is great across many use-cases.",
+            "dvbL7qkNGZY1IqPGZAjM",
+            "Elowen - Upbeat Modern Narrator",
+            "Bright, smooth female tone. Young and lively, with clear diction for modern narration and promos.",
         ),
         (
-            "onwK4e9ZLuTAKqWW03F9",
-            "Daniel - Steady Broadcaster",
-            "A strong voice perfect for delivering a professional broadcast or news story.",
+            "fnYMz3F5gMEDGMWcH1ex",
+            "Finley -  Articulate Anchor",
+            "Crisp, clear, and unflappable. This rhythmic British voice provides a sense of authority and flow for complex explainers.",
         ),
         (
-            "cjVigY5qzO86Huf0OWal",
-            "Eric - Smooth, Trustworthy",
-            "A smooth tenor pitch from a man in his 40s - perfect for agentic use cases.",
+            "22N9cF8z0o7y23njdyaY",
+            "Florence - Atmospheric Storyteller",
+            "Sophisticated and lyrical, this voice flows like a steady stream. Perfect for immersive audiobooks or historical documentaries where the tone needs to be both grand and intimate.",
         ),
         (
-            "JBFqnCBsd6RMkjVDRZzb",
-            "George - Warm, Captivating Storyteller",
-            "Warm resonance that instantly captivates listeners.",
+            "g7LVvkPWALzPxOQbF6OE",
+            "Jade - Upbeat and Natural",
+            'High-energy, unpredictable female voice. Features rapid-fire delivery and a playful, erratic cadence for "Gen-Z" marketing and avant-garde media.',
         ),
         (
-            "SOYHLrjzK2X1ezoPC6cr",
-            "Harry - Fierce Warrior",
-            "An animated warrior ready to charge forward.",
+            "10NkTYmU7tSz3Kkl3Lex",
+            "Kaelen - Amateur Warrior",
+            "Rugged, gravelly male bass-baritone. Intense and textured, perfect for cinematic trailers or hardened character monologues.",
         ),
         (
-            "cgSgspJ2msm6clMCkdW9",
-            "Jessica - Playful, Bright, Warm",
-            "Young and popular, this playful American female voice is perfect for trendy content.",
+            "ktkP7Nsj67dw2zcplQYt",
+            "Lawrence - Bright and Informative",
+            "Crisp, energetic male with a resonant tone. Articulate and engaging for educational content and high-energy commercial voiceovers.",
         ),
         (
-            "FGY2WhTYpPnrIDTdsKH5",
-            "Laura - Enthusiast, Quirky Attitude",
-            "This young adult female voice delivers sunny enthusiasm with a quirky attitude.",
+            "QtY3JBOUKEB5xzrRfOKc",
+            "Maisie - Friendly Casual Neighbor",
+            'Warm, approachable female alto. Bright and unpretentious for "girl-next-door" commercials and relatable social media content.',
         ),
         (
-            "TX3LPaxmHKxFdv7VOQHJ",
-            "Liam - Energetic, Social Media Creator",
-            "A young adult with energy and warmth - suitable for reels and shorts.",
+            "8dEUmyPMdDdK91vboYih",
+            "Sawyer - Midnight Storyteller",
+            "A rich, gravelly baritone with a steady pulse. Perfect for cinematic trailers, noir narrations, or premium luxury advertisements.",
         ),
         (
-            "pFZP5JQG7iQjIQuC4Bku",
-            "Lily - Velvety Actress",
-            "Velvety British female voice delivers news and narrations with warmth and clarity.",
+            "OZ0L6eISlOejga3XjDFt",
+            "Talia - Warm Soft Guide",
+            "Warm female tone. Soft, caring, and relaxed for calm narration and supportive messages.",
         ),
         (
-            "XrExE9yKIg1WjnnlVkGX",
-            "Matilda - Knowledgable, Professional",
-            "A professional woman with a pleasing alto pitch. Suitable for many use cases.",
+            "cymHWdiF8WjUCg6vvFxx",
+            "Vane - Rugged and gravelly",
+            "A weathered voice with a sharp edge. It carries a sense of lived-in fatigue and cynicism, perfect for a world-weary anti-hero or a shadowed figure in a noir setting.",
         ),
         (
-            "SAz9YHcvj6GT2YYXdXww",
-            "River - Relaxed, Neutral, Informative",
-            "A relaxed, neutral voice ready for narrations or conversational projects.",
+            "7QN34D2r3hCNwbOYIeK0",
+            "Warren - Effortless and Cool",
+            "Smooth, laid-back male baritone. Relaxed pacing and a modern, conversational flow for lifestyle brands and authentic storytelling.",
         ),
         (
-            "CwhRBWXzGAHq8TQ4Fs17",
-            "Roger - Laid-Back, Casual, Resonant",
-            "Easy going and perfect for casual conversations.",
-        ),
-        (
-            "EXAVITQu4vr4xnSDxMaL",
-            "Sarah - Mature, Reassuring, Confident",
-            "Young adult woman with a confident and warm, mature quality and a reassuring, professional tone.",
-        ),
-        (
-            "bIHbv24MWmeRgasZH58o",
-            "Will - Relaxed Optimist",
-            "Conversational and laid back.",
+            "FrS6cKLB1wg4WYgPa9GW",
+            "Wyatt - Seasoned Mentor",
+            "Measured and thoughtful, this voice carries the weight of experience. Ideal for long-form documentaries or insightful educational content.",
         ),
     ]
 ]

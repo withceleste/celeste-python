@@ -5,6 +5,8 @@ from typing import Any
 
 from celeste.artifacts import ImageArtifact
 
+from .config import BFLImageField, image_field_for_model
+
 
 def encode_image(image: ImageArtifact) -> str:
     """Encode ImageArtifact to base64 string or return URL.
@@ -25,20 +27,27 @@ def encode_image(image: ImageArtifact) -> str:
         raise ValueError(msg)
 
 
-def add_reference_images(
+def add_input_images(
     request: dict[str, Any],
     images: list[ImageArtifact],
+    model_id: str,
 ) -> dict[str, Any]:
-    """Add reference images to a BFL request dict.
+    """Add input images to a BFL request dict after any already placed.
 
-    Generation starts at ``input_image``; editing reserves that field for the
-    primary image and starts references at ``input_image_2``.
+    The model's image field decides the layout: ``images`` is one list, other
+    fields start at their own name and number later images ``<field>_2``, ...
     """
-    start = 2 if "input_image" in request else 1
-    for index, image in enumerate(images, start=start):
-        name = "input_image" if index == 1 else f"input_image_{index}"
-        request[name] = encode_image(image)
+    if not images:
+        return request
+    field = image_field_for_model(model_id).value
+    encoded = [encode_image(image) for image in images]
+    if field == BFLImageField.IMAGES:
+        request[field] = [*request.get(field, []), *encoded]
+        return request
+    start = 2 if field in request else 1
+    for index, value in enumerate(encoded, start=start):
+        request[field if index == 1 else f"{field}_{index}"] = value
     return request
 
 
-__all__ = ["add_reference_images", "encode_image"]
+__all__ = ["add_input_images", "encode_image"]

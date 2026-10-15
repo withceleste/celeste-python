@@ -24,6 +24,8 @@ type DocumentContent = DocumentArtifact | list[DocumentArtifact]
 type ImageContent = ImageArtifact | list[ImageArtifact]
 type VideoContent = VideoArtifact | list[VideoArtifact]
 type EmbeddingsContent = list[float] | list[list[float]]
+# Bare list: pydantic cannot build a schema from type[list[X]], while list[Model] still matches.
+type OutputSchema = type[BaseModel] | type[list]
 
 
 class SegmentationMask(BaseModel):
@@ -143,6 +145,7 @@ __all__ = [
     "Message",
     "MessageContent",
     "MessagePart",
+    "OutputSchema",
     "RawUsage",
     "Role",
     "SegmentationContent",

@@ -48,15 +48,15 @@ class WebSearchMapper(ToolMapper):
     """Map WebSearch to Google Interactions google_search wire format."""
 
     tool_type = WebSearch
-    _supported_fields: ClassVar[set[str]] = {"blocked_domains"}
+    _supported_fields: ClassVar[set[str]] = set()
 
     def map_tool(self, tool: Tool) -> dict[str, Any]:
         assert isinstance(tool, WebSearch)
         result: dict[str, Any] = {"type": "google_search"}
-        if tool.blocked_domains is not None:
-            result["exclude_domains"] = tool.blocked_domains
         for field in type(tool).model_fields:
-            if field not in self._supported_fields and getattr(tool, field) is not None:
+            if field == "kind" or field in self._supported_fields:
+                continue
+            if getattr(tool, field) is not None:
                 warnings.warn(
                     f"WebSearch.{field} is not supported by Google "
                     f"and will be ignored. Workaround: use a raw dict tool instead.",

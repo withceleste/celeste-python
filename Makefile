@@ -3,7 +3,7 @@
 # Default target
 help:
 	@echo "Available commands:"
-	@echo "  make sync       - Update and sync all dependencies with all extras"
+	@echo "  make sync       - Sync all dependencies with all extras from uv.lock"
 	@echo "  make lint       - Run Ruff linting"
 	@echo "  make format     - Apply Ruff formatting"
 	@echo "  make typecheck  - Run mypy type checking"
@@ -14,11 +14,11 @@ help:
 	@echo "  make ci       - Run full CI/CD pipeline"
 	@echo "  make clean      - Clean cache directories"
 
-# Complete dependency sync - update lock, sync everything
+# Complete dependency sync from the committed lock
 sync:
-	@echo "🔄 Updating dependencies..."
-	@uv sync --all-packages --all-extras --upgrade
-	@echo "✅ All dependencies synced and updated"
+	@echo "🔄 Syncing dependencies..."
+	@uv sync --all-packages --all-extras
+	@echo "✅ All dependencies synced"
 
 # Linting
 lint:

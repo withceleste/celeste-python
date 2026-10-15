@@ -24,7 +24,7 @@ MODELS: list[Model] = [
         streaming=True,
         parameter_constraints={
             Parameter.MAX_TOKENS: Range(min=1, max=1_048_576, step=1),
-            TextParameter.THINKING_BUDGET: Choice(options=["max"]),
+            TextParameter.THINKING_LEVEL: Choice(options=["max"]),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.IMAGE: ImagesConstraint(),
             TextParameter.TOOLS: ToolSupport(tools=[]),

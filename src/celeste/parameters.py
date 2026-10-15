@@ -31,7 +31,7 @@ class ParameterMapper[Content](ABC):
         """
         ...
 
-    def parse_output(self, content: Content, value: object | None) -> Content:
+    def parse_output(self, content: Content, value: Any) -> Content:  # noqa: ANN401
         """Optionally transform parsed content based on parameter value (default: return unchanged)."""
         return content
 

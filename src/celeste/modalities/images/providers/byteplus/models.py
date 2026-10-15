@@ -1,6 +1,6 @@
 """BytePlus models for images modality."""
 
-from celeste.constraints import Bool, Choice, Dimensions
+from celeste.constraints import Bool, Choice, Dimensions, ImagesConstraint
 from celeste.core import Modality, Operation, Provider
 from celeste.models import Model
 
@@ -11,7 +11,7 @@ MODELS: list[Model] = [
         id="seedream-4-0-250828",
         provider=Provider.BYTEPLUS,
         display_name="Seedream 4.0",
-        operations={Modality.IMAGES: {Operation.GENERATE}},
+        operations={Modality.IMAGES: {Operation.GENERATE, Operation.EDIT}},
         streaming=True,
         parameter_constraints={
             ImageParameter.ASPECT_RATIO: Dimensions(
@@ -47,6 +47,7 @@ MODELS: list[Model] = [
                 },
             ),
             ImageParameter.QUALITY: Choice(options=["1K", "2K", "4K"]),
+            ImageParameter.REFERENCE_IMAGES: ImagesConstraint(max_count=14),
             ImageParameter.WATERMARK: Bool(),
         },
     ),
@@ -54,7 +55,7 @@ MODELS: list[Model] = [
         id="seedream-4-5-251128",
         provider=Provider.BYTEPLUS,
         display_name="Seedream 4.5",
-        operations={Modality.IMAGES: {Operation.GENERATE}},
+        operations={Modality.IMAGES: {Operation.GENERATE, Operation.EDIT}},
         streaming=True,
         parameter_constraints={
             ImageParameter.ASPECT_RATIO: Dimensions(
@@ -82,6 +83,7 @@ MODELS: list[Model] = [
                 },
             ),
             ImageParameter.QUALITY: Choice(options=["2K", "4K"]),
+            ImageParameter.REFERENCE_IMAGES: ImagesConstraint(max_count=14),
             ImageParameter.WATERMARK: Bool(),
         },
     ),
@@ -89,7 +91,7 @@ MODELS: list[Model] = [
         id="seedream-5-0-260128",
         provider=Provider.BYTEPLUS,
         display_name="Seedream 5.0 Lite",
-        operations={Modality.IMAGES: {Operation.GENERATE}},
+        operations={Modality.IMAGES: {Operation.GENERATE, Operation.EDIT}},
         streaming=True,
         parameter_constraints={
             ImageParameter.ASPECT_RATIO: Dimensions(
@@ -125,6 +127,7 @@ MODELS: list[Model] = [
                 },
             ),
             ImageParameter.QUALITY: Choice(options=["2K", "3K", "4K"]),
+            ImageParameter.REFERENCE_IMAGES: ImagesConstraint(max_count=14),
             ImageParameter.WATERMARK: Bool(),
         },
     ),
@@ -132,7 +135,7 @@ MODELS: list[Model] = [
         id="dola-seedream-5-0-pro-260628",
         provider=Provider.BYTEPLUS,
         display_name="Seedream 5.0 Pro",
-        operations={Modality.IMAGES: {Operation.GENERATE}},
+        operations={Modality.IMAGES: {Operation.GENERATE, Operation.EDIT}},
         streaming=False,
         parameter_constraints={
             ImageParameter.ASPECT_RATIO: Dimensions(
@@ -168,6 +171,7 @@ MODELS: list[Model] = [
                 },
             ),
             ImageParameter.QUALITY: Choice(options=["1K", "1.5K", "2K"]),
+            ImageParameter.REFERENCE_IMAGES: ImagesConstraint(max_count=10),
             ImageParameter.WATERMARK: Bool(),
         },
     ),
@@ -175,7 +179,7 @@ MODELS: list[Model] = [
         id="dola-seedream-5-0-flash-260915",
         provider=Provider.BYTEPLUS,
         display_name="Seedream 5.0 flash",
-        operations={Modality.IMAGES: {Operation.GENERATE}},
+        operations={Modality.IMAGES: {Operation.GENERATE, Operation.EDIT}},
         streaming=False,
         parameter_constraints={
             ImageParameter.ASPECT_RATIO: Dimensions(
@@ -211,6 +215,7 @@ MODELS: list[Model] = [
                 },
             ),
             ImageParameter.QUALITY: Choice(options=["1K", "1.5K", "2K"]),
+            ImageParameter.REFERENCE_IMAGES: ImagesConstraint(max_count=10),
             ImageParameter.WATERMARK: Bool(),
         },
     ),

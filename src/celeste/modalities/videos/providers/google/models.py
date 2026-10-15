@@ -98,6 +98,7 @@ GOOGLE_OMNI_MODELS: list[Model] = [
         operations={Modality.VIDEOS: {Operation.GENERATE, Operation.EDIT}},
         parameter_constraints={
             VideoParameter.ASPECT_RATIO: Choice(options=["16:9", "9:16"]),
+            VideoParameter.RESOLUTION: Choice(options=["360p", "720p", "1080p", "4k"]),
             VideoParameter.DURATION: Range(min=3, max=10),
             VideoParameter.FIRST_FRAME: ImageConstraint(),
             VideoParameter.LAST_FRAME: ImageConstraint(),
