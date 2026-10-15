@@ -23,6 +23,7 @@ MODELS: list[Model] = [
         parameter_constraints={
             ImageParameter.QUALITY: Choice(options=["768sq", "1k", "1.5k", "2k", "4k"]),
             ImageParameter.SAFETY_TOLERANCE: Range(min=0, max=7),
+            ImageParameter.GROUNDING: Bool(),
         },
     ),
     Model(
