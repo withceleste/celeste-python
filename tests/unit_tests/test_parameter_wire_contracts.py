@@ -14,55 +14,57 @@ from celeste.modalities.audio.providers.groq import parameters as groq_audio
 from celeste.modalities.audio.providers.mistral import parameters as mistral_audio
 from celeste.modalities.audio.providers.openai import parameters as openai_audio
 from celeste.modalities.images.parameters import ImageParameter
-from celeste.modalities.images.providers.bfl import parameters as bfl
+from celeste.modalities.images.providers.bfl import parameters as bfl_images
 from celeste.modalities.images.providers.google import parameters as google_images
-from celeste.modalities.images.providers.topazlabs import parameters as topazlabs
+from celeste.modalities.images.providers.topazlabs import parameters as topazlabs_images
 from celeste.modalities.live.parameters import LiveParameter
 from celeste.modalities.live.providers.google import parameters as google_live
 from celeste.modalities.live.providers.openai import parameters as openai_live
 from celeste.modalities.segmentation.parameters import SegmentationParameter
-from celeste.modalities.segmentation.providers.fal import parameters as fal
+from celeste.modalities.segmentation.providers.fal import parameters as fal_segmentation
 from celeste.modalities.text.parameters import TextParameter
-from celeste.modalities.text.protocols.chatcompletions import parameters as chat
+from celeste.modalities.text.protocols.chatcompletions import (
+    parameters as chatcompletions_text,
+)
 from celeste.modalities.text.protocols.chatcompletions.client import (
     ChatCompletionsTextClient,
     ChatCompletionsTextStream,
 )
-from celeste.modalities.text.providers.anthropic import parameters as anthropic
+from celeste.modalities.text.providers.anthropic import parameters as anthropic_text
 from celeste.modalities.text.providers.google import parameters as google_text
-from celeste.modalities.text.providers.groq import parameters as groq
-from celeste.modalities.text.providers.meta import parameters as meta
-from celeste.modalities.text.providers.moonshot import parameters as moonshot
-from celeste.modalities.text.providers.openai import parameters as openai
+from celeste.modalities.text.providers.groq import parameters as groq_text
+from celeste.modalities.text.providers.meta import parameters as meta_text
+from celeste.modalities.text.providers.moonshot import parameters as moonshot_text
+from celeste.modalities.text.providers.openai import parameters as openai_text
 from celeste.modalities.videos.parameters import VideoParameter
-from celeste.modalities.videos.providers.byteplus import parameters as byteplus
+from celeste.modalities.videos.providers.byteplus import parameters as byteplus_videos
 from celeste.modalities.videos.providers.google import parameters as google_videos
-from celeste.modalities.videos.providers.xai import parameters as xai
+from celeste.modalities.videos.providers.xai import parameters as xai_videos
 from celeste.models import Model
 from celeste.parameters import ParameterMapper
 
-GOOGLE_VERTEX = google_text.GOOGLE_VERTEX_PARAMETER_MAPPERS
-GOOGLE_INTERACTIONS = google_text.GOOGLE_INTERACTIONS_PARAMETER_MAPPERS
-IMAGES_VERTEX = google_images.GOOGLE_VERTEX_PARAMETER_MAPPERS
-IMAGES_INTERACTIONS = google_images.GOOGLE_INTERACTIONS_PARAMETER_MAPPERS
+TEXT_GOOGLE_VERTEX = google_text.GOOGLE_VERTEX_PARAMETER_MAPPERS
+TEXT_GOOGLE_INTERACTIONS = google_text.GOOGLE_INTERACTIONS_PARAMETER_MAPPERS
+IMAGES_GOOGLE_VERTEX = google_images.GOOGLE_VERTEX_PARAMETER_MAPPERS
+IMAGES_GOOGLE_INTERACTIONS = google_images.GOOGLE_INTERACTIONS_PARAMETER_MAPPERS
 AUDIO_GOOGLE = google_audio.GOOGLE_PARAMETER_MAPPERS
 AUDIO_GROQ = groq_audio.GROQ_PARAMETER_MAPPERS
 AUDIO_OPENAI = openai_audio.OPENAI_PARAMETER_MAPPERS
 AUDIO_ELEVENLABS_STT = elevenlabs_audio.ELEVENLABS_SPEECH_TO_TEXT_PARAMETER_MAPPERS
 AUDIO_MISTRAL = mistral_audio.MISTRAL_PARAMETER_MAPPERS
-VIDEOS_VEO = google_videos.GOOGLE_VEO_PARAMETER_MAPPERS
-VIDEOS_INTERACTIONS = google_videos.GOOGLE_INTERACTIONS_PARAMETER_MAPPERS
-OPEN = openai.OPENAI_PARAMETER_MAPPERS
-META = meta.META_PARAMETER_MAPPERS
-CHAT = chat.CHATCOMPLETIONS_PARAMETER_MAPPERS
-ANTHROPIC = anthropic.ANTHROPIC_PARAMETER_MAPPERS
-MOONSHOT = moonshot.MOONSHOT_PARAMETER_MAPPERS
-GROQ = groq.GROQ_PARAMETER_MAPPERS
-BYTEPLUS = byteplus.BYTEPLUS_PARAMETER_MAPPERS
-XAI = xai.XAI_PARAMETER_MAPPERS
-BFL = bfl.BFL_PARAMETER_MAPPERS
-TOPAZ = topazlabs.TOPAZLABS_PARAMETER_MAPPERS
-FAL = fal.FAL_PARAMETER_MAPPERS
+VIDEOS_GOOGLE_VEO = google_videos.GOOGLE_VEO_PARAMETER_MAPPERS
+VIDEOS_GOOGLE_INTERACTIONS = google_videos.GOOGLE_INTERACTIONS_PARAMETER_MAPPERS
+TEXT_OPENAI = openai_text.OPENAI_PARAMETER_MAPPERS
+TEXT_META = meta_text.META_PARAMETER_MAPPERS
+TEXT_CHATCOMPLETIONS = chatcompletions_text.CHATCOMPLETIONS_PARAMETER_MAPPERS
+TEXT_ANTHROPIC = anthropic_text.ANTHROPIC_PARAMETER_MAPPERS
+TEXT_MOONSHOT = moonshot_text.MOONSHOT_PARAMETER_MAPPERS
+TEXT_GROQ = groq_text.GROQ_PARAMETER_MAPPERS
+VIDEOS_BYTEPLUS = byteplus_videos.BYTEPLUS_PARAMETER_MAPPERS
+VIDEOS_XAI = xai_videos.XAI_PARAMETER_MAPPERS
+IMAGES_BFL = bfl_images.BFL_PARAMETER_MAPPERS
+IMAGES_TOPAZLABS = topazlabs_images.TOPAZLABS_PARAMETER_MAPPERS
+SEGMENTATION_FAL = fal_segmentation.FAL_PARAMETER_MAPPERS
 LIVE_GOOGLE = google_live.GOOGLE_PARAMETER_MAPPERS
 LIVE_OPENAI = openai_live.OPENAI_PARAMETER_MAPPERS
 T, IP, V, AP, SP = (
@@ -189,25 +191,25 @@ SCALAR_PARAMETER_CASES = [
             "responses": {"tools": [{"type": "function", "name": "weather"}]},
         },
     ),
-    (GOOGLE_VERTEX, T.TEMPERATURE, 0.2, (*GC, "temperature"), 0.2),
-    (GOOGLE_VERTEX, T.MAX_TOKENS, 80, (*GC, "maxOutputTokens"), 80),
-    (GOOGLE_VERTEX, T.SEED, 7, (*GC, "seed"), 7),
+    (TEXT_GOOGLE_VERTEX, T.TEMPERATURE, 0.2, (*GC, "temperature"), 0.2),
+    (TEXT_GOOGLE_VERTEX, T.MAX_TOKENS, 80, (*GC, "maxOutputTokens"), 80),
+    (TEXT_GOOGLE_VERTEX, T.SEED, 7, (*GC, "seed"), 7),
     (
-        GOOGLE_VERTEX,
+        TEXT_GOOGLE_VERTEX,
         T.THINKING_BUDGET,
         32,
         TC,
         {"thinkingBudget": 32, "includeThoughts": True},
     ),
     (
-        GOOGLE_VERTEX,
+        TEXT_GOOGLE_VERTEX,
         T.THINKING_LEVEL,
         "high",
         TC,
         {"thinkingLevel": "high", "includeThoughts": True},
     ),
-    (IMAGES_VERTEX, IP.ASPECT_RATIO, "16:9", (*IC, "aspectRatio"), "16:9"),
-    (IMAGES_VERTEX, IP.QUALITY, "2K", (*IC, "imageSize"), "2K"),
+    (IMAGES_GOOGLE_VERTEX, IP.ASPECT_RATIO, "16:9", (*IC, "aspectRatio"), "16:9"),
+    (IMAGES_GOOGLE_VERTEX, IP.QUALITY, "2K", (*IC, "imageSize"), "2K"),
     (
         AUDIO_GOOGLE,
         AP.VOICE,
@@ -229,93 +231,93 @@ SCALAR_PARAMETER_CASES = [
         ("response_format", "mime_type"),
         "audio/mp3",
     ),
-    (VIDEOS_VEO, V.ASPECT_RATIO, "16:9", ("parameters", "aspectRatio"), "16:9"),
-    (VIDEOS_VEO, V.RESOLUTION, "1080p", ("parameters", "resolution"), "1080p"),
-    (VIDEOS_VEO, V.DURATION, 6, ("parameters", "durationSeconds"), 6),
+    (VIDEOS_GOOGLE_VEO, V.ASPECT_RATIO, "16:9", ("parameters", "aspectRatio"), "16:9"),
+    (VIDEOS_GOOGLE_VEO, V.RESOLUTION, "1080p", ("parameters", "resolution"), "1080p"),
+    (VIDEOS_GOOGLE_VEO, V.DURATION, 6, ("parameters", "durationSeconds"), 6),
     (
-        VIDEOS_INTERACTIONS,
+        VIDEOS_GOOGLE_INTERACTIONS,
         V.ASPECT_RATIO,
         "9:16",
         ("response_format", "aspect_ratio"),
         "9:16",
     ),
     (
-        VIDEOS_INTERACTIONS,
+        VIDEOS_GOOGLE_INTERACTIONS,
         V.RESOLUTION,
         "1080p",
         ("response_format", "resolution"),
         "1080p",
     ),
     (
-        VIDEOS_INTERACTIONS,
+        VIDEOS_GOOGLE_INTERACTIONS,
         V.DURATION,
         5,
         ("response_format", "duration"),
         "5s",
     ),
     (
-        VIDEOS_INTERACTIONS,
+        VIDEOS_GOOGLE_INTERACTIONS,
         V.FIRST_FRAME,
         LOCAL_IMAGE,
         ("generation_config", "video_config", "task"),
         "image_to_video",
     ),
     (
-        VIDEOS_INTERACTIONS,
+        VIDEOS_GOOGLE_INTERACTIONS,
         V.REFERENCE_IMAGES,
         [LOCAL_IMAGE],
         ("generation_config", "video_config", "task"),
         "reference_to_video",
     ),
     (
-        GOOGLE_INTERACTIONS,
+        TEXT_GOOGLE_INTERACTIONS,
         T.TEMPERATURE,
         0.2,
         ("generation_config", "temperature"),
         0.2,
     ),
     (
-        GOOGLE_INTERACTIONS,
+        TEXT_GOOGLE_INTERACTIONS,
         T.MAX_TOKENS,
         80,
         ("generation_config", "max_output_tokens"),
         80,
     ),
-    (GOOGLE_INTERACTIONS, T.SEED, 7, ("generation_config", "seed"), 7),
+    (TEXT_GOOGLE_INTERACTIONS, T.SEED, 7, ("generation_config", "seed"), 7),
     (
-        GOOGLE_INTERACTIONS,
+        TEXT_GOOGLE_INTERACTIONS,
         T.THINKING_LEVEL,
         "high",
         ("generation_config",),
         {"thinking_level": "high", "thinking_summaries": "auto"},
     ),
     (
-        IMAGES_INTERACTIONS,
+        IMAGES_GOOGLE_INTERACTIONS,
         IP.ASPECT_RATIO,
         "16:9",
         ("response_format", "aspect_ratio"),
         "16:9",
     ),
     (
-        IMAGES_INTERACTIONS,
+        IMAGES_GOOGLE_INTERACTIONS,
         IP.QUALITY,
         "2K",
         ("response_format", "image_size"),
         "2K",
     ),
-    (OPEN, T.TEMPERATURE, 0.4, ("temperature",), 0.4),
-    (OPEN, T.MAX_TOKENS, 90, ("max_output_tokens",), 90),
-    (OPEN, T.THINKING_LEVEL, "high", ("reasoning", "effort"), "high"),
-    (OPEN, T.VERBOSITY, "low", ("text", "verbosity"), "low"),
-    (META, T.THINKING_LEVEL, "max", ("reasoning", "effort"), "max"),
-    (CHAT, T.TEMPERATURE, 0.6, ("temperature",), 0.6),
-    (CHAT, T.MAX_TOKENS, 100, ("max_tokens",), 100),
-    (CHAT, T.THINKING_LEVEL, "high", ("reasoning_effort",), "high"),
-    (ANTHROPIC, T.TEMPERATURE, 0.3, ("temperature",), 0.3),
-    (MOONSHOT, T.TEMPERATURE, 0.4, ("temperature",), 0.4),
-    (MOONSHOT, T.MAX_TOKENS, 120, ("max_completion_tokens",), 120),
-    (MOONSHOT, T.THINKING_LEVEL, "max", ("reasoning_effort",), "max"),
-    (GROQ, T.THINKING_LEVEL, "default", ("reasoning_effort",), "default"),
+    (TEXT_OPENAI, T.TEMPERATURE, 0.4, ("temperature",), 0.4),
+    (TEXT_OPENAI, T.MAX_TOKENS, 90, ("max_output_tokens",), 90),
+    (TEXT_OPENAI, T.THINKING_LEVEL, "high", ("reasoning", "effort"), "high"),
+    (TEXT_OPENAI, T.VERBOSITY, "low", ("text", "verbosity"), "low"),
+    (TEXT_META, T.THINKING_LEVEL, "max", ("reasoning", "effort"), "max"),
+    (TEXT_CHATCOMPLETIONS, T.TEMPERATURE, 0.6, ("temperature",), 0.6),
+    (TEXT_CHATCOMPLETIONS, T.MAX_TOKENS, 100, ("max_tokens",), 100),
+    (TEXT_CHATCOMPLETIONS, T.THINKING_LEVEL, "high", ("reasoning_effort",), "high"),
+    (TEXT_ANTHROPIC, T.TEMPERATURE, 0.3, ("temperature",), 0.3),
+    (TEXT_MOONSHOT, T.TEMPERATURE, 0.4, ("temperature",), 0.4),
+    (TEXT_MOONSHOT, T.MAX_TOKENS, 120, ("max_completion_tokens",), 120),
+    (TEXT_MOONSHOT, T.THINKING_LEVEL, "max", ("reasoning_effort",), "max"),
+    (TEXT_GROQ, T.THINKING_LEVEL, "default", ("reasoning_effort",), "default"),
     (AUDIO_GROQ, AP.LANGUAGE, "en", ("language",), "en"),
     (AUDIO_GROQ, AP.PROMPT, "Celeste", ("prompt",), "Celeste"),
     (AUDIO_GROQ, AP.TEMPERATURE, 0.0, ("temperature",), 0.0),
@@ -325,44 +327,62 @@ SCALAR_PARAMETER_CASES = [
     (AUDIO_ELEVENLABS_STT, AP.LANGUAGE, "en", ("language_code",), "en"),
     (AUDIO_MISTRAL, AP.LANGUAGE, "en", ("language",), "en"),
     (AUDIO_MISTRAL, AP.TEMPERATURE, 0.0, ("temperature",), 0.0),
-    (XAI, V.FIRST_FRAME, IMAGE, ("image", "url"), IMAGE.url),
-    (TOPAZ, IP.OUTPUT_WIDTH, 2048, ("output_width",), 2048),
-    (TOPAZ, IP.OUTPUT_HEIGHT, 1536, ("output_height",), 1536),
-    (TOPAZ, IP.OUTPUT_FORMAT, "jpeg", ("output_format",), "jpeg"),
-    (TOPAZ, IP.CROP_TO_FILL, True, ("crop_to_fill",), True),
-    (TOPAZ, IP.FACE_ENHANCEMENT, True, ("face_enhancement",), True),
-    (TOPAZ, IP.FACE_ENHANCEMENT_STRENGTH, 0.5, ("face_enhancement_strength",), 0.5),
+    (VIDEOS_XAI, V.FIRST_FRAME, IMAGE, ("image", "url"), IMAGE.url),
+    (IMAGES_TOPAZLABS, IP.OUTPUT_WIDTH, 2048, ("output_width",), 2048),
+    (IMAGES_TOPAZLABS, IP.OUTPUT_HEIGHT, 1536, ("output_height",), 1536),
+    (IMAGES_TOPAZLABS, IP.OUTPUT_FORMAT, "jpeg", ("output_format",), "jpeg"),
+    (IMAGES_TOPAZLABS, IP.CROP_TO_FILL, True, ("crop_to_fill",), True),
+    (IMAGES_TOPAZLABS, IP.FACE_ENHANCEMENT, True, ("face_enhancement",), True),
     (
-        TOPAZ,
+        IMAGES_TOPAZLABS,
+        IP.FACE_ENHANCEMENT_STRENGTH,
+        0.5,
+        ("face_enhancement_strength",),
+        0.5,
+    ),
+    (
+        IMAGES_TOPAZLABS,
         IP.FACE_ENHANCEMENT_CREATIVITY,
         0.2,
         ("face_enhancement_creativity",),
         0.2,
     ),
-    (TOPAZ, IP.SUBJECT_DETECTION, "all", ("subject_detection",), "all"),
-    (TOPAZ, IP.SHARPEN, 0.3, ("sharpen",), 0.3),
-    (TOPAZ, IP.DENOISE, 0.4, ("denoise",), 0.4),
-    (TOPAZ, IP.STRENGTH, 0.8, ("strength",), 0.8),
-    (TOPAZ, IP.FIX_COMPRESSION, 0.6, ("fix_compression",), 0.6),
-    (TOPAZ, IP.RECOVERY_STRENGTH, 0.9, ("recovery_strength",), 0.9),
-    (TOPAZ, IP.OPACITY, 1.0, ("opacity",), 1.0),
-    (TOPAZ, IP.DEBLUR_STRENGTH, 0.5, ("deblur_strength",), 0.5),
-    (TOPAZ, IP.DETAIL_STRENGTH, 6.0, ("detail_strength",), 6.0),
-    (TOPAZ, IP.DENOISE_STRENGTH, 0.5, ("denoise_strength",), 0.5),
-    (TOPAZ, IP.DECOMPRESSION_STRENGTH, 0.4, ("decompression_strength",), 0.4),
-    (FAL, SP.MAX_MASKS, 5, ("max_masks",), 5),
-    (FAL, SP.INCLUDE_SCORES, True, ("include_scores",), True),
-    (FAL, SP.INCLUDE_BOXES, True, ("include_boxes",), True),
-    (FAL, SP.RETURN_MULTIPLE_MASKS, True, ("return_multiple_masks",), True),
+    (IMAGES_TOPAZLABS, IP.SUBJECT_DETECTION, "all", ("subject_detection",), "all"),
+    (IMAGES_TOPAZLABS, IP.SHARPEN, 0.3, ("sharpen",), 0.3),
+    (IMAGES_TOPAZLABS, IP.DENOISE, 0.4, ("denoise",), 0.4),
+    (IMAGES_TOPAZLABS, IP.STRENGTH, 0.8, ("strength",), 0.8),
+    (IMAGES_TOPAZLABS, IP.FIX_COMPRESSION, 0.6, ("fix_compression",), 0.6),
+    (IMAGES_TOPAZLABS, IP.RECOVERY_STRENGTH, 0.9, ("recovery_strength",), 0.9),
+    (IMAGES_TOPAZLABS, IP.OPACITY, 1.0, ("opacity",), 1.0),
+    (IMAGES_TOPAZLABS, IP.DEBLUR_STRENGTH, 0.5, ("deblur_strength",), 0.5),
+    (IMAGES_TOPAZLABS, IP.DETAIL_STRENGTH, 6.0, ("detail_strength",), 6.0),
+    (IMAGES_TOPAZLABS, IP.DENOISE_STRENGTH, 0.5, ("denoise_strength",), 0.5),
     (
-        FAL,
+        IMAGES_TOPAZLABS,
+        IP.DECOMPRESSION_STRENGTH,
+        0.4,
+        ("decompression_strength",),
+        0.4,
+    ),
+    (SEGMENTATION_FAL, SP.MAX_MASKS, 5, ("max_masks",), 5),
+    (SEGMENTATION_FAL, SP.INCLUDE_SCORES, True, ("include_scores",), True),
+    (SEGMENTATION_FAL, SP.INCLUDE_BOXES, True, ("include_boxes",), True),
+    (
+        SEGMENTATION_FAL,
+        SP.RETURN_MULTIPLE_MASKS,
+        True,
+        ("return_multiple_masks",),
+        True,
+    ),
+    (
+        SEGMENTATION_FAL,
         SP.POINT_PROMPTS,
         [{"x": 10, "y": 20, "label": 1}],
         ("point_prompts",),
         [{"x": 10, "y": 20, "label": 1}],
     ),
     (
-        FAL,
+        SEGMENTATION_FAL,
         SP.BOX_PROMPTS,
         [{"x_min": 1, "y_min": 2, "x_max": 3, "y_max": 4}],
         ("box_prompts",),
@@ -376,7 +396,7 @@ SCALAR_PARAMETER_CASES = [
     [(*case, MODEL, None) for case in SCALAR_PARAMETER_CASES]
     + [
         (
-            BFL,
+            IMAGES_BFL,
             IP.ASPECT_RATIO,
             "520x512",
             (),
@@ -396,7 +416,7 @@ SCALAR_PARAMETER_CASES = [
     ]
     + [
         (
-            BFL,
+            IMAGES_BFL,
             IP.ASPECT_RATIO,
             "4:1",
             (),
@@ -408,7 +428,7 @@ SCALAR_PARAMETER_CASES = [
     ]
     + [
         (
-            BFL,
+            IMAGES_BFL,
             IP.PROMPT_UPSAMPLING,
             value,
             (),
@@ -421,7 +441,7 @@ SCALAR_PARAMETER_CASES = [
     ]
     + [
         (
-            BFL,
+            IMAGES_BFL,
             IP.PROMPT_UPSAMPLING,
             False,
             (),
@@ -440,7 +460,7 @@ SCALAR_PARAMETER_CASES = [
     ]
     + [
         (
-            BFL,
+            IMAGES_BFL,
             IP.PROMPT_UPSAMPLING,
             True,
             (),
@@ -456,7 +476,7 @@ SCALAR_PARAMETER_CASES = [
     ]
     + [
         (
-            BFL,
+            IMAGES_BFL,
             IP.SAFETY_TOLERANCE,
             6,
             (),
@@ -465,7 +485,7 @@ SCALAR_PARAMETER_CASES = [
             None,
         ),
         (
-            BFL,
+            IMAGES_BFL,
             IP.ASPECT_RATIO,
             "272x256",
             (),
@@ -476,7 +496,7 @@ SCALAR_PARAMETER_CASES = [
     ]
     + [
         (
-            BFL,
+            IMAGES_BFL,
             IP.REFERENCE_IMAGES,
             [IMAGE] * (total - int(editing)),
             (),
@@ -500,7 +520,7 @@ SCALAR_PARAMETER_CASES = [
     ]
     + [
         (
-            BFL,
+            IMAGES_BFL,
             IP.REFERENCE_IMAGES,
             [IMAGE] * (total - int(editing)),
             (),
@@ -539,24 +559,24 @@ def test_scalar_parameters_use_provider_wire_shape(
 @pytest.mark.parametrize(
     "mappers",
     [
-        GOOGLE_VERTEX,
-        IMAGES_VERTEX,
+        TEXT_GOOGLE_VERTEX,
+        IMAGES_GOOGLE_VERTEX,
         AUDIO_GOOGLE,
         AUDIO_GROQ,
         AUDIO_OPENAI,
         AUDIO_ELEVENLABS_STT,
         AUDIO_MISTRAL,
-        VIDEOS_VEO,
-        VIDEOS_INTERACTIONS,
-        OPEN,
-        CHAT,
-        ANTHROPIC,
-        MOONSHOT,
-        GROQ,
-        BYTEPLUS,
-        XAI,
-        BFL,
-        TOPAZ,
+        VIDEOS_GOOGLE_VEO,
+        VIDEOS_GOOGLE_INTERACTIONS,
+        TEXT_OPENAI,
+        TEXT_CHATCOMPLETIONS,
+        TEXT_ANTHROPIC,
+        TEXT_MOONSHOT,
+        TEXT_GROQ,
+        VIDEOS_BYTEPLUS,
+        VIDEOS_XAI,
+        IMAGES_BFL,
+        IMAGES_TOPAZLABS,
         LIVE_GOOGLE,
         LIVE_OPENAI,
     ],
@@ -570,10 +590,10 @@ def test_none_omits_every_optional_parameter(
 @pytest.mark.parametrize(
     ("mappers", "schema", "wire", "path", "mapped", "parsed"),
     [
-        (GOOGLE_VERTEX, Answer, '{"value":1}', GS, "integer", Answer(value=1)),
-        (OPEN, ANSWERS, '{"items":[{"value":2}]}', TF, "answer_list", A2),
-        (CHAT, ANSWERS, W3, RF, "json_object", A3),
-        (GROQ, ANSWERS, W3, RF, "json_object", A3),
+        (TEXT_GOOGLE_VERTEX, Answer, '{"value":1}', GS, "integer", Answer(value=1)),
+        (TEXT_OPENAI, ANSWERS, '{"items":[{"value":2}]}', TF, "answer_list", A2),
+        (TEXT_CHATCOMPLETIONS, ANSWERS, W3, RF, "json_object", A3),
+        (TEXT_GROQ, ANSWERS, W3, RF, "json_object", A3),
     ],
 )
 def test_structured_output_maps_and_parses_typed_results(
@@ -589,7 +609,9 @@ def test_structured_output_maps_and_parses_typed_results(
     assert mapper.parse_output(wire, schema) == parsed
 
 
-@pytest.mark.parametrize(("mappers", "nested"), [(OPEN, False), (CHAT, True)])
+@pytest.mark.parametrize(
+    ("mappers", "nested"), [(TEXT_OPENAI, False), (TEXT_CHATCOMPLETIONS, True)]
+)
 def test_user_tools_use_protocol_function_shape(
     mappers: list[ParameterMapper[Any]], nested: bool
 ) -> None:
@@ -604,9 +626,9 @@ def test_user_tools_use_protocol_function_shape(
 
 def test_google_media_precedes_text_content() -> None:
     request = {"contents": [{"parts": [{"text": "describe"}]}]}
-    parts = _map(IMAGES_VERTEX, IP.REFERENCE_IMAGES, [IMAGE], request)["contents"][0][
-        "parts"
-    ]
+    parts = _map(IMAGES_GOOGLE_VERTEX, IP.REFERENCE_IMAGES, [IMAGE], request)[
+        "contents"
+    ][0]["parts"]
     assert parts == [
         {"file_data": {"file_uri": IMAGE.url}},
         {"text": "describe"},
@@ -617,7 +639,7 @@ def test_google_media_precedes_text_content() -> None:
     ("mappers", "name", "request_body", "expected_input"),
     [
         (
-            IMAGES_INTERACTIONS,
+            IMAGES_GOOGLE_INTERACTIONS,
             IP.REFERENCE_IMAGES,
             {
                 "input": [
@@ -647,7 +669,7 @@ def test_google_media_precedes_text_content() -> None:
             ],
         ),
         (
-            VIDEOS_INTERACTIONS,
+            VIDEOS_GOOGLE_INTERACTIONS,
             V.REFERENCE_IMAGES,
             {"input": "describe"},
             [
@@ -667,9 +689,9 @@ def test_google_interactions_media_joins_input_content(
 
 
 def test_google_veo_frames_land_in_instances() -> None:
-    request = _map(VIDEOS_VEO, V.FIRST_FRAME, LOCAL_IMAGE)
-    request = _map(VIDEOS_VEO, V.LAST_FRAME, LOCAL_IMAGE, request)
-    request = _map(VIDEOS_VEO, V.REFERENCE_IMAGES, [LOCAL_IMAGE], request)
+    request = _map(VIDEOS_GOOGLE_VEO, V.FIRST_FRAME, LOCAL_IMAGE)
+    request = _map(VIDEOS_GOOGLE_VEO, V.LAST_FRAME, LOCAL_IMAGE, request)
+    request = _map(VIDEOS_GOOGLE_VEO, V.REFERENCE_IMAGES, [LOCAL_IMAGE], request)
 
     instance = request["instances"][0]
     assert instance["image"]["bytesBase64Encoded"] == LOCAL_IMAGE.get_base64()
@@ -687,7 +709,7 @@ def test_google_veo_frames_land_in_instances() -> None:
 )
 def test_byteplus_options_are_prompt_flags(name: str, value: object, flag: str) -> None:
     request = {"content": [{"type": "text", "text": "A sunrise"}]}
-    text = _map(BYTEPLUS, name, value, request)["content"][0]["text"]
+    text = _map(VIDEOS_BYTEPLUS, name, value, request)["content"][0]["text"]
     assert text == f"A sunrise {flag}"
 
 
@@ -702,18 +724,18 @@ def test_byteplus_options_are_prompt_flags(name: str, value: object, flag: str) 
 def test_byteplus_images_have_semantic_roles(
     name: str, value: object, role: str
 ) -> None:
-    image = _map(BYTEPLUS, name, value)["content"][0]
+    image = _map(VIDEOS_BYTEPLUS, name, value)["content"][0]
     assert image["role"] == role
     assert image["image_url"]["url"].startswith("data:image/png;base64,")
 
 
 def test_bfl_reference_images_follow_primary_image_numbering() -> None:
     model = Model(id="flux-2-pro", display_name="Wire test")
-    assert _map(BFL, IP.REFERENCE_IMAGES, [IMAGE], model=model) == {
+    assert _map(IMAGES_BFL, IP.REFERENCE_IMAGES, [IMAGE], model=model) == {
         "input_image": IMAGE.url
     }
     assert _map(
-        BFL,
+        IMAGES_BFL,
         IP.REFERENCE_IMAGES,
         [IMAGE],
         {"input_image": "primary"},
