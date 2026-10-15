@@ -14,5 +14,5 @@ class ElevenLabsTextToSpeechEndpoint(StrEnum):
 
 BASE_URL = "https://api.elevenlabs.io"
 
-# Default voice ID (Rachel)
-DEFAULT_VOICE_ID = "21m00Tcm4TlvDq8ikWAM"
+# Default voice ID (Janet)
+DEFAULT_VOICE_ID = "eLDc7xhWxG2FElT3kUTj"
