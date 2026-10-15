@@ -1,6 +1,5 @@
 """BytePlus images client."""
 
-import base64
 from typing import Any, Unpack
 
 from celeste.artifacts import ImageArtifact
@@ -15,7 +14,7 @@ from celeste.providers.byteplus.images.streaming import (
     BytePlusImagesStream as _BytePlusImagesStream,
 )
 from celeste.types import ImageContent
-from celeste.utils import build_data_url, detect_mime_type
+from celeste.utils import build_data_url
 
 from ...client import ImagesClient
 from ...io import (
@@ -27,18 +26,15 @@ from ...parameters import ImageParameters
 from ...streaming import ImagesStream
 from .parameters import BYTEPLUS_PARAMETER_MAPPERS
 
-_OUTPUT_FORMAT_MIME_TYPES = {"png": ImageMimeType.PNG, "jpeg": ImageMimeType.JPEG}
+_OUTPUT_FORMAT_MIME_TYPES: dict[str, ImageMimeType] = {
+    "png": ImageMimeType.PNG,
+    "jpeg": ImageMimeType.JPEG,
+}
 
 
-def _image_mime_type(
-    image_data: dict[str, Any], data: bytes | None = None
-) -> ImageMimeType | None:
-    """Return the MIME type of the declared output_format, else detect it from data."""
-    declared = _OUTPUT_FORMAT_MIME_TYPES.get(image_data.get("output_format", ""))
-    if declared is not None or data is None:
-        return declared
-    detected = detect_mime_type(data)
-    return detected if isinstance(detected, ImageMimeType) else None
+def _image_mime_type(image_data: dict[str, Any]) -> ImageMimeType | None:
+    """Translate an image's declared output_format (None when not declared)."""
+    return _OUTPUT_FORMAT_MIME_TYPES.get(image_data.get("output_format", ""))
 
 
 class BytePlusImagesStream(_BytePlusImagesStream, ImagesStream):
@@ -79,9 +75,8 @@ class BytePlusImagesStream(_BytePlusImagesStream, ImagesStream):
                 url=content, mime_type=_image_mime_type(event_data)
             )
         else:  # b64_json
-            data = base64.b64decode(content)
             artifact = ImageArtifact(
-                data=data, mime_type=_image_mime_type(event_data, data)
+                data=content, mime_type=_image_mime_type(event_data)
             )
 
         return ImageChunk(
@@ -147,10 +142,9 @@ class BytePlusImagesClient(BytePlusImagesMixin, ImagesClient):
                 mime_type=_image_mime_type(image_data),
             )
         if image_data.get("b64_json"):
-            data = base64.b64decode(image_data["b64_json"])
             return ImageArtifact(
-                data=data,
-                mime_type=_image_mime_type(image_data, data),
+                data=image_data["b64_json"],
+                mime_type=_image_mime_type(image_data),
             )
 
         msg = "No image URL or base64 data in BytePlus response"
