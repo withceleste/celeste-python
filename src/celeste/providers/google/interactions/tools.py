@@ -54,7 +54,9 @@ class WebSearchMapper(ToolMapper):
         assert isinstance(tool, WebSearch)
         result: dict[str, Any] = {"type": "google_search"}
         for field in type(tool).model_fields:
-            if field not in self._supported_fields and getattr(tool, field) is not None:
+            if field == "kind" or field in self._supported_fields:
+                continue
+            if getattr(tool, field) is not None:
                 warnings.warn(
                     f"WebSearch.{field} is not supported by Google "
                     f"and will be ignored. Workaround: use a raw dict tool instead.",
