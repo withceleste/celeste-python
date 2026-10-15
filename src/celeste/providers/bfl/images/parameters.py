@@ -8,7 +8,7 @@ from celeste.models import Model
 from celeste.parameters import FieldMapper, ParameterMapper
 from celeste.types import ImageContent
 
-from .utils import add_reference_images
+from .utils import add_reference_images, encode_image
 
 
 class AspectRatioMapper(ParameterMapper[ImageContent]):
@@ -52,7 +52,7 @@ class SeedMapper(FieldMapper[ImageContent]):
 
 
 class ReferenceImagesMapper(ParameterMapper[ImageContent]):
-    """Map all references to BFL's numbered input fields."""
+    """Map all references to BFL's numbered input fields or FLUX 3's images list."""
 
     def map(
         self, request: dict[str, Any], value: object, model: Model
@@ -63,7 +63,7 @@ class ReferenceImagesMapper(ParameterMapper[ImageContent]):
 
         constraint = model.parameter_constraints.get(self.name)
         if (
-            "input_image" in request
+            ("input_image" in request or "images" in request)
             and isinstance(constraint, ImagesConstraint)
             and constraint.max_count is not None
             and len(validated_value) + 1 > constraint.max_count
@@ -74,6 +74,12 @@ class ReferenceImagesMapper(ParameterMapper[ImageContent]):
             )
             raise ConstraintViolationError(msg)
 
+        if model.id in ("flux-3-image",):
+            request["images"] = [
+                *request.get("images", []),
+                *(encode_image(image) for image in validated_value),
+            ]
+            return request
         return add_reference_images(request, validated_value)
 
 

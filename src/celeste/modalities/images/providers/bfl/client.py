@@ -28,7 +28,10 @@ class BFLImagesClient(BFLImagesMixin, ImagesClient):
         """Build request with prompt and (optional) input image."""
         request: dict[str, Any] = {"prompt": inputs.prompt}
         if inputs.image is not None:
-            request["input_image"] = encode_image(inputs.image)
+            if self.model.id in ("flux-3-image",):
+                request["images"] = [encode_image(inputs.image)]
+            else:
+                request["input_image"] = encode_image(inputs.image)
         return request
 
     def _parse_content(

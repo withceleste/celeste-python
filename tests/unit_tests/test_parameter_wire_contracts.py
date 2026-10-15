@@ -496,6 +496,26 @@ SCALAR_PARAMETER_CASES = [
         )
         for editing in (False, True)
         for total in (limit, limit + 1)
+    ]
+    + [
+        (
+            BFL,
+            IP.REFERENCE_IMAGES,
+            [IMAGE] * (total - int(editing)),
+            (),
+            {
+                "images": [
+                    *["primary"] * int(editing),
+                    *[IMAGE.url] * (total - int(editing)),
+                ]
+            }
+            if total == 10
+            else ConstraintViolationError,
+            get_model("flux-3-image", provider=Provider.BFL),
+            {"images": ["primary"]} if editing else None,
+        )
+        for editing in (False, True)
+        for total in (10, 11)
     ],
 )
 def test_scalar_parameters_use_provider_wire_shape(

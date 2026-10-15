@@ -19,9 +19,10 @@ MODELS: list[Model] = [
         id="flux-3-image",
         provider=Provider.BFL,
         display_name="FLUX 3 Image",
-        operations={Modality.IMAGES: {Operation.GENERATE}},
+        operations={Modality.IMAGES: {Operation.GENERATE, Operation.EDIT}},
         parameter_constraints={
             ImageParameter.QUALITY: Choice(options=["768sq", "1k", "1.5k", "2k", "4k"]),
+            ImageParameter.REFERENCE_IMAGES: ImagesConstraint(max_count=10),
             ImageParameter.SAFETY_TOLERANCE: Range(min=0, max=7),
         },
     ),
