@@ -101,12 +101,19 @@ class GuidanceMapper(FieldMapper[ImageContent]):
     field = "guidance"
 
 
+class ResolutionMapper(FieldMapper[ImageContent]):
+    """Map resolution to BFL resolution field."""
+
+    field = "resolution"
+
+
 __all__ = [
     "AspectRatioMapper",
     "GuidanceMapper",
     "OutputFormatMapper",
     "PromptUpsamplingMapper",
     "ReferenceImagesMapper",
+    "ResolutionMapper",
     "SafetyToleranceMapper",
     "SeedMapper",
     "StepsMapper",
