@@ -70,7 +70,6 @@ _TTS_V2_5_LANGUAGES = [
     Language.SPANISH,
     Language.SWEDISH,
     Language.TAMIL,
-    Language.THAI,
     Language.TURKISH,
     Language.UKRAINIAN,
     Language.VIETNAMESE,
