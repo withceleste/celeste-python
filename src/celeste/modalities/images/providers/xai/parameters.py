@@ -5,6 +5,9 @@ from celeste.providers.xai.images.parameters import (
     AspectRatioMapper as _AspectRatioMapper,
 )
 from celeste.providers.xai.images.parameters import (
+    ImagesMapper as _ImagesMapper,
+)
+from celeste.providers.xai.images.parameters import (
     NumImagesMapper as _NumImagesMapper,
 )
 from celeste.providers.xai.images.parameters import (
@@ -42,11 +45,18 @@ class QualityMapper(_ResolutionMapper):
     name = ImageParameter.QUALITY
 
 
+class ReferenceImagesMapper(_ImagesMapper):
+    """Map reference_images to xAI's images parameter."""
+
+    name = ImageParameter.REFERENCE_IMAGES
+
+
 XAI_PARAMETER_MAPPERS: list[ParameterMapper[ImageContent]] = [
     AspectRatioMapper(),
     NumImagesMapper(),
     OutputFormatMapper(),
     QualityMapper(),
+    ReferenceImagesMapper(),
 ]
 
 __all__ = ["XAI_PARAMETER_MAPPERS"]
