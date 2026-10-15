@@ -3,12 +3,12 @@
 from typing import Any, ClassVar
 
 from celeste.constraints import ImagesConstraint
-from celeste.exceptions import ConstraintViolationError
+from celeste.exceptions import ConstraintViolationError, ValidationError
 from celeste.models import Model
 from celeste.parameters import FieldMapper, ParameterMapper
-from celeste.types import ImageContent
+from celeste.types import ImageContent, VideoContent
 
-from .utils import add_input_images
+from .utils import add_input_images, encode_image
 
 
 class AspectRatioMapper[Content](FieldMapper[Content]):
@@ -111,13 +111,52 @@ class GroundingMapper(FieldMapper[ImageContent]):
     field = "grounding"
 
 
+class DurationMapper(FieldMapper[VideoContent]):
+    """Map duration to BFL duration field."""
+
+    field = "duration"
+
+
+class FirstFrameMapper(ParameterMapper[VideoContent]):
+    """Map first_frame to the opening BFL keyframe in i2v mode."""
+
+    def map(
+        self, request: dict[str, Any], value: object, model: Model
+    ) -> dict[str, Any]:
+        validated_value = self._validate_value(value, model)
+        if validated_value is None:
+            return request
+        request["mode"] = "i2v"
+        request["keyframes"] = [encode_image(validated_value)]
+        return request
+
+
+class LastFrameMapper(ParameterMapper[VideoContent]):
+    """Map last_frame to the closing BFL keyframe after first_frame."""
+
+    def map(
+        self, request: dict[str, Any], value: object, model: Model
+    ) -> dict[str, Any]:
+        validated_value = self._validate_value(value, model)
+        if validated_value is None:
+            return request
+        if "keyframes" not in request:
+            msg = "last_frame requires first_frame to be provided"
+            raise ValidationError(msg)
+        request["keyframes"].append(encode_image(validated_value))
+        return request
+
+
 __all__ = [
     "AspectRatioMapper",
+    "DurationMapper",
+    "FirstFrameMapper",
     "GroundingMapper",
     "GuidanceMapper",
     "ImagePromptMapper",
     "ImagesMapper",
     "InputImageMapper",
+    "LastFrameMapper",
     "OutputFormatMapper",
     "PromptUpsamplingMapper",
     "ReferenceImagesMapper",
