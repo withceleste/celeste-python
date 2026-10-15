@@ -24,6 +24,24 @@ from .tools import TOOL_MAPPERS
 _TOOL_DISPATCH = {m.tool_type: m for m in TOOL_MAPPERS}
 
 
+class TemperatureMapper(ParameterMapper[TextContent]):
+    """Map temperature to Google Interactions generation_config.temperature field."""
+
+    def map(
+        self,
+        request: dict[str, Any],
+        value: object,
+        model: Model,
+    ) -> dict[str, Any]:
+        """Transform temperature into provider request."""
+        validated_value = self._validate_value(value, model)
+        if validated_value is None:
+            return request
+
+        request.setdefault("generation_config", {})["temperature"] = validated_value
+        return request
+
+
 class MaxOutputTokensMapper(ParameterMapper[TextContent]):
     """Map max_tokens to Google Interactions generation_config.max_output_tokens field."""
 
@@ -555,6 +573,7 @@ __all__ = [
     "ResolutionMapper",
     "ResponseFormatMapper",
     "SeedMapper",
+    "TemperatureMapper",
     "ThinkingLevelMapper",
     "ToolChoiceMapper",
     "ToolsMapper",
