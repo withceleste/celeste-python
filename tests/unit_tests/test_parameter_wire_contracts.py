@@ -241,6 +241,13 @@ SCALAR_PARAMETER_CASES = [
     ),
     (
         VIDEOS_INTERACTIONS,
+        V.RESOLUTION,
+        "1080p",
+        ("response_format", "resolution"),
+        "1080p",
+    ),
+    (
+        VIDEOS_INTERACTIONS,
         V.DURATION,
         5,
         ("response_format", "duration"),
