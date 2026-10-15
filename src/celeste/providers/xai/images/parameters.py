@@ -22,6 +22,12 @@ class NumImagesMapper(FieldMapper[ImageContent]):
     field = "n"
 
 
+class ResolutionMapper(FieldMapper[ImageContent]):
+    """Map resolution to xAI resolution field."""
+
+    field = "resolution"
+
+
 class ResponseFormatMapper(FieldMapper[ImageContent]):
     """Map response_format to xAI response_format field."""
 
@@ -31,5 +37,6 @@ class ResponseFormatMapper(FieldMapper[ImageContent]):
 __all__ = [
     "AspectRatioMapper",
     "NumImagesMapper",
+    "ResolutionMapper",
     "ResponseFormatMapper",
 ]

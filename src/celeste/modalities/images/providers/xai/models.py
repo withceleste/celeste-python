@@ -34,6 +34,7 @@ MODELS: list[Model] = [
                     "auto",
                 ]
             ),
+            ImageParameter.QUALITY: Choice(options=["1k", "2k", "1.5k"]),
             ImageParameter.OUTPUT_FORMAT: Choice(options=["url", "b64_json"]),
         },
     ),
@@ -64,6 +65,7 @@ MODELS: list[Model] = [
                     "auto",
                 ]
             ),
+            ImageParameter.QUALITY: Choice(options=["1k", "2k"]),
             ImageParameter.OUTPUT_FORMAT: Choice(options=["url", "b64_json"]),
         },
     ),
@@ -94,6 +96,7 @@ MODELS: list[Model] = [
                     "auto",
                 ]
             ),
+            ImageParameter.QUALITY: Choice(options=["1k", "2k", "1.5k"]),
             ImageParameter.OUTPUT_FORMAT: Choice(options=["url", "b64_json"]),
         },
     ),
