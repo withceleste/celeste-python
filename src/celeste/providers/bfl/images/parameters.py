@@ -8,7 +8,8 @@ from celeste.models import Model
 from celeste.parameters import FieldMapper, ParameterMapper
 from celeste.types import ImageContent
 
-from .utils import add_reference_images
+from .config import image_field_for_model
+from .utils import add_input_images
 
 
 class AspectRatioMapper(ParameterMapper[ImageContent]):
@@ -57,7 +58,7 @@ class SeedMapper(FieldMapper[ImageContent]):
 
 
 class ReferenceImagesMapper(ParameterMapper[ImageContent]):
-    """Map all references to BFL's numbered input fields."""
+    """Map all references to the model's BFL input image field."""
 
     def map(
         self, request: dict[str, Any], value: object, model: Model
@@ -68,10 +69,10 @@ class ReferenceImagesMapper(ParameterMapper[ImageContent]):
 
         constraint = model.parameter_constraints.get(self.name)
         if (
-            "input_image" in request
-            and isinstance(constraint, ImagesConstraint)
+            isinstance(constraint, ImagesConstraint)
             and constraint.max_count is not None
             and len(validated_value) + 1 > constraint.max_count
+            and image_field_for_model(model.id) in request
         ):
             msg = (
                 f"{model.id} accepts at most {constraint.max_count} input images, "
@@ -79,7 +80,7 @@ class ReferenceImagesMapper(ParameterMapper[ImageContent]):
             )
             raise ConstraintViolationError(msg)
 
-        return add_reference_images(request, validated_value)
+        return add_input_images(request, validated_value, model.id)
 
 
 class SafetyToleranceMapper(FieldMapper[ImageContent]):
