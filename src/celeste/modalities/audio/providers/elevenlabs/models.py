@@ -42,7 +42,9 @@ ELEVENLABS_OUTPUT_FORMATS = [
 
 _TTS_V2_5_LANGUAGES = [
     Language.ARABIC,
+    Language.BULGARIAN,
     Language.CHINESE,
+    Language.CROATIAN,
     Language.CZECH,
     Language.DANISH,
     Language.DUTCH,
@@ -103,7 +105,7 @@ ELEVENLABS_TTS_MODELS: list[Model] = [
         id="eleven_v3",
         provider=Provider.ELEVENLABS,
         display_name="Eleven v3 (Alpha)",
-        streaming=False,
+        streaming=True,
         operations={Modality.AUDIO: {Operation.SPEAK}},
         parameter_constraints={
             AudioParameter.VOICE: VoiceConstraint(voices=ELEVENLABS_VOICES),

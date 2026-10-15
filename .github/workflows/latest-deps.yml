@@ -1,0 +1,24 @@
+name: Latest dependencies
+
+on:
+  schedule:
+    - cron: "17 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  canary:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v10.3.0
+        with:
+          version: '0.13.0'
+          python-version: '3.12'
+          enable-cache: false
+      - run: uv lock --upgrade
+      - run: uv sync --locked --all-packages --all-extras
+      - run: uv run mypy -p celeste && uv run mypy tests/
+      - run: uv run pytest tests/unit_tests -q

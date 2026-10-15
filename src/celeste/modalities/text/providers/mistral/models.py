@@ -51,7 +51,7 @@ MODELS: list[Model] = [
         streaming=True,
         parameter_constraints={
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
-            TextParameter.THINKING_BUDGET: Choice(options=["none", "high"]),
+            TextParameter.THINKING_LEVEL: Choice(options=["none", "high"]),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.IMAGE: ImagesConstraint(),
             TextParameter.DOCUMENT: DocumentsConstraint(),
@@ -67,7 +67,7 @@ MODELS: list[Model] = [
         streaming=True,
         parameter_constraints={
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
-            TextParameter.THINKING_BUDGET: Choice(options=["none", "high"]),
+            TextParameter.THINKING_LEVEL: Choice(options=["none", "high"]),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.IMAGE: ImagesConstraint(),
             TextParameter.DOCUMENT: DocumentsConstraint(),
@@ -83,7 +83,7 @@ MODELS: list[Model] = [
         streaming=True,
         parameter_constraints={
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
-            TextParameter.THINKING_BUDGET: Choice(options=["none", "high"]),
+            TextParameter.THINKING_LEVEL: Choice(options=["none", "high"]),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.IMAGE: ImagesConstraint(),
             TextParameter.DOCUMENT: DocumentsConstraint(),
@@ -99,7 +99,7 @@ MODELS: list[Model] = [
         streaming=True,
         parameter_constraints={
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
-            TextParameter.THINKING_BUDGET: Choice(options=["none", "high"]),
+            TextParameter.THINKING_LEVEL: Choice(options=["none", "high"]),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.IMAGE: ImagesConstraint(),
             TextParameter.DOCUMENT: DocumentsConstraint(),
@@ -220,7 +220,7 @@ MODELS: list[Model] = [
         streaming=True,
         parameter_constraints={
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
-            TextParameter.THINKING_BUDGET: Choice(options=["none", "high"]),
+            TextParameter.THINKING_LEVEL: Choice(options=["none", "high"]),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.IMAGE: ImagesConstraint(),
             TextParameter.DOCUMENT: DocumentsConstraint(),

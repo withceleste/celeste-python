@@ -14,6 +14,7 @@ from celeste.providers.byteplus.images.streaming import (
     BytePlusImagesStream as _BytePlusImagesStream,
 )
 from celeste.types import ImageContent
+from celeste.utils import build_data_url
 
 from ...client import ImagesClient
 from ...io import (
@@ -91,9 +92,10 @@ class BytePlusImagesStream(_BytePlusImagesStream, ImagesStream):
 
 
 class BytePlusImagesClient(BytePlusImagesMixin, ImagesClient):
-    """BytePlus images client (generate + streaming)."""
+    """BytePlus images client (generate + edit + streaming)."""
 
     _generate_endpoint = config.BytePlusImagesEndpoint.CREATE_IMAGE
+    _edit_endpoint = config.BytePlusImagesEndpoint.CREATE_IMAGE
 
     @classmethod
     def parameter_mappers(cls) -> list[ParameterMapper[ImageContent]]:
@@ -101,10 +103,13 @@ class BytePlusImagesClient(BytePlusImagesMixin, ImagesClient):
 
     def _init_request(self, inputs: ImageInput) -> dict[str, Any]:
         """Initialize request from BytePlus API structure."""
-        return {
+        request: dict[str, Any] = {
             "prompt": inputs.prompt,
             "response_format": "url",
         }
+        if inputs.image is not None:
+            request["image"] = build_data_url(inputs.image)
+        return request
 
     def _parse_content(
         self,

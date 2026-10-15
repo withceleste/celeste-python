@@ -142,6 +142,10 @@ class GoogleInteractionsStream:
             return FinishReason(reason=status)
         return None
 
+    def _is_terminal_event(self, event_data: dict[str, Any]) -> bool:
+        """Check if this is the interaction.completed event."""
+        return event_data.get("event_type") == "interaction.completed"
+
     def _build_stream_metadata(
         self, raw_events: list[dict[str, Any]]
     ) -> dict[str, Any]:

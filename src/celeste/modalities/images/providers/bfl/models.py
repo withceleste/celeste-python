@@ -16,6 +16,38 @@ from ...parameters import ImageParameter
 
 MODELS: list[Model] = [
     Model(
+        id="flux-3-image",
+        provider=Provider.BFL,
+        display_name="FLUX 3 Image",
+        operations={Modality.IMAGES: {Operation.GENERATE, Operation.EDIT}},
+        parameter_constraints={
+            ImageParameter.ASPECT_RATIO: Choice(
+                options=[
+                    "21:9",
+                    "2:1",
+                    "16:9",
+                    "3:2",
+                    "7:5",
+                    "4:3",
+                    "5:4",
+                    "1:1",
+                    "4:5",
+                    "3:4",
+                    "5:7",
+                    "2:3",
+                    "9:16",
+                    "1:2",
+                    "9:21",
+                    "auto",
+                ]
+            ),
+            ImageParameter.QUALITY: Choice(options=["768sq", "1k", "1.5k", "2k", "4k"]),
+            ImageParameter.REFERENCE_IMAGES: ImagesConstraint(max_count=10),
+            ImageParameter.SAFETY_TOLERANCE: Range(min=0, max=7),
+            ImageParameter.GROUNDING: Bool(),
+        },
+    ),
+    Model(
         id="flux-2-max",
         provider=Provider.BFL,
         display_name="FLUX.2 [max]",
@@ -286,6 +318,7 @@ MODELS: list[Model] = [
                 description="Native width:height ratio, such as 16:9; BFL determines output dimensions."
             ),
             ImageParameter.PROMPT_UPSAMPLING: Bool(),
+            ImageParameter.REFERENCE_IMAGES: ImagesConstraint(max_count=1),
             ImageParameter.SEED: Int(),
             ImageParameter.SAFETY_TOLERANCE: Range(min=0, max=6),
             ImageParameter.OUTPUT_FORMAT: Choice(options=["jpeg", "png", "webp"]),
@@ -307,6 +340,7 @@ MODELS: list[Model] = [
                 multiple_of=32,
             ),
             ImageParameter.PROMPT_UPSAMPLING: Bool(),
+            ImageParameter.REFERENCE_IMAGES: ImagesConstraint(max_count=1),
             ImageParameter.SEED: Int(),
             ImageParameter.SAFETY_TOLERANCE: Range(min=0, max=6),
             ImageParameter.OUTPUT_FORMAT: Choice(options=["jpeg", "png", "webp"]),
@@ -328,6 +362,7 @@ MODELS: list[Model] = [
                 multiple_of=32,
             ),
             ImageParameter.PROMPT_UPSAMPLING: Bool(),
+            ImageParameter.REFERENCE_IMAGES: ImagesConstraint(max_count=1),
             ImageParameter.SEED: Int(),
             ImageParameter.SAFETY_TOLERANCE: Range(min=0, max=6),
             ImageParameter.OUTPUT_FORMAT: Choice(options=["jpeg", "png", "webp"]),

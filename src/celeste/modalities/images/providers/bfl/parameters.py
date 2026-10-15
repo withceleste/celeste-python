@@ -5,6 +5,9 @@ from celeste.providers.bfl.images.parameters import (
     AspectRatioMapper as _AspectRatioMapper,
 )
 from celeste.providers.bfl.images.parameters import (
+    GroundingMapper as _GroundingMapper,
+)
+from celeste.providers.bfl.images.parameters import (
     GuidanceMapper as _GuidanceMapper,
 )
 from celeste.providers.bfl.images.parameters import (
@@ -15,6 +18,9 @@ from celeste.providers.bfl.images.parameters import (
 )
 from celeste.providers.bfl.images.parameters import (
     ReferenceImagesMapper as _ReferenceImagesMapper,
+)
+from celeste.providers.bfl.images.parameters import (
+    ResolutionMapper as _ResolutionMapper,
 )
 from celeste.providers.bfl.images.parameters import (
     SafetyToleranceMapper as _SafetyToleranceMapper,
@@ -62,6 +68,14 @@ class ReferenceImagesMapper(_ReferenceImagesMapper):
     name = ImageParameter.REFERENCE_IMAGES
 
 
+class QualityMapper(_ResolutionMapper):
+    name = ImageParameter.QUALITY
+
+
+class GroundingMapper(_GroundingMapper):
+    name = ImageParameter.GROUNDING
+
+
 BFL_PARAMETER_MAPPERS: list[ParameterMapper[ImageContent]] = [
     AspectRatioMapper(),
     PromptUpsamplingMapper(),
@@ -71,6 +85,8 @@ BFL_PARAMETER_MAPPERS: list[ParameterMapper[ImageContent]] = [
     StepsMapper(),
     GuidanceMapper(),
     ReferenceImagesMapper(),
+    QualityMapper(),
+    GroundingMapper(),
 ]
 
 __all__ = ["BFL_PARAMETER_MAPPERS"]

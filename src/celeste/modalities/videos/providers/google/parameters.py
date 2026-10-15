@@ -16,6 +16,9 @@ from celeste.providers.google.interactions.parameters import (
 from celeste.providers.google.interactions.parameters import (
     ReferenceImagesMapper as _InteractionsReferenceImagesMapper,
 )
+from celeste.providers.google.interactions.parameters import (
+    ResolutionMapper as _InteractionsResolutionMapper,
+)
 from celeste.providers.google.veo.parameters import (
     AspectRatioMapper as _VeoAspectRatioMapper,
 )
@@ -91,6 +94,12 @@ class InteractionsAspectRatioMapper(_InteractionsAspectRatioMapper[VideoContent]
     name = VideoParameter.ASPECT_RATIO
 
 
+class InteractionsResolutionMapper(_InteractionsResolutionMapper):
+    """Map resolution to Google Interactions response_format.resolution."""
+
+    name = VideoParameter.RESOLUTION
+
+
 class InteractionsDurationMapper(_InteractionsDurationMapper):
     """Map duration to Google Interactions response_format.duration."""
 
@@ -117,6 +126,7 @@ class InteractionsReferenceImagesMapper(_InteractionsReferenceImagesMapper):
 
 GOOGLE_INTERACTIONS_PARAMETER_MAPPERS: list[ParameterMapper[VideoContent]] = [
     InteractionsAspectRatioMapper(),
+    InteractionsResolutionMapper(),
     InteractionsDurationMapper(),
     InteractionsFirstFrameMapper(),
     InteractionsLastFrameMapper(),

@@ -14,7 +14,7 @@ from ...protocols.chatcompletions.parameters import (
 from ...protocols.chatcompletions.parameters import (
     OutputSchemaMapper,
     TemperatureMapper,
-    ThinkingBudgetMapper,
+    ThinkingLevelMapper,
 )
 from ...protocols.chatcompletions.parameters import (
     ToolChoiceMapper as _ToolChoiceMapper,
@@ -41,7 +41,7 @@ class MaxTokensMapper(_MaxTokensMapper):
 MOONSHOT_PARAMETER_MAPPERS: list[ParameterMapper[TextContent]] = [
     TemperatureMapper(),
     MaxTokensMapper(),
-    ThinkingBudgetMapper(),
+    ThinkingLevelMapper(),
     OutputSchemaMapper(),
     ToolsMapper(),
     ToolChoiceMapper(),

@@ -14,6 +14,7 @@ CASES = [
         "image",
     ),
     (Provider.HUGGINGFACE, "google/gemma-3n-E4B-it", "square_image", "image"),
+    (Provider.META, "muse-spark-1.3", "square_image", "image"),
     (Provider.MISTRAL, "pixtral-12b-latest", "square_image", "image"),
     (
         Provider.MOONSHOT,
@@ -30,6 +31,7 @@ CASES = [
     ),
     (Provider.ANTHROPIC, "claude-haiku-4-5", "test_document", "document"),
     (Provider.GOOGLE, "gemini-2.5-flash-lite", "test_document", "document"),
+    (Provider.META, "muse-spark-1.3", "test_document", "document"),
     (Provider.MISTRAL, "pixtral-12b-latest", "test_document", "document"),
     (Provider.OPENAI, "gpt-4o-mini", "test_document", "document"),
     (Provider.GOOGLE, "gemini-2.5-flash-lite", "test_audio", "audio"),
@@ -50,7 +52,7 @@ async def test_analyze(
 
     response = await client.analyze(
         prompt="Describe this",
-        max_tokens=200,
+        max_tokens=1000,
         **{media_name: request.getfixturevalue(fixture)},
     )
 
