@@ -21,4 +21,4 @@ async def test_stream_speak(provider: Provider, model: str) -> None:
 
     assert chunks
     assert all(isinstance(chunk, AudioChunk) for chunk in chunks)
-    assert any(chunk.content.has_content for chunk in chunks)
+    assert any(chunk.content for chunk in chunks)
