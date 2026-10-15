@@ -26,6 +26,16 @@ from ...parameters import ImageParameters
 from ...streaming import ImagesStream
 from .parameters import BYTEPLUS_PARAMETER_MAPPERS
 
+_OUTPUT_FORMAT_MIME_TYPES: dict[str, ImageMimeType] = {
+    "png": ImageMimeType.PNG,
+    "jpeg": ImageMimeType.JPEG,
+}
+
+
+def _image_mime_type(image_data: dict[str, Any]) -> ImageMimeType | None:
+    """Translate an image's declared output_format (None when not declared)."""
+    return _OUTPUT_FORMAT_MIME_TYPES.get(image_data.get("output_format", ""))
+
 
 class BytePlusImagesStream(_BytePlusImagesStream, ImagesStream):
     """BytePlus streaming for images modality."""
@@ -61,9 +71,13 @@ class BytePlusImagesStream(_BytePlusImagesStream, ImagesStream):
 
         content_type = self._parse_chunk_content_type(event_data)
         if content_type == "url":
-            artifact = ImageArtifact(url=content, mime_type=ImageMimeType.PNG)
+            artifact = ImageArtifact(
+                url=content, mime_type=_image_mime_type(event_data)
+            )
         else:  # b64_json
-            artifact = ImageArtifact(data=content)
+            artifact = ImageArtifact(
+                data=content, mime_type=_image_mime_type(event_data)
+            )
 
         return ImageChunk(
             content=artifact,
@@ -125,12 +139,12 @@ class BytePlusImagesClient(BytePlusImagesMixin, ImagesClient):
         if image_data.get("url"):
             return ImageArtifact(
                 url=image_data["url"],
-                mime_type=ImageMimeType.PNG,
+                mime_type=_image_mime_type(image_data),
             )
         if image_data.get("b64_json"):
             return ImageArtifact(
                 data=image_data["b64_json"],
-                mime_type=ImageMimeType.PNG,
+                mime_type=_image_mime_type(image_data),
             )
 
         msg = "No image URL or base64 data in BytePlus response"
