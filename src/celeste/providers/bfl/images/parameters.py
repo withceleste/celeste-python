@@ -112,8 +112,15 @@ class ResolutionMapper(FieldMapper[ImageContent]):
     field = "resolution"
 
 
+class GroundingMapper(FieldMapper[ImageContent]):
+    """Map grounding to BFL grounding field."""
+
+    field = "grounding"
+
+
 __all__ = [
     "AspectRatioMapper",
+    "GroundingMapper",
     "GuidanceMapper",
     "OutputFormatMapper",
     "PromptUpsamplingMapper",
