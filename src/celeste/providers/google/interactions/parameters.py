@@ -384,6 +384,25 @@ def _set_video_task(request: dict[str, Any], task: str) -> None:
     ] = task
 
 
+class ResolutionMapper(ParameterMapper[VideoContent]):
+    """Map resolution to Google Interactions response_format.resolution field."""
+
+    def map(
+        self,
+        request: dict[str, Any],
+        value: object,
+        model: Model,
+    ) -> dict[str, Any]:
+        """Transform resolution into provider request."""
+        validated_value = self._validate_value(value, model)
+        if validated_value is None:
+            return request
+
+        response_format = request.setdefault("response_format", {"type": "video"})
+        response_format["resolution"] = validated_value
+        return request
+
+
 class DurationMapper(ParameterMapper[VideoContent]):
     """Map duration to Google Interactions response_format.duration field."""
 
@@ -551,6 +570,7 @@ __all__ = [
     "MaxOutputTokensMapper",
     "MediaContentMapper",
     "ReferenceImagesMapper",
+    "ResolutionMapper",
     "ResponseFormatMapper",
     "SeedMapper",
     "TemperatureMapper",
