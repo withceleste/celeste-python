@@ -4,6 +4,7 @@ import asyncio
 import json
 import logging
 from collections.abc import AsyncGenerator, Awaitable, Callable
+from contextlib import aclosing
 from typing import Any
 
 import httpx
@@ -227,11 +228,12 @@ class HTTPClient:
             if not event_source.response.is_success:
                 await event_source.response.aread()
                 event_source.response.raise_for_status()
-            async for sse in event_source.aiter_sse():
-                try:
-                    yield json.loads(sse.data)
-                except json.JSONDecodeError:
-                    continue  # Skip non-JSON control messages (provider-agnostic)
+            async with aclosing(event_source.aiter_sse()) as events:
+                async for sse in events:
+                    try:
+                        yield json.loads(sse.data)
+                    except json.JSONDecodeError:
+                        continue  # Skip non-JSON control messages (provider-agnostic)
 
     async def stream_post_ndjson(
         self,

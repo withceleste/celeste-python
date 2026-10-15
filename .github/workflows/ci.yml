@@ -52,7 +52,7 @@ jobs:
       - uses: ./.github/actions/setup-python-uv
         with:
           python-version: ${{ inputs.python-version || '3.12' }}
-      - run: uv sync --extra otel
+      - run: uv sync --locked --extra otel
       - run: uv run mypy -p celeste && uv run mypy tests/
 
   security:
@@ -87,7 +87,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.12'
-        run: uv sync --extra gcp
+        run: uv sync --locked --extra gcp
       - if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.12'
         run: uv run pytest tests/unit_tests -v --cov=celeste --cov-report=term-missing --cov-report=xml
       - if: matrix.os != 'ubuntu-latest' || matrix.python-version != '3.12'

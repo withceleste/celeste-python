@@ -46,6 +46,7 @@ class ImageParameter(StrEnum):
     DETAIL_STRENGTH = "detail_strength"
     DENOISE_STRENGTH = "denoise_strength"
     DECOMPRESSION_STRENGTH = "decompression_strength"
+    GROUNDING = "grounding"
 
 
 class ImageParameters(Parameters, total=False):
@@ -129,6 +130,9 @@ class ImageParameters(Parameters, total=False):
     ]
     decompression_strength: Annotated[
         float, Field(description="Model-specific decompression strength (0-1).")
+    ]
+    grounding: Annotated[
+        bool, Field(description="Ground the prompt in web and image search.")
     ]
 
 

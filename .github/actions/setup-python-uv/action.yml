@@ -15,9 +15,8 @@ runs:
     - uses: actions/setup-python@v5
       with:
         python-version: ${{ inputs.python-version }}
-    - uses: astral-sh/setup-uv@v3
+    - uses: astral-sh/setup-uv@v10.3.0
       with:
-        enable-cache: true
-        cache-dependency-glob: '**/pyproject.toml'
+        version: '0.13.0'
     - shell: bash
-      run: uv sync --all-packages --group ${{ inputs.group-deps }}
+      run: uv sync --locked --all-packages --group ${{ inputs.group-deps }}

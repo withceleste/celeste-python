@@ -22,6 +22,7 @@ from celeste.mime_types import (
     VideoMimeType,
 )
 from celeste.tools import Tool, ToolChoice
+from celeste.types import OutputSchema
 
 
 class Constraint(BaseModel, ABC):
@@ -276,7 +277,7 @@ class Bool(Constraint):
 class Schema(Constraint):
     """Schema constraint - value must be a Pydantic BaseModel subclass or list[BaseModel]."""
 
-    def __call__(self, value: type[BaseModel]) -> type[BaseModel]:
+    def __call__(self, value: OutputSchema) -> OutputSchema:
         """Validate value is BaseModel or list[BaseModel]."""
         # For list[T], validate inner type T
         if get_origin(value) is list:

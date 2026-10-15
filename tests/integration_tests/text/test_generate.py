@@ -13,6 +13,7 @@ MODELS = [
     (Provider.GOOGLE, "gemini-2.5-flash-lite"),
     (Provider.GROQ, "llama-3.1-8b-instant"),
     (Provider.HUGGINGFACE, "Qwen/Qwen3-4B-Instruct-2507"),
+    (Provider.META, "muse-spark-1.3"),
     (Provider.MISTRAL, "mistral-tiny"),
     (Provider.MOONSHOT, "kimi-k2.6"),
     (Provider.OPENAI, "gpt-4o-mini"),
@@ -31,7 +32,7 @@ VERTEX_MODELS = [
 async def test_generate(provider: Provider, model: str) -> None:
     client = create_client(modality=Modality.TEXT, provider=provider, model=model)
 
-    response = await client.generate(prompt="Say hello", max_tokens=200)
+    response = await client.generate(prompt="Say hello", max_tokens=1000)
 
     assert isinstance(response, TextOutput)
     assert response.content
@@ -44,7 +45,7 @@ async def test_stream_generate(provider: Provider, model: str) -> None:
 
     chunks = [
         chunk
-        async for chunk in client.stream.generate(prompt="Say hello", max_tokens=200)
+        async for chunk in client.stream.generate(prompt="Say hello", max_tokens=1000)
     ]
 
     assert chunks

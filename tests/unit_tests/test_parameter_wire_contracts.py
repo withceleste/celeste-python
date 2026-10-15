@@ -31,6 +31,7 @@ from celeste.modalities.text.protocols.chatcompletions.client import (
 from celeste.modalities.text.providers.anthropic import parameters as anthropic
 from celeste.modalities.text.providers.google import parameters as google_text
 from celeste.modalities.text.providers.groq import parameters as groq
+from celeste.modalities.text.providers.meta import parameters as meta
 from celeste.modalities.text.providers.moonshot import parameters as moonshot
 from celeste.modalities.text.providers.openai import parameters as openai
 from celeste.modalities.videos.parameters import VideoParameter
@@ -52,6 +53,7 @@ AUDIO_MISTRAL = mistral_audio.MISTRAL_PARAMETER_MAPPERS
 VIDEOS_VEO = google_videos.GOOGLE_VEO_PARAMETER_MAPPERS
 VIDEOS_INTERACTIONS = google_videos.GOOGLE_INTERACTIONS_PARAMETER_MAPPERS
 OPEN = openai.OPENAI_PARAMETER_MAPPERS
+META = meta.META_PARAMETER_MAPPERS
 CHAT = chat.CHATCOMPLETIONS_PARAMETER_MAPPERS
 ANTHROPIC = anthropic.ANTHROPIC_PARAMETER_MAPPERS
 MOONSHOT = moonshot.MOONSHOT_PARAMETER_MAPPERS
@@ -239,6 +241,13 @@ SCALAR_PARAMETER_CASES = [
     ),
     (
         VIDEOS_INTERACTIONS,
+        V.RESOLUTION,
+        "1080p",
+        ("response_format", "resolution"),
+        "1080p",
+    ),
+    (
+        VIDEOS_INTERACTIONS,
         V.DURATION,
         5,
         ("response_format", "duration"),
@@ -296,16 +305,17 @@ SCALAR_PARAMETER_CASES = [
     ),
     (OPEN, T.TEMPERATURE, 0.4, ("temperature",), 0.4),
     (OPEN, T.MAX_TOKENS, 90, ("max_output_tokens",), 90),
-    (OPEN, T.THINKING_BUDGET, "high", ("reasoning", "effort"), "high"),
+    (OPEN, T.THINKING_LEVEL, "high", ("reasoning", "effort"), "high"),
     (OPEN, T.VERBOSITY, "low", ("text", "verbosity"), "low"),
+    (META, T.THINKING_LEVEL, "max", ("reasoning", "effort"), "max"),
     (CHAT, T.TEMPERATURE, 0.6, ("temperature",), 0.6),
     (CHAT, T.MAX_TOKENS, 100, ("max_tokens",), 100),
-    (CHAT, T.THINKING_BUDGET, "high", ("reasoning_effort",), "high"),
+    (CHAT, T.THINKING_LEVEL, "high", ("reasoning_effort",), "high"),
     (ANTHROPIC, T.TEMPERATURE, 0.3, ("temperature",), 0.3),
     (MOONSHOT, T.TEMPERATURE, 0.4, ("temperature",), 0.4),
     (MOONSHOT, T.MAX_TOKENS, 120, ("max_completion_tokens",), 120),
-    (MOONSHOT, T.THINKING_BUDGET, "max", ("reasoning_effort",), "max"),
-    (GROQ, T.THINKING_BUDGET, "default", ("reasoning_effort",), "default"),
+    (MOONSHOT, T.THINKING_LEVEL, "max", ("reasoning_effort",), "max"),
+    (GROQ, T.THINKING_LEVEL, "default", ("reasoning_effort",), "default"),
     (AUDIO_GROQ, AP.LANGUAGE, "en", ("language",), "en"),
     (AUDIO_GROQ, AP.PROMPT, "Celeste", ("prompt",), "Celeste"),
     (AUDIO_GROQ, AP.TEMPERATURE, 0.0, ("temperature",), 0.0),
@@ -471,21 +481,42 @@ SCALAR_PARAMETER_CASES = [
             [IMAGE] * (total - int(editing)),
             (),
             {
-                "input_image": "primary" if editing else IMAGE.url,
-                **{f"input_image_{n}": IMAGE.url for n in range(2, total + 1)},
+                field: "primary" if editing else IMAGE.url,
+                **{f"{field}_{n}": IMAGE.url for n in range(2, total + 1)},
             }
             if total == limit
             else ConstraintViolationError,
             get_model(model_id, provider=Provider.BFL),
-            {"input_image": "primary"} if editing else None,
+            {field: "primary"} if editing else None,
         )
-        for model_id, limit in (
-            ("flux-2-pro", 8),
-            ("flux-2-klein-4b", 5),
-            ("flux-kontext-pro", 4),
+        for model_id, field, limit in (
+            ("flux-2-pro", "input_image", 8),
+            ("flux-2-klein-4b", "input_image", 5),
+            ("flux-kontext-pro", "input_image", 4),
+            ("flux-dev", "image_prompt", 1),
         )
         for editing in (False, True)
         for total in (limit, limit + 1)
+    ]
+    + [
+        (
+            BFL,
+            IP.REFERENCE_IMAGES,
+            [IMAGE] * (total - int(editing)),
+            (),
+            {
+                "images": [
+                    *["primary"] * int(editing),
+                    *[IMAGE.url] * (total - int(editing)),
+                ]
+            }
+            if total == 10
+            else ConstraintViolationError,
+            get_model("flux-3-image", provider=Provider.BFL),
+            {"images": ["primary"]} if editing else None,
+        )
+        for editing in (False, True)
+        for total in (10, 11)
     ],
 )
 def test_scalar_parameters_use_provider_wire_shape(
@@ -677,12 +708,16 @@ def test_byteplus_images_have_semantic_roles(
 
 
 def test_bfl_reference_images_follow_primary_image_numbering() -> None:
-    assert _map(BFL, IP.REFERENCE_IMAGES, [IMAGE]) == {"input_image": IMAGE.url}
+    model = Model(id="flux-2-pro", display_name="Wire test")
+    assert _map(BFL, IP.REFERENCE_IMAGES, [IMAGE], model=model) == {
+        "input_image": IMAGE.url
+    }
     assert _map(
         BFL,
         IP.REFERENCE_IMAGES,
         [IMAGE],
         {"input_image": "primary"},
+        model,
     ) == {"input_image": "primary", "input_image_2": IMAGE.url}
 
 

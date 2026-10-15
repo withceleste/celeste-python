@@ -107,6 +107,7 @@ class BFLImagesClient(APIMixin):
                 "Failed",
                 "Request Moderated",
                 "Content Moderated",
+                "No Card Generated",
                 "Task not found",
             ):
                 error_msg = poll_data.get("error") or poll_data.get("details") or status

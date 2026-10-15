@@ -12,7 +12,7 @@ from ...protocols.chatcompletions.parameters import (
     MaxTokensMapper,
     OutputSchemaMapper,
     TemperatureMapper,
-    ThinkingBudgetMapper,
+    ThinkingLevelMapper,
     ToolChoiceMapper,
 )
 
@@ -27,7 +27,7 @@ class ToolsMapper(_ToolsMapper):
 GROQ_PARAMETER_MAPPERS: list[ParameterMapper[TextContent]] = [
     TemperatureMapper(),
     MaxTokensMapper(),
-    ThinkingBudgetMapper(),
+    ThinkingLevelMapper(),
     OutputSchemaMapper(),
     ToolsMapper(),
     ToolChoiceMapper(),

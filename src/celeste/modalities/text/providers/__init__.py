@@ -9,6 +9,7 @@ from .deepseek import DeepSeekTextClient
 from .google import GoogleTextClient
 from .groq import GroqTextClient
 from .huggingface import HuggingFaceTextClient
+from .meta import MetaTextClient
 from .mistral import MistralTextClient
 from .moonshot import MoonshotTextClient
 from .ollama import OllamaTextClient
@@ -23,6 +24,7 @@ PROVIDERS: dict[Provider, type[TextClient]] = {
     Provider.GOOGLE: GoogleTextClient,
     Provider.GROQ: GroqTextClient,
     Provider.HUGGINGFACE: HuggingFaceTextClient,
+    Provider.META: MetaTextClient,
     Provider.OLLAMA: OllamaTextClient,
     Provider.MISTRAL: MistralTextClient,
     Provider.MOONSHOT: MoonshotTextClient,
