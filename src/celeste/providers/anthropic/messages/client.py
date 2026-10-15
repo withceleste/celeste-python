@@ -217,7 +217,10 @@ class AnthropicMessagesClient(APIMixin):
         Returns raw content array that modality clients extract from.
         """
         content = response_data.get("content", [])
-        if not content and response_data.get("stop_reason") != "refusal":
+        if not content and response_data.get("stop_reason") not in {
+            "refusal",
+            "max_tokens",
+        }:
             msg = "No content in response"
             raise ValueError(msg)
         return content
