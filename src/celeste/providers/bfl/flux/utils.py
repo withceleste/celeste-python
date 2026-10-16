@@ -1,11 +1,10 @@
-"""BFL Images API utilities."""
+"""BFL FLUX API utilities."""
 
 import base64
 from typing import Any
 
 from celeste.artifacts import ImageArtifact
-
-from .config import BFLImageField, image_field_for_model
+from celeste.constraints import Int
 
 
 def encode_image(image: ImageArtifact) -> str:
@@ -30,18 +29,17 @@ def encode_image(image: ImageArtifact) -> str:
 def add_input_images(
     request: dict[str, Any],
     images: list[ImageArtifact],
-    model_id: str,
+    field: str,
 ) -> dict[str, Any]:
     """Add input images to a BFL request dict after any already placed.
 
-    The model's image field decides the layout: ``images`` is one list, other
-    fields start at their own name and number later images ``<field>_2``, ...
+    ``images`` is one list; other fields start at their own name and number
+    later images ``<field>_2``, ...
     """
     if not images:
         return request
-    field = image_field_for_model(model_id).value
     encoded = [encode_image(image) for image in images]
-    if field == BFLImageField.IMAGES:
+    if field == "images":
         request[field] = [*request.get(field, []), *encoded]
         return request
     start = 2 if field in request else 1
@@ -50,4 +48,12 @@ def add_input_images(
     return request
 
 
-__all__ = ["add_input_images", "encode_image"]
+def add_dimensions(request: dict[str, Any], dimensions: str) -> dict[str, Any]:
+    """Add width and height to a BFL request dict from a WxH value."""
+    width, height = dimensions.split("x")
+    request["width"] = Int()(width)
+    request["height"] = Int()(height)
+    return request
+
+
+__all__ = ["add_dimensions", "add_input_images", "encode_image"]

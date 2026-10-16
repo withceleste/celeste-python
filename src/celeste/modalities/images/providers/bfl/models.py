@@ -14,7 +14,8 @@ from celeste.models import Model
 
 from ...parameters import ImageParameter
 
-MODELS: list[Model] = [
+# FLUX 3 models (images list, native aspect_ratio)
+BFL_FLUX3_MODELS: list[Model] = [
     Model(
         id="flux-3-image",
         provider=Provider.BFL,
@@ -60,6 +61,10 @@ MODELS: list[Model] = [
             ImageParameter.STEPS: Range(min=1, max=16),
         },
     ),
+]
+
+# FLUX.2 models (input_image, input_image_2, ...; width and height)
+BFL_FLUX2_MODELS: list[Model] = [
     Model(
         id="flux-2-max",
         provider=Provider.BFL,
@@ -283,6 +288,10 @@ MODELS: list[Model] = [
             ImageParameter.GUIDANCE: Range(min=1.5, max=10.0),
         },
     ),
+]
+
+# FLUX.1 Kontext models (input_image, input_image_2, ...; native aspect_ratio)
+BFL_KONTEXT_MODELS: list[Model] = [
     Model(
         id="flux-kontext-max",
         provider=Provider.BFL,
@@ -321,6 +330,10 @@ MODELS: list[Model] = [
             ImageParameter.OUTPUT_FORMAT: Choice(options=["jpeg", "png", "webp"]),
         },
     ),
+]
+
+# FLUX.1 models (image_prompt)
+BFL_FLUX1_MODELS: list[Model] = [
     Model(
         id="flux-pro-1.1-ultra",
         provider=Provider.BFL,
@@ -385,4 +398,43 @@ MODELS: list[Model] = [
     ),
 ]
 
-__all__ = ["MODELS"]
+# Unified model list for registration
+MODELS: list[Model] = [
+    *BFL_FLUX3_MODELS,
+    *BFL_FLUX2_MODELS,
+    *BFL_KONTEXT_MODELS,
+    *BFL_FLUX1_MODELS,
+]
+
+# FLUX.2 models that take disable_pup (inverted); flux-2-flex takes prompt_upsampling.
+BFL_FLUX2_DISABLE_PUP_MODELS = frozenset(
+    {
+        "flux-2-max",
+        "flux-2-pro",
+        "flux-2-pro-preview",
+    }
+)
+
+# FLUX.2 [klein] models have no prompt upsampling field; the value is dropped.
+BFL_FLUX2_KLEIN_MODELS = frozenset(
+    {
+        "flux-2-klein-4b",
+        "flux-2-klein-9b",
+        "flux-2-klein-9b-preview",
+    }
+)
+
+# FLUX.1 models that take a native aspect_ratio; the others take width and height.
+BFL_FLUX1_ASPECT_RATIO_MODELS = frozenset(
+    {
+        "flux-pro-1.1-ultra",
+    }
+)
+
+__all__ = [
+    "BFL_FLUX1_MODELS",
+    "BFL_FLUX2_MODELS",
+    "BFL_FLUX3_MODELS",
+    "BFL_KONTEXT_MODELS",
+    "MODELS",
+]

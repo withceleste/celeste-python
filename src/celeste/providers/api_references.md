@@ -29,7 +29,7 @@ This document contains the official API reference documentation links for all pr
 | **ElevenLabs** | Speech-to-Text | [Speech-to-Text API Reference](https://elevenlabs.io/docs/api-reference/speech-to-text/convert) | — |
 | **BytePlus** | Images | [Images API Reference](https://docs.byteplus.com/en/docs/ModelArk/1541523) | ✅ |
 | **BytePlus** | Videos | [Videos API Reference](https://docs.byteplus.com/en/docs/ModelArk/1520757) | ✅ |
-| **BFL** | Images | [Images API Reference](https://docs.bfl.ml/flux_2/flux2_text_to_image) | ✅ |
+| **BFL** | FLUX | [FLUX API Integration Guide](https://docs.bfl.ai/api_integration/integration_guidelines) | — |
 | **Topaz Labs** | Image | [Image API Reference](https://developer.topazlabs.com/reference/api-endpoints/image) | — |
 | **Topaz Labs** | Enhance | [Enhance](https://developer.topazlabs.com/reference/api-endpoints/image/enhance) | — |
 | **Topaz Labs** | Tool | [Tool](https://developer.topazlabs.com/reference/api-endpoints/image/tool) | — |
@@ -44,7 +44,7 @@ This document contains the official API reference documentation links for all pr
 ## Summary
 
 - **Total APIs:** 34 provider-API combinations
-- **Validated:** 22 ✅ · 12 pending (—)
+- **Validated:** 21 ✅ · 13 pending (—)
 - **Naming convention:** Method names only (Provider column provides context)
 - **Link strategy:** Specific method/endpoint pages when available, general API reference pages otherwise
 

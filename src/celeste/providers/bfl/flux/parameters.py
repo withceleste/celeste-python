@@ -1,54 +1,26 @@
-"""BFL Images API parameter mappers."""
+"""BFL FLUX API parameter mappers."""
 
-from typing import Any
+from typing import Any, ClassVar
 
-from celeste.constraints import ImagesConstraint, Int
+from celeste.constraints import ImagesConstraint
 from celeste.exceptions import ConstraintViolationError
 from celeste.models import Model
 from celeste.parameters import FieldMapper, ParameterMapper
 from celeste.types import ImageContent
 
-from .config import image_field_for_model
 from .utils import add_input_images
 
 
-class AspectRatioMapper(ParameterMapper[ImageContent]):
-    """Map native ratios or validated pixel dimensions for the BFL family."""
+class AspectRatioMapper[Content](FieldMapper[Content]):
+    """Map aspect_ratio to BFL aspect_ratio field."""
 
-    def map(
-        self, request: dict[str, Any], value: object, model: Model
-    ) -> dict[str, Any]:
-        validated_value = self._validate_value(value, model)
-        if validated_value is None:
-            return request
-        if model.id in (
-            "flux-kontext-pro",
-            "flux-kontext-max",
-            "flux-pro-1.1-ultra",
-            "flux-3-image",
-        ):
-            request["aspect_ratio"] = validated_value
-        else:
-            width, height = validated_value.split("x")
-            request["width"] = Int()(width)
-            request["height"] = Int()(height)
-        return request
+    field = "aspect_ratio"
 
 
-class PromptUpsamplingMapper(ParameterMapper[ImageContent]):
-    """Map the prompt control supported by each BFL family."""
+class PromptUpsamplingMapper(FieldMapper[ImageContent]):
+    """Map prompt_upsampling to BFL prompt_upsampling field."""
 
-    def map(
-        self, request: dict[str, Any], value: object, model: Model
-    ) -> dict[str, Any]:
-        validated_value = self._validate_value(value, model)
-        if validated_value is None or model.id.startswith("flux-2-klein-"):
-            return request
-        if model.id in ("flux-2-max", "flux-2-pro", "flux-2-pro-preview"):
-            request["disable_pup"] = not validated_value
-        else:
-            request["prompt_upsampling"] = validated_value
-        return request
+    field = "prompt_upsampling"
 
 
 class SeedMapper(FieldMapper[ImageContent]):
@@ -58,7 +30,9 @@ class SeedMapper(FieldMapper[ImageContent]):
 
 
 class ReferenceImagesMapper(ParameterMapper[ImageContent]):
-    """Map all references to the model's BFL input image field."""
+    """Map all references to a BFL input image field after the edit image."""
+
+    field: ClassVar[str]
 
     def map(
         self, request: dict[str, Any], value: object, model: Model
@@ -72,7 +46,7 @@ class ReferenceImagesMapper(ParameterMapper[ImageContent]):
             isinstance(constraint, ImagesConstraint)
             and constraint.max_count is not None
             and len(validated_value) + 1 > constraint.max_count
-            and image_field_for_model(model.id) in request
+            and self.field in request
         ):
             msg = (
                 f"{model.id} accepts at most {constraint.max_count} input images, "
@@ -80,7 +54,25 @@ class ReferenceImagesMapper(ParameterMapper[ImageContent]):
             )
             raise ConstraintViolationError(msg)
 
-        return add_input_images(request, validated_value, model.id)
+        return add_input_images(request, validated_value, self.field)
+
+
+class InputImageMapper(ReferenceImagesMapper):
+    """Map references to BFL input_image, input_image_2, ... fields."""
+
+    field = "input_image"
+
+
+class ImagesMapper(ReferenceImagesMapper):
+    """Map references to the BFL images list."""
+
+    field = "images"
+
+
+class ImagePromptMapper(ReferenceImagesMapper):
+    """Map references to the BFL image_prompt field."""
+
+    field = "image_prompt"
 
 
 class SafetyToleranceMapper(FieldMapper[ImageContent]):
@@ -107,7 +99,7 @@ class GuidanceMapper(FieldMapper[ImageContent]):
     field = "guidance"
 
 
-class ResolutionMapper(FieldMapper[ImageContent]):
+class ResolutionMapper[Content](FieldMapper[Content]):
     """Map resolution to BFL resolution field."""
 
     field = "resolution"
@@ -123,6 +115,9 @@ __all__ = [
     "AspectRatioMapper",
     "GroundingMapper",
     "GuidanceMapper",
+    "ImagePromptMapper",
+    "ImagesMapper",
+    "InputImageMapper",
     "OutputFormatMapper",
     "PromptUpsamplingMapper",
     "ReferenceImagesMapper",
