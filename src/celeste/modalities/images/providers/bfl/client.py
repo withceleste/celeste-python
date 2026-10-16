@@ -4,9 +4,9 @@ from typing import Any
 
 from celeste.artifacts import ImageArtifact
 from celeste.parameters import ParameterMapper
-from celeste.providers.bfl.images import config
-from celeste.providers.bfl.images.client import BFLImagesClient as BFLImagesMixin
-from celeste.providers.bfl.images.utils import add_input_images
+from celeste.providers.bfl.flux import config
+from celeste.providers.bfl.flux.client import BFLFluxClient as BFLFluxMixin
+from celeste.providers.bfl.flux.utils import add_input_images
 from celeste.types import ImageContent
 
 from ...client import ImagesClient
@@ -14,11 +14,11 @@ from ...io import ImageFinishReason, ImageInput
 from .parameters import BFL_PARAMETER_MAPPERS
 
 
-class BFLImagesClient(BFLImagesMixin, ImagesClient):
+class BFLImagesClient(BFLFluxMixin, ImagesClient):
     """BFL images client (generate + edit)."""
 
-    _generate_endpoint = config.BFLImagesEndpoint.CREATE_IMAGE
-    _edit_endpoint = config.BFLImagesEndpoint.CREATE_IMAGE
+    _generate_endpoint = config.BFLFluxEndpoint.CREATE_IMAGE
+    _edit_endpoint = config.BFLFluxEndpoint.CREATE_IMAGE
 
     @classmethod
     def parameter_mappers(cls) -> list[ParameterMapper[ImageContent]]:
@@ -28,7 +28,7 @@ class BFLImagesClient(BFLImagesMixin, ImagesClient):
         """Build request with prompt and (optional) input image."""
         request: dict[str, Any] = {"prompt": inputs.prompt}
         if inputs.image is not None:
-            add_input_images(request, [inputs.image], self.model.id)
+            add_input_images(request, [inputs.image], self.model)
         return request
 
     def _parse_content(

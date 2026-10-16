@@ -1,4 +1,4 @@
-"""BFL Images API client mixin."""
+"""BFL FLUX API client mixin."""
 
 import asyncio
 import time
@@ -14,8 +14,8 @@ from celeste.mime_types import ApplicationMimeType
 from . import config
 
 
-class BFLImagesClient(APIMixin):
-    """Mixin for BFL Images API operations.
+class BFLFluxClient(APIMixin):
+    """Mixin for BFL FLUX API operations.
 
     Provides shared implementation:
     - _make_request() - HTTP POST with async polling pattern
@@ -27,7 +27,7 @@ class BFLImagesClient(APIMixin):
     3. Return final response with merged metadata
 
     Usage:
-        class BFLImagesClient(BFLImagesMixin, ImagesClient):
+        class BFLImagesClient(BFLFluxMixin, ImagesClient):
             def _parse_content(self, response_data):
                 result = response_data.get("result", {})
                 # Extract image from result["sample"]...
@@ -43,7 +43,7 @@ class BFLImagesClient(APIMixin):
         extra_headers: dict[str, str] | None = None,
         **parameters: Any,
     ) -> dict[str, Any]:
-        """Make HTTP request with async polling for BFL image generation.
+        """Make HTTP request with async polling for BFL generation.
 
         Handles the complete async polling workflow:
         1. Submit job to /v1/{model_id}
@@ -56,7 +56,7 @@ class BFLImagesClient(APIMixin):
         }
 
         if endpoint is None:
-            endpoint = config.BFLImagesEndpoint.CREATE_IMAGE
+            endpoint = config.BFLFluxEndpoint.CREATE_IMAGE
         endpoint = endpoint.format(model_id=self.model.id)
 
         # Phase 1: Submit job
@@ -111,7 +111,7 @@ class BFLImagesClient(APIMixin):
                 "Task not found",
             ):
                 error_msg = poll_data.get("error") or poll_data.get("details") or status
-                msg = f"{self.provider} image generation failed ({status}): {error_msg}"
+                msg = f"{self.provider} generation failed ({status}): {error_msg}"
                 raise ValueError(msg)
 
             await asyncio.sleep(config.POLLING_INTERVAL)
@@ -124,7 +124,7 @@ class BFLImagesClient(APIMixin):
         extra_headers: dict[str, str] | None = None,
         **parameters: Any,
     ) -> AsyncGenerator[dict[str, Any], None]:
-        """BFL Images API does not support SSE streaming in this client."""
+        """BFL FLUX API does not support SSE streaming in this client."""
         raise StreamingNotSupportedError(model_id=self.model.id)
 
     def _parse_finish_reason(self, response_data: dict[str, Any]) -> FinishReason:
@@ -153,7 +153,7 @@ class BFLImagesClient(APIMixin):
         usage_data = dict(response_data.get("_submit_metadata") or {})
         if response_data.get("cost") is not None:
             usage_data["cost"] = response_data["cost"]
-        return BFLImagesClient.map_usage_fields(usage_data)
+        return BFLFluxClient.map_usage_fields(usage_data)
 
     def _parse_content(self, response_data: dict[str, Any]) -> Any:
         """Parse result from response."""
@@ -164,4 +164,4 @@ class BFLImagesClient(APIMixin):
         return result
 
 
-__all__ = ["BFLImagesClient"]
+__all__ = ["BFLFluxClient"]
