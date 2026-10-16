@@ -279,7 +279,7 @@ MODELS: list[Model] = [
         operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
         streaming=True,
         parameter_constraints={
-            Parameter.TEMPERATURE: Range(min=0.0, max=1.0, step=0.01),
+            Parameter.TEMPERATURE: Range(min=0.0, max=1.0),
             Parameter.MAX_TOKENS: Range(min=0, max=128000),
             TextParameter.THINKING_BUDGET: Range(min=1024, max=128000),
             TextParameter.OUTPUT_SCHEMA: Schema(),
