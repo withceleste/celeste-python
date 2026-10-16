@@ -48,6 +48,19 @@ MODELS: list[Model] = [
         },
     ),
     Model(
+        id="flux-3-image-klein",
+        provider=Provider.BFL,
+        display_name="FLUX 3 Image Klein",
+        operations={Modality.IMAGES: {Operation.GENERATE}},
+        parameter_constraints={
+            ImageParameter.QUALITY: Choice(options=["768sq", "1k", "1.5k", "2k", "4k"]),
+            ImageParameter.SEED: Range(min=0, max=4294967295),
+            ImageParameter.SAFETY_TOLERANCE: Range(min=0, max=7),
+            ImageParameter.OUTPUT_FORMAT: Choice(options=["jpeg", "png"]),
+            ImageParameter.STEPS: Range(min=1, max=16),
+        },
+    ),
+    Model(
         id="flux-2-max",
         provider=Provider.BFL,
         display_name="FLUX.2 [max]",
