@@ -8,7 +8,7 @@ from celeste.client import ModalityClient
 from celeste.core import InputType, Modality
 from celeste.types import AudioContent, DocumentContent, ImageContent, {Content}, VideoContent
 
-from .io import {Modality}Chunk, {Modality}Input, {Modality}Output
+from .io import {Modality}Chunk, {Modality}Input, {Modality}Output, {Modality}Usage
 from .parameters import {Modality}Parameters
 from .streaming import {Modality}Stream
 
@@ -20,6 +20,7 @@ class {Modality}Client(ModalityClient[{Modality}Input, {Modality}Output, {Modali
     """
 
     modality: Modality = Modality.{MODALITY}
+    _usage_class = {Modality}Usage
 
     @classmethod
     def _output_class(cls) -> type[{Modality}Output]:
