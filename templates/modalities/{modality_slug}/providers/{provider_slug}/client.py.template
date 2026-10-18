@@ -43,6 +43,12 @@ class {Provider}{Modality}Client({Provider}{Api}Mixin, {Modality}Client):
     def parameter_mappers(cls) -> list[ParameterMapper[{Content}]]:
         return {PROVIDER}_PARAMETER_MAPPERS
 
+    def _init_request(self, inputs: {Modality}Input) -> dict[str, Any]:
+        """Initialize provider-specific request structure from inputs."""
+        # TODO: Map inputs to the provider's request structure
+        msg = "Implement request initialization"
+        raise NotImplementedError(msg)
+
     def _stream_class(self) -> type[{Modality}Stream]:
         """Return the Stream class for this provider."""
         return {Provider}{Modality}Stream
