@@ -1,7 +1,7 @@
 """Anthropic Messages API parameter mappers."""
 
 import json
-from typing import Any, get_args, get_origin
+from typing import Any
 
 from pydantic import BaseModel, TypeAdapter
 
@@ -193,20 +193,10 @@ class OutputFormatMapper(ParameterMapper[TextContent]):
         if validated_value is None:
             return request
 
-        origin = get_origin(validated_value)
-        if origin is list:
-            # Anthropic supports top-level arrays directly
-            inner_type = get_args(validated_value)[0]
-            inner_schema = TypeAdapter(inner_type).json_schema(
-                schema_generator=StrictJsonSchemaGenerator,
-                mode="serialization",
-            )
-            schema = {"type": "array", "items": inner_schema}
-        else:
-            schema = TypeAdapter(validated_value).json_schema(
-                schema_generator=StrictJsonSchemaGenerator,
-                mode="serialization",
-            )
+        schema = TypeAdapter(validated_value).json_schema(
+            schema_generator=StrictJsonSchemaGenerator,
+            mode="serialization",
+        )
 
         request.setdefault("output_config", {})["format"] = {
             "type": "json_schema",

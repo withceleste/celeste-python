@@ -52,12 +52,15 @@ class TextFormatMapper(ParameterMapper[TextContent]):
                 schema_generator=StrictJsonSchemaGenerator,
                 mode="serialization",
             )
+            defs = inner_schema.pop("$defs", {})
             schema = {
                 "type": "object",
                 "properties": {"items": {"type": "array", "items": inner_schema}},
                 "required": ["items"],
                 "additionalProperties": False,
             }
+            if defs:
+                schema["$defs"] = defs
             name = f"{inner_type.__name__.lower()}_list"
         else:
             schema = TypeAdapter(validated_value).json_schema(
