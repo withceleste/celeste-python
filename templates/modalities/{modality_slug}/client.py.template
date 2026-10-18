@@ -20,10 +20,7 @@ from .streaming import {Modality}Stream
 
 
 class {Modality}Client(ModalityClient[{Modality}Input, {Modality}Output, {Modality}Parameters, {Content}, {Modality}Chunk]):
-    """Base {modality} client.
-
-    Providers implement operation methods (generate, analyze).
-    """
+    """Base {modality} client with generate/analyze operations."""
 
     modality: Modality = Modality.{MODALITY}
     _usage_class = {Modality}Usage
@@ -33,6 +30,43 @@ class {Modality}Client(ModalityClient[{Modality}Input, {Modality}Output, {Modali
     def _output_class(cls) -> type[{Modality}Output]:
         """Return the Output class for {modality} modality."""
         return {Modality}Output
+
+    async def generate(
+        self,
+        prompt: str,
+        *,
+        extra_body: dict[str, Any] | None = None,
+        extra_headers: dict[str, str] | None = None,
+        **parameters: Unpack[{Modality}Parameters],
+    ) -> {Modality}Output:
+        """Generate {modality} content from prompt."""
+        inputs = {Modality}Input(prompt=prompt)
+        return await self._predict(
+            inputs, extra_body=extra_body, extra_headers=extra_headers, **parameters
+        )
+
+    async def analyze(
+        self,
+        prompt: str,
+        *,
+        image: ImageContent | None = None,
+        video: VideoContent | None = None,
+        audio: AudioContent | None = None,
+        document: DocumentContent | None = None,
+        extra_body: dict[str, Any] | None = None,
+        extra_headers: dict[str, str] | None = None,
+        **parameters: Unpack[{Modality}Parameters],
+    ) -> {Modality}Output:
+        """Analyze media with a prompt."""
+        self._check_media_support(
+            image=image, video=video, audio=audio, document=document
+        )
+        inputs = {Modality}Input(
+            prompt=prompt, image=image, video=video, audio=audio, document=document
+        )
+        return await self._predict(
+            inputs, extra_body=extra_body, extra_headers=extra_headers, **parameters
+        )
 
     def _check_media_support(
         self,
