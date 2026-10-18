@@ -209,13 +209,7 @@ class ToolChoiceMapper(ParameterMapper[TextContent]):
             return request
 
         if isinstance(validated_value, Tool):
-            dispatch = {m.tool_type: m for m in self._tool_mappers}
-            mapper = dispatch.get(type(validated_value))
-            if mapper is None:
-                msg = f"Tool '{type(validated_value).__name__}' cannot be used as tool_choice in OpenResponses"
-                raise ValueError(msg)
-            wire = mapper.map_tool(validated_value)
-            request["tool_choice"] = {"type": "function", "name": wire.get("name")}
+            request["tool_choice"] = self._map_tool_choice(validated_value)
         elif isinstance(validated_value, dict) and "name" in validated_value:
             request["tool_choice"] = {
                 "type": "function",
@@ -224,6 +218,17 @@ class ToolChoiceMapper(ParameterMapper[TextContent]):
         else:
             request["tool_choice"] = validated_value
         return request
+
+    def _map_tool_choice(self, tool: Tool) -> dict[str, Any]:
+        """Select a mapped function; providers may support native selectors."""
+        dispatch = {mapper.tool_type: mapper for mapper in self._tool_mappers}
+        mapper = dispatch.get(type(tool))
+        wire = mapper.map_tool(tool) if mapper is not None else {}
+        name = wire.get("name")
+        if wire.get("type") != "function" or not isinstance(name, str) or not name:
+            msg = f"Tool '{type(tool).__name__}' cannot be used as tool_choice in OpenResponses"
+            raise ValueError(msg)
+        return {"type": "function", "name": name}
 
 
 __all__ = [

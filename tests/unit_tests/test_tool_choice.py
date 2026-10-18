@@ -1,6 +1,6 @@
 """Tool-choice wire formats and model constraints."""
 
-from typing import Any
+from typing import Any, ClassVar
 
 import pytest
 
@@ -24,9 +24,24 @@ from celeste.modalities.text.providers.google.parameters import (
 from celeste.modalities.text.providers.mistral.parameters import (
     MISTRAL_PARAMETER_MAPPERS,
 )
+from celeste.modalities.text.providers.openai.parameters import (
+    OPENAI_PARAMETER_MAPPERS,
+)
+from celeste.modalities.text.providers.xai.parameters import XAI_PARAMETER_MAPPERS
 from celeste.models import Model
 from celeste.parameters import ParameterMapper
-from celeste.tools import Tool, ToolChoice, WebSearch
+from celeste.protocols.openresponses.parameters import (
+    ToolChoiceMapper as ResponsesToolChoiceMapper,
+)
+from celeste.tools import (
+    CodeExecution,
+    Tool,
+    ToolChoice,
+    ToolMapper,
+    UrlContext,
+    WebSearch,
+    XSearch,
+)
 
 
 class _UnknownTool(Tool):
@@ -206,3 +221,132 @@ def test_constraint_accepts_supported_shapes(value: object) -> None:
 def test_constraint_rejects_unsupported_mode() -> None:
     with pytest.raises(ConstraintViolationError, match="not supported"):
         ToolChoiceSupport(modes=["auto"])(ToolChoice.REQUIRED)
+
+
+@pytest.mark.parametrize(
+    ("mappers", "provider"),
+    [
+        (OPENRESPONSES_PARAMETER_MAPPERS, None),
+        (XAI_PARAMETER_MAPPERS, Provider.XAI),
+        (GOOGLE_INTERACTIONS_PARAMETER_MAPPERS, Provider.GOOGLE),
+        (GOOGLE_VERTEX_PARAMETER_MAPPERS, Provider.GOOGLE),
+    ],
+)
+@pytest.mark.parametrize(
+    "tool", [WebSearch(), XSearch(), CodeExecution(), UrlContext(), _UnknownTool()]
+)
+def test_native_tool_choices_require_provider_support(
+    mappers: list[ParameterMapper[Any]], provider: Provider | None, tool: Tool
+) -> None:
+    with pytest.raises(ValueError, match="cannot be used as tool_choice"):
+        _map(mappers, tool, provider)
+
+
+@pytest.mark.parametrize(
+    "tool", [XSearch(), CodeExecution(), UrlContext(), _UnknownTool()]
+)
+def test_openai_rejects_unsupported_native_tool_choices(tool: Tool) -> None:
+    with pytest.raises(ValueError, match="cannot be used as tool_choice"):
+        _map(OPENAI_PARAMETER_MAPPERS, tool, Provider.OPENAI)
+
+
+def test_openai_forces_web_search_without_changing_declared_tools() -> None:
+    request: dict[str, Any] = {}
+    parameters: dict[Any, object] = {
+        TextParameter.TOOLS: [
+            WebSearch(allowed_domains=["example.com"]),
+            {"name": "weather"},
+        ],
+        TextParameter.TOOL_CHOICE: WebSearch(allowed_domains=["example.com"]),
+    }
+    model = Model(id="test", provider=Provider.OPENAI, display_name="test")
+    for mapper in OPENAI_PARAMETER_MAPPERS:
+        request = mapper.map(request, parameters.get(mapper.name), model)
+    assert request["tools"] == [
+        {"type": "web_search", "filters": {"allowed_domains": ["example.com"]}},
+        {"type": "function", "name": "weather"},
+    ]
+    assert request["tool_choice"] == {
+        "type": "allowed_tools",
+        "mode": "required",
+        "tools": [{"type": "web_search"}],
+    }
+    assert (
+        sum(
+            mapper.name == TextParameter.TOOL_CHOICE
+            for mapper in OPENAI_PARAMETER_MAPPERS
+        )
+        == 1
+    )
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        (None, {}),
+        (ToolChoice.AUTO, {"tool_choice": "auto"}),
+        (ToolChoice.REQUIRED, {"tool_choice": "required"}),
+        (ToolChoice.NONE, {"tool_choice": "none"}),
+        ({"name": "weather"}, {"tool_choice": {"type": "function", "name": "weather"}}),
+        ({"type": "code_interpreter"}, {"tool_choice": {"type": "code_interpreter"}}),
+    ],
+)
+def test_openai_preserves_other_tool_choices(
+    value: object, expected: dict[str, Any]
+) -> None:
+    assert _map(OPENAI_PARAMETER_MAPPERS, value, Provider.OPENAI) == expected
+
+
+def test_google_interactions_preserves_named_function_choice() -> None:
+    assert _map(
+        GOOGLE_INTERACTIONS_PARAMETER_MAPPERS, {"name": "weather"}, Provider.GOOGLE
+    ) == {
+        "generation_config": {
+            "tool_choice": {"allowed_tools": {"mode": "any", "tools": ["weather"]}}
+        }
+    }
+
+
+@pytest.mark.parametrize(
+    "wire",
+    [
+        {"type": "web_search", "name": "search"},
+        {"name": "weather"},
+        {"type": "function", "name": None},
+        {"type": "function", "name": ""},
+        {"type": "function", "name": 1},
+    ],
+)
+def test_portable_choice_rejects_non_function_or_invalid_names(
+    wire: dict[str, Any],
+) -> None:
+    class MappedTool(ToolMapper):
+        tool_type = _UnknownTool
+
+        def map_tool(self, tool: Tool) -> dict[str, Any]:
+            return wire
+
+    class MappedChoice(ResponsesToolChoiceMapper):
+        name = TextParameter.TOOL_CHOICE
+        _tool_mappers: ClassVar[list[ToolMapper]] = [MappedTool()]
+
+    model = Model(id="test", display_name="test")
+    with pytest.raises(ValueError, match="cannot be used as tool_choice"):
+        MappedChoice().map({}, _UnknownTool(), model)
+
+
+def test_portable_choice_uses_effective_function_mapper() -> None:
+    class MappedTool(ToolMapper):
+        tool_type = _UnknownTool
+
+        def map_tool(self, tool: Tool) -> dict[str, Any]:
+            return {"type": "function", "name": "weather", "description": "Weather"}
+
+    class MappedChoice(ResponsesToolChoiceMapper):
+        name = TextParameter.TOOL_CHOICE
+        _tool_mappers: ClassVar[list[ToolMapper]] = [MappedTool()]
+
+    model = Model(id="test", display_name="test")
+    assert MappedChoice().map({}, _UnknownTool(), model) == {
+        "tool_choice": {"type": "function", "name": "weather"}
+    }

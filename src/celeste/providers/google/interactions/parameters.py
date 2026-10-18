@@ -163,21 +163,15 @@ class ToolChoiceMapper(ParameterMapper[TextContent]):
         if validated_value is None:
             return request
 
-        generation_config = request.setdefault("generation_config", {})
-
         if isinstance(validated_value, Tool):
-            mapper = _TOOL_DISPATCH.get(type(validated_value))
-            if mapper is None:
-                msg = (
-                    f"Tool '{type(validated_value).__name__}' cannot be used "
-                    "as tool_choice in Google"
-                )
-                raise ValueError(msg)
-            wire = mapper.map_tool(validated_value)
-            generation_config["tool_choice"] = {
-                "allowed_tools": {"mode": "any", "tools": [wire.get("name")]}
-            }
-        elif isinstance(validated_value, dict) and "name" in validated_value:
+            msg = (
+                f"Tool '{type(validated_value).__name__}' cannot be used "
+                "as tool_choice in Google Interactions; select a function by name"
+            )
+            raise ValueError(msg)
+
+        generation_config = request.setdefault("generation_config", {})
+        if isinstance(validated_value, dict) and "name" in validated_value:
             generation_config["tool_choice"] = {
                 "allowed_tools": {"mode": "any", "tools": [validated_value["name"]]}
             }

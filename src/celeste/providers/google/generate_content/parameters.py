@@ -263,18 +263,14 @@ class ToolChoiceMapper[Content](ParameterMapper[Content]):
             return request
 
         if isinstance(validated_value, Tool):
-            dispatch = {m.tool_type: m for m in TOOL_MAPPERS}
-            mapper = dispatch.get(type(validated_value))
-            if mapper is None:
-                msg = f"Tool '{type(validated_value).__name__}' cannot be used as tool_choice in Google"
-                raise ValueError(msg)
-            wire = mapper.map_tool(validated_value)
+            msg = (
+                f"Tool '{type(validated_value).__name__}' cannot be used "
+                "as tool_choice in Google GenerateContent; select a function by name"
+            )
+            raise ValueError(msg)
+
+        if isinstance(validated_value, dict) and "name" in validated_value:
             config: dict[str, Any] = {
-                "mode": "ANY",
-                "allowedFunctionNames": [wire.get("name")],
-            }
-        elif isinstance(validated_value, dict) and "name" in validated_value:
-            config = {
                 "mode": "ANY",
                 "allowedFunctionNames": [validated_value["name"]],
             }
