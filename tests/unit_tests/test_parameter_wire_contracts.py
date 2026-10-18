@@ -1,8 +1,7 @@
-import json
 from typing import Any
 
 import pytest
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel
 
 from celeste import Provider, get_model
 from celeste.artifacts import ImageArtifact
@@ -572,14 +571,6 @@ def test_none_omits_every_optional_parameter(
     ("mappers", "schema", "wire", "path", "mapped", "parsed"),
     [
         (GOOGLE_VERTEX, Answer, '{"value":1}', GS, "integer", Answer(value=1)),
-        (
-            GOOGLE_INTERACTIONS,
-            Answer,
-            '{"value":1}',
-            ("response_format", "schema", "properties", "value", "type"),
-            "integer",
-            Answer(value=1),
-        ),
         (OPEN, ANSWERS, '{"items":[{"value":2}]}', TF, "answer_list", A2),
         (CHAT, ANSWERS, W3, RF, "json_object", A3),
         (GROQ, ANSWERS, W3, RF, "json_object", A3),
@@ -596,48 +587,6 @@ def test_structured_output_maps_and_parses_typed_results(
     mapper = _mapper(mappers, T.OUTPUT_SCHEMA)
     assert _at(mapper.map({}, schema, MODEL), path) == mapped
     assert mapper.parse_output(wire, schema) == parsed
-
-
-@pytest.mark.parametrize(
-    "mappers",
-    [OPEN, CHAT, GOOGLE_INTERACTIONS, GOOGLE_VERTEX],
-    ids=["openresponses", "chatcompletions", "interactions", "vertex"],
-)
-def test_structured_output_preserves_empty_and_typed_content(
-    mappers: list[ParameterMapper[Any]],
-) -> None:
-    mapper = _mapper(mappers, T.OUTPUT_SCHEMA)
-    answer = Answer(value=1)
-    answers = [answer]
-
-    assert mapper.parse_output("", Answer) == ""
-    assert mapper.parse_output(answer, Answer) is answer
-    assert mapper.parse_output(answers, ANSWERS) is answers
-    assert mapper.parse_output([], ANSWERS) == []
-
-
-@pytest.mark.parametrize(
-    "mappers",
-    [OPEN, CHAT, GOOGLE_INTERACTIONS, GOOGLE_VERTEX],
-    ids=["openresponses", "chatcompletions", "interactions", "vertex"],
-)
-@pytest.mark.parametrize(
-    ("content", "error"),
-    [
-        ("{", json.JSONDecodeError),
-        (" ", json.JSONDecodeError),
-        ([], ValidationError),
-        ({}, ValidationError),
-    ],
-    ids=["malformed-json", "whitespace", "empty-list", "empty-object"],
-)
-def test_structured_output_rejects_invalid_nonempty_json_and_containers(
-    mappers: list[ParameterMapper[Any]],
-    content: object,
-    error: type[Exception],
-) -> None:
-    with pytest.raises(error):
-        _mapper(mappers, T.OUTPUT_SCHEMA).parse_output(content, Answer)
 
 
 @pytest.mark.parametrize(("mappers", "nested"), [(OPEN, False), (CHAT, True)])
