@@ -35,7 +35,7 @@ Multi-backend providers (one provider, several wire APIs — e.g. Google):
 
 Naming: wire mixin `{Provider}{Api}Client` (`GoogleInteractionsClient`); registered composite `{Provider}{Modality}Client` (`GoogleTextClient`); per-backend composite `{Provider}{Api}{Modality}Client` (`GoogleInteractionsTextClient`). The prefix is always the `Provider` enum name, never a brand or model family (`Google`, not `Gemini`). Composition files always alias the wire imports — `{Provider}{Api}Client as {Provider}{Api}Mixin`, `{Provider}{Api}Stream as _{Provider}{Api}Stream` — and never alias `config`.
 
-Template-first: new files start from `templates/` — `cp` the template, then edit. Never write provider/modality files from scratch. Routing map: `templates/README.md`. Registration checklist: CONTRIBUTING.md "Adding a provider" / "Adding a second API to an existing provider".
+Template-first: copy new provider/modality files from `templates/`; providers using an existing protocol may instead copy/adapt an existing compatible provider (route 2 in `templates/README.md`). Never write provider/modality files from scratch. `templates/protocols/` is for a new wire format. Routing map: `templates/README.md`. Registration checklist: CONTRIBUTING.md "Adding a provider" / "Adding a second API to an existing provider".
 
 ## Model catalog rules (`models.py` entries)
 
