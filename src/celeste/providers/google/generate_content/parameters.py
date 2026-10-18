@@ -312,7 +312,7 @@ class ResponseJsonSchemaMapper(ParameterMapper[TextContent]):
         self, content: TextContent, value: OutputSchema | None
     ) -> TextContent:
         """Parse JSON to BaseModel using Pydantic's TypeAdapter."""
-        if value is None:
+        if value is None or content == "":
             return content
 
         # If content is already a BaseModel, return it unchanged
