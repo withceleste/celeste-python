@@ -1,5 +1,6 @@
 """Tool-call arguments are validated at the response boundary."""
 
+import json
 from collections.abc import AsyncIterator
 from enum import StrEnum
 from typing import Any
@@ -16,8 +17,9 @@ from celeste import (
     Provider,
     create_client,
 )
-from celeste.exceptions import ValidationError
+from celeste.exceptions import StreamNotExhaustedError, ValidationError
 from celeste.io import Chunk, Output
+from celeste.modalities.live.providers.openai.client import OpenAILiveStream
 from celeste.parameters import Parameters
 from celeste.providers.google.auth import GoogleADC
 from celeste.streaming import Stream
@@ -261,3 +263,167 @@ async def test_output_schema_preserves_tool_only_turns(
     assert output.tool_calls == [
         ToolCall(id="call-1", name="analyze_image", arguments={"image_id": "img-1"})
     ]
+
+
+def _response_with_arguments(
+    family: str, arguments: object
+) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+    response, events = _tool_only_response(family)
+    function = (
+        response["output"][0]
+        if family == "openresponses"
+        else response["choices"][0]["message"]["tool_calls"][0]["function"]
+    )
+    if arguments is Ellipsis:
+        del function["arguments"]
+    else:
+        function["arguments"] = arguments
+    return response, events
+
+
+async def _tool_events(events: list[dict[str, Any]]) -> AsyncIterator[dict[str, Any]]:
+    for event in events:
+        yield event
+
+
+@pytest.mark.parametrize("family", ["chatcompletions", "openresponses"])
+@pytest.mark.parametrize("streaming", [False, True], ids=["unary", "stream"])
+@pytest.mark.parametrize("arguments", ['{"first_frame":', "", "   ", "[]", "null"])
+async def test_malformed_tool_arguments_never_become_default_inputs(
+    family: str, streaming: bool, arguments: str
+) -> None:
+    client = create_client(
+        modality="text", protocol=family, model="tool-turn", auth=NoAuth()
+    )
+    response, events = _response_with_arguments(family, arguments)
+    tools = [_tool(NullableParams)]
+    stream = (
+        client._stream_class()(_tool_events(events), tools=tools) if streaming else None
+    )
+
+    with pytest.raises(ValidationError, match="analyze_image") as error:
+        if stream is not None:
+            _ = [chunk async for chunk in stream]
+        else:
+            validate_tool_calls(client._parse_tool_calls(response), tools)
+
+    if arguments not in {"[]", "null"}:
+        assert isinstance(error.value.__cause__, json.JSONDecodeError)
+    if stream is not None:
+        with pytest.raises(StopAsyncIteration):
+            await anext(stream)
+        with pytest.raises(StreamNotExhaustedError):
+            _ = stream.output
+
+
+@pytest.mark.parametrize("family", ["chatcompletions", "openresponses"])
+@pytest.mark.parametrize(
+    "arguments", [None, Ellipsis, []], ids=["null", "missing", "array"]
+)
+def test_completed_tool_arguments_require_an_object(
+    family: str, arguments: object
+) -> None:
+    client = create_client(
+        modality="text", protocol=family, model="tool-turn", auth=NoAuth()
+    )
+    response, _ = _response_with_arguments(family, arguments)
+    with pytest.raises(ValidationError, match=r"analyze_image.*JSON object"):
+        client._parse_tool_calls(response)
+
+
+@pytest.mark.parametrize("family", ["chatcompletions", "openresponses"])
+@pytest.mark.parametrize("arguments", ["{}", '{"first_frame":null}'])
+async def test_valid_tool_arguments_survive_unary_and_fragmented_streams(
+    family: str, arguments: str
+) -> None:
+    client = create_client(
+        modality="text", protocol=family, model="tool-turn", auth=NoAuth()
+    )
+    response, events = _response_with_arguments(family, arguments)
+    tools = [_tool(NullableParams)]
+    expected = [
+        ToolCall(id="call-1", name="analyze_image", arguments=json.loads(arguments))
+    ]
+    assert validate_tool_calls(client._parse_tool_calls(response), tools) == expected
+    if family == "chatcompletions":
+        midpoint = len(arguments) // 2
+        call = events[0]["choices"][0]["delta"]["tool_calls"][0]
+        call["function"] = {**call["function"], "arguments": arguments[:midpoint]}
+        events.insert(
+            1,
+            {
+                "object": "chat.completion.chunk",
+                "choices": [
+                    {
+                        "delta": {
+                            "tool_calls": [
+                                {
+                                    "index": 0,
+                                    "function": {"arguments": arguments[midpoint:]},
+                                }
+                            ]
+                        }
+                    }
+                ],
+            },
+        )
+    stream = client._stream_class()(_tool_events(events), tools=tools)
+    _ = [chunk async for chunk in stream]
+    assert stream.output.tool_calls == expected
+    response, _ = _response_with_arguments(family, json.loads(arguments))
+    assert client._parse_tool_calls(response) == expected
+
+
+async def test_truncated_chat_completion_arguments_fail_at_stream_end() -> None:
+    client = create_client(
+        modality="text", protocol="chatcompletions", model="tool-turn", auth=NoAuth()
+    )
+    _, events = _response_with_arguments("chatcompletions", '{"first_frame":')
+    events[-1]["choices"][0]["finish_reason"] = "length"
+    stream = client._stream_class()(_tool_events(events), tools=[_tool(NullableParams)])
+    with pytest.raises(ValidationError, match="analyze_image"):
+        _ = [chunk async for chunk in stream]
+    with pytest.raises(StreamNotExhaustedError):
+        _ = stream.output
+
+
+@pytest.mark.parametrize("status", ["incomplete", "in_progress"])
+async def test_unfinished_responses_arguments_remain_unexecutable(status: str) -> None:
+    client = create_client(
+        modality="text", protocol="openresponses", model="tool-turn", auth=NoAuth()
+    )
+    response, events = _response_with_arguments("openresponses", '{"first_frame":')
+    response["output"][0]["status"] = status
+    assert client._parse_tool_calls(response) == []
+    stream = client._stream_class()(_tool_events(events))
+    _ = [chunk async for chunk in stream]
+    assert stream.output.tool_calls == []
+    live = object.__new__(OpenAILiveStream)
+    assert (
+        live._parse_chunk_tool_calls(
+            {
+                "type": "response.event",
+                "event": {
+                    "type": "response.output_item.done",
+                    "item": response["output"][0],
+                },
+            }
+        )
+        == []
+    )
+
+
+def test_live_delegation_rejects_malformed_completed_arguments() -> None:
+    response, _ = _response_with_arguments("openresponses", '{"first_frame":')
+    live = object.__new__(OpenAILiveStream)
+    with pytest.raises(ValidationError, match="analyze_image") as error:
+        live._parse_chunk_tool_calls(
+            {
+                "type": "response.event",
+                "event": {
+                    "type": "response.output_item.done",
+                    "item": response["output"][0],
+                },
+            }
+        )
+    assert isinstance(error.value.__cause__, json.JSONDecodeError)

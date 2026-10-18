@@ -1,6 +1,5 @@
 """OpenResponses protocol tool mappers and shared parsing helpers."""
 
-import json
 import warnings
 from typing import Any, ClassVar
 
@@ -12,6 +11,7 @@ from celeste.tools import (
     ToolMapper,
     WebSearch,
     XSearch,
+    _parse_tool_arguments,
 )
 
 
@@ -73,14 +73,9 @@ def parse_tool_calls(response_data: dict[str, Any]) -> list[ToolCall]:
             "in_progress",
         ):
             continue
-        raw_args = item.get("arguments")
-        if isinstance(raw_args, str):
-            try:
-                arguments = json.loads(raw_args)
-            except (json.JSONDecodeError, ValueError):
-                arguments = {}
-        else:
-            arguments = raw_args if isinstance(raw_args, dict) else {}
+        arguments = _parse_tool_arguments(
+            item.get("arguments"), name=item.get("name", "")
+        )
         tool_calls.append(
             ToolCall(
                 id=item.get("call_id", item.get("id", "")),

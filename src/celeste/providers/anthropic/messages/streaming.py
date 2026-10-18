@@ -1,10 +1,9 @@
 """Anthropic Messages SSE parsing for streaming."""
 
-import contextlib
-import json
 from typing import Any
 
 from celeste.io import FinishReason
+from celeste.tools import _parse_tool_arguments
 from celeste.types import ToolActivity, ToolActivityStatus
 
 from .client import AnthropicMessagesClient
@@ -39,12 +38,8 @@ class AnthropicMessagesStream:
             block_type = block.get("type")
             idx = event_data.get("index", len(self._content_blocks))
             if block_type in {"server_tool_use", "tool_use"}:
-                input_value = block.get("input")
                 # Keep provider fields like `caller`; only input streams via deltas.
                 captured = dict(block)
-                captured["input"] = (
-                    input_value if isinstance(input_value, dict) else None
-                )
                 captured["input_json"] = ""
                 self._content_blocks[idx] = captured
             elif block_type in {"redacted_thinking", "compaction"} or (
@@ -123,10 +118,10 @@ class AnthropicMessagesStream:
         for idx in sorted(self._content_blocks):
             block = self._content_blocks[idx]
             if block.get("type") in {"server_tool_use", "tool_use"}:
-                input_data = block.get("input") or {}
-                if block.get("input_json"):
-                    with contextlib.suppress(ValueError, TypeError):
-                        input_data = json.loads(block["input_json"])
+                input_data = _parse_tool_arguments(
+                    block.get("input_json") or block.get("input", {}),
+                    name=block.get("name", ""),
+                )
                 # Keep all captured fields (incl. caller); drop input_json accumulator.
                 emitted = {k: v for k, v in block.items() if k != "input_json"}
                 emitted["input"] = input_data
