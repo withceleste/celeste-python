@@ -11,13 +11,14 @@ from celeste.io import FinishReason
 from . import config
 
 # Optional: Import for Vertex AI support (when using GoogleADC auth).
-# from ..auth import GoogleADC
+# from celeste.providers.google.auth import GoogleADC
 
 
 class {Provider}{Api}Client(APIMixin):
     """Mixin for {Provider} {Api} API.
 
     Provides shared HTTP implementation:
+    - _build_url(endpoint) - Apply base_url overrides to both transports
     - _make_request(endpoint=...) - HTTP POST to specified endpoint
     - _make_stream_request() - HTTP streaming (if supported, otherwise raises StreamingNotSupportedError)
     - _parse_usage() - Extract usage dict from response
@@ -34,9 +35,8 @@ class {Provider}{Api}Client(APIMixin):
 
     _content_fields: ClassVar[set[str]] = {"..."}
 
-    # Optional: Vertex AI endpoint routing. Add these two methods when the provider
-    # supports Vertex AI. They replace the inline f"{config.BASE_URL}{endpoint}" URL
-    # construction in _make_request() / _make_stream_request() with self._build_url(endpoint).
+    # Optional: Vertex AI endpoint routing. Add this method and enable the
+    # commented routing in _build_url() when the provider supports Vertex AI.
     #
     # def _get_vertex_endpoint(self, native_endpoint: str) -> str:
     #     """Map native endpoint to Vertex AI endpoint."""
@@ -47,14 +47,20 @@ class {Provider}{Api}Client(APIMixin):
     #     if vertex_endpoint is None:
     #         raise ValueError(f"No Vertex AI endpoint mapping for: {native_endpoint}")
     #     return vertex_endpoint
-    #
-    # def _build_url(self, endpoint: str) -> str:
-    #     """Build full URL based on auth type."""
-    #     if isinstance(self.auth, GoogleADC):
-    #         return self.auth.build_url(
-    #             self._get_vertex_endpoint(endpoint), model_id=self.model.id
-    #         )
-    #     return f"{config.BASE_URL}{endpoint.format(model_id=self.model.id)}"
+
+    def _build_url(self, endpoint: str) -> str:
+        """Build the request URL, honoring an explicit base_url override."""
+        # if isinstance(self.auth, GoogleADC):
+        #     vertex_url = self.auth.build_url(
+        #         self._get_vertex_endpoint(endpoint), model_id=self.model.id
+        #     )
+        #     if self.base_url is None:
+        #         return vertex_url
+        #     vertex_path = vertex_url.removeprefix(self.auth.get_vertex_base_url())
+        #     return f"{self.base_url.rstrip('/')}{vertex_path}"
+        # endpoint = endpoint.format(model_id=self.model.id)
+        base = self.base_url if self.base_url is not None else config.BASE_URL
+        return f"{base.rstrip('/')}{endpoint}"
 
     def _build_request(
         self,
@@ -84,7 +90,7 @@ class {Provider}{Api}Client(APIMixin):
         headers = await self._json_headers(extra_headers)
 
         response = await self.http_client.post(
-            f"{config.BASE_URL}{endpoint}",
+            self._build_url(endpoint),
             headers=headers,
             json_body=request_body,
         )
@@ -120,7 +126,7 @@ class {Provider}{Api}Client(APIMixin):
         headers = await self._json_headers(extra_headers)
 
         return self.http_client.stream_post(
-            f"{config.BASE_URL}{endpoint}",
+            self._build_url(endpoint),
             headers=headers,
             json_body=request_body,
         )
