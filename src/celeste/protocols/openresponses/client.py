@@ -114,8 +114,8 @@ class OpenResponsesClient(APIMixin):
     @staticmethod
     def map_usage_fields(usage_data: dict[str, Any]) -> dict[str, int | float | None]:
         """Map Responses usage fields to unified names."""
-        input_details = usage_data.get("input_tokens_details", {})
-        output_details = usage_data.get("output_tokens_details", {})
+        input_details = usage_data.get("input_tokens_details") or {}
+        output_details = usage_data.get("output_tokens_details") or {}
         return {
             UsageField.INPUT_TOKENS: usage_data.get("input_tokens"),
             UsageField.OUTPUT_TOKENS: usage_data.get("output_tokens"),
@@ -128,7 +128,7 @@ class OpenResponsesClient(APIMixin):
         self, response_data: dict[str, Any]
     ) -> dict[str, int | float | None]:
         """Extract usage data from Responses API response."""
-        usage_data = response_data.get("usage", {})
+        usage_data = response_data.get("usage") or {}
         return self.map_usage_fields(usage_data)
 
     def _parse_content(self, response_data: dict[str, Any]) -> Any:

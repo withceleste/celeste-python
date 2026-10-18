@@ -1,15 +1,20 @@
 """Streaming requests and raw responses preserve complete billing usage."""
 
 from collections.abc import AsyncIterator
+from copy import deepcopy
 from typing import Any
 
+import pytest
 from pydantic import SecretStr
 
-from celeste.auth import AuthHeader
+from celeste.auth import AuthHeader, NoAuth
 from celeste.core import Provider
 from celeste.modalities.text.io import TextInput
 from celeste.modalities.text.protocols.chatcompletions import ChatCompletionsTextStream
-from celeste.modalities.text.protocols.openresponses import OpenResponsesTextStream
+from celeste.modalities.text.protocols.openresponses import (
+    OpenResponsesTextClient,
+    OpenResponsesTextStream,
+)
 from celeste.modalities.text.providers.anthropic.client import AnthropicTextStream
 from celeste.modalities.text.providers.groq.client import GroqTextClient
 from celeste.models import Model
@@ -136,3 +141,106 @@ async def test_chatcompletions_stream_keeps_terminal_usage_event() -> None:
     # Typed usage unchanged for single-terminal-event protocols.
     assert stream.output.usage.input_tokens == 50
     assert stream.output.usage.output_tokens == 10
+
+
+@pytest.mark.parametrize(
+    ("usage", "expected"),
+    [
+        pytest.param(Ellipsis, (None,) * 5, id="missing"),
+        pytest.param(None, (None,) * 5, id="null"),
+        pytest.param({}, (None,) * 5, id="empty"),
+        pytest.param(
+            {"input_tokens": 12}, (12, None, None, None, None), id="missing-details"
+        ),
+        pytest.param(
+            {
+                "input_tokens_details": None,
+                "output_tokens_details": {"reasoning_tokens": 2},
+            },
+            (None, None, None, None, 2),
+            id="null-input-details",
+        ),
+        pytest.param(
+            {
+                "input_tokens_details": {"cached_tokens": 4},
+                "output_tokens_details": None,
+            },
+            (None, None, None, 4, None),
+            id="null-output-details",
+        ),
+        pytest.param(
+            {"input_tokens_details": None, "output_tokens_details": None},
+            (None,) * 5,
+            id="both-details-null",
+        ),
+        pytest.param(
+            {"input_tokens_details": {}, "output_tokens_details": {}},
+            (None,) * 5,
+            id="empty-details",
+        ),
+        pytest.param(
+            {
+                "input_tokens": 12,
+                "output_tokens": 3,
+                "total_tokens": 15,
+                "input_tokens_details": {"cached_tokens": 4},
+                "output_tokens_details": {"reasoning_tokens": 2},
+            },
+            (12, 3, 15, 4, 2),
+            id="populated",
+        ),
+        pytest.param(
+            {
+                "input_tokens": 0,
+                "output_tokens": 0,
+                "total_tokens": 0,
+                "input_tokens_details": {"cached_tokens": 0},
+                "output_tokens_details": {"reasoning_tokens": 0},
+            },
+            (0, 0, 0, 0, 0),
+            id="zero",
+        ),
+    ],
+)
+async def test_responses_usage_normalizes_nulls_without_changing_raw_metadata(
+    usage: object, expected: tuple[int | None, ...]
+) -> None:
+    client = OpenResponsesTextClient(
+        model=Model(id="usage-test", display_name="Usage test"),
+        auth=NoAuth(),
+        base_url=None,
+    )
+    response: dict[str, Any] = {"status": "completed", "output": []}
+    if usage is not Ellipsis:
+        response["usage"] = usage
+    original = deepcopy(response)
+    expected_usage = dict(
+        zip(
+            (
+                "input_tokens",
+                "output_tokens",
+                "total_tokens",
+                "cached_tokens",
+                "reasoning_tokens",
+            ),
+            expected,
+            strict=True,
+        )
+    )
+    assert client._get_usage(response).model_dump() == expected_usage
+    raw = client._build_metadata(response)["raw_response"]
+    assert raw.get("usage", Ellipsis) == original.get("usage", Ellipsis)
+
+    stream = OpenResponsesTextStream(
+        _async_iter(
+            [
+                {"type": "response.output_text.delta", "delta": "done"},
+                {"type": "response.completed", "response": response},
+            ]
+        )
+    )
+    _ = [chunk async for chunk in stream]
+    assert stream.output.content == "done"
+    assert stream.output.usage.model_dump() == expected_usage
+    assert stream.output.metadata["raw_response"] == original
+    assert response == original
