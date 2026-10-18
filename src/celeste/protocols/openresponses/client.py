@@ -153,14 +153,24 @@ class OpenResponsesClient(APIMixin):
         return FinishReason(reason=None)
 
     def _build_metadata(self, response_data: dict[str, Any]) -> dict[str, Any]:
-        """Preserve hosted-tool billing markers without retaining response content."""
+        """Preserve refusals and hosted-tool billing markers, excluding output text."""
         metadata = super()._build_metadata(response_data)
-        output = [
-            {key: item[key] for key in ("type", "status") if key in item}
-            for item in response_data.get("output") or []
-            if isinstance(item, dict)
-            and item.get("type") in {"file_search_call", "web_search_call"}
-        ]
+        output = []
+        for item in response_data.get("output") or []:
+            if not isinstance(item, dict):
+                continue
+            if item.get("type") in {"file_search_call", "web_search_call"}:
+                output.append(
+                    {key: item[key] for key in ("type", "status") if key in item}
+                )
+            elif item.get("type") == "message":
+                refusals = [
+                    part
+                    for part in item.get("content") or []
+                    if isinstance(part, dict) and part.get("type") == "refusal"
+                ]
+                if refusals:
+                    output.append({**item, "content": refusals})
         if output:
             metadata["raw_response"]["output"] = output
         return metadata
