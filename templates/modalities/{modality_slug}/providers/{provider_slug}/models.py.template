@@ -1,8 +1,8 @@
 """{Provider} models for {modality} modality."""
 
-from celeste import Model, Provider
 from celeste.constraints import Choice, Range  # Add others as needed: Bool, Dimensions, Int, Pattern, Schema
-from celeste.core import Modality, Operation
+from celeste.core import Modality, Operation, Provider
+from celeste.models import Model
 
 from ...parameters import {Modality}Parameter
 
