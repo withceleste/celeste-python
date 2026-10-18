@@ -2,19 +2,41 @@
 
 import json
 from collections.abc import Iterator
+from typing import Any
 
 import pytest
-from pydantic import BaseModel, TypeAdapter
+from pydantic import AliasChoices, BaseModel, ConfigDict, Field, TypeAdapter
 
 from celeste.constraints import Schema
+from celeste.modalities.text.protocols.chatcompletions.parameters import (
+    ToolsMapper as ChatCompletionsToolsMapper,
+)
 from celeste.modalities.text.protocols.openresponses.parameters import (
     OutputSchemaMapper as OpenResponsesOutputSchemaMapper,
+)
+from celeste.modalities.text.protocols.openresponses.parameters import (
+    ToolsMapper as OpenResponsesToolsMapper,
 )
 from celeste.modalities.text.providers.anthropic.parameters import (
     OutputSchemaMapper as AnthropicOutputSchemaMapper,
 )
+from celeste.modalities.text.providers.anthropic.parameters import (
+    ToolsMapper as AnthropicToolsMapper,
+)
+from celeste.modalities.text.providers.cohere.parameters import (
+    OutputSchemaMapper as CohereOutputSchemaMapper,
+)
+from celeste.modalities.text.providers.google.parameters import (
+    InteractionsOutputSchemaMapper,
+    InteractionsToolsMapper,
+    VertexOutputSchemaMapper,
+    VertexToolsMapper,
+)
 from celeste.modalities.text.providers.huggingface.parameters import (
     OutputSchemaMapper as HuggingFaceOutputSchemaMapper,
+)
+from celeste.modalities.text.providers.mistral.parameters import (
+    OutputSchemaMapper as MistralOutputSchemaMapper,
 )
 from celeste.models import Model
 from celeste.parameters import ParameterMapper
@@ -23,6 +45,7 @@ from celeste.structured_outputs import (
     StrictJsonSchemaGenerator,
     StrictRefResolvingJsonSchemaGenerator,
 )
+from celeste.tools import ToolCall, validate_tool_calls
 
 
 class Leaf(BaseModel):
@@ -152,3 +175,164 @@ def test_output_schema_references_and_typed_round_trip(
     parsed = mapper.parse_output(json.dumps(payload), output_schema)
     assert parsed == expected
     assert type(parsed) is type(expected)
+
+
+class AliasedFields(BaseModel):
+    plain: int
+    symmetric: int = Field(alias="sameName")
+    serialization_only: int = Field(serialization_alias="serializedName")
+    validation_only: int = Field(validation_alias="validatedName")
+    divergent: int = Field(
+        validation_alias="inputName", serialization_alias="outputName"
+    )
+    choices: int = Field(
+        validation_alias=AliasChoices("preferredName", "fallbackName"),
+        serialization_alias="choiceOutput",
+    )
+
+
+class NameOnlyFields(AliasedFields):
+    model_config = ConfigDict(
+        validate_by_alias=False, validate_by_name=True, serialize_by_alias=True
+    )
+
+
+@pytest.fixture(
+    params=[
+        (
+            AliasedFields,
+            {
+                "plain": 1,
+                "sameName": 2,
+                "serialization_only": 3,
+                "validatedName": 4,
+                "inputName": 5,
+                "preferredName": 6,
+            },
+            {
+                "plain": 1,
+                "symmetric": 2,
+                "serialization_only": 3,
+                "validation_only": 4,
+                "divergent": 5,
+                "choices": 6,
+            },
+        ),
+        (
+            NameOnlyFields,
+            {
+                "plain": 1,
+                "symmetric": 2,
+                "serialization_only": 3,
+                "validation_only": 4,
+                "divergent": 5,
+                "choices": 6,
+            },
+            {
+                "plain": 1,
+                "sameName": 2,
+                "serializedName": 3,
+                "validation_only": 4,
+                "outputName": 5,
+                "choiceOutput": 6,
+            },
+        ),
+    ],
+    ids=["validation-aliases", "names-with-serialization-aliases"],
+)
+def alias_case(
+    request: pytest.FixtureRequest,
+) -> tuple[type[BaseModel], dict[str, int], dict[str, int]]:
+    return request.param
+
+
+@pytest.mark.parametrize(
+    ("mapper", "path", "wrapped"),
+    [
+        (OpenResponsesOutputSchemaMapper(), ("text", "format", "schema"), True),
+        (AnthropicOutputSchemaMapper(), ("output_config", "format", "schema"), False),
+        (
+            HuggingFaceOutputSchemaMapper(),
+            ("response_format", "json_schema", "schema"),
+            True,
+        ),
+        (
+            MistralOutputSchemaMapper(),
+            ("response_format", "json_schema", "schema"),
+            False,
+        ),
+        (CohereOutputSchemaMapper(), ("response_format", "schema"), True),
+        (InteractionsOutputSchemaMapper(), ("response_format", "schema"), False),
+        (VertexOutputSchemaMapper(), ("generationConfig", "responseJsonSchema"), False),
+    ],
+    ids=[
+        "openresponses",
+        "anthropic",
+        "huggingface",
+        "mistral",
+        "cohere",
+        "interactions",
+        "vertex",
+    ],
+)
+@pytest.mark.parametrize("is_list", [False, True], ids=["single", "list"])
+def test_output_schema_aliases_match_response_validation(
+    mapper: ParameterMapper,
+    path: tuple[str, ...],
+    wrapped: bool,
+    is_list: bool,
+    alias_case: tuple[type[BaseModel], dict[str, int], dict[str, int]],
+) -> None:
+    schema_model, payload, _ = alias_case
+    output_schema = list[schema_model] if is_list else schema_model  # type: ignore[valid-type]
+    model = Model(id="alias-test", display_name="Alias test")
+    schema = mapper.map({}, output_schema, model)
+    for key in path:
+        schema = schema[key]
+    model_objects = [
+        node for node in _schema_nodes(schema) if "plain" in node.get("properties", {})
+    ]
+    assert len(model_objects) == 1
+    assert set(model_objects[0]["properties"]) == set(payload)
+    assert set(model_objects[0]["required"]) == set(payload)
+
+    wire_payload: object = [payload] if is_list else payload
+    if is_list and wrapped:
+        wire_payload = {"items": wire_payload}
+    parsed = mapper.parse_output(json.dumps(wire_payload), output_schema)
+    expected = schema_model.model_validate(payload)
+    assert parsed == ([expected] if is_list else expected)
+
+
+@pytest.mark.parametrize(
+    ("mapper", "path"),
+    [
+        (OpenResponsesToolsMapper(), ("tools", 0, "parameters")),
+        (ChatCompletionsToolsMapper(), ("tools", 0, "function", "parameters")),
+        (AnthropicToolsMapper(), ("tools", 0, "input_schema")),
+        (InteractionsToolsMapper(), ("tools", 0, "parameters")),
+        (
+            VertexToolsMapper(),
+            ("tools", 0, "functionDeclarations", 0, "parametersJsonSchema"),
+        ),
+    ],
+    ids=["openresponses", "chatcompletions", "anthropic", "interactions", "vertex"],
+)
+def test_tool_schema_aliases_match_argument_validation(
+    mapper: ParameterMapper,
+    path: tuple[str | int, ...],
+    alias_case: tuple[type[BaseModel], dict[str, int], dict[str, int]],
+) -> None:
+    schema_model, arguments, normalized = alias_case
+    tools = [{"name": "lookup", "parameters": schema_model}]
+    model = Model(id="alias-test", display_name="Alias test")
+    schema: Any = mapper.map({}, tools, model)
+    for key in path:
+        schema = schema[key]
+    assert set(schema["properties"]) == set(arguments)
+    assert set(schema["required"]) == set(arguments)
+
+    call = ToolCall(id="call-1", name="lookup", arguments=arguments)
+    assert validate_tool_calls([call], tools) == [
+        call.model_copy(update={"arguments": normalized})
+    ]

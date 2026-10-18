@@ -54,14 +54,14 @@ class ResponseFormatMapper(_ResponseFormatMapper):
             inner_type = get_args(validated_value)[0]
             inner_schema = TypeAdapter(inner_type).json_schema(
                 schema_generator=StrictRefResolvingJsonSchemaGenerator,
-                mode="serialization",
+                mode="validation",
             )
             schema = {"type": "array", "items": inner_schema}
             name = f"{inner_type.__name__.lower()}_list"
         else:
             schema = TypeAdapter(validated_value).json_schema(
                 schema_generator=StrictRefResolvingJsonSchemaGenerator,
-                mode="serialization",
+                mode="validation",
             )
             name = validated_value.__name__.lower()
 

@@ -36,7 +36,7 @@ class ResponseFormatMapper(_ResponseFormatMapper):
             inner_type = get_args(validated_value)[0]
             inner_schema = TypeAdapter(inner_type).json_schema(
                 schema_generator=StrictJsonSchemaGenerator,
-                mode="serialization",
+                mode="validation",
             )
             defs = inner_schema.pop("$defs", {})
             schema = {
@@ -50,7 +50,7 @@ class ResponseFormatMapper(_ResponseFormatMapper):
         else:
             schema = TypeAdapter(validated_value).json_schema(
                 schema_generator=StrictJsonSchemaGenerator,
-                mode="serialization",
+                mode="validation",
             )
             name = validated_value.__name__.lower()
 

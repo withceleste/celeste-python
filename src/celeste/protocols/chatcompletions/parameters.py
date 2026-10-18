@@ -120,7 +120,7 @@ class ToolsMapper(ParameterMapper[TextContent]):
         if isinstance(params, type) and issubclass(params, BaseModel):
             schema = TypeAdapter(params).json_schema(
                 schema_generator=StrictJsonSchemaGenerator,
-                mode="serialization",
+                mode="validation",
             )
         else:
             schema = params

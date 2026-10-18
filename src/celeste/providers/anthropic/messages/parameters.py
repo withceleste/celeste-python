@@ -133,7 +133,7 @@ class ToolsMapper(ParameterMapper[TextContent]):
         if isinstance(params, type) and issubclass(params, BaseModel):
             input_schema = TypeAdapter(params).json_schema(
                 schema_generator=StrictJsonSchemaGenerator,
-                mode="serialization",
+                mode="validation",
             )
         else:
             input_schema = params
@@ -195,7 +195,7 @@ class OutputFormatMapper(ParameterMapper[TextContent]):
 
         schema = TypeAdapter(validated_value).json_schema(
             schema_generator=StrictJsonSchemaGenerator,
-            mode="serialization",
+            mode="validation",
         )
 
         request.setdefault("output_config", {})["format"] = {

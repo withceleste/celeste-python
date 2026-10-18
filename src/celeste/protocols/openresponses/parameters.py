@@ -50,7 +50,7 @@ class TextFormatMapper(ParameterMapper[TextContent]):
             inner_type = get_args(validated_value)[0]
             inner_schema = TypeAdapter(inner_type).json_schema(
                 schema_generator=StrictJsonSchemaGenerator,
-                mode="serialization",
+                mode="validation",
             )
             defs = inner_schema.pop("$defs", {})
             schema = {
@@ -65,7 +65,7 @@ class TextFormatMapper(ParameterMapper[TextContent]):
         else:
             schema = TypeAdapter(validated_value).json_schema(
                 schema_generator=StrictJsonSchemaGenerator,
-                mode="serialization",
+                mode="validation",
             )
             name = validated_value.__name__.lower()
 
@@ -179,7 +179,7 @@ class ToolsMapper(ParameterMapper[TextContent]):
         if isinstance(params, type) and issubclass(params, BaseModel):
             schema = TypeAdapter(params).json_schema(
                 schema_generator=StrictJsonSchemaGenerator,
-                mode="serialization",
+                mode="validation",
             )
         else:
             schema = params
