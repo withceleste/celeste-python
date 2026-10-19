@@ -113,7 +113,7 @@ class GoogleInteractionsClient(APIMixin):
         self, response_data: dict[str, Any]
     ) -> dict[str, int | float | None]:
         """Extract usage data from Interactions usage metadata."""
-        usage_metadata = response_data.get("usage", {})
+        usage_metadata = response_data.get("usage") or {}
         return GoogleInteractionsClient.map_usage_fields(usage_metadata)
 
     def _parse_content(self, response_data: dict[str, Any]) -> Any:

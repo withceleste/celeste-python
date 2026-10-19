@@ -115,7 +115,7 @@ class OllamaGenerateClient(APIMixin):
 
         Ollama image generation doesn't return token usage.
         """
-        usage_data = response_data.get("usage", response_data)
+        usage_data = response_data.get("usage", response_data) or {}
         return OllamaGenerateClient.map_usage_fields(usage_data)
 
     def _parse_content(self, response_data: dict[str, Any]) -> Any:

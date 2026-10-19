@@ -207,4 +207,4 @@ class GoogleLiveClient(APIMixin):
 
     def _parse_usage(self, response_data: dict[str, Any]) -> RawUsage:
         """Extract usage data from a Google Live event."""
-        return self.map_usage_fields(response_data.get("usageMetadata", {}))
+        return self.map_usage_fields(response_data.get("usageMetadata") or {})

@@ -142,7 +142,7 @@ class OpenAILiveClient(APIMixin):
 
     def _parse_usage(self, response_data: dict[str, Any]) -> RawUsage:
         """Extract usage data from an OpenAI Live event."""
-        return self.map_usage_fields(response_data.get("usage", {}))
+        return self.map_usage_fields(response_data.get("usage") or {})
 
 
 __all__ = ["OpenAILiveClient"]

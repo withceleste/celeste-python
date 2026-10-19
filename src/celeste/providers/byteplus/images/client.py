@@ -107,7 +107,7 @@ class BytePlusImagesClient(APIMixin):
 
         Returns dict that modality clients wrap in their specific Usage type.
         """
-        usage_data = response_data.get("usage", {})
+        usage_data = response_data.get("usage") or {}
         return BytePlusImagesClient.map_usage_fields(usage_data)
 
     def _parse_content(self, response_data: dict[str, Any]) -> Any:

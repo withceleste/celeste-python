@@ -96,7 +96,7 @@ class CohereChatClient(APIMixin):
 
         Shared by client and streaming across all capabilities.
         """
-        billed_units = usage_data.get("billed_units", {})
+        billed_units = usage_data.get("billed_units") or {}
         tokens = usage_data.get("tokens", {})
         return {
             UsageField.INPUT_TOKENS: billed_units.get("input_tokens"),
@@ -109,7 +109,7 @@ class CohereChatClient(APIMixin):
         self, response_data: dict[str, Any]
     ) -> dict[str, int | float | None]:
         """Extract usage data from Chat API response."""
-        usage_data = response_data.get("usage", {})
+        usage_data = response_data.get("usage") or {}
         return CohereChatClient.map_usage_fields(usage_data)
 
     def _parse_content(self, response_data: dict[str, Any]) -> Any:

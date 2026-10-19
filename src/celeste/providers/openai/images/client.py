@@ -178,7 +178,7 @@ class OpenAIImagesClient(APIMixin):
         Returns dict that modality clients wrap in their specific Usage type.
         gpt-image-1 returns usage, DALL-E models don't.
         """
-        usage_data = response_data.get("usage", {})
+        usage_data = response_data.get("usage") or {}
         return OpenAIImagesClient.map_usage_fields(usage_data)
 
     def _parse_content(self, response_data: dict[str, Any]) -> Any:

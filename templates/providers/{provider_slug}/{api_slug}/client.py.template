@@ -142,7 +142,7 @@ class {Provider}{Api}Client(APIMixin):
 
     def _parse_usage(self, response_data: dict[str, Any]) -> dict[str, int | float | None]:
         """Extract usage data from {Provider} {Api} API response."""
-        usage_data = response_data.get("...", {})
+        usage_data = response_data.get("...") or {}
         return {Provider}{Api}Client.map_usage_fields(usage_data)
 
     def _parse_content(self, response_data: dict[str, Any]) -> Any:
