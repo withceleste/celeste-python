@@ -12,14 +12,14 @@ import celeste
 text_model = "..."  # choose from celeste.list_models(modality=celeste.Modality.TEXT, ...)
 image_model = "..."  # choose from celeste.list_models(modality=celeste.Modality.IMAGES, ...)
 audio_model = "..."  # choose from celeste.list_models(modality=celeste.Modality.AUDIO, ...)
-video_model = "..."  # choose from celeste.list_models(modality=celeste.Modality.VIDEOS, ...)
+video_model = "..."  # choose from celeste.list_models(modality=celeste.Modality.TEXT, operation=celeste.Operation.ANALYZE) whose optional_input_types include celeste.core.InputType.VIDEO
 video = "..."  # use a video artifact or supported video input
 
 text = await celeste.text.generate("Explain quantum computing", model=text_model)
 image = await celeste.images.generate("A mountain lake", model=image_model)
 speech = await celeste.audio.speak("Welcome", model=audio_model)
 summary = await celeste.videos.analyze(video, prompt="Summarize this clip", model=video_model)
-embeddings = await celeste.text.embed(["lorem ipsum"], model=text_model)
+embeddings = await celeste.text.embed(["lorem ipsum"], model="...")  # choose from celeste.list_models(modality=celeste.Modality.EMBEDDINGS, operation=celeste.Operation.EMBED)
 ```
 
 Available namespace families include:
