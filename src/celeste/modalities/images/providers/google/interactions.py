@@ -69,7 +69,9 @@ class GoogleInteractionsImagesClient(GoogleInteractionsMixin, ImagesClient):
             if step.get("type") != "model_output":
                 continue
             for part in step.get("content", []):
-                if part.get("type") != "image":
+                if part.get("type") != "image" or not (
+                    part.get("data") or part.get("uri")
+                ):
                     continue
                 mime_type = ImageMimeType(part.get("mime_type", "image/png"))
                 if part.get("data"):
