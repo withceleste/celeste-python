@@ -51,6 +51,8 @@ class {Provider}{Modality}Client({Modality}Client):
         # Copy every endpoint ClassVar the modality routes on:
         # if strategy._generate_endpoint is not None:
         #     object.__setattr__(self, "_generate_endpoint", strategy._generate_endpoint)
+        # if strategy._analyze_endpoint is not None:
+        #     object.__setattr__(self, "_analyze_endpoint", strategy._analyze_endpoint)
 
     @classmethod
     def parameter_mappers(cls) -> list[ParameterMapper[{Content}]]:
