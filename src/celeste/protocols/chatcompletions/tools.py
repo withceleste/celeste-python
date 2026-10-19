@@ -37,19 +37,19 @@ def parse_tool_calls(
 
 
 def parse_annotations(response_data: dict[str, Any]) -> list[dict[str, Any]]:
-    """Extract citation/search annotations from Chat Completions messages."""
-    annotations: list[dict[str, Any]] = []
-    for choice in response_data.get("choices", []):
-        message = choice.get("message", {})
-        message_annotations = message.get("annotations")
-        if not isinstance(message_annotations, list):
-            continue
-        annotations.extend(
-            annotation
-            for annotation in message_annotations
-            if isinstance(annotation, dict)
-        )
-    return annotations
+    """Extract citation/search annotations from the Chat Completions message."""
+    choices = response_data.get("choices", [])
+    if not choices:
+        return []
+
+    message = choices[0].get("message", {})
+    message_annotations = message.get("annotations")
+    if not isinstance(message_annotations, list):
+        return []
+
+    return [
+        annotation for annotation in message_annotations if isinstance(annotation, dict)
+    ]
 
 
 __all__ = [
