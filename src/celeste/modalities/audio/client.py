@@ -158,7 +158,11 @@ class AudioSyncNamespace:
         """Blocking speech generation."""
         inputs = AudioInput(text=text)
         return async_to_sync(self._client._predict)(
-            inputs, extra_body=extra_body, extra_headers=extra_headers, **parameters
+            inputs,
+            endpoint=self._client._speak_endpoint,
+            extra_body=extra_body,
+            extra_headers=extra_headers,
+            **parameters,
         )
 
     def generate(
