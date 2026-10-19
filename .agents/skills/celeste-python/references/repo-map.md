@@ -175,6 +175,8 @@ Modality parameter names and `TypedDict`s live under:
 - `src/celeste/modalities/audio/parameters.py`
 - `src/celeste/modalities/videos/parameters.py`
 - `src/celeste/modalities/embeddings/parameters.py`
+- `src/celeste/modalities/segmentation/parameters.py`
+- `src/celeste/modalities/live/parameters.py`
 
 Provider-specific mappers live under both protocol and modality provider packages. Examples:
 
