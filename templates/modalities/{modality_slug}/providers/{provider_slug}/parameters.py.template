@@ -1,10 +1,10 @@
 """{Provider} parameter mappers for {modality}."""
 
 from celeste.parameters import ParameterMapper
-from celeste.types import {Content}
 from celeste.providers.{provider}.{api}.parameters import (
     ExampleParamMapper as _ExampleParamMapper,
 )
+from celeste.types import {Content}
 
 from ...parameters import {Modality}Parameter
 

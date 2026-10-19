@@ -2,11 +2,14 @@
 
 from typing import Any
 
-from celeste.artifacts import {Artifact}Artifact
 from celeste.parameters import ParameterMapper
 from celeste.providers.{provider}.{api} import config
-from celeste.providers.{provider}.{api}.client import {Provider}{Api}Client as {Provider}{Api}Mixin
-from celeste.providers.{provider}.{api}.streaming import {Provider}{Api}Stream as _{Provider}{Api}Stream
+from celeste.providers.{provider}.{api}.client import (
+    {Provider}{Api}Client as {Provider}{Api}Mixin,
+)
+from celeste.providers.{provider}.{api}.streaming import (
+    {Provider}{Api}Stream as _{Provider}{Api}Stream,
+)
 from celeste.types import {Content}
 
 from ...client import {Modality}Client
@@ -48,19 +51,18 @@ class {Provider}{Modality}Client({Provider}{Api}Mixin, {Modality}Client):
         msg = "Implement request initialization"
         raise NotImplementedError(msg)
 
-    def _stream_class(self) -> type[{Modality}Stream]:
-        """Return the Stream class for this provider."""
-        return {Provider}{Modality}Stream
-
     def _parse_content(
         self,
         response_data: dict[str, Any],
     ) -> {Content}:
         """Parse content from response."""
-        data = super()._parse_content(response_data)
-        # TODO: Implement provider-specific content extraction
+        # TODO: Implement provider-specific content extraction from super()._parse_content(response_data)
         msg = "Implement content extraction"
         raise NotImplementedError(msg)
+
+    def _stream_class(self) -> type[{Modality}Stream]:
+        """Return the Stream class for this provider."""
+        return {Provider}{Modality}Stream
 
 
 __all__ = ["{Provider}{Modality}Client", "{Provider}{Modality}Stream"]
