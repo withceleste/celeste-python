@@ -123,8 +123,8 @@ class GoogleGenerateContentClient(APIMixin):
         self, response_data: dict[str, Any]
     ) -> dict[str, int | float | None]:
         """Extract usage data from Gemini usageMetadata."""
-        usage_metadata = response_data.get("usageMetadata") or {}
-        return GoogleGenerateContentClient.map_usage_fields(usage_metadata)
+        usage_data = response_data.get("usageMetadata") or {}
+        return GoogleGenerateContentClient.map_usage_fields(usage_data)
 
     def _parse_content(self, response_data: dict[str, Any]) -> Any:
         """Return all candidates from response.
