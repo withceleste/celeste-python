@@ -5,12 +5,10 @@ from typing import Any, ClassVar
 
 from celeste.exceptions import UnsupportedParameterWarning
 from celeste.tools import (
-    CodeExecution,
     Tool,
     ToolCall,
     ToolMapper,
     WebSearch,
-    XSearch,
     _parse_tool_arguments,
 )
 
@@ -39,29 +37,7 @@ class WebSearchMapper(ToolMapper):
         return result
 
 
-class XSearchMapper(ToolMapper):
-    """Map XSearch to OpenResponses x_search wire format."""
-
-    tool_type = XSearch
-
-    def map_tool(self, tool: Tool) -> dict[str, Any]:
-        return {"type": "x_search"}
-
-
-class CodeExecutionMapper(ToolMapper):
-    """Map CodeExecution to OpenResponses code_execution wire format."""
-
-    tool_type = CodeExecution
-
-    def map_tool(self, tool: Tool) -> dict[str, Any]:
-        return {"type": "code_execution"}
-
-
-TOOL_MAPPERS: list[ToolMapper] = [
-    WebSearchMapper(),
-    XSearchMapper(),
-    CodeExecutionMapper(),
-]
+TOOL_MAPPERS: list[ToolMapper] = [WebSearchMapper()]
 
 
 def parse_tool_calls(response_data: dict[str, Any]) -> list[ToolCall]:
@@ -150,9 +126,7 @@ def parse_annotations(output: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
 __all__ = [
     "TOOL_MAPPERS",
-    "CodeExecutionMapper",
     "WebSearchMapper",
-    "XSearchMapper",
     "native_replay_output",
     "parse_annotations",
     "parse_content",

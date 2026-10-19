@@ -1,7 +1,7 @@
 """Responses API protocol parameter mappers."""
 
 import json
-from typing import Any, get_args, get_origin
+from typing import Any, ClassVar, get_args, get_origin
 
 from pydantic import BaseModel, TypeAdapter
 
@@ -9,7 +9,7 @@ from celeste.exceptions import InvalidToolError
 from celeste.models import Model
 from celeste.parameters import FieldMapper, ParameterMapper
 from celeste.structured_outputs import StrictJsonSchemaGenerator
-from celeste.tools import Tool
+from celeste.tools import Tool, ToolMapper
 from celeste.types import OutputSchema, TextContent
 
 from .tools import TOOL_MAPPERS
@@ -140,7 +140,12 @@ class VerbosityMapper(ParameterMapper[TextContent]):
 
 
 class ToolsMapper(ParameterMapper[TextContent]):
-    """Map tools list to Responses tools array."""
+    """Map tools list to Responses tools array.
+
+    Subclasses override _tool_mappers with provider-specific built-in tool mappers.
+    """
+
+    _tool_mappers: ClassVar[list[ToolMapper]] = TOOL_MAPPERS
 
     def map(
         self,
@@ -153,7 +158,7 @@ class ToolsMapper(ParameterMapper[TextContent]):
         if not validated_value:
             return request
 
-        dispatch = {m.tool_type: m for m in TOOL_MAPPERS}
+        dispatch = {m.tool_type: m for m in self._tool_mappers}
         tools = request.setdefault("tools", [])
 
         for item in validated_value:
