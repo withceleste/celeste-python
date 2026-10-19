@@ -7,14 +7,14 @@ Use this for changes inside `src/celeste`, templates, or Celeste tests.
 `src/celeste/client.py` defines the base layering:
 
 ```text
-HTTPClient
-  ^
 APIMixin
   ^
 ModalityClient
   ^
 Concrete provider/modality client
 ```
+
+`HTTPClient` (`src/celeste/http.py`) is not a base class: clients reach the pooled transport through the `http_client` property, declared on `APIMixin` and implemented by `ModalityClient`.
 
 Provider API mixins handle wire details. Modality clients handle operation methods, common prediction/streaming flow, output construction, parameter mapping, metadata, and warnings.
 
@@ -43,6 +43,8 @@ Modality clients define operation-level Python APIs:
 - `src/celeste/modalities/audio/client.py`
 - `src/celeste/modalities/videos/client.py`
 - `src/celeste/modalities/embeddings/client.py`
+- `src/celeste/modalities/segmentation/client.py`
+- `src/celeste/modalities/live/client.py`
 
 They should delegate request execution through `_predict(...)` and streaming through `_stream(...)`.
 

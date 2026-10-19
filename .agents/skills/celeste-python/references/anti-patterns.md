@@ -83,7 +83,7 @@ If only a request-body field was added, the change is probably incomplete.
 
 ## Do Not Treat Notes As Canonical
 
-`common_agent_mistakes.md` is useful but not perfect. Verify every warning against:
+Advisory notes are useful but not perfect. Verify every warning against:
 
 1. current source
 2. current tests/templates

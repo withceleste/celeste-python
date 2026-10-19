@@ -28,15 +28,20 @@ Available namespace families include:
 - `celeste.text.embed`
 - `celeste.images.generate`
 - `celeste.images.edit`
+- `celeste.images.upscale`
 - `celeste.images.analyze`
 - `celeste.images.embed`
+- `celeste.images.segment`
 - `celeste.audio.speak`
+- `celeste.audio.generate`
 - `celeste.audio.analyze`
+- `celeste.audio.transcribe`
 - `celeste.audio.embed`
 - `celeste.videos.generate`
 - `celeste.videos.analyze`
 - `celeste.videos.embed`
 - `celeste.documents.analyze`
+- `celeste.live.connect`
 
 Use sync and streaming namespaces when needed:
 
@@ -181,4 +186,4 @@ Check provider-specific structured output behavior before changing SDK internals
 - provider-specific parameter mapper files
 - `references/verification.md` for focused test selection
 
-If notes such as `common_agent_mistakes.md` mention provider-specific structured-output constraints, verify the constraint against current source, tests, or provider behavior before enforcing it. Scope any warning to the affected provider and request path.
+If notes mention provider-specific structured-output constraints, verify the constraint against current source, tests, or provider behavior before enforcing it. Scope any warning to the affected provider and request path.

@@ -28,10 +28,9 @@ When sources disagree, follow this order:
 1. Current source code in `src/celeste/`
 2. Current tests and templates for existing behavior
 3. README examples and public exports
-4. Notes such as `common_agent_mistakes.md`
-5. Model memory
+4. Model memory
 
-Treat `common_agent_mistakes.md` as advisory. Verify every warning against current code and the task context.
+Repo conventions (architecture rules, naming, validation philosophy, workflow) live in `CLAUDE.md`; follow them for SDK-internal work.
 
 ## Route The Task
 
@@ -50,6 +49,7 @@ Use the public API first:
 - `celeste.audio.*`
 - `celeste.videos.*`
 - `celeste.documents.*`
+- `celeste.live.*`
 
 Use `create_client(...)` when explicit client reuse or explicit `modality`, `operation`, `provider`, `protocol`, `base_url`, or auth configuration is needed.
 
