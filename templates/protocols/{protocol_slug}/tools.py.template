@@ -1,9 +1,6 @@
 """{Protocol} protocol tool mappers and shared parsing helpers."""
 
-from typing import Any
-
-from celeste.tools import Tool, ToolMapper
-
+from celeste.tools import ToolMapper
 
 # Add ToolMapper subclasses for protocol-native tools (web_search, code_execution, etc.).
 # Providers that override the wire format define their own tools.py.

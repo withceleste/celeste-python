@@ -1,10 +1,5 @@
 """{Protocol} protocol parameter mappers."""
 
-from typing import Any
-
-from celeste.models import Model
-from celeste.parameters import ParameterMapper
-
 
 # PATTERN 1: Simple flat mapping
 # class TemperatureMapper(ParameterMapper[TextContent]):
@@ -72,6 +67,5 @@ from celeste.parameters import ParameterMapper
 #             return content
 #         parsed = json.loads(content, strict=False) if isinstance(content, str) else content
 #         return TypeAdapter(value).validate_python(parsed)
-
 
 __all__: list[str] = []

@@ -6,6 +6,7 @@ from typing import Any, ClassVar
 from celeste.client import APIMixin
 from celeste.core import UsageField
 from celeste.io import FinishReason
+
 from . import config
 
 
