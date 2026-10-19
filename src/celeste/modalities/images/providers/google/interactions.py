@@ -71,11 +71,15 @@ class GoogleInteractionsImagesClient(GoogleInteractionsMixin, ImagesClient):
             for part in step.get("content", []):
                 if part.get("type") != "image":
                     continue
-                base64_data = part.get("data")
-                if not base64_data:
-                    continue
                 mime_type = ImageMimeType(part.get("mime_type", "image/png"))
-                artifacts.append(ImageArtifact(data=base64_data, mime_type=mime_type))
+                if part.get("data"):
+                    artifacts.append(
+                        ImageArtifact(data=part["data"], mime_type=mime_type)
+                    )
+                elif part.get("uri"):
+                    artifacts.append(
+                        ImageArtifact(url=part["uri"], mime_type=mime_type)
+                    )
 
         if not artifacts:
             return ImageArtifact()
