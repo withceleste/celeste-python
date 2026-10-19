@@ -170,15 +170,17 @@ Relevant source:
 
 ## Templates
 
-Use templates before inventing structure:
+Use templates before inventing structure (routing map: `templates/README.md`):
 
 - `templates/providers/{provider_slug}/`
 - `templates/providers/{provider_slug}/{api_slug}/`
 - `templates/modalities/{modality_slug}/`
 - `templates/modalities/{modality_slug}/providers/{provider_slug}/`
-- `templates/protocols/{protocol_slug}/`
+- `templates/protocols/{protocol_slug}/` (new wire format only, route 5)
 
-Templates are source of truth for generated provider/module shape. Current source and message helpers are source of truth for multimodal message serialization semantics.
+A provider that speaks an existing protocol (`chatcompletions`, `openresponses`) copies/adapts an existing compatible provider instead (route 2).
+
+Templates are source of truth for generated provider/module shape; a template that disagrees with current source is a template bug, fixed as groundwork before the feature. Current source and message helpers are source of truth for multimodal message serialization semantics.
 
 ## Tests To Consult
 

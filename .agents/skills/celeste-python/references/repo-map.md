@@ -185,13 +185,15 @@ Optional input support is inferred from constraints through `src/celeste/io.py`.
 
 ## Templates
 
-Start new provider, protocol, modality, and test work from templates:
+Start new provider, modality, and protocol files from templates (routing map: `templates/README.md`):
 
 - `templates/providers/{provider_slug}/`
 - `templates/providers/{provider_slug}/{api_slug}/`
 - `templates/modalities/{modality_slug}/`
 - `templates/modalities/{modality_slug}/providers/{provider_slug}/`
-- `templates/protocols/{protocol_slug}/`
+- `templates/protocols/{protocol_slug}/` (new wire format only, route 5)
+
+A provider that speaks an existing protocol (`chatcompletions`, `openresponses`) copies/adapts an existing compatible provider instead (route 2). Templates are authoritative for new-file shape; a template that disagrees with current source is a template bug, fixed as groundwork before the feature.
 
 ## Tests As Executable Documentation
 

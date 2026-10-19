@@ -68,7 +68,7 @@ Do not flatten Celeste into a single invented abstraction. The SDK intentionally
 - constraints and optional input type inference
 - protocol clients for compatible APIs
 
-Start from nearby existing providers/modalities and templates. Use focused tests as executable documentation.
+Start new provider, modality, and protocol files from `templates/` (routing map: `templates/README.md`); a provider that speaks an existing protocol copies/adapts an existing compatible provider instead (route 2), and `templates/protocols/` is only for a new wire format (route 5). Templates are authoritative for new-file shape; a template that disagrees with current source is a template bug, fixed as groundwork before the feature. Use focused tests as executable documentation.
 
 ## Common Failure Modes
 
