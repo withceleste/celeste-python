@@ -5,6 +5,7 @@ providers use client.py.template. The PROVIDERS registry entry stays
 {Provider}{Modality}Client — the registry never branches.
 """
 
+# from collections.abc import AsyncGenerator
 from typing import Any, Unpack
 
 from celeste.grounding import Grounding
@@ -15,6 +16,7 @@ from celeste.types import {Content}
 from ...client import {Modality}Client
 from ...io import {Modality}Input
 from ...parameters import {Modality}Parameters
+# from ...streaming import {Modality}Stream
 from .{api1_slug} import {Provider}{Api1}{Modality}Client
 from .{api2_slug} import {Provider}{Api2}{Modality}Client
 from .parameters import (
@@ -126,13 +128,20 @@ class {Provider}{Modality}Client({Modality}Client):
         return self._strategy._build_metadata(response_data)  # type: ignore[union-attr]
 
     # Streaming path — delete if this provider does not stream this modality:
-    # async def _make_stream_request(self, request_body, *, endpoint=None, extra_headers=None, **parameters):
-    #     return await self._strategy._make_stream_request(
+    # async def _make_stream_request(
+    #     self,
+    #     request_body: dict[str, Any],
+    #     *,
+    #     endpoint: str | None = None,
+    #     extra_headers: dict[str, str] | None = None,
+    #     **parameters: Unpack[{Modality}Parameters],
+    # ) -> AsyncGenerator[dict[str, Any], None]:
+    #     return await self._strategy._make_stream_request(  # type: ignore[union-attr]
     #         request_body, endpoint=endpoint, extra_headers=extra_headers, **parameters
     #     )
     #
     # def _stream_class(self) -> type[{Modality}Stream]:
-    #     return self._strategy._stream_class()
+    #     return self._strategy._stream_class()  # type: ignore[union-attr]
 
 
 __all__ = ["{Provider}{Modality}Client"]
