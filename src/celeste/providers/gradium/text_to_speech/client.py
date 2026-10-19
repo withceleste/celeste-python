@@ -182,13 +182,13 @@ class GradiumTextToSpeechClient(APIMixin):
         """
         format_map: dict[str, AudioMimeType] = {
             "wav": AudioMimeType.WAV,
-            "pcm": AudioMimeType.WAV,  # PCM raw, closest match
+            "pcm": AudioMimeType.PCM,
             "opus": AudioMimeType.OGG,  # Opus in OGG container
-            "ulaw_8000": AudioMimeType.WAV,
-            "alaw_8000": AudioMimeType.WAV,
-            "pcm_8000": AudioMimeType.WAV,
-            "pcm_16000": AudioMimeType.WAV,
-            "pcm_24000": AudioMimeType.WAV,
+            "ulaw_8000": AudioMimeType.PCMU,
+            "alaw_8000": AudioMimeType.PCMA,
+            "pcm_8000": AudioMimeType.PCM,
+            "pcm_16000": AudioMimeType.PCM,
+            "pcm_24000": AudioMimeType.PCM,
         }
         return format_map.get(output_format or "", AudioMimeType.WAV)
 
