@@ -129,6 +129,7 @@ Model constraints define supported parameters:
 Model(
     id="...",
     provider=Provider.OPENAI,
+    display_name="...",
     operations={Modality.TEXT: {Operation.GENERATE}},
     parameter_constraints={
         TextParameter.OUTPUT_SCHEMA: Schema(),
