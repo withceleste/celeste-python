@@ -30,8 +30,6 @@ Primitives, not frameworks.
 
 </div>
 
-> 🚀 This is the v1 Beta release. We're validating the new architecture before the stable v1.0 release. Feedback welcome!
-
 # Celeste AI
 
 Type-safe, modality/provider-agnostic primitives.
