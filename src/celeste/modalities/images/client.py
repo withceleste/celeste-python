@@ -35,18 +35,28 @@ class ImagesClient(
     async def generate(
         self,
         prompt: str,
+        *,
+        extra_body: dict[str, Any] | None = None,
+        extra_headers: dict[str, str] | None = None,
         **parameters: Unpack[ImageParameters],
     ) -> ImageOutput:
         """Generate images from prompt."""
         inputs = ImageInput(prompt=prompt)
         return await self._predict(
-            inputs, endpoint=self._generate_endpoint, **parameters
+            inputs,
+            endpoint=self._generate_endpoint,
+            extra_body=extra_body,
+            extra_headers=extra_headers,
+            **parameters,
         )
 
     async def edit(
         self,
         image: ImageArtifact,
         prompt: str,
+        *,
+        extra_body: dict[str, Any] | None = None,
+        extra_headers: dict[str, str] | None = None,
         **parameters: Unpack[ImageParameters],
     ) -> ImageOutput:
         """Edit an image with text instructions."""
@@ -54,11 +64,20 @@ class ImagesClient(
             msg = f"Model {self.model.id} does not support image editing"
             raise NotImplementedError(msg)
         inputs = ImageInput(prompt=prompt, image=image)
-        return await self._predict(inputs, endpoint=self._edit_endpoint, **parameters)
+        return await self._predict(
+            inputs,
+            endpoint=self._edit_endpoint,
+            extra_body=extra_body,
+            extra_headers=extra_headers,
+            **parameters,
+        )
 
     async def upscale(
         self,
         image: ImageArtifact,
+        *,
+        extra_body: dict[str, Any] | None = None,
+        extra_headers: dict[str, str] | None = None,
         **parameters: Unpack[ImageParameters],
     ) -> ImageOutput:
         """Upscale an image."""
@@ -67,7 +86,11 @@ class ImagesClient(
             raise NotImplementedError(msg)
         inputs = ImageInput(image=image)
         return await self._predict(
-            inputs, endpoint=self._upscale_endpoint, **parameters
+            inputs,
+            endpoint=self._upscale_endpoint,
+            extra_body=extra_body,
+            extra_headers=extra_headers,
+            **parameters,
         )
 
     @property

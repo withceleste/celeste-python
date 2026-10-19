@@ -33,18 +33,28 @@ class VideosClient(
     async def generate(
         self,
         prompt: str,
+        *,
+        extra_body: dict[str, Any] | None = None,
+        extra_headers: dict[str, str] | None = None,
         **parameters: Unpack[VideoParameters],
     ) -> VideoOutput:
         """Generate videos from prompt."""
         inputs = VideoInput(prompt=prompt)
         return await self._predict(
-            inputs, endpoint=self._generate_endpoint, **parameters
+            inputs,
+            endpoint=self._generate_endpoint,
+            extra_body=extra_body,
+            extra_headers=extra_headers,
+            **parameters,
         )
 
     async def edit(
         self,
         video: VideoArtifact,
         prompt: str,
+        *,
+        extra_body: dict[str, Any] | None = None,
+        extra_headers: dict[str, str] | None = None,
         **parameters: Unpack[VideoParameters],
     ) -> VideoOutput:
         """Edit a video with text instructions."""
@@ -52,7 +62,13 @@ class VideosClient(
             msg = f"Model {self.model.id} does not support video editing"
             raise NotImplementedError(msg)
         inputs = VideoInput(prompt=prompt, video=video)
-        return await self._predict(inputs, endpoint=self._edit_endpoint, **parameters)
+        return await self._predict(
+            inputs,
+            endpoint=self._edit_endpoint,
+            extra_body=extra_body,
+            extra_headers=extra_headers,
+            **parameters,
+        )
 
     @property
     def sync(self) -> "VideosSyncNamespace":
