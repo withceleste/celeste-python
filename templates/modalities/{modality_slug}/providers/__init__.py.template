@@ -1,12 +1,4 @@
-"""{Modality} providers.
-
-Placeholder Reference:
-- {Modality}  -> PascalCase modality name (e.g., Images, Text, Speech)
-- {modality}  -> lowercase modality name (e.g., images, text, speech)
-- {Provider}  -> PascalCase provider name (e.g., OpenAI, Google)
-- {provider_slug} -> provider package directory (e.g., openai, google)
-- {PROVIDER}  -> Provider enum member (e.g., OPENAI, GOOGLE)
-"""
+"""{Modality} providers."""
 
 from celeste.core import Provider
 
