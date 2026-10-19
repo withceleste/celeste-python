@@ -101,7 +101,8 @@ The steps above assume a new provider. For a new wire API on an existing one (e.
 4. Add the domain namespace in `src/celeste/namespaces/domains.py` and export it from `src/celeste/namespaces/__init__.py`.
 5. Aggregate the provider catalogs in `src/celeste/modalities/<modality>/models.py`.
 6. Add each wire API's docs link to `src/celeste/providers/api_references.md`.
-7. Tests: every new mapper list gets wire-contract matrix rows and joins the `test_none_omits_every_optional_parameter` list in `tests/unit_tests/test_parameter_wire_contracts.py`; integration tests live in `tests/integration_tests/<modality>/` with an `__init__.py`.
+7. Add `celeste.modalities.<modality>.client`, `.streaming`, and `.providers.*` to the modality `[[tool.mypy.overrides]]` module list in `pyproject.toml`.
+8. Tests: every new mapper list gets wire-contract matrix rows and joins the `test_none_omits_every_optional_parameter` list in `tests/unit_tests/test_parameter_wire_contracts.py`; integration tests live in `tests/integration_tests/<modality>/` with an `__init__.py`.
 
 ## Model catalog rules
 
