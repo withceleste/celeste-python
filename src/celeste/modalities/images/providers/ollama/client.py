@@ -3,6 +3,7 @@
 from typing import Any
 
 from celeste.artifacts import ImageArtifact
+from celeste.exceptions import StreamEventError
 from celeste.parameters import ParameterMapper
 from celeste.providers.ollama.generate import config
 from celeste.providers.ollama.generate.client import (
@@ -27,6 +28,14 @@ class OllamaImagesStream(_OllamaGenerateStream, ImagesStream):
 
     def _parse_chunk(self, event_data: dict[str, Any]) -> ImageChunk | None:
         """Parse NDJSON event into ImageChunk."""
+        error = self._parse_stream_error(event_data)
+        if error is not None:
+            raise StreamEventError(
+                message=error.get("message", "Unknown stream error"),
+                error_type=error.get("type"),
+                event_data=event_data,
+                provider=self._stream_metadata.get("provider"),
+            )
         b64_image = self._parse_chunk_content(event_data)
 
         if not b64_image:
