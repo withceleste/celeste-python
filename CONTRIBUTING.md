@@ -75,7 +75,7 @@ For a provider with its own wire API, start by copying from the templates. Repla
 
 A protocol is a wire format served by many vendors (`chatcompletions`, `openresponses`). For an existing format, copy/adapt a compatible provider and reuse the concrete text protocol client, stream, and named mappers under `src/celeste/modalities/text/protocols/`. Meta, Ollama, and OpenRouter demonstrate direct subclasses; HuggingFace and Groq demonstrate a provider wire mixin composed with the text protocol client. Inherit or adapt the modality mappers as needed; a separate mapper module is unnecessary when the shared list is sufficient. Keep vendor-specific behavior in the provider's modules: changing a shared protocol changes every inheriting vendor.
 
-The provider enum, auth/import registration, modality package exports, `PROVIDERS` entry, and model aggregation steps still apply. Catalogs may be empty for providers accepting arbitrary model IDs. Adding a vendor for an existing format does not require a new `Protocol` member or protocol `_CLIENT_MAP` entry.
+The provider enum, auth/import registration, modality package exports, `PROVIDERS` entry, model aggregation, and `src/celeste/providers/api_references.md` entry steps still apply. Catalogs may be empty for providers accepting arbitrary model IDs. Adding a vendor for an existing format does not require a new `Protocol` member or protocol `_CLIENT_MAP` entry.
 
 Use `templates/protocols/` only when implementing a new wire format. Add a modality-specific protocol adapter, stream, and named mappers using `src/celeste/modalities/text/protocols/` as the existing pattern, then register the new `Protocol` member and its modality entry in `_CLIENT_MAP` for `create_client(protocol=...)`.
 
