@@ -7,10 +7,9 @@ from celeste.client import APIMixin
 from celeste.core import UsageField
 from celeste.io import FinishReason
 
-from . import config
-
 # Optional: Import for Vertex AI support (when using GoogleADC auth).
 # from celeste.providers.google.auth import GoogleADC
+from . import config
 
 
 class {Provider}{Api}Client(APIMixin):

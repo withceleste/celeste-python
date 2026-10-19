@@ -24,7 +24,7 @@ from .parameters import {PROVIDER}_PARAMETER_MAPPERS
 class {Provider}{Modality}Stream(_{Provider}{Api}Stream, {Modality}Stream):
     """{Provider} streaming for {modality} modality."""
 
-    def _aggregate_content(self, chunks: list[{Modality}Chunk]) -> Any:
+    def _aggregate_content(self, chunks: list[{Modality}Chunk]) -> {Content}:
         """Aggregate streamed content (modality-specific).
 
         Examples:
