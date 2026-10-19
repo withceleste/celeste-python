@@ -69,7 +69,7 @@ class AnthropicMessagesClient(APIMixin):
         return config.VertexMessagesEndpoint.CREATE_MESSAGE
 
     def _build_url(self, endpoint: str, streaming: bool = False) -> str:
-        """Build full URL based on auth type."""
+        """Build the request URL, honoring an explicit base_url override."""
         if isinstance(self.auth, GoogleADC):
             vertex_url = self.auth.build_url(
                 self._get_vertex_endpoint(endpoint, streaming=streaming),

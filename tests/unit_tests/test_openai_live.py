@@ -261,7 +261,7 @@ async def test_livestream_sends_in_order_and_ends_with_output(finalizes: bool) -
             model="gpt-live-1",
             provider=Provider.OPENAI,
             api_key="key",
-            base_url="https://proxy.example",
+            base_url="https://proxy.example/v1",
             audio_format=AudioMimeType.PCMU,
         ) as livestream:
             await livestream.send(

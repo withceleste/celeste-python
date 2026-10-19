@@ -48,7 +48,7 @@ class OpenAILiveClient(APIMixin):
     def _build_url(self, endpoint: str, streaming: bool = False) -> str:
         """Build the WebSocket URL, honoring an explicit base_url override."""
         base = self.base_url if self.base_url is not None else config.BASE_URL
-        url = f"{base.rstrip('/')}{endpoint}"
+        url = f"{base.rstrip('/').removesuffix('/v1')}{endpoint}"
         return url.replace("https://", "wss://", 1).replace("http://", "ws://", 1)
 
     async def _make_stream_request(

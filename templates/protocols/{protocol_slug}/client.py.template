@@ -41,21 +41,19 @@ class {Protocol}Client(APIMixin):
     _content_fields: ClassVar[set[str]] = {"..."}
 
     def _build_url(self, endpoint: str, streaming: bool = False) -> str:
-        """Build full URL for request.
-
-        Override for Vertex AI support:
-            def _build_url(self, endpoint: str, streaming: bool = False) -> str:
-                if isinstance(self.auth, GoogleADC):
-                    vertex_url = self.auth.build_url(
-                        self._get_vertex_endpoint(endpoint, streaming),
-                        model_id=self.model.id,
-                    )
-                    if self.base_url is None:
-                        return vertex_url
-                    vertex_path = vertex_url.removeprefix(self.auth.get_vertex_base_url())
-                    return f"{self.base_url.rstrip('/')}{vertex_path}"
-                return super()._build_url(endpoint, streaming)
-        """
+        """Build the request URL, honoring an explicit base_url override."""
+        # Override for Vertex AI support:
+        # def _build_url(self, endpoint: str, streaming: bool = False) -> str:
+        #     if isinstance(self.auth, GoogleADC):
+        #         vertex_url = self.auth.build_url(
+        #             self._get_vertex_endpoint(endpoint, streaming),
+        #             model_id=self.model.id,
+        #         )
+        #         if self.base_url is None:
+        #             return vertex_url
+        #         vertex_path = vertex_url.removeprefix(self.auth.get_vertex_base_url())
+        #         return f"{self.base_url.rstrip('/')}{vertex_path}"
+        #     return super()._build_url(endpoint, streaming)
         base = self.base_url if self.base_url is not None else self._default_base_url
         return f"{base.rstrip('/')}{endpoint}"
 

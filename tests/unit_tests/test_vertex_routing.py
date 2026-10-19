@@ -49,7 +49,13 @@ def _build_url(
     *,
     streaming: bool = False,
 ) -> str:
-    client = MagicMock(auth=auth, model=_model(model_id), base_url=None)
+    client = MagicMock(
+        spec=client_type,
+        auth=auth,
+        model=_model(model_id),
+        base_url=None,
+        _default_base_url=getattr(client_type, "_default_base_url", None),
+    )
     if hasattr(client_type, "_get_vertex_endpoint"):
         client._get_vertex_endpoint = client_type._get_vertex_endpoint.__get__(client)
     method = client_type._build_url.__get__(client)
