@@ -88,6 +88,9 @@ class BytePlusImagesStream(_BytePlusImagesStream, ImagesStream):
 
     def _aggregate_content(self, chunks: list[ImageChunk]) -> ImageArtifact:
         """Aggregate image content from chunks."""
+        for chunk in reversed(chunks):
+            if "error" not in chunk.metadata:
+                return chunk.content
         return chunks[-1].content
 
     def _aggregate_usage(self, chunks: list[ImageChunk]) -> ImageUsage:
