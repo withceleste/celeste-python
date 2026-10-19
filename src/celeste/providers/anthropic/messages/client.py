@@ -65,8 +65,8 @@ class AnthropicMessagesClient(APIMixin):
     ) -> str:
         """Map Anthropic endpoint to Vertex AI endpoint."""
         if streaming:
-            return config.VertexAnthropicEndpoint.STREAM_MESSAGE
-        return config.VertexAnthropicEndpoint.CREATE_MESSAGE
+            return config.VertexMessagesEndpoint.STREAM_MESSAGE
+        return config.VertexMessagesEndpoint.CREATE_MESSAGE
 
     def _build_url(self, endpoint: str, streaming: bool = False) -> str:
         """Build full URL based on auth type."""

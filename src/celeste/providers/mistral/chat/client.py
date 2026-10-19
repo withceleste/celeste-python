@@ -22,8 +22,8 @@ class MistralChatClient(ChatCompletionsClient):
     ) -> str:
         """Map Mistral endpoint to Vertex AI endpoint."""
         if streaming:
-            return config.VertexMistralEndpoint.STREAM_CHAT
-        return config.VertexMistralEndpoint.CREATE_CHAT
+            return config.VertexChatEndpoint.STREAM_CHAT
+        return config.VertexChatEndpoint.CREATE_CHAT
 
     def _build_url(self, endpoint: str, streaming: bool = False) -> str:
         """Build full URL based on auth type."""

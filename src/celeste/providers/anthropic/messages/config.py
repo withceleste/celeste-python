@@ -12,7 +12,7 @@ class AnthropicMessagesEndpoint(StrEnum):
     GET_MODEL = "/v1/models/{model_id}"
 
 
-class VertexAnthropicEndpoint(StrEnum):
+class VertexMessagesEndpoint(StrEnum):
     """Endpoints for Anthropic on Vertex AI."""
 
     CREATE_MESSAGE = "/v1/projects/{project_id}/locations/{location}/publishers/anthropic/models/{model_id}:rawPredict"

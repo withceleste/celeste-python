@@ -22,7 +22,7 @@ class DeepSeekChatClient(ChatCompletionsClient):
     def _get_vertex_endpoint(self, deepseek_endpoint: str) -> str:
         """Map DeepSeek endpoint to Vertex AI endpoint."""
         mapping: dict[str, str] = {
-            config.DeepSeekChatEndpoint.CREATE_CHAT: config.VertexDeepSeekEndpoint.CREATE_CHAT,
+            config.DeepSeekChatEndpoint.CREATE_CHAT: config.VertexChatEndpoint.CREATE_CHAT,
         }
         vertex_endpoint = mapping.get(deepseek_endpoint)
         if vertex_endpoint is None:
