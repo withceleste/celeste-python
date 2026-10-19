@@ -30,6 +30,11 @@ class XAIVideosClient(APIMixin):
 
     _content_fields: ClassVar[set[str]] = {"video"}
 
+    def _build_url(self, endpoint: str, streaming: bool = False) -> str:
+        """Build the request URL, honoring an explicit base_url override."""
+        base = self.base_url if self.base_url is not None else config.BASE_URL
+        return f"{base.rstrip('/')}{endpoint}"
+
     def _build_request(
         self,
         inputs: Any,
@@ -71,7 +76,7 @@ class XAIVideosClient(APIMixin):
 
         # Submit video generation request
         response = await self.http_client.post(
-            f"{config.BASE_URL}{endpoint}",
+            self._build_url(endpoint),
             headers=headers,
             json_body=request_body,
         )
@@ -92,7 +97,7 @@ class XAIVideosClient(APIMixin):
             await asyncio.sleep(config.POLL_INTERVAL)
 
             status_response = await self.http_client.get(
-                f"{config.BASE_URL}{poll_endpoint}",
+                self._build_url(poll_endpoint),
                 headers=headers,
             )
             self._handle_error_response(status_response)

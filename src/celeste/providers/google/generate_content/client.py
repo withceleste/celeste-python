@@ -50,13 +50,19 @@ class GoogleGenerateContentClient(APIMixin):
             raise ValueError(f"No Vertex AI endpoint mapping for: {gemini_endpoint}")
         return vertex_endpoint
 
-    def _build_url(self, endpoint: str) -> str:
+    def _build_url(self, endpoint: str, streaming: bool = False) -> str:
         """Build full URL based on auth type."""
         if isinstance(self.auth, GoogleADC):
-            return self.auth.build_url(
+            vertex_url = self.auth.build_url(
                 self._get_vertex_endpoint(endpoint), model_id=self.model.id
             )
-        return f"{config.BASE_URL}{endpoint.format(model_id=self.model.id)}"
+            if self.base_url is None:
+                return vertex_url
+            vertex_path = vertex_url.removeprefix(self.auth.get_vertex_base_url())
+            return f"{self.base_url.rstrip('/')}{vertex_path}"
+        endpoint = endpoint.format(model_id=self.model.id)
+        base = self.base_url if self.base_url is not None else config.BASE_URL
+        return f"{base.rstrip('/')}{endpoint}"
 
     async def _make_request(
         self,
@@ -94,7 +100,7 @@ class GoogleGenerateContentClient(APIMixin):
 
         headers = await self._json_headers(extra_headers)
         return self.http_client.stream_post(
-            url=self._build_url(endpoint),
+            url=self._build_url(endpoint, streaming=True),
             headers=headers,
             json_body=request_body,
         )

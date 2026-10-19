@@ -18,7 +18,7 @@ class {Provider}{Api}Client(APIMixin):
     """Mixin for {Provider} {Api} API.
 
     Provides shared HTTP implementation:
-    - _build_url(endpoint) - Apply base_url overrides to both transports
+    - _build_url(endpoint, streaming) - Apply base_url overrides to both transports
     - _make_request(endpoint=...) - HTTP POST to specified endpoint
     - _make_stream_request() - HTTP streaming (if supported, otherwise raises StreamingNotSupportedError)
     - _parse_usage() - Extract usage dict from response
@@ -38,8 +38,10 @@ class {Provider}{Api}Client(APIMixin):
     # Optional: Vertex AI endpoint routing. Add this method and enable the
     # commented routing in _build_url() when the provider supports Vertex AI.
     #
-    # def _get_vertex_endpoint(self, native_endpoint: str) -> str:
+    # def _get_vertex_endpoint(self, native_endpoint: str, streaming: bool = False) -> str:
     #     """Map native endpoint to Vertex AI endpoint."""
+    #     if streaming:  # Only when Vertex streams through a separate verb.
+    #         return config.Vertex{Api}Endpoint.STREAM_...
     #     mapping: dict[str, str] = {
     #         config.{Provider}{Api}Endpoint.CREATE_...: config.Vertex{Api}Endpoint.CREATE_...,
     #     }
@@ -48,11 +50,11 @@ class {Provider}{Api}Client(APIMixin):
     #         raise ValueError(f"No Vertex AI endpoint mapping for: {native_endpoint}")
     #     return vertex_endpoint
 
-    def _build_url(self, endpoint: str) -> str:
+    def _build_url(self, endpoint: str, streaming: bool = False) -> str:
         """Build the request URL, honoring an explicit base_url override."""
         # if isinstance(self.auth, GoogleADC):
         #     vertex_url = self.auth.build_url(
-        #         self._get_vertex_endpoint(endpoint), model_id=self.model.id
+        #         self._get_vertex_endpoint(endpoint, streaming), model_id=self.model.id
         #     )
         #     if self.base_url is None:
         #         return vertex_url
@@ -126,7 +128,7 @@ class {Provider}{Api}Client(APIMixin):
         headers = await self._json_headers(extra_headers)
 
         return self.http_client.stream_post(
-            self._build_url(endpoint),
+            self._build_url(endpoint, streaming=True),
             headers=headers,
             json_body=request_body,
         )

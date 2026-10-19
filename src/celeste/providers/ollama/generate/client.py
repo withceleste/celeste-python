@@ -29,7 +29,7 @@ class OllamaGenerateClient(APIMixin):
     def _build_url(self, endpoint: str, streaming: bool = False) -> str:
         """Build full URL for Ollama Generate API."""
         base = self.base_url if self.base_url is not None else self._default_base_url
-        return f"{base}{endpoint}"
+        return f"{base.rstrip('/')}{endpoint}"
 
     def _build_request(
         self,
@@ -85,7 +85,7 @@ class OllamaGenerateClient(APIMixin):
         headers = await self._json_headers(extra_headers)
 
         return self.http_client.stream_post_ndjson(
-            self._build_url(endpoint),
+            self._build_url(endpoint, streaming=True),
             headers=headers,
             json_body=request_body,
         )

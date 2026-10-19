@@ -35,6 +35,11 @@ class TopazLabsImageClient(APIMixin):
 
     _content_fields: ClassVar[set[str]] = {"download_url", "url"}
 
+    def _build_url(self, endpoint: str, streaming: bool = False) -> str:
+        """Build the request URL, honoring an explicit base_url override."""
+        base = self.base_url if self.base_url is not None else config.BASE_URL
+        return f"{base.rstrip('/')}{endpoint}"
+
     def _build_request(
         self,
         inputs: Any,
@@ -98,7 +103,7 @@ class TopazLabsImageClient(APIMixin):
                 data[key] = form_field_value(value)
 
         response = await self.http_client.post_multipart(
-            f"{config.BASE_URL}{endpoint}",
+            self._build_url(endpoint),
             headers=self._merge_headers(await self.auth.aget_headers(), extra_headers),
             files=files,
             data=data,
@@ -118,9 +123,8 @@ class TopazLabsImageClient(APIMixin):
             {**(await self.auth.aget_headers()), "Accept": ApplicationMimeType.JSON},
             extra_headers,
         )
-        status_url = (
-            f"{config.BASE_URL}"
-            f"{config.TopazLabsImageEndpoint.STATUS.format(process_id=process_id)}"
+        status_url = self._build_url(
+            config.TopazLabsImageEndpoint.STATUS.format(process_id=process_id)
         )
         start_time = time.monotonic()
 
@@ -158,9 +162,8 @@ class TopazLabsImageClient(APIMixin):
             {**(await self.auth.aget_headers()), "Accept": ApplicationMimeType.JSON},
             extra_headers,
         )
-        download_url = (
-            f"{config.BASE_URL}"
-            f"{config.TopazLabsImageEndpoint.DOWNLOAD.format(process_id=process_id)}"
+        download_url = self._build_url(
+            config.TopazLabsImageEndpoint.DOWNLOAD.format(process_id=process_id)
         )
         response = await self.http_client.get(download_url, headers=headers)
         self._handle_error_response(response)

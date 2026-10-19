@@ -31,6 +31,11 @@ class CohereChatClient(APIMixin):
 
     _content_fields: ClassVar[set[str]] = {"message"}
 
+    def _build_url(self, endpoint: str, streaming: bool = False) -> str:
+        """Build the request URL, honoring an explicit base_url override."""
+        base = self.base_url if self.base_url is not None else config.BASE_URL
+        return f"{base.rstrip('/')}{endpoint}"
+
     def _build_request(
         self,
         inputs: Any,
@@ -62,7 +67,7 @@ class CohereChatClient(APIMixin):
         headers = await self._json_headers(extra_headers)
 
         response = await self.http_client.post(
-            f"{config.BASE_URL}{endpoint}",
+            self._build_url(endpoint),
             headers=headers,
             json_body=request_body,
         )
@@ -85,7 +90,7 @@ class CohereChatClient(APIMixin):
         headers = await self._json_headers(extra_headers)
 
         return self.http_client.stream_post(
-            f"{config.BASE_URL}{endpoint}",
+            self._build_url(endpoint, streaming=True),
             headers=headers,
             json_body=request_body,
         )

@@ -41,30 +41,35 @@ class GoogleVeoClient(APIMixin):
         """Map Gemini Veo endpoint to Vertex AI endpoint."""
         mapping: dict[str, str] = {
             config.GoogleVeoEndpoint.CREATE_VIDEO: config.VertexVeoEndpoint.CREATE_VIDEO,
+            config.GoogleVeoEndpoint.GET_OPERATION: config.VertexVeoEndpoint.FETCH_OPERATION,
         }
         vertex_endpoint = mapping.get(gemini_endpoint)
         if vertex_endpoint is None:
             raise ValueError(f"No Vertex AI endpoint mapping for: {gemini_endpoint}")
         return vertex_endpoint
 
-    def _build_url(self, endpoint: str) -> str:
+    def _build_url(self, endpoint: str, streaming: bool = False) -> str:
         """Build full URL based on auth type."""
         if isinstance(self.auth, GoogleADC):
-            return self.auth.build_url(
+            vertex_url = self.auth.build_url(
                 self._get_vertex_endpoint(endpoint), model_id=self.model.id
             )
-        return f"{config.BASE_URL}{endpoint.format(model_id=self.model.id)}"
+            if self.base_url is None:
+                return vertex_url
+            vertex_path = vertex_url.removeprefix(self.auth.get_vertex_base_url())
+            return f"{self.base_url.rstrip('/')}{vertex_path}"
+        endpoint = endpoint.format(model_id=self.model.id)
+        base = self.base_url if self.base_url is not None else config.BASE_URL
+        return f"{base.rstrip('/')}{endpoint}"
 
     def _build_poll_url(self, operation_name: str) -> str:
         """Build polling URL for long-running operations."""
         if isinstance(self.auth, GoogleADC):
-            return self.auth.build_url(
-                config.VertexVeoEndpoint.FETCH_OPERATION, model_id=self.model.id
-            )
+            return self._build_url(config.GoogleVeoEndpoint.GET_OPERATION)
         poll_path = config.GoogleVeoEndpoint.GET_OPERATION.format(
             operation_name=operation_name
         )
-        return f"{config.BASE_URL}{poll_path}"
+        return self._build_url(poll_path)
 
     async def _make_poll_request(
         self, operation_name: str, extra_headers: dict[str, str] | None = None

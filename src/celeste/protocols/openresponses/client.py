@@ -46,11 +46,18 @@ class OpenResponsesClient(APIMixin):
         Override for Vertex AI support:
             def _build_url(self, endpoint: str, streaming: bool = False) -> str:
                 if isinstance(self.auth, GoogleADC):
-                    return self.auth.build_url(self._get_vertex_endpoint(endpoint, streaming))
+                    vertex_url = self.auth.build_url(
+                        self._get_vertex_endpoint(endpoint, streaming),
+                        model_id=self.model.id,
+                    )
+                    if self.base_url is None:
+                        return vertex_url
+                    vertex_path = vertex_url.removeprefix(self.auth.get_vertex_base_url())
+                    return f"{self.base_url.rstrip('/')}{vertex_path}"
                 return super()._build_url(endpoint, streaming)
         """
         base = self.base_url if self.base_url is not None else self._default_base_url
-        return f"{base}{endpoint}"
+        return f"{base.rstrip('/')}{endpoint}"
 
     def _build_request(
         self,
