@@ -2,11 +2,8 @@
 
 from celeste.models import Model
 
-from .providers.openai.models import MODELS as OPENAI_MODELS
-
-# from .providers.google.models import MODELS as GOOGLE_MODELS
+from .providers.{provider_slug}.models import MODELS as {PROVIDER}_MODELS
 
 MODELS: list[Model] = [
-    *OPENAI_MODELS,
-    # *GOOGLE_MODELS,
+    *{PROVIDER}_MODELS,
 ]
