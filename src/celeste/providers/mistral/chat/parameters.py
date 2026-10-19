@@ -9,7 +9,7 @@ from celeste.parameters import ParameterMapper
 from celeste.protocols.chatcompletions.parameters import (
     ResponseFormatMapper as _ResponseFormatMapper,
 )
-from celeste.structured_outputs import StrictRefResolvingJsonSchemaGenerator
+from celeste.structured_outputs import StrictJsonSchemaGenerator
 from celeste.types import TextContent
 
 
@@ -53,14 +53,17 @@ class ResponseFormatMapper(_ResponseFormatMapper):
         if origin is list:
             inner_type = get_args(validated_value)[0]
             inner_schema = TypeAdapter(inner_type).json_schema(
-                schema_generator=StrictRefResolvingJsonSchemaGenerator,
+                schema_generator=StrictJsonSchemaGenerator,
                 mode="validation",
             )
+            defs = inner_schema.pop("$defs", {})
             schema = {"type": "array", "items": inner_schema}
+            if defs:
+                schema["$defs"] = defs
             name = f"{inner_type.__name__.lower()}_list"
         else:
             schema = TypeAdapter(validated_value).json_schema(
-                schema_generator=StrictRefResolvingJsonSchemaGenerator,
+                schema_generator=StrictJsonSchemaGenerator,
                 mode="validation",
             )
             name = validated_value.__name__.lower()
