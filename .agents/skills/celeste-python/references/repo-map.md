@@ -48,12 +48,14 @@ Core enums live in `src/celeste/core.py`:
 
 - `Provider`: backend vendor or local provider.
 - `Protocol`: wire-compatible API format such as `openresponses` or `chatcompletions`.
-- `Modality`: output/client family such as text, images, videos, audio, embeddings.
-- `Operation`: action such as generate, edit, analyze, speak, transcribe, embed, upscale.
+- `Modality`: the one modality, in addition to text, essential to the model's purpose — the modality the model cannot function without.
+- `Operation`: what you do — generate, edit, analyze, speak, transcribe, embed, upscale, segment, connect.
 - `Domain`: resource the user works with, used by namespace routing.
 - `InputType`: optional media input categories.
 - `Parameter`: common parameter names shared across modalities.
 - `UsageField`: normalized usage keys.
+
+Never describe Modality as an output type or Domain as an input type: `audio.transcribe` is an `AUDIO`-modality operation that returns `TextOutput`.
 
 I/O and content types:
 
