@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.0.0] - 2026-10-20
 
-206 PRs merged, 470+ files changed. First stable release: a live (realtime) modality, transcription, audio generation, upscaling, segmentation, native multimodal messages, reasoning and grounding on outputs, OpenTelemetry, and a model catalog refreshed against live provider APIs.
+210 PRs merged, 490+ files changed. First stable release: a live (realtime) modality, transcription, audio generation, upscaling, segmentation, decision models, native multimodal messages, reasoning and grounding on outputs, OpenTelemetry, and a model catalog refreshed against live provider APIs.
 
 ### 1. Live Modality (headline)
 
@@ -32,6 +32,7 @@ Bidirectional realtime sessions as a first-class modality.
 - **Audio generation** — `celeste.audio.generate(prompt, ...)` with Google Lyria (`lyria-3-clip-preview`, `lyria-3-pro-preview`, `lyria-3.5`); `reference_images` for image-conditioned music; lyrics and structure kept in `metadata["text_blocks"]` (#324, #400, #405).
 - **Image upscaling** — `celeste.images.upscale(image, model=..., ...)` (+ sync) with Topaz Labs Gigapixel (8 models, async submit → status → download) and new upscale parameters (`output_width`, `face_enhancement`, `denoise`, …) (#340).
 - **Segmentation modality** — `Modality.SEGMENTATION` + `Operation.SEGMENT`: `celeste.images.segment(image=..., prompt=..., model=...)` returns a `SegmentationOutput` whose `content` is `list[SegmentationMask]` (`rle`, `index`, `score`, `box`), via fal.ai SAM 3 / 3.1 with point and box prompts (#341).
+- **Decision modality** — `Modality.DECISION` + `Operation.DECIDE`: `celeste.text.decide(state, questions=..., model=...)` and `celeste.images.decide(image, questions=..., model=...)` (+ sync) answer named, typed questions with calibrated answers: `BooleanQuestion` → `BooleanAnswer` (`probability` of yes), `ChoiceQuestion` → `ChoiceAnswer` (`choice`, `probabilities`, `confidence`), `ScoreQuestion` → `ScoreAnswer` (`score`, `probabilities`, `confidence`), `BoxQuestion` → `BoxAnswer` (`box` edges as image fractions, `confidence`). An `ImageArtifact` can sit anywhere in `state`, `instructions` or `criteria` (#545).
 - **Document input** — `celeste.documents.analyze()` and `analyze(document=...)` with `DocumentArtifact`, `DocumentMimeType` (PDF, DOCX, XLSX, PPTX, CSV, TXT, HTML, MD) on OpenAI, Anthropic, Google, Mistral and Meta; URL documents sent as `file_url` (OpenResponses) and with `mime_type` (Google) (#249, #251, #502).
 - **Multimodal embeddings** — `embed()` accepts `images=`, `videos=`, `audio=`; new `celeste.images.embed()`, `celeste.videos.embed()`, `celeste.audio.embed()`; `gemini-embedding-2` (Vertex supported) (#246, #312).
 - **Video editing** — Gemini Omni (`gemini-omni-flash-preview`, `gemini-omni-1.1-flash`) generate + edit; `celeste.videos.edit(...)`, sync `edit` and `client.sync.edit`; xAI `grok-imagine-video` edits accept local videos (#326, #383, #534). `gemini-omni-1.1-flash` accepts `resolution` `360p` / `720p` / `1080p` / `4k` (#505).
@@ -86,6 +87,7 @@ Bidirectional realtime sessions as a first-class modality.
 - **OpenRouter** (#284) — OpenResponses protocol, credential `OPENROUTER_API_KEY`; any OpenRouter model slug.
 - **fal.ai** (#341) — `Provider.FAL`, credential `FAL_KEY`; SAM 3 segmentation.
 - **Topaz Labs** (#340) — image upscaling, credential `TOPAZ_API_KEY`.
+- **TypeSafe** (#545) — `Provider.TYPESAFE`, credential `TYPESAFE_API_KEY`; Jev decision models. Requests with images or box questions send TypeSafe's `TypeSafe-Danger-Zone-Images` opt-in header automatically.
 - **New provider × modality pairs:** Groq audio (#337), Mistral audio (#339); ElevenLabs gains its speech-to-text API (#339).
 
 ### 9. New Models
@@ -142,6 +144,9 @@ Bidirectional realtime sessions as a first-class modality.
 
 **fal.ai:**
 - `fal-ai/sam-3/image-rle`, `fal-ai/sam-3-1/image-rle` (#341)
+
+**TypeSafe:**
+- `jev-latest`, `jev-preview`, `jev-1.14.0`, `jev-1.13.0`; box questions need Jev 1.14 (#545)
 
 **Removed (retired, shut down or superseded on provider APIs; arrows point to the replacement):**
 - Anthropic: `claude-sonnet-4-20250514`, `claude-opus-4-20250514` (#312)
@@ -213,7 +218,7 @@ Bidirectional realtime sessions as a first-class modality.
 ### 14. Testing
 
 - **Suite consolidated** around public contracts and parametrized provider matrices (-7,989 test lines); arbitrary unregistered provider model ids remain supported and optimistically advertise streaming (#310).
-- **742 unit tests** at release (527 in v0.11.0); coverage now measures provider, protocol and modality code (omit list removed) with a 65% gate (was 80%) (#310).
+- **744 unit tests** at release (527 in v0.11.0); coverage now measures provider, protocol and modality code (omit list removed) with a 65% gate (was 80%) (#310).
 - **Locked dependencies** — `uv.lock` committed; CI, type-check, test and publish install with `uv sync --locked`; daily latest-deps canary and weekly Dependabot lockfile updates (#498); mypy pinned below 2.4 (#494).
 
 ---

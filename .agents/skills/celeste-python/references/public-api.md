@@ -26,12 +26,14 @@ Available namespace families include:
 
 - `celeste.text.generate`
 - `celeste.text.embed`
+- `celeste.text.decide`
 - `celeste.images.generate`
 - `celeste.images.edit`
 - `celeste.images.upscale`
 - `celeste.images.analyze`
 - `celeste.images.embed`
 - `celeste.images.segment`
+- `celeste.images.decide`
 - `celeste.audio.speak`
 - `celeste.audio.generate`
 - `celeste.audio.analyze`

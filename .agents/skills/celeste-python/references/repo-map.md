@@ -10,12 +10,14 @@ Use domain namespaces for normal app code:
 
 - `celeste.text.generate(...)`
 - `celeste.text.embed(...)`
+- `celeste.text.decide(...)`
 - `celeste.images.generate(...)`
 - `celeste.images.edit(...)`
 - `celeste.images.upscale(...)`
 - `celeste.images.analyze(...)`
 - `celeste.images.embed(...)`
 - `celeste.images.segment(...)`
+- `celeste.images.decide(...)`
 - `celeste.audio.speak(...)`
 - `celeste.audio.generate(...)`
 - `celeste.audio.analyze(...)`
@@ -54,7 +56,7 @@ Core enums live in `src/celeste/core.py`:
 - `Provider`: backend vendor or local provider.
 - `Protocol`: wire-compatible API format such as `openresponses` or `chatcompletions`.
 - `Modality`: the one modality, in addition to text, essential to the model's purpose — the modality the model cannot function without.
-- `Operation`: what you do — generate, edit, analyze, speak, transcribe, embed, upscale, segment, connect.
+- `Operation`: what you do — generate, edit, analyze, speak, transcribe, embed, upscale, segment, connect, decide.
 - `Domain`: resource the user works with, used by namespace routing.
 - `InputType`: optional media input categories.
 - `Parameter`: common parameter names shared across modalities.
@@ -98,6 +100,7 @@ Modality clients live under:
 - `src/celeste/modalities/embeddings/client.py`
 - `src/celeste/modalities/segmentation/client.py`
 - `src/celeste/modalities/live/client.py`
+- `src/celeste/modalities/decision/client.py`
 
 They expose operations and sync/stream namespaces. Examples:
 
@@ -108,6 +111,7 @@ They expose operations and sync/stream namespaces. Examples:
 - embeddings: `embed`, `sync.embed`
 - segmentation: `segment`, `sync.segment`
 - live: `connect`
+- decision: `decide`, `sync.decide`
 
 ## Provider And Modality Registration
 
@@ -177,6 +181,7 @@ Modality parameter names and `TypedDict`s live under:
 - `src/celeste/modalities/embeddings/parameters.py`
 - `src/celeste/modalities/segmentation/parameters.py`
 - `src/celeste/modalities/live/parameters.py`
+- `src/celeste/modalities/decision/parameters.py`
 
 Provider-specific mappers live under both protocol and modality provider packages. Examples:
 

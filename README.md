@@ -100,6 +100,7 @@ embeddings = await celeste.text.embed(["lorep ipsum", "dolor sit amet"], model="
 | **Transcribe** | — | — | ✓ | — | — |
 | **Embed** | ✓ | ○ | — | ○ | — |
 | **Connect** | — | — | — | — | ✓ |
+| **Decide** | ✓ | ✓ | — | — | — |
 
 <sub>✓ Available · ○ Planned</sub>
 

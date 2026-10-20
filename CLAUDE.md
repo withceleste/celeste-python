@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-Celeste: unified multi-modal AI SDK for Python (3.12+, uv). One client API across 20+ providers — text, images, audio, videos, embeddings, live.
+Celeste: unified multi-modal AI SDK for Python (3.12+, uv). One client API across 20+ providers — text, images, audio, videos, embeddings, live, decision.
 
 ## Core concepts
 
@@ -8,9 +8,9 @@ Celeste: unified multi-modal AI SDK for Python (3.12+, uv). One client API acros
 - **Domain**: the resource you work with.
 - Never describe Modality as an output type or Domain as an input type.
 - Key enums, all in `src/celeste/core.py`:
-  - `Modality` (text, embeddings, images, videos, audio, segmentation, live)
+  - `Modality` (text, embeddings, images, videos, audio, segmentation, live, decision)
   - `Domain` (text, images, audio, videos, documents, live)
-  - `Operation` — what you do (generate, edit, analyze, speak, transcribe, embed, upscale, segment, connect)
+  - `Operation` — what you do (generate, edit, analyze, speak, transcribe, embed, upscale, segment, connect, decide)
   - `Provider` — which backend serves the request
   - `Protocol` (chatcompletions, openresponses)
 - `(Domain, Operation) → Modality` inference: `DOMAIN_OPERATION_TO_MODALITY` in `core.py`.

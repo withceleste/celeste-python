@@ -93,6 +93,7 @@ jobs:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
           TOPAZ_API_KEY: ${{ secrets.TOPAZ_API_KEY }}
           META_API_KEY: ${{ secrets.META_API_KEY }}
+          TYPESAFE_API_KEY: ${{ secrets.TYPESAFE_API_KEY }}
         run: uv run pytest "$TEST_FILE" -v
 
   build:

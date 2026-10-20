@@ -45,6 +45,7 @@ Modality clients define operation-level Python APIs:
 - `src/celeste/modalities/embeddings/client.py`
 - `src/celeste/modalities/segmentation/client.py`
 - `src/celeste/modalities/live/client.py`
+- `src/celeste/modalities/decision/client.py`
 
 They should delegate request execution through `_predict(...)` and streaming through `_stream(...)`.
 
