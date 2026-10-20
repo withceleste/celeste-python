@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.0.0] - 2026-10-20
 
-205 PRs merged, 470+ files changed. First stable release: a live (realtime) modality, transcription, audio generation, upscaling, segmentation, native multimodal messages, reasoning and grounding on outputs, OpenTelemetry, and a model catalog refreshed against live provider APIs.
+206 PRs merged, 470+ files changed. First stable release: a live (realtime) modality, transcription, audio generation, upscaling, segmentation, native multimodal messages, reasoning and grounding on outputs, OpenTelemetry, and a model catalog refreshed against live provider APIs.
 
 ### 1. Live Modality (headline)
 
@@ -150,7 +150,7 @@ Bidirectional realtime sessions as a first-class modality.
 - xAI: `grok-4-0709`, `grok-4-1-fast-reasoning`, `grok-4-1-fast-non-reasoning`, `grok-4-fast-reasoning`, `grok-4-fast-non-reasoning` (#280); `grok-4.20-beta-0309-reasoning` → `grok-4.20-0309-reasoning`, `grok-4.20-beta-0309-non-reasoning` → `grok-4.20-0309-non-reasoning` (#282)
 - Mistral: `open-mistral-7b`, `pixtral-12b-2409` (#280); `pixtral-large-latest`, `voxtral-mini-2507` (#311); `labs-devstral-small-2512` (#312)
 - DeepSeek: `deepseek-chat`, `deepseek-reasoner` → `deepseek-v4-flash` (#314)
-- Groq: `moonshotai/kimi-k2-instruct`, `moonshotai/kimi-k2-instruct-0905` (#280); `llama-3.1-8b-instant` → `openai/gpt-oss-20b`, `meta-llama/llama-4-scout-17b-16e-instruct` (#539)
+- Groq: `moonshotai/kimi-k2-instruct`, `moonshotai/kimi-k2-instruct-0905` (#280); `llama-3.1-8b-instant` → `openai/gpt-oss-20b` (#539); `meta-llama/llama-4-scout-17b-16e-instruct` (#541)
 - Moonshot: `kimi-k2-0711-preview`, `kimi-k2-0905-preview`, `kimi-k2-turbo-preview`, `kimi-k2-thinking`, `kimi-k2-thinking-turbo` (#312)
 - BytePlus: `seedance-1-0-lite-t2v-250428`, `seedance-1-0-lite-i2v-250428` (#280)
 - ElevenLabs: `eleven_multilingual_v1`, `eleven_monolingual_v1` (#313)
