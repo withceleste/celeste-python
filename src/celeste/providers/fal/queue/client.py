@@ -29,6 +29,11 @@ class FalQueueClient(APIMixin):
     3. GET response_url for the result body
     """
 
+    def _build_url(self, endpoint: str, streaming: bool = False) -> str:
+        """Build the request URL, honoring an explicit base_url override."""
+        base = self.base_url if self.base_url is not None else config.BASE_URL
+        return f"{base.rstrip('/')}{endpoint}"
+
     async def _make_request(
         self,
         request_body: dict[str, Any],
@@ -48,7 +53,7 @@ class FalQueueClient(APIMixin):
         endpoint = endpoint.format(model_id=self.model.id)
 
         submit_response = await self.http_client.post(
-            f"{config.BASE_URL}{endpoint}",
+            self._build_url(endpoint),
             headers=headers,
             json_body=request_body,
         )

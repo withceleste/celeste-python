@@ -12,14 +12,14 @@ import celeste
 text_model = "..."  # choose from celeste.list_models(modality=celeste.Modality.TEXT, ...)
 image_model = "..."  # choose from celeste.list_models(modality=celeste.Modality.IMAGES, ...)
 audio_model = "..."  # choose from celeste.list_models(modality=celeste.Modality.AUDIO, ...)
-video_model = "..."  # choose from celeste.list_models(modality=celeste.Modality.VIDEOS, ...)
+video_model = "..."  # choose from celeste.list_models(modality=celeste.Modality.TEXT, operation=celeste.Operation.ANALYZE) whose optional_input_types include celeste.core.InputType.VIDEO
 video = "..."  # use a video artifact or supported video input
 
 text = await celeste.text.generate("Explain quantum computing", model=text_model)
 image = await celeste.images.generate("A mountain lake", model=image_model)
 speech = await celeste.audio.speak("Welcome", model=audio_model)
 summary = await celeste.videos.analyze(video, prompt="Summarize this clip", model=video_model)
-embeddings = await celeste.text.embed(["lorem ipsum"], model=text_model)
+embeddings = await celeste.text.embed(["lorem ipsum"], model="...")  # choose from celeste.list_models(modality=celeste.Modality.EMBEDDINGS, operation=celeste.Operation.EMBED)
 ```
 
 Available namespace families include:
@@ -28,15 +28,20 @@ Available namespace families include:
 - `celeste.text.embed`
 - `celeste.images.generate`
 - `celeste.images.edit`
+- `celeste.images.upscale`
 - `celeste.images.analyze`
 - `celeste.images.embed`
+- `celeste.images.segment`
 - `celeste.audio.speak`
+- `celeste.audio.generate`
 - `celeste.audio.analyze`
+- `celeste.audio.transcribe`
 - `celeste.audio.embed`
 - `celeste.videos.generate`
 - `celeste.videos.analyze`
 - `celeste.videos.embed`
 - `celeste.documents.analyze`
+- `celeste.live.connect`
 
 Use sync and streaming namespaces when needed:
 
@@ -181,4 +186,4 @@ Check provider-specific structured output behavior before changing SDK internals
 - provider-specific parameter mapper files
 - `references/verification.md` for focused test selection
 
-If notes such as `common_agent_mistakes.md` mention provider-specific structured-output constraints, verify the constraint against current source, tests, or provider behavior before enforcing it. Scope any warning to the affected provider and request path.
+If notes mention provider-specific structured-output constraints, verify the constraint against current source, tests, or provider behavior before enforcing it. Scope any warning to the affected provider and request path.

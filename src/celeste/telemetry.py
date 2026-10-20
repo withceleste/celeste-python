@@ -5,7 +5,8 @@ import contextvars
 import json
 import os
 import time
-from collections.abc import AsyncIterator, Iterator
+import weakref
+from collections.abc import AsyncIterator, Generator, Iterator
 from contextlib import contextmanager, suppress
 from types import TracebackType
 from typing import Any
@@ -429,6 +430,7 @@ class _TracedStream:
         self._seen_first = False
         self._ended = False
         self._error: BaseException | None = None
+        self._sync_generator: weakref.ref[Generator[Any, None, None]] | None = None
 
     def __aiter__(self) -> "_TracedStream":
         """Return self as async iterator."""
@@ -470,7 +472,13 @@ class _TracedStream:
         return False
 
     def __iter__(self) -> Iterator[Any]:
-        """Sync iterator using a blocking portal — drives this wrapper's __anext__."""
+        """Return the sync chunk generator, weakly retained so context exit can close it."""
+        generator = self._iter_chunks()
+        self._sync_generator = weakref.ref(generator)
+        return generator
+
+    def _iter_chunks(self) -> Generator[Any, None, None]:
+        """Yield chunks through a blocking portal that drives this wrapper's __anext__."""
         portal_cm = start_blocking_portal()
         portal = portal_cm.__enter__()
         try:
@@ -496,7 +504,11 @@ class _TracedStream:
         exc_val: BaseException | None,
         exc_tb: TracebackType | None,
     ) -> None:
-        """Exit sync context — delegate to inner Stream."""
+        """Exit sync context — close the retained chunk generator, then delegate to inner Stream."""
+        if self._sync_generator is not None:
+            generator = self._sync_generator()
+            if generator is not None:
+                generator.close()
         self._inner.__exit__(exc_type, exc_val, exc_tb)
 
     def __repr__(self) -> str:

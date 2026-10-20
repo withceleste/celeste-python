@@ -283,7 +283,7 @@ def test_openresponses_assistant_tool_call_preserves_message_content() -> None:
 
     assert request["input"][0] == {
         "role": "assistant",
-        "content": [{"type": "input_text", "text": "checking"}],
+        "content": [{"type": "output_text", "text": "checking"}],
     }
     assert request["input"][1]["type"] == "function_call"
     assert request["input"][1]["name"] == "lookup"

@@ -50,7 +50,7 @@ class AudioFormatMapper[Content](ParameterMapper[Content]):
 
 
 class ToolsMapper[Content](ParameterMapper[Content]):
-    """Map tools to OpenAI delegation.responses.tools field in Responses shape."""
+    """Map tools to delegation.responses.tools; the required delegation.responses.model comes from extra_body."""
 
     def map(
         self, request: dict[str, Any], value: object, model: Model

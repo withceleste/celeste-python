@@ -12,15 +12,20 @@ Use domain namespaces for normal app code:
 - `celeste.text.embed(...)`
 - `celeste.images.generate(...)`
 - `celeste.images.edit(...)`
+- `celeste.images.upscale(...)`
 - `celeste.images.analyze(...)`
 - `celeste.images.embed(...)`
+- `celeste.images.segment(...)`
 - `celeste.audio.speak(...)`
+- `celeste.audio.generate(...)`
 - `celeste.audio.analyze(...)`
+- `celeste.audio.transcribe(...)`
 - `celeste.audio.embed(...)`
 - `celeste.videos.generate(...)`
 - `celeste.videos.analyze(...)`
 - `celeste.videos.embed(...)`
 - `celeste.documents.analyze(...)`
+- `celeste.live.connect(...)`
 
 Namespace implementations live in `src/celeste/namespaces/domains.py`. They route domain operations to modality clients through `create_client(...)`.
 
@@ -48,12 +53,14 @@ Core enums live in `src/celeste/core.py`:
 
 - `Provider`: backend vendor or local provider.
 - `Protocol`: wire-compatible API format such as `openresponses` or `chatcompletions`.
-- `Modality`: output/client family such as text, images, videos, audio, embeddings.
-- `Operation`: action such as generate, edit, analyze, speak, transcribe, embed, upscale.
+- `Modality`: the one modality, in addition to text, essential to the model's purpose — the modality the model cannot function without.
+- `Operation`: what you do — generate, edit, analyze, speak, transcribe, embed, upscale, segment, connect.
 - `Domain`: resource the user works with, used by namespace routing.
 - `InputType`: optional media input categories.
 - `Parameter`: common parameter names shared across modalities.
 - `UsageField`: normalized usage keys.
+
+Never describe Modality as an output type or Domain as an input type: `audio.transcribe` is an `AUDIO`-modality operation that returns `TextOutput`.
 
 I/O and content types:
 
@@ -71,14 +78,14 @@ Prefer these types over app-local strings or duplicate models.
 The core client layering is in `src/celeste/client.py`:
 
 ```text
-HTTPClient
-  ^
 APIMixin
   ^
 ModalityClient
   ^
 Concrete provider/modality client
 ```
+
+`HTTPClient` (`src/celeste/http.py`) is not a base class: clients reach the pooled transport through the `http_client` property, declared on `APIMixin` and implemented by `ModalityClient`.
 
 `APIMixin` owns provider API behavior such as request transport, URL building, response parsing, and usage mapping. `ModalityClient` owns modality behavior such as `_predict`, `_stream`, parameter mapping, output construction, metadata, warnings for unsupported parameters, and common error handling.
 
@@ -89,6 +96,8 @@ Modality clients live under:
 - `src/celeste/modalities/audio/client.py`
 - `src/celeste/modalities/videos/client.py`
 - `src/celeste/modalities/embeddings/client.py`
+- `src/celeste/modalities/segmentation/client.py`
+- `src/celeste/modalities/live/client.py`
 
 They expose operations and sync/stream namespaces. Examples:
 
@@ -97,6 +106,8 @@ They expose operations and sync/stream namespaces. Examples:
 - audio: `speak`, `stream.speak`, `sync.speak`
 - videos: `generate`, `edit`, `sync.generate`
 - embeddings: `embed`, `sync.embed`
+- segmentation: `segment`, `sync.segment`
+- live: `connect`
 
 ## Provider And Modality Registration
 
@@ -164,6 +175,8 @@ Modality parameter names and `TypedDict`s live under:
 - `src/celeste/modalities/audio/parameters.py`
 - `src/celeste/modalities/videos/parameters.py`
 - `src/celeste/modalities/embeddings/parameters.py`
+- `src/celeste/modalities/segmentation/parameters.py`
+- `src/celeste/modalities/live/parameters.py`
 
 Provider-specific mappers live under both protocol and modality provider packages. Examples:
 
@@ -185,13 +198,15 @@ Optional input support is inferred from constraints through `src/celeste/io.py`.
 
 ## Templates
 
-Start new provider, protocol, modality, and test work from templates:
+Start new provider, modality, and protocol files from templates (routing map: `templates/README.md`):
 
 - `templates/providers/{provider_slug}/`
 - `templates/providers/{provider_slug}/{api_slug}/`
 - `templates/modalities/{modality_slug}/`
 - `templates/modalities/{modality_slug}/providers/{provider_slug}/`
-- `templates/protocols/{protocol_slug}/`
+- `templates/protocols/{protocol_slug}/` (new wire format only, route 5)
+
+A provider that speaks an existing protocol (`chatcompletions`, `openresponses`) copies/adapts an existing compatible provider instead (route 2). Templates are authoritative for new-file shape; a template that disagrees with current source is a template bug, fixed as groundwork before the feature.
 
 ## Tests As Executable Documentation
 
@@ -213,7 +228,6 @@ When sources disagree, follow this order:
 1. Current source code in `src/celeste/`.
 2. Current tests and templates for existing behavior.
 3. README examples and public exports.
-4. Notes such as `common_agent_mistakes.md`.
-5. Model memory.
+4. Model memory.
 
-`common_agent_mistakes.md` is advisory. Keep useful warnings, but verify every rule against current code and task context.
+Repo conventions (architecture rules, naming, validation philosophy, workflow) live in `CLAUDE.md`; follow them for SDK-internal work.

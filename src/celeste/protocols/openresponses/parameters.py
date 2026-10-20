@@ -50,19 +50,22 @@ class TextFormatMapper(ParameterMapper[TextContent]):
             inner_type = get_args(validated_value)[0]
             inner_schema = TypeAdapter(inner_type).json_schema(
                 schema_generator=StrictJsonSchemaGenerator,
-                mode="serialization",
+                mode="validation",
             )
+            defs = inner_schema.pop("$defs", {})
             schema = {
                 "type": "object",
                 "properties": {"items": {"type": "array", "items": inner_schema}},
                 "required": ["items"],
                 "additionalProperties": False,
             }
+            if defs:
+                schema["$defs"] = defs
             name = f"{inner_type.__name__.lower()}_list"
         else:
             schema = TypeAdapter(validated_value).json_schema(
                 schema_generator=StrictJsonSchemaGenerator,
-                mode="serialization",
+                mode="validation",
             )
             name = validated_value.__name__.lower()
 
@@ -78,7 +81,7 @@ class TextFormatMapper(ParameterMapper[TextContent]):
         self, content: TextContent, value: OutputSchema | None
     ) -> TextContent:
         """Parse JSON string to BaseModel using Pydantic's TypeAdapter."""
-        if value is None:
+        if value is None or content == "":
             return content
 
         if isinstance(content, BaseModel):
@@ -137,7 +140,12 @@ class VerbosityMapper(ParameterMapper[TextContent]):
 
 
 class ToolsMapper(ParameterMapper[TextContent]):
-    """Map tools list to Responses tools array."""
+    """Map tools list to Responses tools array.
+
+    Subclasses override _tool_mappers with provider-specific built-in tool mappers.
+    """
+
+    _tool_mappers: ClassVar[list[ToolMapper]] = TOOL_MAPPERS
 
     def map(
         self,
@@ -150,7 +158,7 @@ class ToolsMapper(ParameterMapper[TextContent]):
         if not validated_value:
             return request
 
-        dispatch = {m.tool_type: m for m in TOOL_MAPPERS}
+        dispatch = {m.tool_type: m for m in self._tool_mappers}
         tools = request.setdefault("tools", [])
 
         for item in validated_value:
@@ -176,7 +184,7 @@ class ToolsMapper(ParameterMapper[TextContent]):
         if isinstance(params, type) and issubclass(params, BaseModel):
             schema = TypeAdapter(params).json_schema(
                 schema_generator=StrictJsonSchemaGenerator,
-                mode="serialization",
+                mode="validation",
             )
         else:
             schema = params
@@ -192,8 +200,6 @@ class ToolsMapper(ParameterMapper[TextContent]):
 class ToolChoiceMapper(ParameterMapper[TextContent]):
     """Map tool_choice to OpenResponses tool_choice field."""
 
-    _tool_mappers: ClassVar[list[ToolMapper]] = TOOL_MAPPERS
-
     def map(
         self,
         request: dict[str, Any],
@@ -206,14 +212,10 @@ class ToolChoiceMapper(ParameterMapper[TextContent]):
             return request
 
         if isinstance(validated_value, Tool):
-            dispatch = {m.tool_type: m for m in self._tool_mappers}
-            mapper = dispatch.get(type(validated_value))
-            if mapper is None:
-                msg = f"Tool '{type(validated_value).__name__}' cannot be used as tool_choice in OpenResponses"
-                raise ValueError(msg)
-            wire = mapper.map_tool(validated_value)
-            request["tool_choice"] = {"type": "function", "name": wire.get("name")}
-        elif isinstance(validated_value, dict) and "name" in validated_value:
+            msg = f"Tool '{type(validated_value).__name__}' cannot be used as tool_choice in OpenResponses"
+            raise ValueError(msg)
+
+        if isinstance(validated_value, dict) and "name" in validated_value:
             request["tool_choice"] = {
                 "type": "function",
                 "name": validated_value["name"],

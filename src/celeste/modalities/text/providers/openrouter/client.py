@@ -6,13 +6,13 @@ from celeste.modalities.text.protocols.openresponses.client import (
     OpenResponsesTextClient,
     OpenResponsesTextStream,
 )
-from celeste.providers.openrouter.config import DEFAULT_BASE_URL
+from celeste.providers.openrouter.responses.config import BASE_URL
 
 
 class OpenRouterTextClient(OpenResponsesTextClient):
     """OpenRouter — OpenResponses with default https://openrouter.ai/api."""
 
-    _default_base_url: ClassVar[str] = DEFAULT_BASE_URL
+    _default_base_url: ClassVar[str] = BASE_URL
 
 
 OpenRouterTextStream = OpenResponsesTextStream

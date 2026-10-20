@@ -65,17 +65,22 @@ class AnthropicMessagesClient(APIMixin):
     ) -> str:
         """Map Anthropic endpoint to Vertex AI endpoint."""
         if streaming:
-            return config.VertexAnthropicEndpoint.STREAM_MESSAGE
-        return config.VertexAnthropicEndpoint.CREATE_MESSAGE
+            return config.VertexMessagesEndpoint.STREAM_MESSAGE
+        return config.VertexMessagesEndpoint.CREATE_MESSAGE
 
     def _build_url(self, endpoint: str, streaming: bool = False) -> str:
-        """Build full URL based on auth type."""
+        """Build the request URL, honoring an explicit base_url override."""
         if isinstance(self.auth, GoogleADC):
-            return self.auth.build_url(
+            vertex_url = self.auth.build_url(
                 self._get_vertex_endpoint(endpoint, streaming=streaming),
                 model_id=self.model.id,
             )
-        return f"{config.BASE_URL}{endpoint}"
+            if self.base_url is None:
+                return vertex_url
+            vertex_path = vertex_url.removeprefix(self.auth.get_vertex_base_url())
+            return f"{self.base_url.rstrip('/')}{vertex_path}"
+        base = self.base_url if self.base_url is not None else config.BASE_URL
+        return f"{base.rstrip('/')}{endpoint}"
 
     async def _build_headers(
         self,
@@ -208,7 +213,7 @@ class AnthropicMessagesClient(APIMixin):
         self, response_data: dict[str, Any]
     ) -> dict[str, int | float | None]:
         """Extract usage data from Messages API response."""
-        usage_data = response_data.get("usage", {})
+        usage_data = response_data.get("usage") or {}
         return AnthropicMessagesClient.map_usage_fields(usage_data)
 
     def _parse_content(self, response_data: dict[str, Any]) -> Any:

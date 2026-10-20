@@ -1,30 +1,97 @@
 """{Modality} modality client."""
 
-from typing import Any, Unpack
+from typing import Any, ClassVar, Unpack
 
 from asgiref.sync import async_to_sync
 
 from celeste.client import ModalityClient
 from celeste.core import InputType, Modality
-from celeste.types import AudioContent, DocumentContent, ImageContent, {Content}, VideoContent
+from celeste.types import (
+    AudioContent,
+    DocumentContent,
+    ImageContent,
+    {Content},
+    VideoContent,
+)
 
-from .io import {Modality}Chunk, {Modality}Input, {Modality}Output
+from .io import (
+    {Modality}Chunk,
+    {Modality}FinishReason,
+    {Modality}Input,
+    {Modality}Output,
+    {Modality}Usage,
+)
 from .parameters import {Modality}Parameters
 from .streaming import {Modality}Stream
 
 
-class {Modality}Client(ModalityClient[{Modality}Input, {Modality}Output, {Modality}Parameters, {Content}, {Modality}Chunk]):
-    """Base {modality} client.
-
-    Providers implement operation methods (generate, analyze).
-    """
+class {Modality}Client(
+    ModalityClient[
+        {Modality}Input,
+        {Modality}Output,
+        {Modality}Parameters,
+        {Content},
+        {Modality}Chunk,
+    ]
+):
+    """Base {modality} client with generate/analyze operations."""
 
     modality: Modality = Modality.{MODALITY}
+    _usage_class = {Modality}Usage
+    _finish_reason_class = {Modality}FinishReason
+
+    _generate_endpoint: ClassVar[str | None] = None
+    _analyze_endpoint: ClassVar[str | None] = None
 
     @classmethod
     def _output_class(cls) -> type[{Modality}Output]:
         """Return the Output class for {modality} modality."""
         return {Modality}Output
+
+    async def generate(
+        self,
+        prompt: str,
+        *,
+        extra_body: dict[str, Any] | None = None,
+        extra_headers: dict[str, str] | None = None,
+        **parameters: Unpack[{Modality}Parameters],
+    ) -> {Modality}Output:
+        """Generate {modality} content from prompt."""
+        inputs = {Modality}Input(prompt=prompt)
+        return await self._predict(
+            inputs,
+            endpoint=self._generate_endpoint,
+            extra_body=extra_body,
+            extra_headers=extra_headers,
+            **parameters,
+        )
+
+    async def analyze(
+        self,
+        prompt: str,
+        *,
+        image: ImageContent | None = None,
+        video: VideoContent | None = None,
+        audio: AudioContent | None = None,
+        document: DocumentContent | None = None,
+        extra_body: dict[str, Any] | None = None,
+        extra_headers: dict[str, str] | None = None,
+        **parameters: Unpack[{Modality}Parameters],
+    ) -> {Modality}Output:
+        """Analyze media with a prompt."""
+        self._check_media_support(
+            image=image, video=video, audio=audio, document=document
+        )
+        inputs = {Modality}Input(
+            prompt=prompt, image=image, video=video, audio=audio, document=document
+        )
+        return await self._predict(
+            inputs,
+            endpoint=self._analyze_endpoint,
+            extra_body=extra_body,
+            extra_headers=extra_headers,
+            **parameters,
+        )
 
     def _check_media_support(
         self,
@@ -47,7 +114,10 @@ class {Modality}Client(ModalityClient[{Modality}Input, {Modality}Output, {Modali
         if audio is not None and InputType.AUDIO not in self.model.optional_input_types:
             msg = f"Model {self.model.id} does not support audio input"
             raise NotImplementedError(msg)
-        if document is not None and InputType.DOCUMENT not in self.model.optional_input_types:
+        if (
+            document is not None
+            and InputType.DOCUMENT not in self.model.optional_input_types
+        ):
             msg = f"Model {self.model.id} does not support document input"
             raise NotImplementedError(msg)
 
@@ -112,8 +182,12 @@ class {Modality}StreamNamespace:
             async for chunk in client.stream.analyze("Describe", image=img):
                 print(chunk.content)
         """
-        self._client._check_media_support(image=image, video=video, audio=audio, document=document)
-        inputs = {Modality}Input(prompt=prompt, image=image, video=video, audio=audio, document=document)
+        self._client._check_media_support(
+            image=image, video=video, audio=audio, document=document
+        )
+        inputs = {Modality}Input(
+            prompt=prompt, image=image, video=video, audio=audio, document=document
+        )
         return self._client._stream(
             inputs,
             stream_class=self._client._stream_class(),
@@ -147,7 +221,13 @@ class {Modality}SyncNamespace:
             print(result.content)
         """
         inputs = {Modality}Input(prompt=prompt)
-        return async_to_sync(self._client._predict)(inputs, extra_body=extra_body, extra_headers=extra_headers, **parameters)
+        return async_to_sync(self._client._predict)(
+            inputs,
+            endpoint=self._client._generate_endpoint,
+            extra_body=extra_body,
+            extra_headers=extra_headers,
+            **parameters,
+        )
 
     def analyze(
         self,
@@ -167,9 +247,19 @@ class {Modality}SyncNamespace:
             result = client.sync.analyze("Describe", image=img)
             print(result.content)
         """
-        self._client._check_media_support(image=image, video=video, audio=audio, document=document)
-        inputs = {Modality}Input(prompt=prompt, image=image, video=video, audio=audio, document=document)
-        return async_to_sync(self._client._predict)(inputs, extra_body=extra_body, extra_headers=extra_headers, **parameters)
+        self._client._check_media_support(
+            image=image, video=video, audio=audio, document=document
+        )
+        inputs = {Modality}Input(
+            prompt=prompt, image=image, video=video, audio=audio, document=document
+        )
+        return async_to_sync(self._client._predict)(
+            inputs,
+            endpoint=self._client._analyze_endpoint,
+            extra_body=extra_body,
+            extra_headers=extra_headers,
+            **parameters,
+        )
 
     @property
     def stream(self) -> "{Modality}SyncStreamNamespace":
@@ -202,7 +292,9 @@ class {Modality}SyncStreamNamespace:
             print(stream.output.usage)
         """
         # Return same stream as async version - __iter__/__next__ handle sync iteration
-        return self._client.stream.generate(prompt, extra_body=extra_body, extra_headers=extra_headers, **parameters)
+        return self._client.stream.generate(
+            prompt, extra_body=extra_body, extra_headers=extra_headers, **parameters
+        )
 
     def analyze(
         self,
@@ -228,7 +320,14 @@ class {Modality}SyncStreamNamespace:
         """
         # Return same stream as async version - __iter__/__next__ handle sync iteration
         return self._client.stream.analyze(
-            prompt, image=image, video=video, audio=audio, document=document, extra_body=extra_body, extra_headers=extra_headers, **parameters
+            prompt,
+            image=image,
+            video=video,
+            audio=audio,
+            document=document,
+            extra_body=extra_body,
+            extra_headers=extra_headers,
+            **parameters,
         )
 
 

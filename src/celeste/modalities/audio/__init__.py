@@ -1,6 +1,6 @@
 """Celeste Audio modality."""
 
-from .client import AudioClient
+from .client import AudioClient, AudioStreamNamespace
 from .io import (
     AudioChunk,
     AudioFinishReason,
@@ -9,6 +9,7 @@ from .io import (
     AudioUsage,
 )
 from .parameters import AudioParameter, AudioParameters
+from .streaming import AudioStream
 
 __all__ = [
     "AudioChunk",
@@ -18,5 +19,7 @@ __all__ = [
     "AudioOutput",
     "AudioParameter",
     "AudioParameters",
+    "AudioStream",
+    "AudioStreamNamespace",
     "AudioUsage",
 ]

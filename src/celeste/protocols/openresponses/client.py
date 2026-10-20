@@ -41,16 +41,21 @@ class OpenResponsesClient(APIMixin):
     _content_fields: ClassVar[set[str]] = {"output"}
 
     def _build_url(self, endpoint: str, streaming: bool = False) -> str:
-        """Build full URL for request.
-
-        Override for Vertex AI support:
-            def _build_url(self, endpoint: str, streaming: bool = False) -> str:
-                if isinstance(self.auth, GoogleADC):
-                    return self.auth.build_url(self._get_vertex_endpoint(endpoint, streaming))
-                return super()._build_url(endpoint, streaming)
-        """
+        """Build the request URL, honoring an explicit base_url override."""
+        # Override for Vertex AI support:
+        # def _build_url(self, endpoint: str, streaming: bool = False) -> str:
+        #     if isinstance(self.auth, GoogleADC):
+        #         vertex_url = self.auth.build_url(
+        #             self._get_vertex_endpoint(endpoint, streaming),
+        #             model_id=self.model.id,
+        #         )
+        #         if self.base_url is None:
+        #             return vertex_url
+        #         vertex_path = vertex_url.removeprefix(self.auth.get_vertex_base_url())
+        #         return f"{self.base_url.rstrip('/')}{vertex_path}"
+        #     return super()._build_url(endpoint, streaming)
         base = self.base_url if self.base_url is not None else self._default_base_url
-        return f"{base}{endpoint}"
+        return f"{base.rstrip('/')}{endpoint}"
 
     def _build_request(
         self,
@@ -114,8 +119,8 @@ class OpenResponsesClient(APIMixin):
     @staticmethod
     def map_usage_fields(usage_data: dict[str, Any]) -> dict[str, int | float | None]:
         """Map Responses usage fields to unified names."""
-        input_details = usage_data.get("input_tokens_details", {})
-        output_details = usage_data.get("output_tokens_details", {})
+        input_details = usage_data.get("input_tokens_details") or {}
+        output_details = usage_data.get("output_tokens_details") or {}
         return {
             UsageField.INPUT_TOKENS: usage_data.get("input_tokens"),
             UsageField.OUTPUT_TOKENS: usage_data.get("output_tokens"),
@@ -128,7 +133,7 @@ class OpenResponsesClient(APIMixin):
         self, response_data: dict[str, Any]
     ) -> dict[str, int | float | None]:
         """Extract usage data from Responses API response."""
-        usage_data = response_data.get("usage", {})
+        usage_data = response_data.get("usage") or {}
         return self.map_usage_fields(usage_data)
 
     def _parse_content(self, response_data: dict[str, Any]) -> Any:
@@ -153,14 +158,24 @@ class OpenResponsesClient(APIMixin):
         return FinishReason(reason=None)
 
     def _build_metadata(self, response_data: dict[str, Any]) -> dict[str, Any]:
-        """Preserve hosted-tool billing markers without retaining response content."""
+        """Preserve refusals and hosted-tool billing markers, excluding output text."""
         metadata = super()._build_metadata(response_data)
-        output = [
-            {key: item[key] for key in ("type", "status") if key in item}
-            for item in response_data.get("output") or []
-            if isinstance(item, dict)
-            and item.get("type") in {"file_search_call", "web_search_call"}
-        ]
+        output = []
+        for item in response_data.get("output") or []:
+            if not isinstance(item, dict):
+                continue
+            if item.get("type") in {"file_search_call", "web_search_call"}:
+                output.append(
+                    {key: item[key] for key in ("type", "status") if key in item}
+                )
+            elif item.get("type") == "message":
+                refusals = [
+                    part
+                    for part in item.get("content") or []
+                    if isinstance(part, dict) and part.get("type") == "refusal"
+                ]
+                if refusals:
+                    output.append({**item, "content": refusals})
         if output:
             metadata["raw_response"]["output"] = output
         return metadata

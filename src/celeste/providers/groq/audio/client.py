@@ -25,6 +25,11 @@ class GroqAudioClient(APIMixin):
 
     _content_fields: ClassVar[set[str]] = {"text"}
 
+    def _build_url(self, endpoint: str, streaming: bool = False) -> str:
+        """Build the request URL, honoring an explicit base_url override."""
+        base = self.base_url if self.base_url is not None else config.BASE_URL
+        return f"{base.rstrip('/')}{endpoint}"
+
     def _build_request(
         self,
         inputs: Any,
@@ -71,7 +76,7 @@ class GroqAudioClient(APIMixin):
                 data[key] = str(value)
 
         response = await self.http_client.post_multipart(
-            f"{config.BASE_URL}{endpoint}",
+            self._build_url(endpoint),
             headers=self._merge_headers(await self.auth.aget_headers(), extra_headers),
             files=files,
             data=data,

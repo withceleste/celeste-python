@@ -52,7 +52,7 @@ class ResponseFormatMapper(ParameterMapper[TextContent]):
         self, content: TextContent, value: OutputSchema | None
     ) -> TextContent:
         """Parse JSON string to typed output via Pydantic TypeAdapter."""
-        if value is None:
+        if value is None or content == "":
             return content
 
         if isinstance(content, BaseModel):
@@ -120,7 +120,7 @@ class ToolsMapper(ParameterMapper[TextContent]):
         if isinstance(params, type) and issubclass(params, BaseModel):
             schema = TypeAdapter(params).json_schema(
                 schema_generator=StrictJsonSchemaGenerator,
-                mode="serialization",
+                mode="validation",
             )
         else:
             schema = params

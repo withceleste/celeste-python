@@ -138,6 +138,7 @@ DOMAIN_OPERATION_TO_MODALITY: dict[tuple[Domain, Operation], Modality] = {
     (Domain.AUDIO, Operation.TRANSCRIBE): Modality.AUDIO,
     (Domain.AUDIO, Operation.ANALYZE): Modality.TEXT,
     (Domain.VIDEOS, Operation.GENERATE): Modality.VIDEOS,
+    (Domain.VIDEOS, Operation.EDIT): Modality.VIDEOS,
     (Domain.VIDEOS, Operation.ANALYZE): Modality.TEXT,
     (Domain.VIDEOS, Operation.EMBED): Modality.EMBEDDINGS,
     (Domain.DOCUMENTS, Operation.ANALYZE): Modality.TEXT,
@@ -146,7 +147,7 @@ DOMAIN_OPERATION_TO_MODALITY: dict[tuple[Domain, Operation], Modality] = {
 
 
 def infer_modality(domain: Domain, operation: Operation) -> Modality:
-    """Infer output modality from domain and operation."""
+    """Infer the Modality for a (Domain, Operation) pair."""
     key = (domain, operation)
     if key not in DOMAIN_OPERATION_TO_MODALITY:
         msg = f"No modality mapping for domain={domain.value}, operation={operation.value}"

@@ -41,16 +41,21 @@ class ChatCompletionsClient(APIMixin):
     _content_fields: ClassVar[set[str]] = {"choices"}
 
     def _build_url(self, endpoint: str, streaming: bool = False) -> str:
-        """Build full URL for request.
-
-        Override for Vertex AI support:
-            def _build_url(self, endpoint: str, streaming: bool = False) -> str:
-                if isinstance(self.auth, GoogleADC):
-                    return self.auth.build_url(self._get_vertex_endpoint(endpoint, streaming))
-                return super()._build_url(endpoint, streaming)
-        """
+        """Build the request URL, honoring an explicit base_url override."""
+        # Override for Vertex AI support:
+        # def _build_url(self, endpoint: str, streaming: bool = False) -> str:
+        #     if isinstance(self.auth, GoogleADC):
+        #         vertex_url = self.auth.build_url(
+        #             self._get_vertex_endpoint(endpoint, streaming),
+        #             model_id=self.model.id,
+        #         )
+        #         if self.base_url is None:
+        #             return vertex_url
+        #         vertex_path = vertex_url.removeprefix(self.auth.get_vertex_base_url())
+        #         return f"{self.base_url.rstrip('/')}{vertex_path}"
+        #     return super()._build_url(endpoint, streaming)
         base = self.base_url if self.base_url is not None else self._default_base_url
-        return f"{base}{endpoint}"
+        return f"{base.rstrip('/')}{endpoint}"
 
     def _build_request(
         self,
@@ -129,7 +134,7 @@ class ChatCompletionsClient(APIMixin):
         self, response_data: dict[str, Any]
     ) -> dict[str, int | float | None]:
         """Extract usage data from Chat Completions API response."""
-        usage_data = response_data.get("usage", {})
+        usage_data = response_data.get("usage") or {}
         return self.map_usage_fields(usage_data)
 
     def _parse_content(self, response_data: dict[str, Any]) -> Any:

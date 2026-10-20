@@ -9,7 +9,7 @@ from typing import Any, Unpack
 from pydantic import SecretStr
 
 from celeste import Authentication, ToolResult, create_client
-from celeste.artifacts import ImageArtifact
+from celeste.artifacts import ImageArtifact, VideoArtifact
 from celeste.core import Modality, Operation, Protocol, Provider
 from celeste.modalities.audio.io import AudioOutput
 from celeste.modalities.audio.parameters import AudioParameters
@@ -1270,6 +1270,28 @@ class SyncVideosNamespace:
         )
         return client.sync.generate(prompt, **params)
 
+    def edit(
+        self,
+        video: VideoArtifact,
+        prompt: str,
+        *,
+        model: str,
+        provider: Provider | None = None,
+        api_key: str | SecretStr | None = None,
+        auth: Authentication | None = None,
+        **params: Unpack[VideoParameters],
+    ) -> VideoOutput:
+        """Blocking video editing."""
+        client = create_client(
+            modality=Modality.VIDEOS,
+            operation=Operation.EDIT,
+            model=model,
+            provider=provider,
+            api_key=api_key,
+            auth=auth,
+        )
+        return client.sync.edit(video, prompt, **params)
+
     def analyze(
         self,
         video: VideoContent,
@@ -1323,7 +1345,7 @@ class SyncVideosNamespace:
 class VideosNamespace:
     """celeste.videos.* namespace.
 
-    Provides video generation and analysis operations.
+    Provides video generation, editing, and analysis operations.
     """
 
     async def generate(
@@ -1358,6 +1380,41 @@ class VideosNamespace:
             auth=auth,
         )
         return await client.generate(prompt, **parameters)
+
+    async def edit(
+        self,
+        video: VideoArtifact,
+        prompt: str,
+        *,
+        model: str,
+        provider: Provider | None = None,
+        api_key: str | SecretStr | None = None,
+        auth: Authentication | None = None,
+        **parameters: Unpack[VideoParameters],
+    ) -> VideoOutput:
+        """Edit a video with a prompt.
+
+        Args:
+            video: The video to edit.
+            prompt: Instructions for editing.
+            model: Model ID to use (required).
+            provider: Optional provider override.
+            api_key: Optional API key override.
+            auth: Optional Authentication object (e.g., GoogleADC for Vertex AI).
+            **parameters: Additional model parameters.
+
+        Returns:
+            VideoOutput with edited video.
+        """
+        client = create_client(
+            modality=Modality.VIDEOS,
+            operation=Operation.EDIT,
+            model=model,
+            provider=provider,
+            api_key=api_key,
+            auth=auth,
+        )
+        return await client.edit(video, prompt, **parameters)
 
     async def analyze(
         self,

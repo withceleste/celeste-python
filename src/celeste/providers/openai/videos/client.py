@@ -42,6 +42,11 @@ class OpenAIVideosClient(APIMixin):
 
     _content_fields: ClassVar[set[str]] = {"video_data"}
 
+    def _build_url(self, endpoint: str, streaming: bool = False) -> str:
+        """Build the request URL, honoring an explicit base_url override."""
+        base = self.base_url if self.base_url is not None else config.BASE_URL
+        return f"{base.rstrip('/')}{endpoint}"
+
     def _build_request(
         self,
         inputs: Any,
@@ -92,7 +97,7 @@ class OpenAIVideosClient(APIMixin):
         if files:
             logger.info("Sending multipart request to OpenAI with input_reference")
             response = await self.http_client.post_multipart(
-                f"{config.BASE_URL}{endpoint}",
+                self._build_url(endpoint),
                 headers=self._merge_headers(
                     await self.auth.aget_headers(), extra_headers
                 ),
@@ -102,7 +107,7 @@ class OpenAIVideosClient(APIMixin):
         else:
             logger.info(f"Sending request to OpenAI: {request_body}")
             response = await self.http_client.post(
-                f"{config.BASE_URL}{endpoint}",
+                self._build_url(endpoint),
                 headers=await self._json_headers(extra_headers),
                 json_body=request_body,
             )
@@ -117,7 +122,7 @@ class OpenAIVideosClient(APIMixin):
         poll_headers = await self._json_headers(extra_headers)
         for _ in range(config.MAX_POLLS):
             status_response = await self.http_client.get(
-                f"{config.BASE_URL}{endpoint}/{video_id}",
+                self._build_url(f"{endpoint}/{video_id}"),
                 headers=poll_headers,
             )
             self._handle_error_response(status_response)
@@ -144,7 +149,7 @@ class OpenAIVideosClient(APIMixin):
 
         # Fetch video content
         content_response = await self.http_client.get(
-            f"{config.BASE_URL}{endpoint}/{video_id}{config.CONTENT_ENDPOINT_SUFFIX}",
+            self._build_url(f"{endpoint}/{video_id}{config.CONTENT_ENDPOINT_SUFFIX}"),
             headers=poll_headers,
         )
         self._handle_error_response(content_response)

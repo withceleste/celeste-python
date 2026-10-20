@@ -16,6 +16,7 @@ _RESPONSE_FORMAT_OPTIONS = [
     AudioMimeType.AAC,
     AudioMimeType.FLAC,
     AudioMimeType.WAV,
+    AudioMimeType.PCM,
 ]
 
 _OPENAI_TRANSCRIBE_MIME_TYPES = [

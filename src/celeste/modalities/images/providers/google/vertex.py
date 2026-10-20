@@ -51,7 +51,13 @@ class GoogleVertexImagesClient(GoogleGenerateContentMixin, ImagesClient):
         """Parse usage from response."""
         usage = super()._parse_usage(response_data)
         candidates = response_data.get("candidates", [])
-        return {**usage, UsageField.NUM_IMAGES: len(candidates)}
+        num_images = sum(
+            1
+            for candidate in candidates
+            for part in candidate.get("content", {}).get("parts", [])
+            if not part.get("thought") and part.get("inlineData", {}).get("data")
+        )
+        return {**usage, UsageField.NUM_IMAGES: num_images}
 
     def _parse_content(
         self,

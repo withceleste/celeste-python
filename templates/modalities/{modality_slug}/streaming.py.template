@@ -1,9 +1,9 @@
 """{Modality} streaming primitives."""
 
 from abc import abstractmethod
-from typing import Any
 
 from celeste.streaming import Stream
+from celeste.types import {Content}
 
 from .io import (
     {Modality}Chunk,
@@ -24,7 +24,7 @@ class {Modality}Stream(Stream[{Modality}Output, {Modality}Parameters, {Modality}
     _empty_content = ""  # TODO: Set appropriate empty content for modality
 
     @abstractmethod
-    def _aggregate_content(self, chunks: list[{Modality}Chunk]) -> Any:
+    def _aggregate_content(self, chunks: list[{Modality}Chunk]) -> {Content}:
         """Aggregate content from chunks into raw content (modality-specific)."""
         ...
 

@@ -45,6 +45,12 @@ class OpenAILiveClient(APIMixin):
         session["model"] = self.model.id
         return {"type": "session.start", "session": session}
 
+    def _build_url(self, endpoint: str, streaming: bool = False) -> str:
+        """Build the WebSocket URL, honoring an explicit base_url override."""
+        base = self.base_url if self.base_url is not None else config.BASE_URL
+        url = f"{base.rstrip('/').removesuffix('/v1')}{endpoint}"
+        return url.replace("https://", "wss://", 1).replace("http://", "ws://", 1)
+
     async def _make_stream_request(
         self,
         request_body: dict[str, Any],
@@ -55,9 +61,8 @@ class OpenAILiveClient(APIMixin):
     ) -> AsyncGenerator[dict[str, Any], None]:
         """Return the WebSocket event generator."""
         headers = self._merge_headers(await self.auth.aget_headers(), extra_headers)
-        base = (self.base_url or config.BASE_URL).rstrip("/").removesuffix("/v1")
-        url = base.replace("https://", "wss://", 1).replace("http://", "ws://", 1) + (
-            endpoint or config.OpenAILiveEndpoint.CREATE_SESSION
+        url = self._build_url(
+            endpoint or config.OpenAILiveEndpoint.CREATE_SESSION, streaming=True
         )
         return self._stream_events(url, headers, request_body)
 
@@ -142,7 +147,7 @@ class OpenAILiveClient(APIMixin):
 
     def _parse_usage(self, response_data: dict[str, Any]) -> RawUsage:
         """Extract usage data from an OpenAI Live event."""
-        return self.map_usage_fields(response_data.get("usage", {}))
+        return self.map_usage_fields(response_data.get("usage") or {})
 
 
 __all__ = ["OpenAILiveClient"]

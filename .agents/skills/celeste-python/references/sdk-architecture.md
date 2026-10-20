@@ -7,14 +7,14 @@ Use this for changes inside `src/celeste`, templates, or Celeste tests.
 `src/celeste/client.py` defines the base layering:
 
 ```text
-HTTPClient
-  ^
 APIMixin
   ^
 ModalityClient
   ^
 Concrete provider/modality client
 ```
+
+`HTTPClient` (`src/celeste/http.py`) is not a base class: clients reach the pooled transport through the `http_client` property, declared on `APIMixin` and implemented by `ModalityClient`.
 
 Provider API mixins handle wire details. Modality clients handle operation methods, common prediction/streaming flow, output construction, parameter mapping, metadata, and warnings.
 
@@ -43,6 +43,8 @@ Modality clients define operation-level Python APIs:
 - `src/celeste/modalities/audio/client.py`
 - `src/celeste/modalities/videos/client.py`
 - `src/celeste/modalities/embeddings/client.py`
+- `src/celeste/modalities/segmentation/client.py`
+- `src/celeste/modalities/live/client.py`
 
 They should delegate request execution through `_predict(...)` and streaming through `_stream(...)`.
 
@@ -129,6 +131,7 @@ Model constraints define supported parameters:
 Model(
     id="...",
     provider=Provider.OPENAI,
+    display_name="...",
     operations={Modality.TEXT: {Operation.GENERATE}},
     parameter_constraints={
         TextParameter.OUTPUT_SCHEMA: Schema(),
@@ -169,15 +172,17 @@ Relevant source:
 
 ## Templates
 
-Use templates before inventing structure:
+Use templates before inventing structure (routing map: `templates/README.md`):
 
 - `templates/providers/{provider_slug}/`
 - `templates/providers/{provider_slug}/{api_slug}/`
 - `templates/modalities/{modality_slug}/`
 - `templates/modalities/{modality_slug}/providers/{provider_slug}/`
-- `templates/protocols/{protocol_slug}/`
+- `templates/protocols/{protocol_slug}/` (new wire format only, route 5)
 
-Templates are source of truth for generated provider/module shape. Current source and message helpers are source of truth for multimodal message serialization semantics.
+A provider that speaks an existing protocol (`chatcompletions`, `openresponses`) copies/adapts an existing compatible provider instead (route 2).
+
+Templates are source of truth for generated provider/module shape; a template that disagrees with current source is a template bug, fixed as groundwork before the feature. Current source and message helpers are source of truth for multimodal message serialization semantics.
 
 ## Tests To Consult
 

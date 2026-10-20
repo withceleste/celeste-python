@@ -88,6 +88,9 @@ class BytePlusImagesStream(_BytePlusImagesStream, ImagesStream):
 
     def _aggregate_content(self, chunks: list[ImageChunk]) -> ImageArtifact:
         """Aggregate image content from chunks."""
+        for chunk in reversed(chunks):
+            if "error" not in chunk.metadata:
+                return chunk.content
         return chunks[-1].content
 
     def _aggregate_usage(self, chunks: list[ImageChunk]) -> ImageUsage:
@@ -150,15 +153,14 @@ class BytePlusImagesClient(BytePlusImagesMixin, ImagesClient):
         msg = "No image URL or base64 data in BytePlus response"
         raise ValidationError(msg)
 
-    async def _make_request(
+    def _build_request(
         self,
-        request_body: dict[str, Any],
-        *,
-        endpoint: str | None = None,
-        extra_headers: dict[str, str] | None = None,
+        inputs: ImageInput,
+        extra_body: dict[str, Any] | None = None,
+        streaming: bool = False,
         **parameters: Unpack[ImageParameters],
     ) -> dict[str, Any]:
-        """Make HTTP request with parameter validation."""
+        """Build request with parameter validation."""
         # Validate mutually exclusive parameters
         if parameters.get("aspect_ratio") and parameters.get("quality"):
             msg = (
@@ -170,8 +172,8 @@ class BytePlusImagesClient(BytePlusImagesMixin, ImagesClient):
             )
             raise ConstraintViolationError(msg)
 
-        return await super()._make_request(
-            request_body, endpoint=endpoint, extra_headers=extra_headers, **parameters
+        return super()._build_request(
+            inputs, extra_body=extra_body, streaming=streaming, **parameters
         )
 
     def _stream_class(self) -> type[ImagesStream]:

@@ -22,17 +22,21 @@ class MistralChatClient(ChatCompletionsClient):
     ) -> str:
         """Map Mistral endpoint to Vertex AI endpoint."""
         if streaming:
-            return config.VertexMistralEndpoint.STREAM_CHAT
-        return config.VertexMistralEndpoint.CREATE_CHAT
+            return config.VertexChatEndpoint.STREAM_CHAT
+        return config.VertexChatEndpoint.CREATE_CHAT
 
     def _build_url(self, endpoint: str, streaming: bool = False) -> str:
-        """Build full URL based on auth type."""
+        """Build the request URL, honoring an explicit base_url override."""
         if isinstance(self.auth, GoogleADC):
-            return self.auth.build_url(
+            vertex_url = self.auth.build_url(
                 self._get_vertex_endpoint(endpoint, streaming=streaming),
                 model_id=self.model.id,
             )
-        return f"{config.BASE_URL}{endpoint}"
+            if self.base_url is None:
+                return vertex_url
+            vertex_path = vertex_url.removeprefix(self.auth.get_vertex_base_url())
+            return f"{self.base_url.rstrip('/')}{vertex_path}"
+        return super()._build_url(endpoint, streaming)
 
 
 __all__ = ["MistralChatClient"]

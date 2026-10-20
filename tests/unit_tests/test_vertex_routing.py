@@ -49,7 +49,13 @@ def _build_url(
     *,
     streaming: bool = False,
 ) -> str:
-    client = MagicMock(auth=auth, model=_model(model_id))
+    client = MagicMock(
+        spec=client_type,
+        auth=auth,
+        model=_model(model_id),
+        base_url=None,
+        _default_base_url=getattr(client_type, "_default_base_url", None),
+    )
     if hasattr(client_type, "_get_vertex_endpoint"):
         client._get_vertex_endpoint = client_type._get_vertex_endpoint.__get__(client)
     method = client_type._build_url.__get__(client)
@@ -220,8 +226,13 @@ def test_adc_embeddings_use_location_endpoint(location: str, base_url: str) -> N
 
 
 def test_veo_poll_routes_match_auth() -> None:
-    direct = MagicMock(auth=_api_key(), model=_model("veo"))
-    vertex = MagicMock(auth=_adc(), model=_model("veo"))
+    direct = MagicMock(auth=_api_key(), model=_model("veo"), base_url=None)
+    vertex = MagicMock(auth=_adc(), model=_model("veo"), base_url=None)
+    for client in (direct, vertex):
+        client._get_vertex_endpoint = GoogleVeoClient._get_vertex_endpoint.__get__(
+            client
+        )
+        client._build_url = GoogleVeoClient._build_url.__get__(client)
     direct_url = GoogleVeoClient._build_poll_url(direct, "operations/abc")
     vertex_url = GoogleVeoClient._build_poll_url(vertex, "operations/abc")
     assert direct_url.endswith("/v1beta/operations/abc")

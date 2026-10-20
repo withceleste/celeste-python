@@ -37,15 +37,27 @@ class AudioClient(
     async def speak(
         self,
         text: str,
+        *,
+        extra_body: dict[str, Any] | None = None,
+        extra_headers: dict[str, str] | None = None,
         **parameters: Unpack[AudioParameters],
     ) -> AudioOutput:
         """Convert text to speech audio."""
         inputs = AudioInput(text=text)
-        return await self._predict(inputs, endpoint=self._speak_endpoint, **parameters)
+        return await self._predict(
+            inputs,
+            endpoint=self._speak_endpoint,
+            extra_body=extra_body,
+            extra_headers=extra_headers,
+            **parameters,
+        )
 
     async def generate(
         self,
         prompt: str,
+        *,
+        extra_body: dict[str, Any] | None = None,
+        extra_headers: dict[str, str] | None = None,
         **parameters: Unpack[AudioParameters],
     ) -> AudioOutput:
         """Generate audio from a prompt."""
@@ -54,7 +66,11 @@ class AudioClient(
             raise NotImplementedError(msg)
         inputs = AudioInput(text=prompt)
         return await self._predict(
-            inputs, endpoint=self._generate_endpoint, **parameters
+            inputs,
+            endpoint=self._generate_endpoint,
+            extra_body=extra_body,
+            extra_headers=extra_headers,
+            **parameters,
         )
 
     async def transcribe(
@@ -158,7 +174,11 @@ class AudioSyncNamespace:
         """Blocking speech generation."""
         inputs = AudioInput(text=text)
         return async_to_sync(self._client._predict)(
-            inputs, extra_body=extra_body, extra_headers=extra_headers, **parameters
+            inputs,
+            endpoint=self._client._speak_endpoint,
+            extra_body=extra_body,
+            extra_headers=extra_headers,
+            **parameters,
         )
 
     def generate(
