@@ -7,12 +7,7 @@ CASES = [
     (Provider.ANTHROPIC, "claude-haiku-4-5", "square_image", "image"),
     (Provider.COHERE, "command-a-vision-07-2025", "square_image", "image"),
     (Provider.GOOGLE, "gemini-2.5-flash-lite", "square_image", "image"),
-    (
-        Provider.GROQ,
-        "meta-llama/llama-4-scout-17b-16e-instruct",
-        "square_image",
-        "image",
-    ),
+    (Provider.GROQ, "qwen/qwen3.8-27b", "square_image", "image"),
     (Provider.HUGGINGFACE, "google/gemma-3n-E4B-it", "square_image", "image"),
     (Provider.META, "muse-spark-1.3", "square_image", "image"),
     (Provider.MISTRAL, "pixtral-12b-latest", "square_image", "image"),
