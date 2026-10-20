@@ -7,15 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Removed
-
-- **OpenAI videos provider** (#538) — OpenAI shut down the Videos API and all Sora 2 models on 2026-09-24; `sora-2`, `sora-2-pro` and `sora-2-2025-12-08` go with it. Video generation stays on Google, BytePlus and xAI.
-
 ---
 
 ## [1.0.0] - 2026-10-20
 
-200 PRs merged, 460+ files changed. First stable release: a live (realtime) modality, transcription, audio generation, upscaling, segmentation, native multimodal messages, reasoning and grounding on outputs, OpenTelemetry, and a model catalog refreshed against live provider APIs.
+204 PRs merged, 470+ files changed. First stable release: a live (realtime) modality, transcription, audio generation, upscaling, segmentation, native multimodal messages, reasoning and grounding on outputs, OpenTelemetry, and a model catalog refreshed against live provider APIs.
 
 ### 1. Live Modality (headline)
 
@@ -86,7 +82,7 @@ Bidirectional realtime sessions as a first-class modality.
 
 ### 8. New Providers
 
-- **Meta** (#502) — OpenResponses protocol, credential `MODEL_API_KEY`: `muse-wonder-1.0`, `muse-spark-1.3`, `muse-spark-1.3-contributor`.
+- **Meta** (#502, #537) — OpenResponses protocol, credential `MODEL_API_KEY` or `META_API_KEY`: `muse-wonder-1.0`, `muse-spark-1.3`, `muse-spark-1.3-contributor`.
 - **OpenRouter** (#284) — OpenResponses protocol, credential `OPENROUTER_API_KEY`; any OpenRouter model slug.
 - **fal.ai** (#341) — `Provider.FAL`, credential `FAL_KEY`; SAM 3 segmentation.
 - **Topaz Labs** (#340) — image upscaling, credential `TOPAZ_API_KEY`.
@@ -149,12 +145,12 @@ Bidirectional realtime sessions as a first-class modality.
 
 **Removed (retired, shut down or superseded on provider APIs; arrows point to the replacement):**
 - Anthropic: `claude-sonnet-4-20250514`, `claude-opus-4-20250514` (#312)
-- OpenAI: `dall-e-2`, `dall-e-3` (#280); `gpt-5.1-codex`, `gpt-5.2-codex`, `gpt-5.2-chat-latest` → `gpt-5.6-sol` (#432)
+- OpenAI: `dall-e-2`, `dall-e-3` (#280); `gpt-5.1-codex`, `gpt-5.2-codex`, `gpt-5.2-chat-latest` → `gpt-5.6-sol` (#432); `sora-2`, `sora-2-pro`, `sora-2-2025-12-08` (#538)
 - Google: `gemini-3-pro-preview` (#280); `gemini-3.1-flash-lite-preview` → `gemini-3.1-flash-lite` (#281); `gemini-3-pro-image-preview` → `gemini-3-pro-image`, `gemini-3.1-flash-image-preview` → `gemini-3.1-flash-image` (#294); `gemini-embedding-001` → `gemini-embedding-2`, `veo-3.0-generate-001`, `veo-3.0-fast-generate-001` (#312); `gemini-2.5-flash-tts` → `gemini-2.5-flash-preview-tts`, `gemini-2.5-pro-tts` → `gemini-2.5-pro-preview-tts` (#321); `imagen-4.0-generate-001`, `imagen-4.0-fast-generate-001`, `imagen-4.0-ultra-generate-001` → `gemini-3.1-flash-image` (#418)
 - xAI: `grok-4-0709`, `grok-4-1-fast-reasoning`, `grok-4-1-fast-non-reasoning`, `grok-4-fast-reasoning`, `grok-4-fast-non-reasoning` (#280); `grok-4.20-beta-0309-reasoning` → `grok-4.20-0309-reasoning`, `grok-4.20-beta-0309-non-reasoning` → `grok-4.20-0309-non-reasoning` (#282)
 - Mistral: `open-mistral-7b`, `pixtral-12b-2409` (#280); `pixtral-large-latest`, `voxtral-mini-2507` (#311); `labs-devstral-small-2512` (#312)
 - DeepSeek: `deepseek-chat`, `deepseek-reasoner` → `deepseek-v4-flash` (#314)
-- Groq: `moonshotai/kimi-k2-instruct`, `moonshotai/kimi-k2-instruct-0905` (#280)
+- Groq: `moonshotai/kimi-k2-instruct`, `moonshotai/kimi-k2-instruct-0905` (#280); `llama-3.1-8b-instant` → `openai/gpt-oss-20b` (#539)
 - Moonshot: `kimi-k2-0711-preview`, `kimi-k2-0905-preview`, `kimi-k2-turbo-preview`, `kimi-k2-thinking`, `kimi-k2-thinking-turbo` (#312)
 - BytePlus: `seedance-1-0-lite-t2v-250428`, `seedance-1-0-lite-i2v-250428` (#280)
 - ElevenLabs: `eleven_multilingual_v1`, `eleven_monolingual_v1` (#313)
@@ -172,6 +168,7 @@ Bidirectional realtime sessions as a first-class modality.
 - **Outputs** — `num_images > 1` returns a list of `ImageArtifact` on xAI (#374); `stream()` returns a delegating `_TracedStream` wrapper, so `isinstance(x, Stream)` checks fail (#272).
 - **Voices and formats** — all 52 previous ElevenLabs voices (e.g. Rachel, Adam, George) and all 14 previous Gradium voice ids fail `VoiceConstraint` (Emma's id remains the implicit default when no voice is passed); pick from the refreshed catalogs (#308, #504). ElevenLabs' default voice is Janet instead of Rachel (#509). ElevenLabs `ulaw_8000` / `alaw_8000` output formats removed (#314).
 - **Credentials** — `TOPAZLABS_API_KEY` → `TOPAZ_API_KEY` (#340).
+- **OpenAI videos provider removed** (#538) — OpenAI shut down the Videos API and all Sora 2 models on 2026-09-24; video generation stays on Google, BytePlus and xAI.
 - **Custom providers** (#401) — `APIMixin._json_headers()` is async; `_make_stream_request` is `async def` returning an unstarted `AsyncGenerator`; new `Authentication.aget_headers()`; `close_all_http_clients()` closes only the current loop's pools.
 - **Utilities and typing** — `celeste.utils.build_image_data_url` → `build_data_url(artifact)` (#312); the never-mapped `prompt` key is removed from `AudioParameters` (#324).
 - **Deep imports** — Google: `IMAGEN_MODELS` / `GEMINI_MODELS`, `IMAGEN_PARAMETER_MAPPERS` / `GEMINI_PARAMETER_MAPPERS`, the Imagen and Gemini image backend modules, `celeste.providers.google.cloud_tts` and the previous `celeste.providers.google.interactions` modules removed or replaced, per-backend classes renamed, `VEO_SUPPORTED_MIME_TYPES` → `GOOGLE_SUPPORTED_MIME_TYPES` (#310, #316, #321, #435). OpenAI / xAI `ThinkingBudgetMapper` → `ThinkingLevelMapper`, Mistral's removed (#501). Dead `OllamaClient` / `OllamaStream` aliases removed (#316). BFL `WidthMapper` / `HeightMapper` removed (#436). `RefResolvingJsonSchemaGenerator` / `StrictRefResolvingJsonSchemaGenerator` removed, `XSearchMapper` / `CodeExecutionMapper` moved to `celeste.providers.xai.responses.tools`, `Vertex{Provider}Endpoint` → `Vertex{Api}Endpoint` (#534).
@@ -187,7 +184,7 @@ Bidirectional realtime sessions as a first-class modality.
 - **Tool calling** — Gemini mixed built-in + function tools (#285, #334); Vertex function calls without an `id` (#460); no spurious `WebSearch.kind` warning on Google Interactions (#518); Chat Completions citations from the selected choice only (#534); Vertex citation offsets mapped within their part (#401).
 - **Images** — OpenAI and xAI return every generated image (#356, #374); BFL dimensions forwarded exactly, native aspect ratios, `disable_pup`, moderation and `No Card Generated` polling stops (#426, #436, #511, #512); BytePlus MIME types from `output_format` (#520), successful images kept after a later failure and the quality/aspect-ratio guard on streams (#534); sync image operations reach their endpoints (OpenAI and xAI sync edits hit `/images/edits`) and sync/stream `edit` / `upscale` raise `NotImplementedError` like async (#534); Google images dispatcher forwards `base_url`, transforms and metadata (#258, #317).
 - **Audio** — ElevenLabs sends `output_format` as a query parameter (previously always MP3) with corrected MIME types and new formats (`mp3_24000_48`, `pcm_32000`, `wav_8000`…`wav_48000`) (#314); OpenAI speech MIME type from the response and `wav` output (#412); Gradium raw audio labeled `audio/pcm` / `audio/pcmu` / `audio/pcma` (#534) and `pcm_8000` (#313); Google TTS languages, `Language` gains 49 codes (#382, #414); Lyria output format and final audio block (#329, #405); audio bytes no longer copied into metadata (#307).
-- **Videos** — Vertex Veo `gcsUri` parsed and download credentials scoped to Google origins (#401); Sora durations, 1080p and portrait sizes (#314).
+- **Videos** — Vertex Veo `gcsUri` parsed and download credentials scoped to Google origins (#401).
 - **Anthropic on Vertex** — `anthropic_version` in the body, `model` omitted, web search downgraded to the supported version (#515).
 - **Streaming and telemetry** — streams consumed across tasks under OpenTelemetry (#277); Ollama image streams raise `StreamEventError` on in-band errors (#534); complete streamed usage and raw responses (#300).
 - **Typing** — modality `Parameters` TypedDicts are `total=False` (#256); `output_schema=list[Model]` type-checks (#497).
