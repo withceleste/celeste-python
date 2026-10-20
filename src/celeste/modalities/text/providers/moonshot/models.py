@@ -11,7 +11,7 @@ from celeste.constraints import (
 )
 from celeste.core import Modality, Operation, Parameter, Provider
 from celeste.models import Model
-from celeste.tools import ToolChoice, WebSearch
+from celeste.tools import ToolChoice
 
 from ...parameters import TextParameter
 
@@ -29,21 +29,6 @@ MODELS: list[Model] = [
             TextParameter.IMAGE: ImagesConstraint(),
             TextParameter.TOOLS: ToolSupport(tools=[]),
             TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
-        },
-    ),
-    Model(
-        id="kimi-k2.5",
-        provider=Provider.MOONSHOT,
-        display_name="Kimi K2.5",
-        operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
-        streaming=True,
-        parameter_constraints={
-            TextParameter.OUTPUT_SCHEMA: Schema(),
-            TextParameter.IMAGE: ImagesConstraint(),
-            TextParameter.TOOLS: ToolSupport(tools=[]),
-            TextParameter.TOOL_CHOICE: Choice(
-                options=[ToolChoice.AUTO, ToolChoice.NONE]
-            ),
         },
     ),
     Model(
@@ -92,20 +77,6 @@ MODELS: list[Model] = [
             TextParameter.TOOL_CHOICE: Choice(
                 options=[ToolChoice.AUTO, ToolChoice.NONE]
             ),
-        },
-    ),
-    Model(
-        id="moonshot-v1-8k-vision-preview",
-        provider=Provider.MOONSHOT,
-        display_name="Moonshot v1 8K Vision (Preview)",
-        operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
-        streaming=True,
-        parameter_constraints={
-            Parameter.TEMPERATURE: Range(min=0.0, max=1.0, step=0.01),
-            TextParameter.OUTPUT_SCHEMA: Schema(),
-            TextParameter.IMAGE: ImagesConstraint(),
-            TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
-            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
         },
     ),
 ]

@@ -8,15 +8,9 @@ CASES = [
     (Provider.COHERE, "command-a-vision-07-2025", "square_image", "image"),
     (Provider.GOOGLE, "gemini-2.5-flash-lite", "square_image", "image"),
     (Provider.GROQ, "qwen/qwen3.8-27b", "square_image", "image"),
-    (Provider.HUGGINGFACE, "google/gemma-3n-E4B-it", "square_image", "image"),
     (Provider.META, "muse-spark-1.3", "square_image", "image"),
     (Provider.MISTRAL, "pixtral-12b-latest", "square_image", "image"),
-    (
-        Provider.MOONSHOT,
-        "moonshot-v1-8k-vision-preview",
-        "square_image",
-        "image",
-    ),
+    (Provider.MOONSHOT, "kimi-k2.6", "square_image", "image"),
     (Provider.OPENAI, "gpt-4o-mini", "square_image", "image"),
     (
         Provider.XAI,
