@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- **OpenAI videos provider** (#538) — OpenAI shut down the Videos API and all Sora 2 models on 2026-09-24; `sora-2`, `sora-2-pro` and `sora-2-2025-12-08` go with it. Video generation stays on Google, BytePlus and xAI.
+
 ---
 
 ## [1.0.0] - 2026-10-20

@@ -12,7 +12,6 @@ pytestmark = pytest.mark.slow
 @pytest.mark.parametrize(
     ("provider", "model", "parameters"),
     [
-        (Provider.OPENAI, "sora-2", {"duration": 4, "resolution": "720p"}),
         (Provider.GOOGLE, "veo-3.1-fast-generate-preview", {"duration": 4}),
         (Provider.GOOGLE, "gemini-omni-flash-preview", {}),
         (

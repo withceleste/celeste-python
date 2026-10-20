@@ -15,7 +15,6 @@ This document contains the official API reference documentation links for all pr
 | **OpenAI** | Images | [Images API Reference](https://platform.openai.com/docs/api-reference/images) | ✅ |
 | **OpenAI** | Audio | [Audio API Reference](https://platform.openai.com/docs/api-reference/audio) | ✅ |
 | **OpenAI** | Live | [Live API Reference](https://developers.openai.com/api/reference/resources/live/primary-websocket) | ✅ |
-| **OpenAI** | Videos | [Videos API Reference](https://platform.openai.com/docs/api-reference/videos) | ✅ |
 | **Anthropic** | Messages | [Messages API Reference](https://docs.anthropic.com/claude/reference/messages) | ✅ |
 | **Cohere** | Chat | [Chat API Reference](https://docs.cohere.com/reference/chat) | ✅ |
 | **DeepSeek** | Chat | [Chat API Reference](https://api-docs.deepseek.com/api/create-chat-completion) | ✅ |
