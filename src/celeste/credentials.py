@@ -80,6 +80,7 @@ class Credentials(BaseSettings):
     model_api_key: SecretStr | None = Field(
         None, validation_alias=AliasChoices("MODEL_API_KEY", "META_API_KEY")
     )
+    typesafe_api_key: SecretStr | None = Field(None, alias="TYPESAFE_API_KEY")
 
     model_config = {
         "env_file": find_dotenv(),

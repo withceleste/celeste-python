@@ -29,6 +29,7 @@ class Provider(StrEnum):
     OPENROUTER = "openrouter"
     FAL = "fal"
     META = "meta"
+    TYPESAFE = "typesafe"
 
 
 class Protocol(StrEnum):
@@ -48,6 +49,7 @@ class Modality(StrEnum):
     AUDIO = "audio"
     SEGMENTATION = "segmentation"
     LIVE = "live"
+    DECISION = "decision"
 
 
 class Operation(StrEnum):
@@ -66,6 +68,7 @@ class Operation(StrEnum):
     UPSCALE = "upscale"
     SEGMENT = "segment"
     CONNECT = "connect"
+    DECIDE = "decide"
 
 
 class InputType(StrEnum):
@@ -143,6 +146,8 @@ DOMAIN_OPERATION_TO_MODALITY: dict[tuple[Domain, Operation], Modality] = {
     (Domain.VIDEOS, Operation.EMBED): Modality.EMBEDDINGS,
     (Domain.DOCUMENTS, Operation.ANALYZE): Modality.TEXT,
     (Domain.LIVE, Operation.CONNECT): Modality.LIVE,
+    (Domain.TEXT, Operation.DECIDE): Modality.DECISION,
+    (Domain.IMAGES, Operation.DECIDE): Modality.DECISION,
 }
 
 

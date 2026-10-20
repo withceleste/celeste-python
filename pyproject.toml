@@ -173,6 +173,8 @@ module = [
     "celeste.modalities.live.client",
     "celeste.modalities.live.streaming",
     "celeste.modalities.live.providers.*",
+    "celeste.modalities.decision.client",
+    "celeste.modalities.decision.providers.*",
     "celeste.providers.*.client",
     "celeste.providers.*.*",
     "celeste.namespaces.domains",

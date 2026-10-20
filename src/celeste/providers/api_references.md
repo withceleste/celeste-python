@@ -39,11 +39,12 @@ This document contains the official API reference documentation links for all pr
 | **Ollama** | Responses (OpenAI-compatible) | [API Reference](https://docs.ollama.com/api) | — |
 | **OpenRouter** | Responses | [API Reference](https://openrouter.ai/docs/api/api-reference) | — |
 | **Meta** | Responses | [Responses API Reference](https://dev.meta.ai/docs/api-reference/responses/create-response) | — |
+| **TypeSafe** | System One | [API Reference](https://docs.typesafe.ai/api) | — |
 
 ## Summary
 
 - **Total APIs:** 34 provider-API combinations
-- **Validated:** 22 ✅ · 12 pending (—)
+- **Validated:** 21 ✅ · 13 pending (—)
 - **Naming convention:** Method names only (Provider column provides context)
 - **Link strategy:** Specific method/endpoint pages when available, general API reference pages otherwise
 
