@@ -1,7 +1,7 @@
 """Provider API credentials management for Celeste."""
 
 from dotenv import find_dotenv
-from pydantic import Field, SecretStr
+from pydantic import AliasChoices, Field, SecretStr
 from pydantic_settings import BaseSettings
 
 from celeste.auth import (
@@ -77,7 +77,9 @@ class Credentials(BaseSettings):
     gradium_api_key: SecretStr | None = Field(None, alias="GRADIUM_API_KEY")
     openrouter_api_key: SecretStr | None = Field(None, alias="OPENROUTER_API_KEY")
     fal_key: SecretStr | None = Field(None, alias="FAL_KEY")
-    model_api_key: SecretStr | None = Field(None, alias="MODEL_API_KEY")
+    model_api_key: SecretStr | None = Field(
+        None, validation_alias=AliasChoices("MODEL_API_KEY", "META_API_KEY")
+    )
 
     model_config = {
         "env_file": find_dotenv(),
