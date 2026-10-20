@@ -6,6 +6,7 @@ from typing import Any
 import httpx
 
 from celeste.client import APIMixin
+from celeste.http import DEFAULT_TIMEOUT
 from celeste.io import FinishReason
 from celeste.mime_types import AudioMimeType
 
@@ -139,6 +140,7 @@ class ElevenLabsTextToSpeechClient(APIMixin):
             url,
             json=json_body,
             headers=headers,
+            timeout=DEFAULT_TIMEOUT,
         ) as response:
             if not response.is_success:
                 error_text = await response.aread()
