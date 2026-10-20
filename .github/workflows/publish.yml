@@ -92,7 +92,7 @@ jobs:
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
           TOPAZ_API_KEY: ${{ secrets.TOPAZ_API_KEY }}
-          MODEL_API_KEY: ${{ secrets.MODEL_API_KEY }}
+          META_API_KEY: ${{ secrets.META_API_KEY }}
         run: uv run pytest "$TEST_FILE" -v
 
   build:
