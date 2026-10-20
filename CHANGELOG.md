@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.0.0] - 2026-10-20
 
-204 PRs merged, 470+ files changed. First stable release: a live (realtime) modality, transcription, audio generation, upscaling, segmentation, native multimodal messages, reasoning and grounding on outputs, OpenTelemetry, and a model catalog refreshed against live provider APIs.
+206 PRs merged, 470+ files changed. First stable release: a live (realtime) modality, transcription, audio generation, upscaling, segmentation, native multimodal messages, reasoning and grounding on outputs, OpenTelemetry, and a model catalog refreshed against live provider APIs.
 
 ### 1. Live Modality (headline)
 
@@ -150,7 +150,7 @@ Bidirectional realtime sessions as a first-class modality.
 - xAI: `grok-4-0709`, `grok-4-1-fast-reasoning`, `grok-4-1-fast-non-reasoning`, `grok-4-fast-reasoning`, `grok-4-fast-non-reasoning` (#280); `grok-4.20-beta-0309-reasoning` → `grok-4.20-0309-reasoning`, `grok-4.20-beta-0309-non-reasoning` → `grok-4.20-0309-non-reasoning` (#282)
 - Mistral: `open-mistral-7b`, `pixtral-12b-2409` (#280); `pixtral-large-latest`, `voxtral-mini-2507` (#311); `labs-devstral-small-2512` (#312)
 - DeepSeek: `deepseek-chat`, `deepseek-reasoner` → `deepseek-v4-flash` (#314)
-- Groq: `moonshotai/kimi-k2-instruct`, `moonshotai/kimi-k2-instruct-0905` (#280); `llama-3.1-8b-instant` → `openai/gpt-oss-20b` (#539)
+- Groq: `moonshotai/kimi-k2-instruct`, `moonshotai/kimi-k2-instruct-0905` (#280); `llama-3.1-8b-instant` → `openai/gpt-oss-20b` (#539); `meta-llama/llama-4-scout-17b-16e-instruct` (#541)
 - Moonshot: `kimi-k2-0711-preview`, `kimi-k2-0905-preview`, `kimi-k2-turbo-preview`, `kimi-k2-thinking`, `kimi-k2-thinking-turbo` (#312)
 - BytePlus: `seedance-1-0-lite-t2v-250428`, `seedance-1-0-lite-i2v-250428` (#280)
 - ElevenLabs: `eleven_multilingual_v1`, `eleven_monolingual_v1` (#313)
@@ -181,7 +181,7 @@ Bidirectional realtime sessions as a first-class modality.
 - **Text content** — Anthropic joins all text blocks (#428), Google Vertex all text parts (#373), OpenResponses all message items with rebased citations (#500); Cohere joins text blocks and surfaces thinking (#314); Anthropic empty `max_tokens` responses return usage instead of raising (#523); Anthropic compaction blocks preserved for replay (#430); `analyze(audio=...)` available on every text provider (#248).
 - **Responses protocol** — assistant `TextPart`s replay as `output_text` (fixes OpenAI 400 on multi-turn); refusals kept in `metadata["raw_response"]["output"]`; hosted-tool billing markers kept; nullable usage objects accepted (#431, #534).
 - **Usage** — `usage: null` and null token-detail objects no longer crash any parser (#534); BFL reports the settled `cost` (#426); Vertex `num_images` counts images (#534).
-- **Tool calling** — Gemini mixed built-in + function tools (#285, #334); Vertex function calls without an `id` (#460); no spurious `WebSearch.kind` warning on Google Interactions (#518); Chat Completions citations from the selected choice only (#534); Vertex citation offsets mapped within their part (#401).
+- **Tool calling** — Gemini mixed built-in + function tools (#285, #334); Vertex function calls without an `id` (#460); no spurious `WebSearch.kind` warning on Google Interactions (#518); Chat Completions citations from the selected choice only (#534); Vertex citation offsets mapped within their part (#401); Groq streamed web-search grounding (#540).
 - **Images** — OpenAI and xAI return every generated image (#356, #374); BFL dimensions forwarded exactly, native aspect ratios, `disable_pup`, moderation and `No Card Generated` polling stops (#426, #436, #511, #512); BytePlus MIME types from `output_format` (#520), successful images kept after a later failure and the quality/aspect-ratio guard on streams (#534); sync image operations reach their endpoints (OpenAI and xAI sync edits hit `/images/edits`) and sync/stream `edit` / `upscale` raise `NotImplementedError` like async (#534); Google images dispatcher forwards `base_url`, transforms and metadata (#258, #317).
 - **Audio** — ElevenLabs sends `output_format` as a query parameter (previously always MP3) with corrected MIME types and new formats (`mp3_24000_48`, `pcm_32000`, `wav_8000`…`wav_48000`) (#314); OpenAI speech MIME type from the response and `wav` output (#412); Gradium raw audio labeled `audio/pcm` / `audio/pcmu` / `audio/pcma` (#534) and `pcm_8000` (#313); Google TTS languages, `Language` gains 49 codes (#382, #414); Lyria output format and final audio block (#329, #405); audio bytes no longer copied into metadata (#307).
 - **Videos** — Vertex Veo `gcsUri` parsed and download credentials scoped to Google origins (#401).
