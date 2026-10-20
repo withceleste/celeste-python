@@ -7,20 +7,212 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Removed
+---
 
-- Removed the expired `Capability` and `APIKey` compatibility APIs, the
-  `capability=` client argument, and deprecated boolean tool parameters. Use
-  `Modality` + `Operation`, `AuthHeader`, and `tools=` respectively.
-- Removed the unused string authentication registry, the unregistered Google
-  Interactions prototype, and the superseded WebSocket client wrapper.
+## [1.0.0] - 2026-10-20
 
-### Changed
+200 PRs merged, 460+ files changed. First stable release: a live (realtime) modality, transcription, audio generation, upscaling, segmentation, native multimodal messages, reasoning and grounding on outputs, OpenTelemetry, and a model catalog refreshed against live provider APIs.
 
-- Consolidated the unit and integration suites around public contracts and
-  parametrized provider matrices. Arbitrary unregistered provider model IDs
-  remain supported and optimistically advertise streaming because provider
-  catalogs cannot be exhaustive.
+### 1. Live Modality (headline)
+
+Bidirectional realtime sessions as a first-class modality.
+
+- `celeste.live.connect(model=..., messages=..., **LiveParameters)` returns a `LiveStream`, used as `async with ... as livestream`.
+- `livestream.send(...)` accepts audio (`AudioArtifact`), `ToolResult` and raw frame dicts on every model, plus `str`, `Message` and `ImageArtifact` on Gemini Live; `livestream.end()` stops sending.
+- Chunks (`LiveChunk`) carry the model audio plus `transcript` and `tool_calls`; the final `LiveOutput` holds the audio artifact, `usage` and the `messages` transcript.
+- **Parameters:** `voice`, `audio_format` (`LiveAudioFormat`), `tools`, `thinking_level`, `reference_images`, `temperature`, `max_tokens`, `seed` (each provider maps the subset it supports).
+- **Models:** Google `gemini-3.8-live`, `gemini-3.8-live-extended-thinking` (BidiGenerateContent, also on Vertex via `GoogleADC`); OpenAI `gpt-live-1`.
+- New `Modality.LIVE`, `Domain.LIVE`, `Operation.CONNECT`; `AudioMimeType.PCMU` / `PCMA`.
+- PR: #477
+- Files: `src/celeste/modalities/live/` (new), `src/celeste/providers/google/live/` (new), `src/celeste/providers/openai/live/` (new)
+
+### 2. New Operations and Modalities
+
+- **Audio transcription** — `celeste.audio.transcribe(audio, model=..., prompt=..., language=..., temperature=...)` (+ sync) returns `TextOutput`. Providers: Groq Whisper, OpenAI (`gpt-4o-mini-transcribe`, `gpt-4o-mini-transcribe-2025-12-15`, `gpt-4o-transcribe`, `gpt-4o-transcribe-diarize`, `gpt-transcribe`, `whisper-1`), ElevenLabs Scribe, Mistral Voxtral (#337, #339, #388, #413, #483, #486).
+- **Audio generation** — `celeste.audio.generate(prompt, ...)` with Google Lyria (`lyria-3-clip-preview`, `lyria-3-pro-preview`, `lyria-3.5`); `reference_images` for image-conditioned music; lyrics and structure kept in `metadata["text_blocks"]` (#324, #400, #405).
+- **Image upscaling** — `celeste.images.upscale(image, model=..., ...)` (+ sync) with Topaz Labs Gigapixel (8 models, async submit → status → download) and new upscale parameters (`output_width`, `face_enhancement`, `denoise`, …) (#340).
+- **Segmentation modality** — `Modality.SEGMENTATION` + `Operation.SEGMENT`: `celeste.images.segment(image=..., prompt=..., model=...)` returns a `SegmentationOutput` whose `content` is `list[SegmentationMask]` (`rle`, `index`, `score`, `box`), via fal.ai SAM 3 / 3.1 with point and box prompts (#341).
+- **Document input** — `celeste.documents.analyze()` and `analyze(document=...)` with `DocumentArtifact`, `DocumentMimeType` (PDF, DOCX, XLSX, PPTX, CSV, TXT, HTML, MD) on OpenAI, Anthropic, Google, Mistral and Meta; URL documents sent as `file_url` (OpenResponses) and with `mime_type` (Google) (#249, #251, #502).
+- **Multimodal embeddings** — `embed()` accepts `images=`, `videos=`, `audio=`; new `celeste.images.embed()`, `celeste.videos.embed()`, `celeste.audio.embed()`; `gemini-embedding-2` (Vertex supported) (#246, #312).
+- **Video editing** — Gemini Omni (`gemini-omni-flash-preview`, `gemini-omni-1.1-flash`) generate + edit; `celeste.videos.edit(...)`, sync `edit` and `client.sync.edit`; xAI `grok-imagine-video` edits accept local videos (#326, #383, #534). `gemini-omni-1.1-flash` accepts `resolution` `360p` / `720p` / `1080p` / `4k` (#505).
+- **Image editing and parameters** — BytePlus Seedream `edit()` with up to 14 reference images (#508); xAI multi-image edits (#516); BFL `flux-3-image` editing and per-model input-image fields (#519); `grounding` image parameter on `flux-3-image` (#513); xAI image `quality` maps to the native `resolution` field (#507); OpenAI images gain `num_images`, `output_format`, `background`, `output_compression` and `safety_tolerance` (→ `moderation`) (#264).
+- **Video parameters** — `first_frame` on xAI video models (#312); BytePlus `first_frame` / `last_frame` / reference images accept local artifacts as data URLs (#313).
+
+### 3. Messages, Reasoning and Grounding
+
+- **Native multimodal messages** — `Message.content` is `str | list[MessagePart]` with ordered `TextPart`, `ImagePart`, `AudioPart`, `VideoPart`, `DocumentPart`, serialized to each wire's native shape (OpenResponses, Chat Completions, Anthropic, Google, Cohere, xAI); `messages=` accepts `list[Message | ToolResult]` (#283, #312).
+- **Reasoning output** — `TextOutput` and `Message` gain `reasoning` and a serializable `signature` for multi-turn thinking round-trips, `TextChunk` gains `reasoning` (Anthropic, Google, Mistral, OpenAI, xAI, Chat Completions `reasoning_content`); Anthropic adaptive-thinking summaries stream as reasoning (#254, #297).
+- **`thinking_level`** — named reasoning effort is a first-class parameter on Anthropic (adaptive thinking), Google, OpenAI, xAI, DeepSeek, Groq, Mistral, Moonshot, Meta and `protocol="chatcompletions"`; `thinking_budget` is an integer token budget only (#264, #265, #295, #297, #501, #502).
+- **Web-search grounding** — `Output.grounding` (`queries`, `sources`, `citations`, `search_entry_point`) on unary and streamed outputs for OpenAI, xAI, Chat Completions, Google, Anthropic and Groq compound; new `celeste.grounding` module (#287, #306, #323, #420).
+- **Live tool activity** — `TextChunk.tool_activity` (`ToolActivity`, `ToolActivityStatus.STARTED` / `COMPLETED`) streams native web-search progress (#290).
+- **Usage** — `TextUsage.cached_tokens`; audio and video usage gain token counts; Google embeddings report `promptTokenCount`; streamed usage completed for Anthropic, Groq and HuggingFace (#273, #300, #321, #326, #351, #534).
+- **Google** — `seed` mapped on both Google text backends (#325).
+
+### 4. Tool Calling
+
+- **`tool_choice=`** — `ToolChoice.AUTO` / `REQUIRED` / `NONE` or a specific function, declared per model via `ToolChoiceSupport` (#253). A built-in tool as `tool_choice` raises `ValueError` instead of sending a null function name, except `WebSearch()` on OpenAI (the `allowed_tools` selector) and Anthropic (`{"type": "tool", "name": "web_search"}`) (#534).
+- **`ToolOutput[Content]` / `ToolError[Content]`** — generic result types; Pydantic tool results serialized as JSON on every wire (#267).
+- **Validated tool calls** — arguments for Pydantic-typed tools are validated and normalized (#278); malformed or non-object tool-call JSON raises `ValidationError` on Chat Completions, OpenResponses and Anthropic streaming instead of becoming `{}` (#534).
+- **Built-in tools** — `UrlContext` on Google text models (#325); `rehydrate_tools()` rebuilds built-in tools from JSON and built-in tools gain a `kind` literal (#299); Anthropic `WebSearch` uses dynamic-filtering `web_search_20260209` on Claude 4.6+ models (#297); `ToolSupport(custom_tools=False)` for built-in-only models (#313). On the OpenResponses protocol the shared mappers now cover only `WebSearch`: `XSearch` and `CodeExecution` (sent as `code_interpreter`) move to xAI's mappers, and Ollama, OpenRouter and generic `protocol="openresponses"` raise `ValueError` for them; `CodeExecution` is unchanged on Google and Groq (#534).
+- **Native replay** of provider tool turns for multi-turn loops — Anthropic thinking, server-tool and toolset blocks and code-execution containers; Google function-call ids, typed tool results and built-in steps; OpenAI stateless Responses turns; DeepSeek and Mistral reasoning; Moonshot tool names (#296, #298, #299, #309, #327, #459, #461, #462, #463, #464, #465).
+- **Tool schemas** — Google sends user tools as raw JSON Schema (`parametersJsonSchema` on Vertex, `parameters` on Interactions; integer enums, `$defs`, `anyOf`) (#263, #321); response and tool schemas use Pydantic validation mode so aliases match (#534).
+
+### 5. Google on the Interactions API
+
+- Google text and Gemini images use `/v1beta/interactions` with an API key and Vertex `generateContent` with `GoogleADC`; TTS, Lyria and Omni video always use Interactions.
+- `GoogleTextClient` and `GoogleVideosClient` become dispatchers over per-backend clients and `GoogleImagesClient` switches its backends to Interactions / Vertex; Google TTS moves from Cloud TTS to Interactions TTS and gains streaming.
+- Interactions parity: streamed grounding, reasoning and cached tokens, typed tool results, `m4a` input, URI delivery for images and audio.
+- `GoogleADC(location="us" | "eu")` routes Vertex to the `aiplatform.{us,eu}.rep.googleapis.com` multi-region hosts (#312).
+- PRs: #312, #321, #323, #326, #327, #328, #334, #420, #435, #534
+
+### 6. Observability (OpenTelemetry)
+
+- Every `_predict` / `_stream` emits GenAI semantic-convention spans (`gen_ai.request.model`, `gen_ai.provider.name`, `gen_ai.usage.*`, `gen_ai.response.finish_reasons`, time to first chunk); streaming spans carry usage.
+- `gen_ai.client.token.usage` and `gen_ai.client.operation.duration` histograms; opt-in message capture via `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT=true` (media as references, never bytes).
+- `gen_ai.response.model` from the provider-reported `metadata["response_model"]`.
+- New optional `[otel]` extra; no-op without it or without a `TracerProvider`.
+- PRs: #270, #272, #273, #275, #277, #286, #310
+
+### 7. Transport and Streaming
+
+- **Retries** — `post`, `post_multipart` and `get` retry timeouts, network errors and HTTP 408/429/500/502/503/504 (2 retries, exponential backoff); streams are not retried (#288).
+- **Connection lifecycle** — HTTP pools are owned per event loop and closed on shutdown; interrupted streams close their upstream iterator; Google ADC refresh runs off the event loop (#401).
+- **`base_url` everywhere** — every transport (unary, streaming, polling, downloads, Vertex) builds URLs through one `_build_url(endpoint, streaming=False)`: an explicit `base_url` wins and its trailing slash is trimmed (#534).
+- **Streams** — Google Interactions streams end at `interaction.completed` with no trailing delay (#496); Responses `response.incomplete` is terminal, `response.failed` raises and unfinished function calls are excluded (#401); `with stream:` closes a retained sync iterator (#534).
+
+### 8. New Providers
+
+- **Meta** (#502) — OpenResponses protocol, credential `MODEL_API_KEY`: `muse-wonder-1.0`, `muse-spark-1.3`, `muse-spark-1.3-contributor`.
+- **OpenRouter** (#284) — OpenResponses protocol, credential `OPENROUTER_API_KEY`; any OpenRouter model slug.
+- **fal.ai** (#341) — `Provider.FAL`, credential `FAL_KEY`; SAM 3 segmentation.
+- **Topaz Labs** (#340) — image upscaling, credential `TOPAZ_API_KEY`.
+- **New provider × modality pairs:** Groq audio (#337), Mistral audio (#339); ElevenLabs gains its speech-to-text API (#339).
+
+### 9. New Models
+
+**Anthropic:**
+- `claude-opus-4-7` (#264); `claude-sonnet-5`, `claude-opus-4-8`, `claude-fable-5` (#293); `claude-mythos-5`, `claude-opus-5` (#360); `claude-fable-5-1`, `claude-mythos-5-1` (#384); `claude-opus-5-5` (#446); `claude-sonnet-5-5` (#468); `claude-haiku-5-5` (#495)
+
+**OpenAI:**
+- Text: `gpt-5.5`, `gpt-5.4-mini`, `gpt-5.4-nano` (#282); `gpt-5.6`, `gpt-5.6-sol`, `gpt-5.6-terra`, `gpt-5.6-luna` (#305); `gpt-5.3-codex`, `gpt-5.5-pro` (#312); `chat-latest` (#355); `gpt-6-astra` (#433); `gpt-6-sol`, `gpt-6-luna` (#438); `gpt-6.1-sol` (#479)
+- Images: `gpt-image-2` (#264); `gpt-image-2.5-flare` (#456); `gpt-image-2.5-sunburst` (#455)
+- Audio: `gpt-4o-mini-tts-2025-12-15` (#331); `gpt-4o-mini-transcribe`, `gpt-4o-transcribe`, `whisper-1` (#339); `gpt-4o-mini-transcribe-2025-12-15` (#388); `gpt-transcribe` (#413); `gpt-4o-transcribe-diarize` (#483)
+- Live: `gpt-live-1` (#477)
+
+**Google:**
+- Text: `gemini-3.5-flash` (#279); `gemini-3.1-flash-lite` (GA, #281); `gemini-3.5-flash-lite`, `gemini-3.6-flash` (#330); `gemini-3.7-flash` (#347); `gemini-3.8-flash` (#391); `gemini-4-argon` (#499)
+- Images: `gemini-3.1-flash-lite-image`, `gemini-3-pro-image`, `gemini-3.1-flash-image` (GA, #294); `gemini-nano-banana-2.1` (#493)
+- Videos: `veo-3.1-lite-generate-preview` (#264); `gemini-omni-flash-preview` (#326); `gemini-omni-1.1-flash` (#383)
+- Audio: `gemini-3.1-flash-tts-preview` (#264); `gemini-2.5-flash-preview-tts`, `gemini-2.5-pro-preview-tts` (#321); `lyria-3-clip-preview`, `lyria-3-pro-preview` (#324); `lyria-3.5` (#400); `gemini-3.8-flash-lite-tts` (#451); `gemini-3.8-flash-tts` (#452)
+- Embeddings: `gemini-embedding-2-preview` (#246); `gemini-embedding-2` (#312)
+- Live: `gemini-3.8-live`, `gemini-3.8-live-extended-thinking` (#477)
+
+**xAI:**
+- `grok-4.3`, `grok-4.20-0309-reasoning`, `grok-4.20-0309-non-reasoning`, `grok-imagine-image-quality` (#282); `grok-4.5` (#304); `grok-imagine-video-1.5` (#312); `grok-build-0.1`, `grok-4.20-multi-agent-0309` (#313); `grok-4.6` (#349); `grok-imagine-image-2.0` (#381); `grok-4.7` (#458)
+
+**Mistral:**
+- `mistral-medium-3-5` (#264); `mistral-large-2512`, `mistral-small-2603` (#282); Voxtral `voxtral-mini-2602`, `voxtral-mini-latest` (#339)
+
+**Cohere:**
+- `command-a-translate-08-2025`, `command-r-plus-08-2024` (#264); `command-a-plus-05-2026` (#282); `command-a-reasoning-08-2025`, `command-r-08-2024`, `c4ai-aya-vision-32b`, `c4ai-aya-expanse-32b`, `tiny-aya-global`, `tiny-aya-earth`, `tiny-aya-fire`, `tiny-aya-water` (#331)
+
+**DeepSeek:**
+- `deepseek-v4-flash`, `deepseek-v4-pro` (#265)
+
+**Groq:**
+- `qwen/qwen3.6-27b`, `minimaxai/minimax-m2.7` (#313); `qwen/qwen3.8-27b` (#350); Whisper `whisper-large-v3-turbo`, `whisper-large-v3` (#337)
+
+**Moonshot:**
+- `kimi-k2.6`, `kimi-k2.7-code`, `kimi-k2.7-code-highspeed` (#312); `kimi-k3` (#313)
+
+**Meta:**
+- `muse-wonder-1.0`, `muse-spark-1.3`, `muse-spark-1.3-contributor` (#502)
+
+**BytePlus:**
+- `dreamina-seedance-2-0-260128`, `dreamina-seedance-2-0-fast-260128` (#282, renamed in #313); `dola-seedream-5-0-pro-260628` (#302, renamed in #313); `dreamina-seedance-2-0-mini-260615` (#313); `dola-seedream-5-0-flash-260915` (#449)
+
+**BFL:**
+- `flux-2-pro-preview`, `flux-2-klein-4b`, `flux-2-klein-9b`, `flux-2-klein-9b-preview` (#313); `flux-kontext-max`, `flux-kontext-pro`, `flux-pro-1.1-ultra`, `flux-pro-1.1`, `flux-dev` (#331); `flux-3-image` (#506); `flux-3-image-klein` (#531)
+
+**ElevenLabs:**
+- `eleven_v4` (#484); Scribe `scribe_v2`, `scribe_v1` (#339); `scribe_v2_medical` (#486)
+
+**Topaz Labs:**
+- `Standard V2`, `High Fidelity V2`, `Upscale High Fidelity V3`, `Low Resolution V2`, `CGI`, `Text Refine`, `Detail`, `Transparency Upscale` (#340)
+
+**fal.ai:**
+- `fal-ai/sam-3/image-rle`, `fal-ai/sam-3-1/image-rle` (#341)
+
+**Removed (retired, shut down or superseded on provider APIs; arrows point to the replacement):**
+- Anthropic: `claude-sonnet-4-20250514`, `claude-opus-4-20250514` (#312)
+- OpenAI: `dall-e-2`, `dall-e-3` (#280); `gpt-5.1-codex`, `gpt-5.2-codex`, `gpt-5.2-chat-latest` → `gpt-5.6-sol` (#432)
+- Google: `gemini-3-pro-preview` (#280); `gemini-3.1-flash-lite-preview` → `gemini-3.1-flash-lite` (#281); `gemini-3-pro-image-preview` → `gemini-3-pro-image`, `gemini-3.1-flash-image-preview` → `gemini-3.1-flash-image` (#294); `gemini-embedding-001` → `gemini-embedding-2`, `veo-3.0-generate-001`, `veo-3.0-fast-generate-001` (#312); `gemini-2.5-flash-tts` → `gemini-2.5-flash-preview-tts`, `gemini-2.5-pro-tts` → `gemini-2.5-pro-preview-tts` (#321); `imagen-4.0-generate-001`, `imagen-4.0-fast-generate-001`, `imagen-4.0-ultra-generate-001` → `gemini-3.1-flash-image` (#418)
+- xAI: `grok-4-0709`, `grok-4-1-fast-reasoning`, `grok-4-1-fast-non-reasoning`, `grok-4-fast-reasoning`, `grok-4-fast-non-reasoning` (#280); `grok-4.20-beta-0309-reasoning` → `grok-4.20-0309-reasoning`, `grok-4.20-beta-0309-non-reasoning` → `grok-4.20-0309-non-reasoning` (#282)
+- Mistral: `open-mistral-7b`, `pixtral-12b-2409` (#280); `pixtral-large-latest`, `voxtral-mini-2507` (#311); `labs-devstral-small-2512` (#312)
+- DeepSeek: `deepseek-chat`, `deepseek-reasoner` → `deepseek-v4-flash` (#314)
+- Groq: `moonshotai/kimi-k2-instruct`, `moonshotai/kimi-k2-instruct-0905` (#280)
+- Moonshot: `kimi-k2-0711-preview`, `kimi-k2-0905-preview`, `kimi-k2-turbo-preview`, `kimi-k2-thinking`, `kimi-k2-thinking-turbo` (#312)
+- BytePlus: `seedance-1-0-lite-t2v-250428`, `seedance-1-0-lite-i2v-250428` (#280)
+- ElevenLabs: `eleven_multilingual_v1`, `eleven_monolingual_v1` (#313)
+
+### 10. Breaking Changes
+
+- **Top-level `celeste` namespace trimmed** (#245) — internal types and specific exceptions left `celeste.__all__`, and most are no longer importable from `celeste`; import them from `celeste.exceptions`, `celeste.core`, `celeste.parameters`, `celeste.types`, `celeste.http` or `celeste.structured_outputs`.
+- **Legacy APIs removed** (#310) — `Capability` / `capability=` (on `create_client()`, `register_models()`, `list_models()` and the not-found errors) → `modality=` + `operation=`; `Model.capabilities` → `Model.operations`; `APIKey` → `AuthHeader`; `web_search=` / `x_search=` / `code_execution=` → `tools=[WebSearch()]` etc.; removed without replacement: `UnsupportedCapabilityError` / `CapabilityError`, `celeste.auth.register_auth` / `get_auth_class`, `celeste.websocket`.
+- **Messages** (#283) — the `Content` alias is removed; `Message.content` accepts only `str | list[MessagePart]` (wrap media in `ImagePart` etc.); `ToolResult` is no longer a `Message`; `TextOutput.message.content` is always text (typed structured output stays on `output.content`).
+- **Reasoning parameters** — named efforts move from `thinking_budget` to `thinking_level` on OpenAI and xAI; `thinking_budget="high"` there is ignored with `UnsupportedParameterWarning` (#501). Google API-key text ignores `thinking_budget`; use `thinking_level` (#321). Mistral `thinking_budget` no longer maps to `prompt_mode`: `magistral-small-latest` takes `thinking_level="none"` / `"high"` and `magistral-medium-latest` has no reasoning control (#311, #501).
+- **Google TTS** (#321) — requires `GOOGLE_API_KEY` (ADC alone no longer works); ids renamed to `gemini-2.5-flash-preview-tts` / `gemini-2.5-pro-preview-tts`.
+- **Anthropic default `max_tokens`** (#299) — the model's ceiling (up to 128000) instead of 1024; pass `max_tokens=` to cap output.
+- **Tools** — raw tool dicts with neither `type` nor `name` raise `InvalidToolError` on Anthropic, Chat Completions and OpenResponses providers (#298, #299). Invalid arguments for Pydantic-typed tools raise `ValidationError` (#278), and malformed tool-call JSON raises `ValidationError` instead of returning `{}` (#534). `XSearch` and `CodeExecution` raise `ValueError` on Ollama and generic `protocol="openresponses"`, and xAI's `CodeExecution` is sent as `code_interpreter` (#534). `WebSearch` is no longer advertised on `kimi-k2.5` (#312). Google API-key text ignores `WebSearch(blocked_domains=...)` with `UnsupportedParameterWarning`; Vertex keeps it (#517).
+- **Requests** — non-streaming requests retry by default (#288); strict output schemas mark defaulted fields required (#288); an explicit `base_url` (including `""`) is now honored by every transport (#534).
+- **Outputs** — `num_images > 1` returns a list of `ImageArtifact` on xAI (#374); `stream()` returns a delegating `_TracedStream` wrapper, so `isinstance(x, Stream)` checks fail (#272).
+- **Voices and formats** — all 52 previous ElevenLabs voices (e.g. Rachel, Adam, George) and all 14 previous Gradium voice ids fail `VoiceConstraint` (Emma's id remains the implicit default when no voice is passed); pick from the refreshed catalogs (#308, #504). ElevenLabs' default voice is Janet instead of Rachel (#509). ElevenLabs `ulaw_8000` / `alaw_8000` output formats removed (#314).
+- **Credentials** — `TOPAZLABS_API_KEY` → `TOPAZ_API_KEY` (#340).
+- **Custom providers** (#401) — `APIMixin._json_headers()` is async; `_make_stream_request` is `async def` returning an unstarted `AsyncGenerator`; new `Authentication.aget_headers()`; `close_all_http_clients()` closes only the current loop's pools.
+- **Utilities and typing** — `celeste.utils.build_image_data_url` → `build_data_url(artifact)` (#312); the never-mapped `prompt` key is removed from `AudioParameters` (#324).
+- **Deep imports** — Google: `IMAGEN_MODELS` / `GEMINI_MODELS`, `IMAGEN_PARAMETER_MAPPERS` / `GEMINI_PARAMETER_MAPPERS`, the Imagen and Gemini image backend modules, `celeste.providers.google.cloud_tts` and the previous `celeste.providers.google.interactions` modules removed or replaced, per-backend classes renamed, `VEO_SUPPORTED_MIME_TYPES` → `GOOGLE_SUPPORTED_MIME_TYPES` (#310, #316, #321, #435). OpenAI / xAI `ThinkingBudgetMapper` → `ThinkingLevelMapper`, Mistral's removed (#501). Dead `OllamaClient` / `OllamaStream` aliases removed (#316). BFL `WidthMapper` / `HeightMapper` removed (#436). `RefResolvingJsonSchemaGenerator` / `StrictRefResolvingJsonSchemaGenerator` removed, `XSearchMapper` / `CodeExecutionMapper` moved to `celeste.providers.xai.responses.tools`, `Vertex{Provider}Endpoint` → `Vertex{Api}Endpoint` (#534).
+- **Stricter constraints** (values the provider APIs already rejected) — `thinking_budget=-1` on `claude-haiku-4-5` (#297), `claude-sonnet-4-5`, `claude-opus-4-5`, `claude-opus-4-1` (#395) and `claude-opus-4-6` (#469); `thinking_level="minimal"` on `gpt-5.1`, `gpt-5.2`, `gpt-5.4`, and `"minimal"` / `"low"` on `gpt-5.2-pro`, `gpt-5.4-pro` (#394, #501); BFL edit reference limits count the primary image and raise `ConstraintViolationError` when exceeded (#436).
+- **Removed models** — see section 9.
+
+### 11. Bug Fixes
+
+- **Structured outputs** — tool-only turns with `output_schema` keep empty content and tool calls (#534); `list[Model]` schemas keep `$defs` at the root and Cohere / Mistral stop inlining `$ref`s (no dangling refs or `RecursionError`) (#534); Anthropic sends `output_config.format` and returns empty refusals instead of raising (#428).
+- **Text content** — Anthropic joins all text blocks (#428), Google Vertex all text parts (#373), OpenResponses all message items with rebased citations (#500); Cohere joins text blocks and surfaces thinking (#314); Anthropic empty `max_tokens` responses return usage instead of raising (#523); Anthropic compaction blocks preserved for replay (#430); `analyze(audio=...)` available on every text provider (#248).
+- **Responses protocol** — assistant `TextPart`s replay as `output_text` (fixes OpenAI 400 on multi-turn); refusals kept in `metadata["raw_response"]["output"]`; hosted-tool billing markers kept; nullable usage objects accepted (#431, #534).
+- **Usage** — `usage: null` and null token-detail objects no longer crash any parser (#534); BFL reports the settled `cost` (#426); Vertex `num_images` counts images (#534).
+- **Tool calling** — Gemini mixed built-in + function tools (#285, #334); Vertex function calls without an `id` (#460); no spurious `WebSearch.kind` warning on Google Interactions (#518); Chat Completions citations from the selected choice only (#534); Vertex citation offsets mapped within their part (#401).
+- **Images** — OpenAI and xAI return every generated image (#356, #374); BFL dimensions forwarded exactly, native aspect ratios, `disable_pup`, moderation and `No Card Generated` polling stops (#426, #436, #511, #512); BytePlus MIME types from `output_format` (#520), successful images kept after a later failure and the quality/aspect-ratio guard on streams (#534); sync image operations reach their endpoints (OpenAI and xAI sync edits hit `/images/edits`) and sync/stream `edit` / `upscale` raise `NotImplementedError` like async (#534); Google images dispatcher forwards `base_url`, transforms and metadata (#258, #317).
+- **Audio** — ElevenLabs sends `output_format` as a query parameter (previously always MP3) with corrected MIME types and new formats (`mp3_24000_48`, `pcm_32000`, `wav_8000`…`wav_48000`) (#314); OpenAI speech MIME type from the response and `wav` output (#412); Gradium raw audio labeled `audio/pcm` / `audio/pcmu` / `audio/pcma` (#534) and `pcm_8000` (#313); Google TTS languages, `Language` gains 49 codes (#382, #414); Lyria output format and final audio block (#329, #405); audio bytes no longer copied into metadata (#307).
+- **Videos** — Vertex Veo `gcsUri` parsed and download credentials scoped to Google origins (#401); Sora durations, 1080p and portrait sizes (#314).
+- **Anthropic on Vertex** — `anthropic_version` in the body, `model` omitted, web search downgraded to the supported version (#515).
+- **Streaming and telemetry** — streams consumed across tasks under OpenTelemetry (#277); Ollama image streams raise `StreamEventError` on in-band errors (#534); complete streamed usage and raw responses (#300).
+- **Typing** — modality `Parameters` TypedDicts are `total=False` (#256); `output_schema=list[Model]` type-checks (#497).
+- **Provider fixes** — DeepSeek replays `reasoning_content` (#314, #461) and its `thinking_level` mapper is no longer shadowed (#534); Cohere `thinking_budget` sentinels `-1` / `0` (#534); Moonshot `max_completion_tokens` (#312); Chat Completions serializes `VideoPart` (#312); OpenAI TTS accepts PCM (#534).
+- **Catalog corrections** against live provider APIs — reasoning efforts, token limits, aspect ratios (incl. `21:9` / `5:2` on xAI images), quality tiers (incl. Seedream 4K), reference-image limits, languages, voices and streaming flags; `seedream-4-5-251128` restored (#291, #292, #297, #311, #313, #314, #331, #332, #357, #381, #385, #386, #387, #389, #390, #393, #394, #395, #396, #399, #402, #408, #436, #447, #448, #450, #453, #457, #469, #470, #471, #472, #473, #474, #475, #476, #485, #487, #489, #490, #491, #503, #522, #530).
+
+### 12. DX Improvements
+
+- **Parameter docs** — every modality parameter is `Annotated` with a description; `Constraint` gains an optional `description` (#261).
+- **Voices** — `Voice.description`; voice catalogs refreshed from provider metadata (Gradium 66 voices, Google 30, OpenAI 13) (#308).
+- **Async signatures** — async images, audio and videos operations take keyword-only `extra_body` / `extra_headers`, matching sync and stream (#534).
+- **Exports** — `ImagesStream` / `ImagesStreamNamespace` and `AudioStream` / `AudioStreamNamespace` exported from their modality packages (#534).
+- **Templates** — provider, modality and protocol templates render and import with only their TODO fill-ins and pass type-check (a new modality also adds the documented mypy override); new aggregator `models.py` template (#534).
+- **Contributing** — protocol-provider, model-catalog, model-removal, second-API and new-modality playbooks in CONTRIBUTING; `CLAUDE.md` and the `celeste-python` agent skill (#283, #315, #318, #477, #534).
+- **Notebooks** — `notebooks/multimodal-embeddings.ipynb` (#246).
+
+### 13. Architecture (Internal)
+
+- **Base modality operations** — `generate()`, `analyze()`, `speak()`, `edit()` centralized on modality clients via endpoint ClassVars; -300 lines (#248).
+- **Multi-backend dispatchers** — Google text, images and videos and ElevenLabs audio select a backend once and delegate every hook; enforced by `test_dispatcher_delegation.py` (#317, #321, #326, #339).
+- **Protocol mapper reuse** — protocol mapper lists shared by compatible providers; vendor overrides listed explicitly (#252, #534).
+- **Composition conventions** — `{Provider}{Api}Mixin` aliases and plain `config` imports (#316).
+- **Stream hooks** — `_aggregate_raw_response` (#300), `_is_terminal_event` (#496), `_parse_chunk_transcript` / `_parse_chunk_tool_calls` (#477); `HTTPClient.stream_post_bytes` (#480).
+
+### 14. Testing
+
+- **Suite consolidated** around public contracts and parametrized provider matrices (-7,989 test lines); arbitrary unregistered provider model ids remain supported and optimistically advertise streaming (#310).
+- **742 unit tests** at release (527 in v0.11.0); coverage now measures provider, protocol and modality code (omit list removed) with a 65% gate (was 80%) (#310).
+- **Locked dependencies** — `uv.lock` committed; CI, type-check, test and publish install with `uv sync --locked`; daily latest-deps canary and weekly Dependabot lockfile updates (#498); mypy pinned below 2.4 (#494).
 
 ---
 
@@ -339,6 +531,7 @@ First-class support for multi-turn conversations across all text providers.
 
 ---
 
-[Unreleased]: https://github.com/withceleste/celeste-python/compare/v0.11.0...HEAD
+[Unreleased]: https://github.com/withceleste/celeste-python/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/withceleste/celeste-python/compare/v0.11.0...v1.0.0
 [0.11.0]: https://github.com/withceleste/celeste-python/compare/v0.9.1...v0.11.0
 [0.9.1]: https://github.com/withceleste/celeste-python/compare/v0.3.9...v0.9.1
