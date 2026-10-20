@@ -50,7 +50,9 @@ async def test_web_search(provider: Provider, model: str) -> None:
     client = create_client(modality=Modality.TEXT, provider=provider, model=model)
 
     output = await client.generate(
-        prompt="When was Python 3.12 released?", tools=[WebSearch()], max_tokens=2000
+        prompt="Search the web: when was Python 3.12 released?",
+        tools=[WebSearch()],
+        max_tokens=2000,
     )
 
     assert isinstance(output, TextOutput)
@@ -64,7 +66,7 @@ async def test_stream_web_search(provider: Provider, model: str) -> None:
     client = create_client(modality=Modality.TEXT, provider=provider, model=model)
 
     stream = client.stream.generate(
-        prompt="When was Python 3.12 released?",
+        prompt="Search the web: when was Python 3.12 released?",
         tools=[WebSearch()],
         max_tokens=2000,
     )
