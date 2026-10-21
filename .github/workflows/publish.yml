@@ -94,7 +94,29 @@ jobs:
           TOPAZ_API_KEY: ${{ secrets.TOPAZ_API_KEY }}
           META_API_KEY: ${{ secrets.META_API_KEY }}
           TYPESAFE_API_KEY: ${{ secrets.TYPESAFE_API_KEY }}
-        run: uv run pytest "$TEST_FILE" -v
+        # Vertex Claude runs in vertex-claude-integration-tests, which never blocks a release.
+        run: uv run pytest "$TEST_FILE" -v -k "not (vertex and anthropic)"
+
+  vertex-claude-integration-tests:
+    needs: [validate-release, run-ci]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    continue-on-error: true
+    environment:
+      name: integration-tests
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+      - uses: ./.github/actions/setup-python-uv
+      - run: uv sync --locked --extra gcp
+      - run: uv run pytest tests/integration_tests -v -k "vertex and anthropic"
 
   build:
     needs: [validate-release, run-ci, collect-integration-tests, integration-tests]
