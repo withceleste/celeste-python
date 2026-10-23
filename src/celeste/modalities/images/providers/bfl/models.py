@@ -41,7 +41,9 @@ MODELS: list[Model] = [
                     "auto",
                 ]
             ),
-            ImageParameter.QUALITY: Choice(options=["768sq", "1k", "1.5k", "2k", "4k"]),
+            ImageParameter.QUALITY: Choice(
+                options=["768sq", "1k", "1.5k", "2k", "4k", "match_input"]
+            ),
             ImageParameter.REFERENCE_IMAGES: ImagesConstraint(max_count=10),
             ImageParameter.SAFETY_TOLERANCE: Range(min=0, max=7),
             ImageParameter.GROUNDING: Bool(),
