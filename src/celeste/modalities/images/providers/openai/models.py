@@ -8,27 +8,6 @@ from ...parameters import ImageParameter
 
 MODELS: list[Model] = [
     Model(
-        id="gpt-image-1",
-        provider=Provider.OPENAI,
-        display_name="GPT Image 1",
-        operations={Modality.IMAGES: {Operation.GENERATE, Operation.EDIT}},
-        streaming=True,
-        parameter_constraints={
-            ImageParameter.PARTIAL_IMAGES: Range(min=0, max=3),
-            ImageParameter.ASPECT_RATIO: Choice(
-                options=["1024x1024", "1536x1024", "1024x1536", "auto"]
-            ),
-            ImageParameter.QUALITY: Choice(options=["low", "medium", "high", "auto"]),
-            ImageParameter.NUM_IMAGES: Range(min=1, max=10),
-            ImageParameter.OUTPUT_FORMAT: Choice(options=["png", "jpeg", "webp"]),
-            ImageParameter.BACKGROUND: Choice(
-                options=["transparent", "opaque", "auto"]
-            ),
-            ImageParameter.SAFETY_TOLERANCE: Choice(options=["auto", "low"]),
-            ImageParameter.OUTPUT_COMPRESSION: Range(min=0, max=100),
-        },
-    ),
-    Model(
         id="gpt-image-1-mini",
         provider=Provider.OPENAI,
         display_name="GPT Image 1 Mini",
