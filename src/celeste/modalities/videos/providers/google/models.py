@@ -37,27 +37,6 @@ GOOGLE_VEO_MODELS: list[Model] = [
             ),
         },
     ),
-    Model(
-        id="veo-3.1-fast-generate-preview",
-        provider=Provider.GOOGLE,
-        display_name="Veo 3.1 Fast (Preview)",
-        operations={Modality.VIDEOS: {Operation.GENERATE}},
-        parameter_constraints={
-            VideoParameter.ASPECT_RATIO: Choice(options=["16:9", "9:16"]),
-            VideoParameter.RESOLUTION: Choice(options=["720p", "1080p", "4k"]),
-            VideoParameter.DURATION: Choice(options=[4, 6, 8]),
-            VideoParameter.REFERENCE_IMAGES: ImagesConstraint(
-                supported_mime_types=GOOGLE_SUPPORTED_MIME_TYPES,
-                max_count=3,
-            ),
-            VideoParameter.FIRST_FRAME: ImageConstraint(
-                supported_mime_types=GOOGLE_SUPPORTED_MIME_TYPES,
-            ),
-            VideoParameter.LAST_FRAME: ImageConstraint(
-                supported_mime_types=GOOGLE_SUPPORTED_MIME_TYPES,
-            ),
-        },
-    ),
 ]
 
 # Interactions API models (Gemini Omni)
