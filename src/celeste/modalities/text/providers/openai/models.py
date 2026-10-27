@@ -53,6 +53,24 @@ MODELS: list[Model] = [
         },
     ),
     Model(
+        id="gpt-6.1-terra",
+        provider=Provider.OPENAI,
+        display_name="GPT-6.1 Terra",
+        operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
+        streaming=True,
+        parameter_constraints={
+            Parameter.MAX_TOKENS: Range(min=1, max=128000),
+            TextParameter.THINKING_LEVEL: Choice(
+                options=["none", "low", "medium", "high", "xhigh", "max"]
+            ),
+            TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
+            TextParameter.OUTPUT_SCHEMA: Schema(),
+            TextParameter.IMAGE: ImagesConstraint(),
+            TextParameter.DOCUMENT: DocumentsConstraint(),
+        },
+    ),
+    Model(
         id="gpt-6-sol",
         provider=Provider.OPENAI,
         display_name="GPT-6 Sol",
