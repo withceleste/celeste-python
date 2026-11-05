@@ -16,6 +16,21 @@ from ...parameters import TextParameter
 
 MODELS: list[Model] = [
     Model(
+        id="mistral-large-4",
+        provider=Provider.MISTRAL,
+        display_name="Mistral Large 4 (26.10)",
+        operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
+        parameter_constraints={
+            Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
+            TextParameter.THINKING_LEVEL: Choice(options=["low", "medium", "high"]),
+            TextParameter.OUTPUT_SCHEMA: Schema(),
+            TextParameter.IMAGE: ImagesConstraint(),
+            TextParameter.DOCUMENT: DocumentsConstraint(),
+            TextParameter.TOOLS: ToolSupport(tools=[]),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
+        },
+    ),
+    Model(
         id="mistral-large-2512",
         provider=Provider.MISTRAL,
         display_name="Mistral Large 3 (25.12)",
