@@ -67,6 +67,19 @@ GOOGLE_OMNI_MODELS: list[Model] = [
             VideoParameter.REFERENCE_IMAGES: ImagesConstraint(),
         },
     ),
+    Model(
+        id="gemini-omni-1.2-flash",
+        provider=Provider.GOOGLE,
+        display_name="Gemini Omni 1.2 Flash",
+        operations={Modality.VIDEOS: {Operation.GENERATE, Operation.EDIT}},
+        parameter_constraints={
+            VideoParameter.ASPECT_RATIO: Choice(options=["16:9", "9:16"]),
+            VideoParameter.RESOLUTION: Choice(options=["360p", "720p", "1080p", "4k"]),
+            VideoParameter.FIRST_FRAME: ImageConstraint(),
+            VideoParameter.LAST_FRAME: ImageConstraint(),
+            VideoParameter.REFERENCE_IMAGES: ImagesConstraint(),
+        },
+    ),
 ]
 
 MODELS: list[Model] = [
