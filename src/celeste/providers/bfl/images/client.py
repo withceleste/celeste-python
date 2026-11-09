@@ -3,6 +3,7 @@
 import asyncio
 import time
 from collections.abc import AsyncGenerator
+from json import JSONDecodeError
 from typing import Any, ClassVar
 
 from celeste.client import APIMixin
@@ -97,8 +98,12 @@ class BFLImagesClient(APIMixin):
                 headers=poll_headers,
             )
 
-            self._handle_error_response(poll_response)
-            poll_data = poll_response.json()
+            # A failed task can return a non-2xx response whose JSON body carries its status.
+            try:
+                poll_data = poll_response.json()
+            except (JSONDecodeError, UnicodeDecodeError):
+                self._handle_error_response(poll_response)
+                raise
             status = poll_data.get("status")
 
             if status == "Ready":
@@ -119,6 +124,7 @@ class BFLImagesClient(APIMixin):
                 msg = f"{self.provider} image generation failed ({status}): {error_msg}"
                 raise ValueError(msg)
 
+            self._handle_error_response(poll_response)
             await asyncio.sleep(config.POLLING_INTERVAL)
 
     async def _make_stream_request(
