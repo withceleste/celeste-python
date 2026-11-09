@@ -5,7 +5,7 @@ from pydantic import BaseModel
 
 from celeste import Provider, get_model
 from celeste.artifacts import ImageArtifact
-from celeste.exceptions import ConstraintViolationError
+from celeste.exceptions import ConstraintViolationError, ValidationError
 from celeste.mime_types import AudioMimeType, ImageMimeType
 from celeste.modalities.audio.parameters import AudioParameter
 from celeste.modalities.audio.providers.elevenlabs import parameters as elevenlabs_audio
@@ -36,6 +36,7 @@ from celeste.modalities.text.providers.meta import parameters as meta
 from celeste.modalities.text.providers.moonshot import parameters as moonshot
 from celeste.modalities.text.providers.openai import parameters as openai
 from celeste.modalities.videos.parameters import VideoParameter
+from celeste.modalities.videos.providers.bfl import parameters as bfl_videos
 from celeste.modalities.videos.providers.byteplus import parameters as byteplus
 from celeste.modalities.videos.providers.google import parameters as google_videos
 from celeste.modalities.videos.providers.xai import parameters as xai
@@ -54,6 +55,7 @@ AUDIO_ELEVENLABS_STT = elevenlabs_audio.ELEVENLABS_SPEECH_TO_TEXT_PARAMETER_MAPP
 AUDIO_MISTRAL = mistral_audio.MISTRAL_PARAMETER_MAPPERS
 VIDEOS_VEO = google_videos.GOOGLE_VEO_PARAMETER_MAPPERS
 VIDEOS_INTERACTIONS = google_videos.GOOGLE_INTERACTIONS_PARAMETER_MAPPERS
+VIDEOS_BFL = bfl_videos.BFL_PARAMETER_MAPPERS
 OPEN = openai.OPENAI_PARAMETER_MAPPERS
 META = meta.META_PARAMETER_MAPPERS
 CHAT = chat.CHATCOMPLETIONS_PARAMETER_MAPPERS
@@ -328,6 +330,9 @@ SCALAR_PARAMETER_CASES = [
     (AUDIO_MISTRAL, AP.LANGUAGE, "en", ("language",), "en"),
     (AUDIO_MISTRAL, AP.TEMPERATURE, 0.0, ("temperature",), 0.0),
     (XAI, V.FIRST_FRAME, IMAGE, ("image", "url"), IMAGE.url),
+    (VIDEOS_BFL, V.RESOLUTION, "hd", ("resolution",), "hd"),
+    (VIDEOS_BFL, V.DURATION, 5, ("duration",), 5),
+    (VIDEOS_BFL, V.FIRST_FRAME, IMAGE, (), {"mode": "i2v", "keyframes": [IMAGE.url]}),
     (
         IMAGES_OPENAI,
         IP.REFERENCE_IMAGES,
@@ -500,6 +505,15 @@ SCALAR_PARAMETER_CASES = [
             get_model("flux-dev", provider=Provider.BFL),
             None,
         ),
+        (
+            VIDEOS_BFL,
+            V.ASPECT_RATIO,
+            "9:16",
+            ("aspect_ratio",),
+            "9:16",
+            get_model("flux-3-video", provider=Provider.BFL),
+            None,
+        ),
     ]
     + [
         (
@@ -544,6 +558,18 @@ SCALAR_PARAMETER_CASES = [
         )
         for editing in (False, True)
         for total in (10, 11)
+    ]
+    + [
+        (
+            VIDEOS_BFL,
+            V.LAST_FRAME,
+            IMAGE,
+            ("keyframes",),
+            ["first", IMAGE.url] if first_frame else ValidationError,
+            MODEL,
+            {"mode": "i2v", "keyframes": ["first"]} if first_frame else None,
+        )
+        for first_frame in (True, False)
     ],
 )
 def test_scalar_parameters_use_provider_wire_shape(
@@ -584,6 +610,7 @@ def test_scalar_parameters_use_provider_wire_shape(
         BYTEPLUS,
         XAI,
         BFL,
+        VIDEOS_BFL,
         TOPAZ,
         LIVE_GOOGLE,
         LIVE_OPENAI,

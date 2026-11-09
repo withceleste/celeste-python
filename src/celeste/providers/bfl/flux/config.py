@@ -7,6 +7,7 @@ class BFLFluxEndpoint(StrEnum):
     """Endpoints for BFL FLUX API."""
 
     CREATE_IMAGE = "/v1/{model_id}"
+    CREATE_VIDEO = "/v1/{model_id}"
 
 
 BASE_URL = "https://api.bfl.ai"

@@ -36,7 +36,7 @@ from celeste.types import ImageContent
 from ...parameters import ImageParameter
 
 
-class AspectRatioMapper(_AspectRatioMapper):
+class AspectRatioMapper(_AspectRatioMapper[ImageContent]):
     name = ImageParameter.ASPECT_RATIO
 
 
@@ -68,7 +68,7 @@ class ReferenceImagesMapper(_ReferenceImagesMapper):
     name = ImageParameter.REFERENCE_IMAGES
 
 
-class QualityMapper(_ResolutionMapper):
+class QualityMapper(_ResolutionMapper[ImageContent]):
     name = ImageParameter.QUALITY
 
 
