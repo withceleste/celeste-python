@@ -10,7 +10,7 @@ from ...languages import Language
 from ...parameters import AudioParameter
 from .voices import ELEVENLABS_VOICES
 
-# Valid output formats for ElevenLabs API (ulaw/alaw excluded: no AudioMimeType label)
+# Valid output formats for ElevenLabs API
 ELEVENLABS_OUTPUT_FORMATS = [
     "mp3_22050_32",
     "mp3_24000_48",
@@ -26,6 +26,8 @@ ELEVENLABS_OUTPUT_FORMATS = [
     "pcm_32000",
     "pcm_44100",
     "pcm_48000",
+    "ulaw_8000",
+    "alaw_8000",
     "wav_8000",
     "wav_16000",
     "wav_22050",

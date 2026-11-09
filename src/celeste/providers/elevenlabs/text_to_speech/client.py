@@ -203,6 +203,8 @@ class ElevenLabsTextToSpeechClient(APIMixin):
             "pcm": AudioMimeType.PCM,
             "wav": AudioMimeType.WAV,
             "opus": AudioMimeType.OGG,
+            "ulaw": AudioMimeType.PCMU,
+            "alaw": AudioMimeType.PCMA,
         }
         return codec_map.get(codec, AudioMimeType.MP3)
 
