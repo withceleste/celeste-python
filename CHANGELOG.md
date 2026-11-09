@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Bug Fixes
+
+- **Images** — OpenAI image edits send `mask` and `reference_images` (up to 16 input images) instead of warning and dropping them; edits use the JSON `images` body, and generation with `reference_images` is served by `/images/edits` (#568).
+
 ---
 
 ## [1.0.0] - 2026-10-20

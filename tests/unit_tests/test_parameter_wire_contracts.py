@@ -16,6 +16,7 @@ from celeste.modalities.audio.providers.openai import parameters as openai_audio
 from celeste.modalities.images.parameters import ImageParameter
 from celeste.modalities.images.providers.bfl import parameters as bfl
 from celeste.modalities.images.providers.google import parameters as google_images
+from celeste.modalities.images.providers.openai import parameters as openai_images
 from celeste.modalities.images.providers.topazlabs import parameters as topazlabs
 from celeste.modalities.live.parameters import LiveParameter
 from celeste.modalities.live.providers.google import parameters as google_live
@@ -45,6 +46,7 @@ GOOGLE_VERTEX = google_text.GOOGLE_VERTEX_PARAMETER_MAPPERS
 GOOGLE_INTERACTIONS = google_text.GOOGLE_INTERACTIONS_PARAMETER_MAPPERS
 IMAGES_VERTEX = google_images.GOOGLE_VERTEX_PARAMETER_MAPPERS
 IMAGES_INTERACTIONS = google_images.GOOGLE_INTERACTIONS_PARAMETER_MAPPERS
+IMAGES_OPENAI = openai_images.OPENAI_PARAMETER_MAPPERS
 AUDIO_GOOGLE = google_audio.GOOGLE_PARAMETER_MAPPERS
 AUDIO_GROQ = groq_audio.GROQ_PARAMETER_MAPPERS
 AUDIO_OPENAI = openai_audio.OPENAI_PARAMETER_MAPPERS
@@ -326,6 +328,20 @@ SCALAR_PARAMETER_CASES = [
     (AUDIO_MISTRAL, AP.LANGUAGE, "en", ("language",), "en"),
     (AUDIO_MISTRAL, AP.TEMPERATURE, 0.0, ("temperature",), 0.0),
     (XAI, V.FIRST_FRAME, IMAGE, ("image", "url"), IMAGE.url),
+    (
+        IMAGES_OPENAI,
+        IP.REFERENCE_IMAGES,
+        [IMAGE],
+        ("images",),
+        [{"image_url": IMAGE.url}],
+    ),
+    (
+        IMAGES_OPENAI,
+        IP.MASK,
+        LOCAL_IMAGE,
+        ("mask",),
+        {"image_url": "data:image/png;base64,ZnJhbWU="},
+    ),
     (TOPAZ, IP.OUTPUT_WIDTH, 2048, ("output_width",), 2048),
     (TOPAZ, IP.OUTPUT_HEIGHT, 1536, ("output_height",), 1536),
     (TOPAZ, IP.OUTPUT_FORMAT, "jpeg", ("output_format",), "jpeg"),
@@ -374,6 +390,17 @@ SCALAR_PARAMETER_CASES = [
 @pytest.mark.parametrize(
     ("mappers", "name", "value", "path", "expected", "model", "initial_request"),
     [(*case, MODEL, None) for case in SCALAR_PARAMETER_CASES]
+    + [
+        (
+            IMAGES_OPENAI,
+            IP.REFERENCE_IMAGES,
+            [IMAGE],
+            ("images",),
+            [{"image_url": "primary"}, {"image_url": IMAGE.url}],
+            MODEL,
+            {"images": [{"image_url": "primary"}]},
+        ),
+    ]
     + [
         (
             BFL,
@@ -541,6 +568,7 @@ def test_scalar_parameters_use_provider_wire_shape(
     [
         GOOGLE_VERTEX,
         IMAGES_VERTEX,
+        IMAGES_OPENAI,
         AUDIO_GOOGLE,
         AUDIO_GROQ,
         AUDIO_OPENAI,
