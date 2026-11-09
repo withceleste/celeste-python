@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Bug Fixes
+
+- **Images** — OpenAI `gpt-image-2`, `gpt-image-2.5-flare` and `gpt-image-2.5-sunburst` accept any `WIDTHxHEIGHT` size the API documents (e.g. `1536x864`) instead of eight fixed sizes (#564).
+
 ---
 
 ## [1.0.0] - 2026-10-20
