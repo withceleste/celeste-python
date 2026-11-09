@@ -1,6 +1,6 @@
 """OpenAI models for images modality."""
 
-from celeste.constraints import Choice, Range, Str
+from celeste.constraints import Choice, ImageConstraint, ImagesConstraint, Range
 from celeste.core import Modality, Operation, Provider
 from celeste.models import Model
 
@@ -26,6 +26,8 @@ MODELS: list[Model] = [
             ),
             ImageParameter.SAFETY_TOLERANCE: Choice(options=["auto", "low"]),
             ImageParameter.OUTPUT_COMPRESSION: Range(min=0, max=100),
+            ImageParameter.REFERENCE_IMAGES: ImagesConstraint(max_count=16),
+            ImageParameter.MASK: ImageConstraint(),
         },
     ),
     Model(
@@ -47,6 +49,8 @@ MODELS: list[Model] = [
             ),
             ImageParameter.SAFETY_TOLERANCE: Choice(options=["auto", "low"]),
             ImageParameter.OUTPUT_COMPRESSION: Range(min=0, max=100),
+            ImageParameter.REFERENCE_IMAGES: ImagesConstraint(max_count=16),
+            ImageParameter.MASK: ImageConstraint(),
         },
     ),
     Model(
@@ -57,8 +61,17 @@ MODELS: list[Model] = [
         streaming=True,
         parameter_constraints={
             ImageParameter.PARTIAL_IMAGES: Range(min=0, max=3),
-            ImageParameter.ASPECT_RATIO: Str(
-                description="WIDTHxHEIGHT, such as 1536x864, with both edges divisible by 16, an aspect ratio between 1:3 and 3:1 and at most 3840x2160; or auto."
+            ImageParameter.ASPECT_RATIO: Choice(
+                options=[
+                    "1024x1024",
+                    "1536x1024",
+                    "1024x1536",
+                    "2048x2048",
+                    "2048x1152",
+                    "3840x2160",
+                    "2160x3840",
+                    "auto",
+                ]
             ),
             ImageParameter.QUALITY: Choice(options=["low", "medium", "high", "auto"]),
             ImageParameter.NUM_IMAGES: Range(min=1, max=10),
@@ -68,6 +81,8 @@ MODELS: list[Model] = [
             ),
             ImageParameter.SAFETY_TOLERANCE: Choice(options=["auto", "low"]),
             ImageParameter.OUTPUT_COMPRESSION: Range(min=0, max=100),
+            ImageParameter.REFERENCE_IMAGES: ImagesConstraint(max_count=16),
+            ImageParameter.MASK: ImageConstraint(),
         },
     ),
     Model(
@@ -78,8 +93,17 @@ MODELS: list[Model] = [
         streaming=True,
         parameter_constraints={
             ImageParameter.PARTIAL_IMAGES: Range(min=0, max=3),
-            ImageParameter.ASPECT_RATIO: Str(
-                description="WIDTHxHEIGHT, such as 1536x864, with both edges divisible by 16, an aspect ratio between 1:3 and 3:1 and at most 3840x2160; or auto."
+            ImageParameter.ASPECT_RATIO: Choice(
+                options=[
+                    "1024x1024",
+                    "1536x1024",
+                    "1024x1536",
+                    "2048x2048",
+                    "2048x1152",
+                    "3840x2160",
+                    "2160x3840",
+                    "auto",
+                ]
             ),
             ImageParameter.QUALITY: Choice(
                 options=["low", "medium", "high", "xhigh", "max", "auto"]
@@ -91,6 +115,8 @@ MODELS: list[Model] = [
             ),
             ImageParameter.SAFETY_TOLERANCE: Choice(options=["auto", "low"]),
             ImageParameter.OUTPUT_COMPRESSION: Range(min=0, max=100),
+            ImageParameter.REFERENCE_IMAGES: ImagesConstraint(max_count=16),
+            ImageParameter.MASK: ImageConstraint(),
         },
     ),
     Model(
@@ -112,6 +138,8 @@ MODELS: list[Model] = [
             ),
             ImageParameter.SAFETY_TOLERANCE: Choice(options=["auto", "low"]),
             ImageParameter.OUTPUT_COMPRESSION: Range(min=0, max=100),
+            ImageParameter.REFERENCE_IMAGES: ImagesConstraint(max_count=16),
+            ImageParameter.MASK: ImageConstraint(),
         },
     ),
     Model(
@@ -122,8 +150,17 @@ MODELS: list[Model] = [
         streaming=True,
         parameter_constraints={
             ImageParameter.PARTIAL_IMAGES: Range(min=0, max=3),
-            ImageParameter.ASPECT_RATIO: Str(
-                description="WIDTHxHEIGHT, such as 1536x864, with both edges divisible by 16, an aspect ratio between 1:3 and 3:1 and at most 3840x2160; or auto."
+            ImageParameter.ASPECT_RATIO: Choice(
+                options=[
+                    "1024x1024",
+                    "1536x1024",
+                    "1024x1536",
+                    "2048x2048",
+                    "2048x1152",
+                    "3840x2160",
+                    "2160x3840",
+                    "auto",
+                ]
             ),
             ImageParameter.QUALITY: Choice(
                 options=["low", "medium", "high", "xhigh", "max", "auto"]
@@ -135,6 +172,8 @@ MODELS: list[Model] = [
             ),
             ImageParameter.SAFETY_TOLERANCE: Choice(options=["auto", "low"]),
             ImageParameter.OUTPUT_COMPRESSION: Range(min=0, max=100),
+            ImageParameter.REFERENCE_IMAGES: ImagesConstraint(max_count=16),
+            ImageParameter.MASK: ImageConstraint(),
         },
     ),
     Model(
@@ -156,6 +195,8 @@ MODELS: list[Model] = [
             ),
             ImageParameter.SAFETY_TOLERANCE: Choice(options=["auto", "low"]),
             ImageParameter.OUTPUT_COMPRESSION: Range(min=0, max=100),
+            ImageParameter.REFERENCE_IMAGES: ImagesConstraint(max_count=16),
+            ImageParameter.MASK: ImageConstraint(),
         },
     ),
 ]
