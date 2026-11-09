@@ -36,8 +36,12 @@ def _client(model_id: str) -> GoogleVideosClient:
     )
 
 
-def test_veo_model_dispatches_to_veo_strategy() -> None:
-    client = _client("veo-3.1-generate-preview")
+def test_veo_model_dispatches_to_veo_strategy(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        "celeste.modalities.videos.providers.google.client._VEO_MODEL_IDS",
+        frozenset({"veo-test"}),
+    )
+    client = _client("veo-test")
     assert isinstance(client._strategy, GoogleVeoVideosClient)
     assert client._generate_endpoint == client._strategy._generate_endpoint
     assert client._edit_endpoint == client._strategy._edit_endpoint
@@ -47,8 +51,8 @@ def test_veo_model_dispatches_to_veo_strategy() -> None:
     "video", [{"gcsUri": "gs://bucket/result.mp4"}, {"bytesBase64Encoded": "dmlk"}]
 )
 def test_vertex_veo_parses_video_without_mutating_response(video: dict) -> None:
-    client = GoogleVideosClient(
-        model=_model("veo-3.1-generate-preview"),
+    client = GoogleVeoVideosClient(
+        model=_model("veo-test"),
         provider=Provider.GOOGLE,
         auth=GoogleADC(project_id="test"),
     )
