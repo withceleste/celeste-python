@@ -5,6 +5,9 @@ from celeste.protocols.chatcompletions.parameters import (
     MaxTokensMapper as _MaxTokensMapper,
 )
 from celeste.protocols.chatcompletions.parameters import (
+    PromptCacheKeyMapper as _PromptCacheKeyMapper,
+)
+from celeste.protocols.chatcompletions.parameters import (
     ResponseFormatMapper as _ResponseFormatMapper,
 )
 from celeste.protocols.chatcompletions.parameters import (
@@ -58,6 +61,12 @@ class ToolChoiceMapper(_ToolChoiceMapper):
     name = TextParameter.TOOL_CHOICE
 
 
+class PromptCacheKeyMapper(_PromptCacheKeyMapper):
+    """Map prompt_cache_key to Chat Completions prompt_cache_key parameter."""
+
+    name = TextParameter.PROMPT_CACHE_KEY
+
+
 CHATCOMPLETIONS_PARAMETER_MAPPERS: list[ParameterMapper[TextContent]] = [
     TemperatureMapper(),
     MaxTokensMapper(),
@@ -67,4 +76,8 @@ CHATCOMPLETIONS_PARAMETER_MAPPERS: list[ParameterMapper[TextContent]] = [
     ToolChoiceMapper(),
 ]
 
-__all__ = ["CHATCOMPLETIONS_PARAMETER_MAPPERS", "ThinkingLevelMapper"]
+__all__ = [
+    "CHATCOMPLETIONS_PARAMETER_MAPPERS",
+    "PromptCacheKeyMapper",
+    "ThinkingLevelMapper",
+]

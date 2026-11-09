@@ -1,6 +1,6 @@
 """Meta parameter mappers for text."""
 
-from celeste.parameters import FieldMapper, ParameterMapper
+from celeste.parameters import ParameterMapper
 from celeste.protocols.openresponses.parameters import (
     ReasoningEffortMapper as _ReasoningEffortMapper,
 )
@@ -16,17 +16,9 @@ class ThinkingLevelMapper(_ReasoningEffortMapper):
     name = TextParameter.THINKING_LEVEL
 
 
-class PromptCacheKeyMapper(FieldMapper[TextContent]):
-    """Map prompt_cache_key to Meta's prompt_cache_key parameter."""
-
-    name = TextParameter.PROMPT_CACHE_KEY
-    field = "prompt_cache_key"
-
-
 META_PARAMETER_MAPPERS: list[ParameterMapper[TextContent]] = [
     *OPENRESPONSES_PARAMETER_MAPPERS,
     ThinkingLevelMapper(),
-    PromptCacheKeyMapper(),
 ]
 
 __all__ = ["META_PARAMETER_MAPPERS"]

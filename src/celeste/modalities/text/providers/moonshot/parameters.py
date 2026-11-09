@@ -1,6 +1,6 @@
 """Moonshot parameter mappers for text."""
 
-from celeste.parameters import FieldMapper, ParameterMapper
+from celeste.parameters import ParameterMapper
 from celeste.protocols.chatcompletions.parameters import (
     ToolsMapper as _ToolsMapper,
 )
@@ -13,6 +13,7 @@ from ...protocols.chatcompletions.parameters import (
 )
 from ...protocols.chatcompletions.parameters import (
     OutputSchemaMapper,
+    PromptCacheKeyMapper,
     TemperatureMapper,
     ThinkingLevelMapper,
 )
@@ -36,13 +37,6 @@ class MaxTokensMapper(_MaxTokensMapper):
     """Map max_tokens to Moonshot's current field name."""
 
     field = "max_completion_tokens"
-
-
-class PromptCacheKeyMapper(FieldMapper[TextContent]):
-    """Map prompt_cache_key to Moonshot's prompt_cache_key parameter."""
-
-    name = TextParameter.PROMPT_CACHE_KEY
-    field = "prompt_cache_key"
 
 
 MOONSHOT_PARAMETER_MAPPERS: list[ParameterMapper[TextContent]] = [

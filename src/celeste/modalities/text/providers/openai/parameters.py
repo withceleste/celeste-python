@@ -3,7 +3,7 @@
 from typing import Any
 
 from celeste.models import Model
-from celeste.parameters import FieldMapper, ParameterMapper
+from celeste.parameters import ParameterMapper
 from celeste.protocols.openresponses.parameters import (
     ReasoningEffortMapper as _ReasoningEffortMapper,
 )
@@ -17,6 +17,7 @@ from ...parameters import TextParameter
 from ...protocols.openresponses.parameters import (
     MaxTokensMapper,
     OutputSchemaMapper,
+    PromptCacheKeyMapper,
     TemperatureMapper,
     ToolsMapper,
 )
@@ -60,13 +61,6 @@ class ToolChoiceMapper(_ToolChoiceMapper):
             }
             return request
         return super().map(request, validated_value, model)
-
-
-class PromptCacheKeyMapper(FieldMapper[TextContent]):
-    """Map prompt_cache_key to OpenAI's prompt_cache_key parameter."""
-
-    name = TextParameter.PROMPT_CACHE_KEY
-    field = "prompt_cache_key"
 
 
 OPENAI_PARAMETER_MAPPERS: list[ParameterMapper[TextContent]] = [

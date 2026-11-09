@@ -3,7 +3,7 @@
 from typing import Any
 
 from celeste.models import Model
-from celeste.parameters import FieldMapper, ParameterMapper
+from celeste.parameters import ParameterMapper
 from celeste.providers.mistral.chat.parameters import (
     ResponseFormatMapper as _ResponseFormatMapper,
 )
@@ -12,6 +12,7 @@ from celeste.types import TextContent
 from ...parameters import TextParameter
 from ...protocols.chatcompletions.parameters import (
     MaxTokensMapper,
+    PromptCacheKeyMapper,
     TemperatureMapper,
     ThinkingLevelMapper,
     ToolsMapper,
@@ -49,13 +50,6 @@ class ToolChoiceMapper(_ToolChoiceMapper):
             request["tool_choice"] = "any"
             return request
         return super().map(request, validated_value, model)
-
-
-class PromptCacheKeyMapper(FieldMapper[TextContent]):
-    """Map prompt_cache_key to Mistral's prompt_cache_key parameter."""
-
-    name = TextParameter.PROMPT_CACHE_KEY
-    field = "prompt_cache_key"
 
 
 MISTRAL_PARAMETER_MAPPERS: list[ParameterMapper[TextContent]] = [

@@ -27,6 +27,12 @@ class MaxOutputTokensMapper(FieldMapper[TextContent]):
     field = "max_output_tokens"
 
 
+class PromptCacheKeyMapper(FieldMapper[TextContent]):
+    """Map prompt_cache_key to Responses prompt_cache_key field."""
+
+    field = "prompt_cache_key"
+
+
 class TextFormatMapper(ParameterMapper[TextContent]):
     """Map output_schema to Responses text.format field.
 
@@ -227,6 +233,7 @@ class ToolChoiceMapper(ParameterMapper[TextContent]):
 
 __all__ = [
     "MaxOutputTokensMapper",
+    "PromptCacheKeyMapper",
     "ReasoningEffortMapper",
     "TemperatureMapper",
     "TextFormatMapper",
