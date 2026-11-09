@@ -23,7 +23,7 @@ MODELS: list[Model] = [
         operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
         streaming=True,
         parameter_constraints={
-            Parameter.MAX_TOKENS: Range(min=1, max=128000),
+            Parameter.MAX_TOKENS: Range(min=16, max=128000),
             TextParameter.THINKING_LEVEL: Choice(
                 options=["low", "medium", "high", "xhigh", "max"]
             ),
@@ -41,7 +41,7 @@ MODELS: list[Model] = [
         operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
         streaming=True,
         parameter_constraints={
-            Parameter.MAX_TOKENS: Range(min=1, max=128000),
+            Parameter.MAX_TOKENS: Range(min=16, max=128000),
             TextParameter.THINKING_LEVEL: Choice(
                 options=["low", "medium", "high", "xhigh", "max"]
             ),
@@ -59,7 +59,7 @@ MODELS: list[Model] = [
         operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
         streaming=True,
         parameter_constraints={
-            Parameter.MAX_TOKENS: Range(min=1, max=128000),
+            Parameter.MAX_TOKENS: Range(min=16, max=128000),
             TextParameter.THINKING_LEVEL: Choice(
                 options=["none", "low", "medium", "high", "xhigh", "max"]
             ),
@@ -77,7 +77,7 @@ MODELS: list[Model] = [
         operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
         streaming=True,
         parameter_constraints={
-            Parameter.MAX_TOKENS: Range(min=1, max=128000),
+            Parameter.MAX_TOKENS: Range(min=16, max=128000),
             TextParameter.THINKING_LEVEL: Choice(
                 options=["none", "low", "medium", "high", "xhigh", "max"]
             ),
@@ -95,7 +95,7 @@ MODELS: list[Model] = [
         operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
         streaming=True,
         parameter_constraints={
-            Parameter.MAX_TOKENS: Range(min=1, max=128000),
+            Parameter.MAX_TOKENS: Range(min=16, max=128000),
             TextParameter.THINKING_LEVEL: Choice(
                 options=["none", "low", "medium", "high", "xhigh", "max"]
             ),
@@ -114,7 +114,7 @@ MODELS: list[Model] = [
         streaming=True,
         parameter_constraints={
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0),
-            Parameter.MAX_TOKENS: Range(min=1, max=16384),
+            Parameter.MAX_TOKENS: Range(min=16, max=16384),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
             TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
             TextParameter.OUTPUT_SCHEMA: Schema(),
@@ -130,7 +130,7 @@ MODELS: list[Model] = [
         streaming=True,
         parameter_constraints={
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0),
-            Parameter.MAX_TOKENS: Range(min=1, max=16384),
+            Parameter.MAX_TOKENS: Range(min=16, max=16384),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
             TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
             TextParameter.OUTPUT_SCHEMA: Schema(),
@@ -145,7 +145,7 @@ MODELS: list[Model] = [
         operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
         streaming=True,
         parameter_constraints={
-            Parameter.MAX_TOKENS: Range(min=1, max=128000),
+            Parameter.MAX_TOKENS: Range(min=16, max=128000),
             TextParameter.THINKING_LEVEL: Choice(
                 options=["minimal", "low", "medium", "high"]
             ),
@@ -162,7 +162,7 @@ MODELS: list[Model] = [
         operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
         streaming=True,
         parameter_constraints={
-            Parameter.MAX_TOKENS: Range(min=1, max=128000),
+            Parameter.MAX_TOKENS: Range(min=16, max=128000),
             TextParameter.THINKING_LEVEL: Choice(
                 options=["none", "low", "medium", "high", "xhigh"]
             ),
@@ -180,7 +180,7 @@ MODELS: list[Model] = [
         operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
         streaming=True,
         parameter_constraints={
-            Parameter.MAX_TOKENS: Range(min=1, max=128000),
+            Parameter.MAX_TOKENS: Range(min=16, max=128000),
             TextParameter.THINKING_LEVEL: Choice(options=["medium", "high", "xhigh"]),
             TextParameter.VERBOSITY: Choice(options=["low", "medium", "high"]),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
@@ -196,7 +196,7 @@ MODELS: list[Model] = [
         operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
         streaming=True,
         parameter_constraints={
-            Parameter.MAX_TOKENS: Range(min=1, max=128000),
+            Parameter.MAX_TOKENS: Range(min=16, max=128000),
             TextParameter.THINKING_LEVEL: Choice(
                 options=["low", "medium", "high", "xhigh"]
             ),
@@ -214,7 +214,7 @@ MODELS: list[Model] = [
         streaming=True,
         parameter_constraints={
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0),
-            Parameter.MAX_TOKENS: Range(min=1, max=128000),
+            Parameter.MAX_TOKENS: Range(min=16, max=128000),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
             TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
             TextParameter.OUTPUT_SCHEMA: Schema(),
@@ -229,7 +229,7 @@ MODELS: list[Model] = [
         operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
         streaming=True,
         parameter_constraints={
-            Parameter.MAX_TOKENS: Range(min=1, max=128000),
+            Parameter.MAX_TOKENS: Range(min=16, max=128000),
             TextParameter.THINKING_LEVEL: Choice(
                 options=["none", "low", "medium", "high"]
             ),
@@ -248,7 +248,7 @@ MODELS: list[Model] = [
         operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
         streaming=True,
         parameter_constraints={
-            Parameter.MAX_TOKENS: Range(min=1, max=128000),
+            Parameter.MAX_TOKENS: Range(min=16, max=128000),
             TextParameter.THINKING_LEVEL: Choice(
                 options=["minimal", "low", "medium", "high"]
             ),
@@ -266,7 +266,7 @@ MODELS: list[Model] = [
         operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
         streaming=True,
         parameter_constraints={
-            Parameter.MAX_TOKENS: Range(min=1, max=128000),
+            Parameter.MAX_TOKENS: Range(min=16, max=128000),
             TextParameter.THINKING_LEVEL: Choice(
                 options=["minimal", "low", "medium", "high"]
             ),
@@ -283,7 +283,7 @@ MODELS: list[Model] = [
         operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
         streaming=True,
         parameter_constraints={
-            Parameter.MAX_TOKENS: Range(min=1, max=128000),
+            Parameter.MAX_TOKENS: Range(min=16, max=128000),
             TextParameter.THINKING_LEVEL: Choice(
                 options=["none", "low", "medium", "high", "xhigh", "max"]
             ),
@@ -301,7 +301,7 @@ MODELS: list[Model] = [
         operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
         streaming=True,
         parameter_constraints={
-            Parameter.MAX_TOKENS: Range(min=1, max=128000),
+            Parameter.MAX_TOKENS: Range(min=16, max=128000),
             TextParameter.THINKING_LEVEL: Choice(
                 options=["none", "low", "medium", "high", "xhigh", "max"]
             ),
@@ -319,7 +319,7 @@ MODELS: list[Model] = [
         operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
         streaming=True,
         parameter_constraints={
-            Parameter.MAX_TOKENS: Range(min=1, max=128000),
+            Parameter.MAX_TOKENS: Range(min=16, max=128000),
             TextParameter.THINKING_LEVEL: Choice(
                 options=["none", "low", "medium", "high", "xhigh", "max"]
             ),
@@ -337,7 +337,7 @@ MODELS: list[Model] = [
         operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
         streaming=True,
         parameter_constraints={
-            Parameter.MAX_TOKENS: Range(min=1, max=128000),
+            Parameter.MAX_TOKENS: Range(min=16, max=128000),
             TextParameter.THINKING_LEVEL: Choice(
                 options=["none", "low", "medium", "high", "xhigh", "max"]
             ),
@@ -355,7 +355,7 @@ MODELS: list[Model] = [
         operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
         streaming=True,
         parameter_constraints={
-            Parameter.MAX_TOKENS: Range(min=1, max=128000),
+            Parameter.MAX_TOKENS: Range(min=16, max=128000),
             TextParameter.THINKING_LEVEL: Choice(
                 options=["none", "low", "medium", "high", "xhigh"]
             ),
@@ -374,7 +374,7 @@ MODELS: list[Model] = [
         operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
         streaming=False,
         parameter_constraints={
-            Parameter.MAX_TOKENS: Range(min=1, max=128000),
+            Parameter.MAX_TOKENS: Range(min=16, max=128000),
             TextParameter.THINKING_LEVEL: Choice(options=["medium", "high", "xhigh"]),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
             TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
@@ -389,7 +389,7 @@ MODELS: list[Model] = [
         operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
         streaming=True,
         parameter_constraints={
-            Parameter.MAX_TOKENS: Range(min=1, max=128000),
+            Parameter.MAX_TOKENS: Range(min=16, max=128000),
             TextParameter.THINKING_LEVEL: Choice(
                 options=["none", "low", "medium", "high", "xhigh"]
             ),
@@ -407,7 +407,7 @@ MODELS: list[Model] = [
         operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
         streaming=True,
         parameter_constraints={
-            Parameter.MAX_TOKENS: Range(min=1, max=128000),
+            Parameter.MAX_TOKENS: Range(min=16, max=128000),
             TextParameter.THINKING_LEVEL: Choice(
                 options=["none", "low", "medium", "high", "xhigh"]
             ),
@@ -424,7 +424,7 @@ MODELS: list[Model] = [
         operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
         streaming=True,
         parameter_constraints={
-            Parameter.MAX_TOKENS: Range(min=1, max=128000),
+            Parameter.MAX_TOKENS: Range(min=16, max=128000),
             TextParameter.THINKING_LEVEL: Choice(
                 options=["none", "low", "medium", "high", "xhigh"]
             ),
@@ -443,7 +443,7 @@ MODELS: list[Model] = [
         operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
         streaming=True,
         parameter_constraints={
-            Parameter.MAX_TOKENS: Range(min=1, max=128000),
+            Parameter.MAX_TOKENS: Range(min=16, max=128000),
             TextParameter.THINKING_LEVEL: Choice(options=["medium", "high", "xhigh"]),
             TextParameter.VERBOSITY: Choice(options=["low", "medium", "high"]),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
@@ -460,7 +460,7 @@ MODELS: list[Model] = [
         streaming=True,
         parameter_constraints={
             Parameter.TEMPERATURE: Range(min=0.0, max=2.0),
-            Parameter.MAX_TOKENS: Range(min=1, max=32768),
+            Parameter.MAX_TOKENS: Range(min=16, max=32768),
             TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
             TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
             TextParameter.OUTPUT_SCHEMA: Schema(),
