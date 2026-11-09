@@ -12,6 +12,7 @@ from celeste.providers.openai.images.streaming import (
     OpenAIImagesStream as _OpenAIImagesStream,
 )
 from celeste.types import ImageContent
+from celeste.utils import build_data_url
 
 from ...client import ImagesClient
 from ...io import (
@@ -41,11 +42,10 @@ class OpenAIImagesClient(OpenAIImagesMixin, ImagesClient):
         return OPENAI_PARAMETER_MAPPERS
 
     def _init_request(self, inputs: ImageInput) -> dict[str, Any]:
-        """Initialize request, keeping ImageArtifact for multipart handling."""
+        """Initialize request from inputs."""
         request: dict[str, Any] = {"prompt": inputs.prompt}
         if inputs.image is not None:
-            # Keep as ImageArtifact - _make_multipart_request handles encoding
-            request["image"] = inputs.image
+            request["images"] = [{"image_url": build_data_url(inputs.image)}]
         return request
 
     def _parse_content(
