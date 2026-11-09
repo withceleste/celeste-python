@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
-- **Text** — Anthropic requests use API version `2026-10-21` (the `anthropic-version` header on the Claude API, `anthropic_version` in the body on Claude on Google Cloud). The version removes `temperature`, `top_p` and `top_k`, so `temperature` on Anthropic models is now warned about and dropped instead of sent; an assistant message carrying a document now returns HTTP 400 from the API.
+- **Text** — Anthropic requests use API version `2026-10-21` (the `anthropic-version` header on the Claude API, `anthropic_version` in the body on Claude on Google Cloud). The version removes `temperature`, `top_p` and `top_k`, so `temperature` on Anthropic models is now warned about and dropped instead of sent; an assistant message carrying a document now returns HTTP 400 from the API (#586).
 
 ### Bug Fixes
 
