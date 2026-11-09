@@ -5,6 +5,9 @@ from celeste.protocols.openresponses.parameters import (
     MaxOutputTokensMapper as _MaxOutputTokensMapper,
 )
 from celeste.protocols.openresponses.parameters import (
+    PromptCacheKeyMapper as _PromptCacheKeyMapper,
+)
+from celeste.protocols.openresponses.parameters import (
     TemperatureMapper as _TemperatureMapper,
 )
 from celeste.protocols.openresponses.parameters import (
@@ -51,12 +54,19 @@ class ToolChoiceMapper(_ToolChoiceMapper):
     name = TextParameter.TOOL_CHOICE
 
 
+class PromptCacheKeyMapper(_PromptCacheKeyMapper):
+    """Map prompt_cache_key to Responses prompt_cache_key parameter."""
+
+    name = TextParameter.PROMPT_CACHE_KEY
+
+
 OPENRESPONSES_PARAMETER_MAPPERS: list[ParameterMapper[TextContent]] = [
     TemperatureMapper(),
     MaxTokensMapper(),
     OutputSchemaMapper(),
     ToolsMapper(),
     ToolChoiceMapper(),
+    PromptCacheKeyMapper(),
 ]
 
 __all__ = ["OPENRESPONSES_PARAMETER_MAPPERS"]

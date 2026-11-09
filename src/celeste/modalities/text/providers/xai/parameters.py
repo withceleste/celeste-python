@@ -14,6 +14,7 @@ from ...parameters import TextParameter
 from ...protocols.openresponses.parameters import (
     MaxTokensMapper,
     OutputSchemaMapper,
+    PromptCacheKeyMapper,
     TemperatureMapper,
     ToolChoiceMapper,
 )
@@ -39,6 +40,7 @@ XAI_PARAMETER_MAPPERS: list[ParameterMapper[TextContent]] = [
     ToolsMapper(),
     ToolChoiceMapper(),
     ThinkingLevelMapper(),
+    PromptCacheKeyMapper(),
 ]
 
 __all__ = ["XAI_PARAMETER_MAPPERS"]

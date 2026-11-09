@@ -17,6 +17,7 @@ from ...parameters import TextParameter
 from ...protocols.openresponses.parameters import (
     MaxTokensMapper,
     OutputSchemaMapper,
+    PromptCacheKeyMapper,
     TemperatureMapper,
     ToolsMapper,
 )
@@ -70,6 +71,7 @@ OPENAI_PARAMETER_MAPPERS: list[ParameterMapper[TextContent]] = [
     ToolChoiceMapper(),
     VerbosityMapper(),
     ThinkingLevelMapper(),
+    PromptCacheKeyMapper(),
 ]
 
 __all__ = ["OPENAI_PARAMETER_MAPPERS"]

@@ -29,12 +29,15 @@ from celeste.modalities.text.protocols.chatcompletions.client import (
     ChatCompletionsTextClient,
     ChatCompletionsTextStream,
 )
+from celeste.modalities.text.protocols.openresponses import parameters as responses
 from celeste.modalities.text.providers.anthropic import parameters as anthropic
 from celeste.modalities.text.providers.google import parameters as google_text
 from celeste.modalities.text.providers.groq import parameters as groq
 from celeste.modalities.text.providers.meta import parameters as meta
+from celeste.modalities.text.providers.mistral import parameters as mistral
 from celeste.modalities.text.providers.moonshot import parameters as moonshot
 from celeste.modalities.text.providers.openai import parameters as openai
+from celeste.modalities.text.providers.xai import parameters as xai_text
 from celeste.modalities.videos.parameters import VideoParameter
 from celeste.modalities.videos.providers.byteplus import parameters as byteplus
 from celeste.modalities.videos.providers.google import parameters as google_videos
@@ -56,6 +59,9 @@ VIDEOS_VEO = google_videos.GOOGLE_VEO_PARAMETER_MAPPERS
 VIDEOS_INTERACTIONS = google_videos.GOOGLE_INTERACTIONS_PARAMETER_MAPPERS
 OPEN = openai.OPENAI_PARAMETER_MAPPERS
 META = meta.META_PARAMETER_MAPPERS
+RESPONSES = responses.OPENRESPONSES_PARAMETER_MAPPERS
+TEXT_XAI = xai_text.XAI_PARAMETER_MAPPERS
+MISTRAL = mistral.MISTRAL_PARAMETER_MAPPERS
 CHAT = chat.CHATCOMPLETIONS_PARAMETER_MAPPERS
 ANTHROPIC = anthropic.ANTHROPIC_PARAMETER_MAPPERS
 MOONSHOT = moonshot.MOONSHOT_PARAMETER_MAPPERS
@@ -318,6 +324,12 @@ SCALAR_PARAMETER_CASES = [
     (MOONSHOT, T.MAX_TOKENS, 120, ("max_completion_tokens",), 120),
     (MOONSHOT, T.THINKING_LEVEL, "max", ("reasoning_effort",), "max"),
     (GROQ, T.THINKING_LEVEL, "default", ("reasoning_effort",), "default"),
+    (OPEN, T.PROMPT_CACHE_KEY, "thread-1", ("prompt_cache_key",), "thread-1"),
+    (TEXT_XAI, T.PROMPT_CACHE_KEY, "thread-1", ("prompt_cache_key",), "thread-1"),
+    (META, T.PROMPT_CACHE_KEY, "thread-1", ("prompt_cache_key",), "thread-1"),
+    (RESPONSES, T.PROMPT_CACHE_KEY, "thread-1", ("prompt_cache_key",), "thread-1"),
+    (MISTRAL, T.PROMPT_CACHE_KEY, "thread-1", ("prompt_cache_key",), "thread-1"),
+    (MOONSHOT, T.PROMPT_CACHE_KEY, "thread-1", ("prompt_cache_key",), "thread-1"),
     (AUDIO_GROQ, AP.LANGUAGE, "en", ("language",), "en"),
     (AUDIO_GROQ, AP.PROMPT, "Celeste", ("prompt",), "Celeste"),
     (AUDIO_GROQ, AP.TEMPERATURE, 0.0, ("temperature",), 0.0),
@@ -577,6 +589,10 @@ def test_scalar_parameters_use_provider_wire_shape(
         VIDEOS_VEO,
         VIDEOS_INTERACTIONS,
         OPEN,
+        TEXT_XAI,
+        META,
+        RESPONSES,
+        MISTRAL,
         CHAT,
         ANTHROPIC,
         MOONSHOT,

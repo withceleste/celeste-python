@@ -12,6 +12,7 @@ from celeste.types import TextContent
 from ...parameters import TextParameter
 from ...protocols.chatcompletions.parameters import (
     MaxTokensMapper,
+    PromptCacheKeyMapper,
     TemperatureMapper,
     ThinkingLevelMapper,
     ToolsMapper,
@@ -58,6 +59,7 @@ MISTRAL_PARAMETER_MAPPERS: list[ParameterMapper[TextContent]] = [
     OutputSchemaMapper(),
     ToolsMapper(),
     ToolChoiceMapper(),
+    PromptCacheKeyMapper(),
 ]
 
 __all__ = ["MISTRAL_PARAMETER_MAPPERS"]

@@ -27,6 +27,12 @@ class MaxTokensMapper(FieldMapper[TextContent]):
     field = "max_tokens"
 
 
+class PromptCacheKeyMapper(FieldMapper[TextContent]):
+    """Map prompt_cache_key to Chat Completions prompt_cache_key field."""
+
+    field = "prompt_cache_key"
+
+
 class ResponseFormatMapper(ParameterMapper[TextContent]):
     """Map output_schema to Chat Completions response_format field.
 
@@ -174,6 +180,7 @@ class ToolChoiceMapper(ParameterMapper[TextContent]):
 
 __all__ = [
     "MaxTokensMapper",
+    "PromptCacheKeyMapper",
     "ResponseFormatMapper",
     "TemperatureMapper",
     "ToolChoiceMapper",

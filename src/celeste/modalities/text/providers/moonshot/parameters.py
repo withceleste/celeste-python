@@ -13,6 +13,7 @@ from ...protocols.chatcompletions.parameters import (
 )
 from ...protocols.chatcompletions.parameters import (
     OutputSchemaMapper,
+    PromptCacheKeyMapper,
     TemperatureMapper,
     ThinkingLevelMapper,
 )
@@ -45,6 +46,7 @@ MOONSHOT_PARAMETER_MAPPERS: list[ParameterMapper[TextContent]] = [
     OutputSchemaMapper(),
     ToolsMapper(),
     ToolChoiceMapper(),
+    PromptCacheKeyMapper(),
 ]
 
 __all__ = ["MOONSHOT_PARAMETER_MAPPERS"]
