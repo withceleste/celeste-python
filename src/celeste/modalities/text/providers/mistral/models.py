@@ -16,13 +16,31 @@ from ...parameters import TextParameter
 
 MODELS: list[Model] = [
     Model(
+        id="mistral-large-4-0",
+        provider=Provider.MISTRAL,
+        display_name="Mistral Large 4",
+        operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
+        streaming=True,
+        parameter_constraints={
+            Parameter.TEMPERATURE: Range(min=0.0, max=1.5),
+            TextParameter.THINKING_LEVEL: Choice(
+                options=["none", "minimal", "low", "medium", "high", "xhigh"]
+            ),
+            TextParameter.OUTPUT_SCHEMA: Schema(),
+            TextParameter.IMAGE: ImagesConstraint(),
+            TextParameter.DOCUMENT: DocumentsConstraint(),
+            TextParameter.TOOLS: ToolSupport(tools=[]),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
+        },
+    ),
+    Model(
         id="mistral-large-2512",
         provider=Provider.MISTRAL,
         display_name="Mistral Large 3 (25.12)",
         operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
         streaming=True,
         parameter_constraints={
-            Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
+            Parameter.TEMPERATURE: Range(min=0.0, max=1.5, step=0.01),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.IMAGE: ImagesConstraint(),
             TextParameter.DOCUMENT: DocumentsConstraint(),
@@ -37,7 +55,7 @@ MODELS: list[Model] = [
         operations={Modality.TEXT: {Operation.GENERATE}},
         streaming=True,
         parameter_constraints={
-            Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
+            Parameter.TEMPERATURE: Range(min=0.0, max=1.5, step=0.01),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.TOOLS: ToolSupport(tools=[]),
             TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
@@ -50,7 +68,7 @@ MODELS: list[Model] = [
         operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
         streaming=True,
         parameter_constraints={
-            Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
+            Parameter.TEMPERATURE: Range(min=0.0, max=1.5, step=0.01),
             TextParameter.THINKING_LEVEL: Choice(options=["none", "high"]),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.IMAGE: ImagesConstraint(),
@@ -66,7 +84,7 @@ MODELS: list[Model] = [
         operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
         streaming=True,
         parameter_constraints={
-            Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
+            Parameter.TEMPERATURE: Range(min=0.0, max=1.5, step=0.01),
             TextParameter.THINKING_LEVEL: Choice(options=["none", "high"]),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.IMAGE: ImagesConstraint(),
@@ -82,7 +100,7 @@ MODELS: list[Model] = [
         operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
         streaming=True,
         parameter_constraints={
-            Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
+            Parameter.TEMPERATURE: Range(min=0.0, max=1.5, step=0.01),
             TextParameter.THINKING_LEVEL: Choice(options=["none", "high"]),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.IMAGE: ImagesConstraint(),
@@ -98,7 +116,7 @@ MODELS: list[Model] = [
         operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
         streaming=True,
         parameter_constraints={
-            Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
+            Parameter.TEMPERATURE: Range(min=0.0, max=1.5, step=0.01),
             TextParameter.THINKING_LEVEL: Choice(options=["none", "high"]),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.IMAGE: ImagesConstraint(),
@@ -113,7 +131,7 @@ MODELS: list[Model] = [
         operations={Modality.TEXT: {Operation.GENERATE}},
         streaming=True,
         parameter_constraints={
-            Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
+            Parameter.TEMPERATURE: Range(min=0.0, max=1.5, step=0.01),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.TOOLS: ToolSupport(tools=[]),
             TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
@@ -126,7 +144,7 @@ MODELS: list[Model] = [
         operations={Modality.TEXT: {Operation.GENERATE}},
         streaming=True,
         parameter_constraints={
-            Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
+            Parameter.TEMPERATURE: Range(min=0.0, max=1.5, step=0.01),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.TOOLS: ToolSupport(tools=[]),
             TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
@@ -139,7 +157,7 @@ MODELS: list[Model] = [
         operations={Modality.TEXT: {Operation.GENERATE}},
         streaming=True,
         parameter_constraints={
-            Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
+            Parameter.TEMPERATURE: Range(min=0.0, max=1.5, step=0.01),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.TOOLS: ToolSupport(tools=[]),
             TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
@@ -152,7 +170,7 @@ MODELS: list[Model] = [
         operations={Modality.TEXT: {Operation.GENERATE}},
         streaming=True,
         parameter_constraints={
-            Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
+            Parameter.TEMPERATURE: Range(min=0.0, max=1.5, step=0.01),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.TOOLS: ToolSupport(tools=[]),
             TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
@@ -165,7 +183,7 @@ MODELS: list[Model] = [
         operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
         streaming=True,
         parameter_constraints={
-            Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
+            Parameter.TEMPERATURE: Range(min=0.0, max=1.5, step=0.01),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.IMAGE: ImagesConstraint(),
             TextParameter.DOCUMENT: DocumentsConstraint(),
@@ -180,7 +198,7 @@ MODELS: list[Model] = [
         operations={Modality.TEXT: {Operation.GENERATE}},
         streaming=True,
         parameter_constraints={
-            Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
+            Parameter.TEMPERATURE: Range(min=0.0, max=1.5, step=0.01),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.TOOLS: ToolSupport(tools=[]),
             TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
@@ -193,7 +211,7 @@ MODELS: list[Model] = [
         operations={Modality.TEXT: {Operation.GENERATE}},
         streaming=True,
         parameter_constraints={
-            Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
+            Parameter.TEMPERATURE: Range(min=0.0, max=1.5, step=0.01),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.TOOLS: ToolSupport(tools=[]),
             TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
@@ -206,7 +224,7 @@ MODELS: list[Model] = [
         operations={Modality.TEXT: {Operation.GENERATE}},
         streaming=True,
         parameter_constraints={
-            Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
+            Parameter.TEMPERATURE: Range(min=0.0, max=1.5, step=0.01),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.TOOLS: ToolSupport(tools=[]),
             TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
@@ -219,7 +237,7 @@ MODELS: list[Model] = [
         operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
         streaming=True,
         parameter_constraints={
-            Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
+            Parameter.TEMPERATURE: Range(min=0.0, max=1.5, step=0.01),
             TextParameter.THINKING_LEVEL: Choice(options=["none", "high"]),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.IMAGE: ImagesConstraint(),
@@ -234,7 +252,7 @@ MODELS: list[Model] = [
         operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
         streaming=True,
         parameter_constraints={
-            Parameter.TEMPERATURE: Range(min=0.0, max=2.0, step=0.01),
+            Parameter.TEMPERATURE: Range(min=0.0, max=1.5, step=0.01),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.IMAGE: ImagesConstraint(),
             TextParameter.DOCUMENT: DocumentsConstraint(),

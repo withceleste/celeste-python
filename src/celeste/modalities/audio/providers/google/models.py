@@ -63,7 +63,9 @@ MODELS: list[Model] = [
         streaming=True,
         operations={Modality.AUDIO: {Operation.SPEAK}},
         parameter_constraints={
-            AudioParameter.VOICE: VoiceConstraint(voices=GOOGLE_VOICES),
+            AudioParameter.VOICE: VoiceConstraint(
+                voices=GOOGLE_VOICES, custom_voices=True
+            ),
             AudioParameter.OUTPUT_FORMAT: Choice(
                 options=[
                     AudioMimeType.WAV,
@@ -82,7 +84,9 @@ MODELS: list[Model] = [
         streaming=True,
         operations={Modality.AUDIO: {Operation.SPEAK}},
         parameter_constraints={
-            AudioParameter.VOICE: VoiceConstraint(voices=GOOGLE_VOICES),
+            AudioParameter.VOICE: VoiceConstraint(
+                voices=GOOGLE_VOICES, custom_voices=True
+            ),
             AudioParameter.OUTPUT_FORMAT: Choice(
                 options=[
                     AudioMimeType.WAV,
