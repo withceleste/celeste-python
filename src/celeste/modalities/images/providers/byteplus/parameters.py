@@ -2,7 +2,13 @@
 
 from celeste.parameters import ParameterMapper
 from celeste.providers.byteplus.images.parameters import (
+    BackgroundMapper as _BackgroundMapper,
+)
+from celeste.providers.byteplus.images.parameters import (
     ImageMapper as _ImageMapper,
+)
+from celeste.providers.byteplus.images.parameters import (
+    OutputFormatMapper as _OutputFormatMapper,
 )
 from celeste.providers.byteplus.images.parameters import (
     SizeMapper as _SizeMapper,
@@ -33,11 +39,21 @@ class WatermarkMapper(_WatermarkMapper):
     name = ImageParameter.WATERMARK
 
 
+class OutputFormatMapper(_OutputFormatMapper):
+    name = ImageParameter.OUTPUT_FORMAT
+
+
+class BackgroundMapper(_BackgroundMapper):
+    name = ImageParameter.BACKGROUND
+
+
 BYTEPLUS_PARAMETER_MAPPERS: list[ParameterMapper[ImageContent]] = [
     AspectRatioMapper(),
     QualityMapper(),
     ReferenceImagesMapper(),
     WatermarkMapper(),
+    OutputFormatMapper(),
+    BackgroundMapper(),
 ]
 
 __all__ = ["BYTEPLUS_PARAMETER_MAPPERS"]

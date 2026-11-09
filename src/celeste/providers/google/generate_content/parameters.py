@@ -10,10 +10,10 @@ from celeste.mime_types import ApplicationMimeType
 from celeste.models import Model
 from celeste.parameters import ParameterMapper
 from celeste.providers.google.utils import build_media_part
-from celeste.tools import Tool
+from celeste.tools import Tool, WebSearch
 from celeste.types import OutputSchema, TextContent
 
-from .tools import TOOL_MAPPERS
+from .tools import TOOL_MAPPERS, WebSearchMapper
 
 
 class TemperatureMapper[Content](ParameterMapper[Content]):
@@ -151,6 +151,24 @@ class ImageSizeMapper[Content](ParameterMapper[Content]):
         request.setdefault("generationConfig", {}).setdefault("imageConfig", {})[
             "imageSize"
         ] = validated_value
+        return request
+
+
+class GoogleSearchMapper[Content](ParameterMapper[Content]):
+    """Map grounding to a Google tools google_search entry."""
+
+    def map(
+        self,
+        request: dict[str, Any],
+        value: object,
+        model: Model,
+    ) -> dict[str, Any]:
+        """Add the google_search tool when grounding is enabled."""
+        validated_value = self._validate_value(value, model)
+        if not validated_value:
+            return request
+
+        request.setdefault("tools", []).append(WebSearchMapper().map_tool(WebSearch()))
         return request
 
 
@@ -375,6 +393,7 @@ class ResponseJsonSchemaMapper(ParameterMapper[TextContent]):
 
 __all__ = [
     "AspectRatioMapper",
+    "GoogleSearchMapper",
     "ImageSizeMapper",
     "MaxOutputTokensMapper",
     "MediaContentMapper",

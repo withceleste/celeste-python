@@ -1,6 +1,6 @@
 """Google models for images modality."""
 
-from celeste.constraints import Choice, ImagesConstraint
+from celeste.constraints import Bool, Choice, ImagesConstraint
 from celeste.core import Modality, Operation, Provider
 from celeste.models import Model
 
@@ -56,6 +56,7 @@ MODELS: list[Model] = [
             ImageParameter.QUALITY: Choice(options=["1K", "2K", "4K"]),
             ImageParameter.REFERENCE_IMAGES: ImagesConstraint(max_count=14),
             ImageParameter.THINKING_LEVEL: Choice(options=["minimal", "high"]),
+            ImageParameter.GROUNDING: Bool(),
         },
     ),
     Model(
@@ -85,6 +86,7 @@ MODELS: list[Model] = [
             ImageParameter.QUALITY: Choice(options=["512", "1K", "2K", "4K"]),
             ImageParameter.REFERENCE_IMAGES: ImagesConstraint(max_count=14),
             ImageParameter.THINKING_LEVEL: Choice(options=["minimal", "high"]),
+            ImageParameter.GROUNDING: Bool(),
         },
     ),
     Model(
@@ -145,6 +147,7 @@ MODELS: list[Model] = [
             ImageParameter.THINKING_LEVEL: Choice(
                 options=["minimal", "medium", "high"]
             ),
+            ImageParameter.GROUNDING: Bool(),
         },
     ),
 ]

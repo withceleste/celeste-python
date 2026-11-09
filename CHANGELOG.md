@@ -12,12 +12,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Text** — New `prompt_cache_key` parameter (`TextParameter.PROMPT_CACHE_KEY`) is sent as the provider's `prompt_cache_key` field instead of being warned about and dropped, so requests that share a prompt prefix reach the same cache; mapped on the Open Responses protocol, which defines the field (OpenAI, xAI, Meta, OpenRouter, Ollama), and for Mistral and Moonshot on Chat Completions (#576).
 - **Audio** — Gemini 3.8 TTS (`gemini-3.8-flash-tts`, `gemini-3.8-flash-lite-tts`) accepts Extended Voice Library voices (e.g. `en-us-advisor-1`) and custom `voice_...` / `voicekey_...` ids instead of rejecting them locally; `VoiceConstraint(custom_voices=True)` passes a voice outside the listed catalog through for the provider to validate (#572, #578).
 - **Audio** — Google `gemini-3.5-transcribe` serves `Operation.TRANSCRIBE`: `client.transcribe(audio)` sends the audio to the Interactions API with `transcription_config` and returns the transcript as `TextOutput`; `language` maps to `transcription_config.language_codes` (#589).
+- **Images** — Google `gemini-3-pro-image`, `gemini-3.1-flash-image` and `gemini-nano-banana-2.1` accept the `grounding` parameter: `grounding=True` adds the `google_search` tool on both the Interactions and Vertex backends instead of being warned about and dropped, so the image reflects real-time search results (#588).
+- **Audio** — ElevenLabs text-to-speech accepts the `ulaw_8000` and `alaw_8000` output formats instead of rejecting them locally; unary and streamed speech in those formats is labeled `AudioMimeType.PCMU` / `AudioMimeType.PCMA` (#587).
+- **Images** — BytePlus Seedream sends `output_format` (`png`, `jpeg`; Seedream 5.0 lite, pro, flash) and `background` (`transparent`, `opaque`; Seedream 5.0 pro, flash) instead of warning about and dropping them (#590).
+
+### Breaking Changes
+
+- **Text** — Anthropic requests use API version `2026-10-21` (the `anthropic-version` header on the Claude API, `anthropic_version` in the body on Claude on Google Cloud). The version removes `temperature`, `top_p` and `top_k`, so `temperature` on Anthropic models is now warned about and dropped instead of sent; an assistant message carrying a document now returns HTTP 400 from the API (#586).
 
 ### Bug Fixes
 
 - **Images** — OpenAI image edits send `mask` and `reference_images` (up to 16 input images) instead of warning and dropping them; edits use the JSON `images` body, and generation with `reference_images` is served by `/images/edits` (#568).
 - **Images** — OpenAI `gpt-image-2`, `gpt-image-2.5-flare` and `gpt-image-2.5-sunburst` accept any documented `WIDTHxHEIGHT` size (multiples of 16, 1:3 to 3:1, at most 3840 per edge, 655,360–8,294,400 pixels) with the standard sizes kept as presets, instead of eight fixed sizes (#564).
 - **Text** — Anthropic on Claude on Google Cloud (GoogleADC) sends image and document inputs as base64 sources; the route accepts no URL sources (#570).
+- **Videos** — Google `veo-3.1-generate-preview` is no longer registered: the Gemini API shut it down on October 22, 2026 and now answers 404 `NOT_FOUND`. No Veo model remains registered; Google's replacement is `gemini-omni-1.2-flash` (#585).
+- **Live** — Google `gemini-3.8-live` and `gemini-3.8-live-extended-thinking` constrain `max_tokens` to 1–65,536, the documented output-token limit, as the Google text models do; a larger value raises `ConstraintViolationError` instead of being sent (#591).
 
 ---
 
