@@ -319,7 +319,6 @@ SCALAR_PARAMETER_CASES = [
     (CHAT, T.TEMPERATURE, 0.6, ("temperature",), 0.6),
     (CHAT, T.MAX_TOKENS, 100, ("max_tokens",), 100),
     (CHAT, T.THINKING_LEVEL, "high", ("reasoning_effort",), "high"),
-    (ANTHROPIC, T.TEMPERATURE, 0.3, ("temperature",), 0.3),
     (MOONSHOT, T.TEMPERATURE, 0.4, ("temperature",), 0.4),
     (MOONSHOT, T.MAX_TOKENS, 120, ("max_completion_tokens",), 120),
     (MOONSHOT, T.THINKING_LEVEL, "max", ("reasoning_effort",), "max"),

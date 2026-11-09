@@ -22,8 +22,8 @@ class VertexMessagesEndpoint(StrEnum):
 BASE_URL = "https://api.anthropic.com"
 
 # Required
-ANTHROPIC_VERSION = "2023-06-01"
-VERTEX_ANTHROPIC_VERSION = "vertex-2023-10-16"
+ANTHROPIC_VERSION = "2026-10-21"
+VERTEX_ANTHROPIC_VERSION = "2026-10-21"
 CONTENT_TYPE_JSON = "application/json"
 
 # Header
