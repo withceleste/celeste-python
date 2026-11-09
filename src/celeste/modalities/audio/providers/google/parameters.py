@@ -28,7 +28,7 @@ class VoiceMapper(_VoiceMapper):
 
 
 class LanguageMapper(_LanguageMapper):
-    """Map language to Google Interactions speech_config language field."""
+    """Map language to Google Interactions speech_config or transcription_config field."""
 
     name = AudioParameter.LANGUAGE
     locale_map: ClassVar[dict[str, str]] = {

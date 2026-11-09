@@ -16,6 +16,7 @@ MODELS = [
     (Provider.ELEVENLABS, "scribe_v1"),
     (Provider.MISTRAL, "voxtral-mini-2602"),
     (Provider.MISTRAL, "voxtral-mini-latest"),
+    (Provider.GOOGLE, "gemini-3.5-transcribe"),
 ]
 
 
