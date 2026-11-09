@@ -29,6 +29,7 @@ class TextParameter(StrEnum):
     TOOLS = "tools"
     TOOL_CHOICE = "tool_choice"
     VERBOSITY = "verbosity"
+    PROMPT_CACHE_KEY = "prompt_cache_key"
 
     # Media input declarations (for optional_input_types)
     IMAGE = "image"
@@ -65,6 +66,12 @@ class TextParameters(Parameters, total=False):
         Field(description="Controls whether and which tool the model must call."),
     ]
     verbosity: Annotated[str, Field(description="Output verbosity level.")]
+    prompt_cache_key: Annotated[
+        str,
+        Field(
+            description="Key grouping requests that share a prompt prefix for caching."
+        ),
+    ]
 
 
 __all__ = [

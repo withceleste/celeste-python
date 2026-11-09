@@ -1,6 +1,6 @@
 """xAI parameter mappers for text."""
 
-from celeste.parameters import ParameterMapper
+from celeste.parameters import FieldMapper, ParameterMapper
 from celeste.protocols.openresponses.parameters import (
     ReasoningEffortMapper as _ReasoningEffortMapper,
 )
@@ -32,6 +32,13 @@ class ToolsMapper(_ToolsMapper):
     _tool_mappers = XAI_TOOL_MAPPERS
 
 
+class PromptCacheKeyMapper(FieldMapper[TextContent]):
+    """Map prompt_cache_key to xAI's prompt_cache_key parameter."""
+
+    name = TextParameter.PROMPT_CACHE_KEY
+    field = "prompt_cache_key"
+
+
 XAI_PARAMETER_MAPPERS: list[ParameterMapper[TextContent]] = [
     TemperatureMapper(),
     MaxTokensMapper(),
@@ -39,6 +46,7 @@ XAI_PARAMETER_MAPPERS: list[ParameterMapper[TextContent]] = [
     ToolsMapper(),
     ToolChoiceMapper(),
     ThinkingLevelMapper(),
+    PromptCacheKeyMapper(),
 ]
 
 __all__ = ["XAI_PARAMETER_MAPPERS"]

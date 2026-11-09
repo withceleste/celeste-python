@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Features
+
+- **Text** — New `prompt_cache_key` parameter (`TextParameter.PROMPT_CACHE_KEY`) is sent as the provider's `prompt_cache_key` field instead of being warned about and dropped, so requests that share a prompt prefix reach the same cache; mapped for xAI, OpenAI, Meta and OpenRouter (Responses) and Mistral and Moonshot (Chat Completions) (#573).
+
 ### Bug Fixes
 
 - **Images** — OpenAI image edits send `mask` and `reference_images` (up to 16 input images) instead of warning and dropping them; edits use the JSON `images` body, and generation with `reference_images` is served by `/images/edits` (#568).
