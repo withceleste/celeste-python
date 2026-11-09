@@ -97,10 +97,7 @@ class OpenAIImagesClient(APIMixin):
         extra_headers: dict[str, str] | None = None,
         **parameters: Any,
     ) -> AsyncGenerator[dict[str, Any], None]:
-        """Make streaming request to OpenAI Images API.
-
-        Streaming is only supported for gpt-image-1.
-        """
+        """Make streaming request to OpenAI Images API."""
         if endpoint is None:
             endpoint = config.OpenAIImagesEndpoint.CREATE_IMAGE
 
@@ -137,7 +134,6 @@ class OpenAIImagesClient(APIMixin):
         """Extract usage data from Images API response.
 
         Returns dict that modality clients wrap in their specific Usage type.
-        gpt-image-1 returns usage, DALL-E models don't.
         """
         usage_data = response_data.get("usage") or {}
         return OpenAIImagesClient.map_usage_fields(usage_data)
