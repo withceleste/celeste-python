@@ -259,4 +259,17 @@ MODELS: list[Model] = [
             TextParameter.TOOLS: ToolSupport(tools=[]),
         },
     ),
+    Model(
+        id="zai-glm-5-3",
+        provider=Provider.MISTRAL,
+        display_name="Z.ai GLM 5.3",
+        operations={Modality.TEXT: {Operation.GENERATE}},
+        streaming=True,
+        parameter_constraints={
+            Parameter.TEMPERATURE: Range(min=0.0, max=1.5),
+            TextParameter.OUTPUT_SCHEMA: Schema(),
+            TextParameter.TOOLS: ToolSupport(tools=[]),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
+        },
+    ),
 ]
