@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Features
 
-- **Audio** — Gemini 3.8 TTS (`gemini-3.8-flash-tts`, `gemini-3.8-flash-lite-tts`) accepts Extended Voice Library voices (e.g. `en-us-advisor-1`) and custom `voice_...` / `voicekey_...` ids instead of rejecting them locally; `VoiceConstraint(custom_voices=True)` passes a voice outside the listed catalog through for the provider to validate (#572, #573).
+- **Audio** — Gemini 3.8 TTS (`gemini-3.8-flash-tts`, `gemini-3.8-flash-lite-tts`) accepts Extended Voice Library voices (e.g. `en-us-advisor-1`) and custom `voice_...` / `voicekey_...` ids instead of rejecting them locally; `VoiceConstraint(custom_voices=True)` passes a voice outside the listed catalog through for the provider to validate (#572, #574).
 
 ### Bug Fixes
 
