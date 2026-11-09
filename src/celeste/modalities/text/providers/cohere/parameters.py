@@ -51,13 +51,12 @@ class ThinkingBudgetMapper(_ThinkingMapper):
 
         # Translate unified → provider-native
         if validated_value == -1:
-            provider_value = "enabled"
-        elif validated_value == 0:
-            provider_value = "disabled"
-        else:
-            provider_value = validated_value
-
-        return super().map(request, provider_value, model)
+            request["thinking"] = {"type": "enabled"}
+            return request
+        if validated_value == 0:
+            request["thinking"] = {"type": "disabled"}
+            return request
+        return super().map(request, validated_value, model)
 
 
 class OutputSchemaMapper(_ResponseFormatMapper):

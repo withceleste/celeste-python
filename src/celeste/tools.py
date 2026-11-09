@@ -1,5 +1,6 @@
 """Tool calling types for Celeste."""
 
+import json
 from abc import ABC, abstractmethod
 from enum import StrEnum
 from typing import Any, ClassVar, Literal
@@ -104,6 +105,20 @@ def _tool_parameter_models(tools: object | None) -> dict[str, type[BaseModel]]:
         ):
             models[name] = parameters
     return models
+
+
+def _parse_tool_arguments(arguments: object, *, name: str) -> dict[str, Any]:
+    """Decode completed tool arguments without inventing empty inputs."""
+    if isinstance(arguments, str):
+        try:
+            arguments = json.loads(arguments)
+        except json.JSONDecodeError as exc:
+            raise ValidationError(
+                f"Tool call '{name}' arguments are not valid JSON"
+            ) from exc
+    if not isinstance(arguments, dict):
+        raise ValidationError(f"Tool call '{name}' arguments must be a JSON object")
+    return arguments
 
 
 def validate_tool_calls(

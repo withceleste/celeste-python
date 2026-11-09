@@ -1,0 +1,9 @@
+"""Aggregated models for {modality} modality."""
+
+from celeste.models import Model
+
+from .providers.{provider_slug}.models import MODELS as {PROVIDER}_MODELS
+
+MODELS: list[Model] = [
+    *{PROVIDER}_MODELS,
+]

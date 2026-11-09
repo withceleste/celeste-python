@@ -1,6 +1,6 @@
 [project]
 name = "celeste-ai"
-version = "0.11.0"
+version = "1.0.0"
 description = "Open source, type-safe primitives for multi-modal AI. All capabilities, all providers, one interface"
 authors = [{name = "Kamilbenkirane", email = "kamil@withceleste.ai"}]
 readme = "README.md"
@@ -173,6 +173,8 @@ module = [
     "celeste.modalities.live.client",
     "celeste.modalities.live.streaming",
     "celeste.modalities.live.providers.*",
+    "celeste.modalities.decision.client",
+    "celeste.modalities.decision.providers.*",
     "celeste.providers.*.client",
     "celeste.providers.*.*",
     "celeste.namespaces.domains",

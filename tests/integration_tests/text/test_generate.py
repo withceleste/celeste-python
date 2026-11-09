@@ -11,7 +11,7 @@ MODELS = [
     (Provider.COHERE, "command-r7b-12-2024"),
     (Provider.DEEPSEEK, "deepseek-v4-flash"),
     (Provider.GOOGLE, "gemini-2.5-flash-lite"),
-    (Provider.GROQ, "llama-3.1-8b-instant"),
+    (Provider.GROQ, "openai/gpt-oss-20b"),
     (Provider.HUGGINGFACE, "Qwen/Qwen3-4B-Instruct-2507"),
     (Provider.META, "muse-spark-1.3"),
     (Provider.MISTRAL, "mistral-tiny"),

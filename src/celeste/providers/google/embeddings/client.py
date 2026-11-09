@@ -5,6 +5,7 @@ from collections.abc import AsyncGenerator
 from typing import Any, ClassVar
 
 from celeste.client import APIMixin
+from celeste.core import UsageField
 from celeste.exceptions import StreamingNotSupportedError
 from celeste.io import FinishReason
 
@@ -44,11 +45,11 @@ class GoogleEmbeddingsClient(APIMixin):
 
     @staticmethod
     def map_usage_fields(usage_data: dict[str, Any]) -> dict[str, int | float | None]:
-        """Map Google Embeddings usage fields to unified names.
-
-        Embeddings API doesn't provide usage metadata.
-        """
-        return {}
+        """Map Google Embeddings usage fields to unified names."""
+        return {
+            UsageField.INPUT_TOKENS: usage_data.get("promptTokenCount"),
+            UsageField.TOTAL_TOKENS: usage_data.get("totalTokenCount"),
+        }
 
     def _get_vertex_endpoint(self, gemini_endpoint: str) -> str:
         """Map Gemini Embeddings endpoint to Vertex AI endpoint."""
@@ -60,14 +61,20 @@ class GoogleEmbeddingsClient(APIMixin):
             raise ValueError(f"No Vertex AI endpoint mapping for: {gemini_endpoint}")
         return vertex_endpoint
 
-    def _build_url(self, endpoint: str) -> str:
-        """Build full URL based on auth type."""
+    def _build_url(self, endpoint: str, streaming: bool = False) -> str:
+        """Build the request URL, honoring an explicit base_url override."""
         if isinstance(self.auth, GoogleADC):
-            return self.auth.build_url(
+            vertex_url = self.auth.build_url(
                 self._get_vertex_endpoint(endpoint),
                 model_id=self.model.id,
             )
-        return f"{config.BASE_URL}{endpoint.format(model_id=self.model.id)}"
+            if self.base_url is None:
+                return vertex_url
+            vertex_path = vertex_url.removeprefix(self.auth.get_vertex_base_url())
+            return f"{self.base_url.rstrip('/')}{vertex_path}"
+        endpoint = endpoint.format(model_id=self.model.id)
+        base = self.base_url if self.base_url is not None else config.BASE_URL
+        return f"{base.rstrip('/')}{endpoint}"
 
     async def _make_request(
         self,
@@ -98,7 +105,17 @@ class GoogleEmbeddingsClient(APIMixin):
                     for request in request_body["requests"]
                 )
             )
-            return {"embeddings": [response["embedding"] for response in responses]}
+            return {
+                "embeddings": [response["embedding"] for response in responses],
+                "usageMetadata": {
+                    key: sum(response["usageMetadata"][key] for response in responses)
+                    for key in ("promptTokenCount", "totalTokenCount")
+                    if all(
+                        key in (response.get("usageMetadata") or {})
+                        for response in responses
+                    )
+                },
+            }
 
         endpoint_template = (
             config.GoogleEmbeddingsEndpoint.BATCH_EMBED_CONTENTS
@@ -140,8 +157,9 @@ class GoogleEmbeddingsClient(APIMixin):
     def _parse_usage(
         self, response_data: dict[str, Any]
     ) -> dict[str, int | float | None]:
-        """Embeddings API doesn't provide usage metadata."""
-        return GoogleEmbeddingsClient.map_usage_fields(response_data)
+        """Extract usage data from Embeddings usageMetadata."""
+        usage_data = response_data.get("usageMetadata") or {}
+        return GoogleEmbeddingsClient.map_usage_fields(usage_data)
 
     def _parse_finish_reason(self, response_data: dict[str, Any]) -> FinishReason:
         """Embeddings API doesn't provide finish reasons."""

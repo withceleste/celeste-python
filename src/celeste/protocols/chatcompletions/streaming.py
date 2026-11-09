@@ -1,11 +1,9 @@
 """Chat Completions protocol SSE parsing for streaming."""
 
-import contextlib
-import json
 from typing import Any
 
 from celeste.io import FinishReason
-from celeste.tools import ToolCall
+from celeste.tools import ToolCall, _parse_tool_arguments
 
 from .client import ChatCompletionsClient
 
@@ -126,10 +124,7 @@ class ChatCompletionsStream:
         """Reconstruct tool calls from accumulated Chat Completions deltas."""
         result: list[ToolCall] = []
         for tc in self._tool_call_deltas.values():
-            arguments: dict[str, Any] = {}
-            if tc["arguments"]:
-                with contextlib.suppress(json.JSONDecodeError, ValueError, TypeError):
-                    arguments = json.loads(tc["arguments"])
+            arguments = _parse_tool_arguments(tc["arguments"], name=tc["name"])
             result.append(ToolCall(id=tc["id"], name=tc["name"], arguments=arguments))
         return result
 

@@ -20,7 +20,7 @@ class AspectRatioMapper(_SizeMapper):
 
 
 class QualityMapper(_SizeMapper):
-    """Map quality to BytePlus size field with conflict resolution."""
+    """Map quality to BytePlus size field."""
 
     name = ImageParameter.QUALITY
 

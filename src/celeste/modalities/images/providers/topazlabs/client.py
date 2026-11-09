@@ -10,7 +10,7 @@ from celeste.providers.topazlabs.image.client import (
 from celeste.types import ImageContent
 
 from ...client import ImagesClient
-from ...io import ImageFinishReason, ImageInput
+from ...io import ImageInput
 from .parameters import TOPAZLABS_PARAMETER_MAPPERS
 
 # Capability sentinel only; submit path is resolved per model id in the wire mixin.
@@ -37,11 +37,6 @@ class TopazLabsImagesClient(TopazLabsImageMixin, ImagesClient):
         """Parse content from response."""
         download_url = super()._parse_content(response_data)
         return ImageArtifact(url=download_url)
-
-    def _parse_finish_reason(self, response_data: dict[str, Any]) -> ImageFinishReason:
-        """Parse finish reason from response."""
-        finish_reason = super()._parse_finish_reason(response_data)
-        return ImageFinishReason(reason=finish_reason.reason)
 
 
 __all__ = ["TopazLabsImagesClient"]

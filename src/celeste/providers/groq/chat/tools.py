@@ -40,14 +40,8 @@ class CodeExecutionMapper(ToolMapper):
 TOOL_MAPPERS: list[ToolMapper] = [WebSearchMapper(), CodeExecutionMapper()]
 
 
-def parse_search_results(response_data: dict[str, Any]) -> list[dict[str, Any]]:
-    """Extract Groq Compound native search result rows."""
-    choices = response_data.get("choices", [])
-    if not choices:
-        return []
-
-    message = choices[0].get("message", {})
-    executed_tools = message.get("executed_tools")
+def parse_search_results(executed_tools: Any) -> list[dict[str, Any]]:  # noqa: ANN401
+    """Extract Groq native search result rows from executed_tools."""
     if not isinstance(executed_tools, list):
         return []
 

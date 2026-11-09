@@ -1,18 +1,18 @@
 """{Provider} parameter mappers for {modality}."""
 
 from celeste.parameters import ParameterMapper
-from celeste.types import {Content}
 from celeste.providers.{provider}.{api}.parameters import (
-    ExampleMapper as _ExampleMapper,
+    ExampleParamMapper as _ExampleParamMapper,
 )
+from celeste.types import {Content}
 
 from ...parameters import {Modality}Parameter
 
 
-class AspectRatioMapper(_ExampleMapper):
-    """Map aspect_ratio to {Provider}'s parameter."""
+class TemperatureMapper(_ExampleParamMapper):
+    """Map temperature to {Provider}'s parameter."""
 
-    name = {Modality}Parameter.ASPECT_RATIO
+    name = {Modality}Parameter.TEMPERATURE
 
 
 # A second wire API makes this file multi-backend: rename this set with the first
@@ -20,7 +20,7 @@ class AspectRatioMapper(_ExampleMapper):
 # parallel {Api2} set, and let the dispatcher client.py merge the lists in
 # parameter_mappers(). No bare set survives in a multi-backend file.
 {PROVIDER}_PARAMETER_MAPPERS: list[ParameterMapper[{Content}]] = [
-    AspectRatioMapper(),
+    TemperatureMapper(),
 ]
 
 __all__ = ["{PROVIDER}_PARAMETER_MAPPERS"]

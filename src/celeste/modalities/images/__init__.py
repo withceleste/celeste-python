@@ -1,6 +1,6 @@
 """Celeste Images modality."""
 
-from .client import ImagesClient
+from .client import ImagesClient, ImagesStreamNamespace
 from .io import (
     ImageChunk,
     ImageFinishReason,
@@ -9,6 +9,7 @@ from .io import (
     ImageUsage,
 )
 from .parameters import ImageParameter, ImageParameters
+from .streaming import ImagesStream
 
 __all__ = [
     "ImageChunk",
@@ -19,4 +20,6 @@ __all__ = [
     "ImageParameters",
     "ImageUsage",
     "ImagesClient",
+    "ImagesStream",
+    "ImagesStreamNamespace",
 ]

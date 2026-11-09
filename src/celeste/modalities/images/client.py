@@ -35,18 +35,28 @@ class ImagesClient(
     async def generate(
         self,
         prompt: str,
+        *,
+        extra_body: dict[str, Any] | None = None,
+        extra_headers: dict[str, str] | None = None,
         **parameters: Unpack[ImageParameters],
     ) -> ImageOutput:
         """Generate images from prompt."""
         inputs = ImageInput(prompt=prompt)
         return await self._predict(
-            inputs, endpoint=self._generate_endpoint, **parameters
+            inputs,
+            endpoint=self._generate_endpoint,
+            extra_body=extra_body,
+            extra_headers=extra_headers,
+            **parameters,
         )
 
     async def edit(
         self,
         image: ImageArtifact,
         prompt: str,
+        *,
+        extra_body: dict[str, Any] | None = None,
+        extra_headers: dict[str, str] | None = None,
         **parameters: Unpack[ImageParameters],
     ) -> ImageOutput:
         """Edit an image with text instructions."""
@@ -54,11 +64,20 @@ class ImagesClient(
             msg = f"Model {self.model.id} does not support image editing"
             raise NotImplementedError(msg)
         inputs = ImageInput(prompt=prompt, image=image)
-        return await self._predict(inputs, endpoint=self._edit_endpoint, **parameters)
+        return await self._predict(
+            inputs,
+            endpoint=self._edit_endpoint,
+            extra_body=extra_body,
+            extra_headers=extra_headers,
+            **parameters,
+        )
 
     async def upscale(
         self,
         image: ImageArtifact,
+        *,
+        extra_body: dict[str, Any] | None = None,
+        extra_headers: dict[str, str] | None = None,
         **parameters: Unpack[ImageParameters],
     ) -> ImageOutput:
         """Upscale an image."""
@@ -67,7 +86,11 @@ class ImagesClient(
             raise NotImplementedError(msg)
         inputs = ImageInput(image=image)
         return await self._predict(
-            inputs, endpoint=self._upscale_endpoint, **parameters
+            inputs,
+            endpoint=self._upscale_endpoint,
+            extra_body=extra_body,
+            extra_headers=extra_headers,
+            **parameters,
         )
 
     @property
@@ -118,6 +141,9 @@ class ImagesStreamNamespace:
         **parameters: Unpack[ImageParameters],
     ) -> ImagesStream:
         """Stream image editing."""
+        if self._client._edit_endpoint is None:
+            msg = f"Model {self._client.model.id} does not support image editing"
+            raise NotImplementedError(msg)
         inputs = ImageInput(prompt=prompt, image=image)
         return self._client._stream(
             inputs,
@@ -153,7 +179,11 @@ class ImagesSyncNamespace:
         """
         inputs = ImageInput(prompt=prompt)
         return async_to_sync(self._client._predict)(
-            inputs, extra_body=extra_body, extra_headers=extra_headers, **parameters
+            inputs,
+            endpoint=self._client._generate_endpoint,
+            extra_body=extra_body,
+            extra_headers=extra_headers,
+            **parameters,
         )
 
     def edit(
@@ -171,9 +201,16 @@ class ImagesSyncNamespace:
             result = client.sync.edit(image, "Add a rainbow")
             result.content.show()
         """
+        if self._client._edit_endpoint is None:
+            msg = f"Model {self._client.model.id} does not support image editing"
+            raise NotImplementedError(msg)
         inputs = ImageInput(prompt=prompt, image=image)
         return async_to_sync(self._client._predict)(
-            inputs, extra_body=extra_body, extra_headers=extra_headers, **parameters
+            inputs,
+            endpoint=self._client._edit_endpoint,
+            extra_body=extra_body,
+            extra_headers=extra_headers,
+            **parameters,
         )
 
     def upscale(
@@ -190,9 +227,16 @@ class ImagesSyncNamespace:
             result = client.sync.upscale(image)
             result.content.show()
         """
+        if self._client._upscale_endpoint is None:
+            msg = f"Model {self._client.model.id} does not support image upscaling"
+            raise NotImplementedError(msg)
         inputs = ImageInput(image=image)
         return async_to_sync(self._client._predict)(
-            inputs, extra_body=extra_body, extra_headers=extra_headers, **parameters
+            inputs,
+            endpoint=self._client._upscale_endpoint,
+            extra_body=extra_body,
+            extra_headers=extra_headers,
+            **parameters,
         )
 
     @property

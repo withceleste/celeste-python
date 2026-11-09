@@ -6,6 +6,7 @@ from typing import Any
 import httpx
 
 from celeste.client import APIMixin
+from celeste.http import DEFAULT_TIMEOUT
 from celeste.io import FinishReason
 from celeste.mime_types import AudioMimeType
 
@@ -29,6 +30,11 @@ class ElevenLabsTextToSpeechClient(APIMixin):
             async def generate(self, *args, **parameters):
                 # Handle binary response...
     """
+
+    def _build_url(self, endpoint: str, streaming: bool = False) -> str:
+        """Build the request URL, honoring an explicit base_url override."""
+        base = self.base_url if self.base_url is not None else config.BASE_URL
+        return f"{base.rstrip('/')}{endpoint}"
 
     async def _make_request(
         self,
@@ -61,7 +67,7 @@ class ElevenLabsTextToSpeechClient(APIMixin):
 
         headers = await self._json_headers(extra_headers)
 
-        url = f"{config.BASE_URL}{endpoint}"
+        url = self._build_url(endpoint)
         if output_format:
             url = f"{url}?output_format={output_format}"
 
@@ -107,7 +113,7 @@ class ElevenLabsTextToSpeechClient(APIMixin):
 
         headers = await self._json_headers(extra_headers)
 
-        url = f"{config.BASE_URL}{endpoint}"
+        url = self._build_url(endpoint, streaming=True)
         if output_format:
             url = f"{url}?output_format={output_format}"
 
@@ -134,6 +140,7 @@ class ElevenLabsTextToSpeechClient(APIMixin):
             url,
             json=json_body,
             headers=headers,
+            timeout=DEFAULT_TIMEOUT,
         ) as response:
             if not response.is_success:
                 error_text = await response.aread()

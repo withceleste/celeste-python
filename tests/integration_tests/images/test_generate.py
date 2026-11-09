@@ -26,7 +26,7 @@ from celeste.providers.google.auth import GoogleADC
             "flux-dev",
             {
                 "aspect_ratio": "256x256",
-                "steps": 1,
+                "steps": 4,
                 "guidance": 1.5,
                 "output_format": "webp",
             },

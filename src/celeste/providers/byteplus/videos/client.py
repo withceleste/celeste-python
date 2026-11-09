@@ -36,6 +36,11 @@ class BytePlusVideosClient(APIMixin):
 
     _content_fields: ClassVar[set[str]] = {"content"}
 
+    def _build_url(self, endpoint: str, streaming: bool = False) -> str:
+        """Build the request URL, honoring an explicit base_url override."""
+        base = self.base_url if self.base_url is not None else config.BASE_URL
+        return f"{base.rstrip('/')}{endpoint}"
+
     def _build_request(
         self,
         inputs: Any,
@@ -75,7 +80,7 @@ class BytePlusVideosClient(APIMixin):
         # Phase 1: Submit job
         logger.debug("Submitting video generation task to BytePlus")
         submit_response = await self.http_client.post(
-            f"{config.BASE_URL}{endpoint}",
+            self._build_url(endpoint),
             headers=headers,
             json_body=request_body,
         )
@@ -97,7 +102,9 @@ class BytePlusVideosClient(APIMixin):
                 msg = f"BytePlus task {task_id} timed out after {config.POLLING_TIMEOUT} seconds"
                 raise TimeoutError(msg)
 
-            status_url = f"{config.BASE_URL}{config.BytePlusVideosEndpoint.GET_VIDEO_STATUS.format(task_id=task_id)}"
+            status_url = self._build_url(
+                config.BytePlusVideosEndpoint.GET_VIDEO_STATUS.format(task_id=task_id)
+            )
             logger.debug(f"Polling BytePlus task status: {task_id}")
 
             status_response = await self.http_client.get(
@@ -151,7 +158,7 @@ class BytePlusVideosClient(APIMixin):
         self, response_data: dict[str, Any]
     ) -> dict[str, int | float | None]:
         """Extract usage data from BytePlus API response."""
-        usage_data = response_data.get("usage", {})
+        usage_data = response_data.get("usage") or {}
         return BytePlusVideosClient.map_usage_fields(usage_data)
 
     def _parse_content(self, response_data: dict[str, Any]) -> Any:

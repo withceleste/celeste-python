@@ -41,7 +41,9 @@ MODELS: list[Model] = [
                     "auto",
                 ]
             ),
-            ImageParameter.QUALITY: Choice(options=["768sq", "1k", "1.5k", "2k", "4k"]),
+            ImageParameter.QUALITY: Choice(
+                options=["768sq", "1k", "1.5k", "2k", "4k", "match_input"]
+            ),
             ImageParameter.REFERENCE_IMAGES: ImagesConstraint(max_count=10),
             ImageParameter.SAFETY_TOLERANCE: Range(min=0, max=7),
             ImageParameter.GROUNDING: Bool(),
@@ -86,9 +88,7 @@ MODELS: list[Model] = [
             ImageParameter.PROMPT_UPSAMPLING: Bool(),
             ImageParameter.REFERENCE_IMAGES: ImagesConstraint(max_count=8),
             ImageParameter.SEED: Int(),
-            ImageParameter.SAFETY_TOLERANCE: Int(
-                description="Standard levels are 0-5; higher levels require BFL authorization."
-            ),
+            ImageParameter.SAFETY_TOLERANCE: Range(min=0, max=7),
             ImageParameter.OUTPUT_FORMAT: Choice(options=["jpeg", "png", "webp"]),
         },
     ),
@@ -118,9 +118,7 @@ MODELS: list[Model] = [
             ImageParameter.PROMPT_UPSAMPLING: Bool(),
             ImageParameter.REFERENCE_IMAGES: ImagesConstraint(max_count=8),
             ImageParameter.SEED: Int(),
-            ImageParameter.SAFETY_TOLERANCE: Int(
-                description="Standard levels are 0-5; higher levels require BFL authorization."
-            ),
+            ImageParameter.SAFETY_TOLERANCE: Range(min=0, max=7),
             ImageParameter.OUTPUT_FORMAT: Choice(options=["jpeg", "png", "webp"]),
         },
     ),
@@ -150,9 +148,7 @@ MODELS: list[Model] = [
             ImageParameter.PROMPT_UPSAMPLING: Bool(),
             ImageParameter.REFERENCE_IMAGES: ImagesConstraint(max_count=8),
             ImageParameter.SEED: Int(),
-            ImageParameter.SAFETY_TOLERANCE: Int(
-                description="Standard levels are 0-5; higher levels require BFL authorization."
-            ),
+            ImageParameter.SAFETY_TOLERANCE: Range(min=0, max=7),
             ImageParameter.OUTPUT_FORMAT: Choice(options=["jpeg", "png", "webp"]),
         },
     ),
@@ -181,9 +177,7 @@ MODELS: list[Model] = [
             ),
             ImageParameter.REFERENCE_IMAGES: ImagesConstraint(max_count=5),
             ImageParameter.SEED: Int(),
-            ImageParameter.SAFETY_TOLERANCE: Int(
-                description="Standard levels are 0-5; higher levels require BFL authorization."
-            ),
+            ImageParameter.SAFETY_TOLERANCE: Range(min=0, max=7),
             ImageParameter.OUTPUT_FORMAT: Choice(options=["jpeg", "png", "webp"]),
         },
     ),
@@ -212,9 +206,7 @@ MODELS: list[Model] = [
             ),
             ImageParameter.REFERENCE_IMAGES: ImagesConstraint(max_count=5),
             ImageParameter.SEED: Int(),
-            ImageParameter.SAFETY_TOLERANCE: Int(
-                description="Standard levels are 0-5; higher levels require BFL authorization."
-            ),
+            ImageParameter.SAFETY_TOLERANCE: Range(min=0, max=7),
             ImageParameter.OUTPUT_FORMAT: Choice(options=["jpeg", "png", "webp"]),
         },
     ),
@@ -243,9 +235,7 @@ MODELS: list[Model] = [
             ),
             ImageParameter.REFERENCE_IMAGES: ImagesConstraint(max_count=5),
             ImageParameter.SEED: Int(),
-            ImageParameter.SAFETY_TOLERANCE: Int(
-                description="Standard levels are 0-5; higher levels require BFL authorization."
-            ),
+            ImageParameter.SAFETY_TOLERANCE: Range(min=0, max=7),
             ImageParameter.OUTPUT_FORMAT: Choice(options=["jpeg", "png", "webp"]),
         },
     ),
@@ -275,9 +265,7 @@ MODELS: list[Model] = [
             ImageParameter.PROMPT_UPSAMPLING: Bool(),
             ImageParameter.REFERENCE_IMAGES: ImagesConstraint(max_count=8),
             ImageParameter.SEED: Int(),
-            ImageParameter.SAFETY_TOLERANCE: Int(
-                description="Standard levels are 0-5; higher levels require BFL authorization."
-            ),
+            ImageParameter.SAFETY_TOLERANCE: Range(min=0, max=7),
             ImageParameter.OUTPUT_FORMAT: Choice(options=["jpeg", "png", "webp"]),
             ImageParameter.STEPS: Range(min=1, max=50),
             ImageParameter.GUIDANCE: Range(min=1.5, max=10.0),

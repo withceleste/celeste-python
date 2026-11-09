@@ -48,7 +48,7 @@ def _input_file(document: DocumentArtifact) -> dict[str, Any]:
     }
 
 
-def _serialize_content(content: Any) -> Any:
+def _serialize_content(content: Any, role: Role) -> Any:
     if isinstance(content, str):
         return content
     items: list[dict[str, Any]] = []
@@ -59,7 +59,12 @@ def _serialize_content(content: Any) -> Any:
             (TextPart, ImagePart, DocumentPart),
         )
         if isinstance(part, TextPart):
-            items.append({"type": "input_text", "text": part.text})
+            items.append(
+                {
+                    "type": "output_text" if role == Role.ASSISTANT else "input_text",
+                    "text": part.text,
+                }
+            )
         elif isinstance(part, ImagePart):
             items.append(
                 {"type": "input_image", "image_url": build_data_url(part.image)}
@@ -94,7 +99,7 @@ def _serialize_messages(
                 items.append(
                     {
                         "role": msg.role,
-                        "content": _serialize_content(msg.content),
+                        "content": _serialize_content(msg.content, msg.role),
                     }
                 )
             if msg.tool_calls:
@@ -114,7 +119,7 @@ def _serialize_messages(
                 mode="json",
                 serialize_as_any=True,
             )
-            msg_dict["content"] = _serialize_content(msg.content)
+            msg_dict["content"] = _serialize_content(msg.content, msg.role)
             items.append(msg_dict)
     return items
 

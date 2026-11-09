@@ -17,6 +17,17 @@ type JsonValue = (
     str | int | float | bool | dict[str, JsonValue] | list[JsonValue] | None
 )
 
+type DecisionValue = (
+    str
+    | int
+    | float
+    | bool
+    | ImageArtifact
+    | dict[str, DecisionValue]
+    | list[DecisionValue]
+    | None
+)
+
 type TextContent = str | JsonValue | BaseModel | list[BaseModel]
 type ToolResultContent = TextContent
 type AudioContent = AudioArtifact | list[AudioArtifact]
@@ -41,6 +52,57 @@ class SegmentationMask(BaseModel):
 
 
 type SegmentationContent = list[SegmentationMask]
+
+
+class BooleanAnswer(BaseModel):
+    """Probability that the answer to a yes/no question is yes."""
+
+    type: Literal["boolean"] = "boolean"
+    probability: float
+
+
+class ChoiceAnswer(BaseModel):
+    """Most likely option with the probability of every option."""
+
+    type: Literal["choice"] = "choice"
+    choice: str
+    probabilities: dict[str, float]
+    confidence: float
+
+
+class ScoreAnswer(BaseModel):
+    """Expected level with the probability of every level index."""
+
+    type: Literal["score"] = "score"
+    score: float
+    probabilities: dict[int, float]
+    confidence: float
+
+
+class BoxCoordinates(BaseModel):
+    """Box edges as fractions of image height and width, measured from the top-left."""
+
+    top: float
+    bottom: float
+    left: float
+    right: float
+
+
+class BoxAnswer(BaseModel):
+    """Bounding box around the target located in an image."""
+
+    type: Literal["box"] = "box"
+    box: BoxCoordinates
+    confidence: float | None = None
+
+
+type DecisionContent = dict[
+    str,
+    Annotated[
+        BooleanAnswer | ChoiceAnswer | ScoreAnswer | BoxAnswer,
+        Field(discriminator="type"),
+    ],
+]
 
 type RawUsage = dict[str, int | float | None]
 
@@ -136,6 +198,12 @@ class Message(BaseModel):
 __all__ = [
     "AudioContent",
     "AudioPart",
+    "BooleanAnswer",
+    "BoxAnswer",
+    "BoxCoordinates",
+    "ChoiceAnswer",
+    "DecisionContent",
+    "DecisionValue",
     "DocumentContent",
     "DocumentPart",
     "EmbeddingsContent",
@@ -148,6 +216,7 @@ __all__ = [
     "OutputSchema",
     "RawUsage",
     "Role",
+    "ScoreAnswer",
     "SegmentationContent",
     "SegmentationMask",
     "TextContent",

@@ -23,9 +23,9 @@ WEB_SEARCH_MODELS = [
 
 FUNCTION_TOOL_MODELS = [
     (Provider.ANTHROPIC, "claude-haiku-4-5", True),
-    (Provider.DEEPSEEK, "deepseek-v4-flash", True),
+    (Provider.DEEPSEEK, "deepseek-v4-flash", False),
     (Provider.GOOGLE, "gemini-2.5-flash-lite", True),
-    (Provider.GROQ, "llama-3.1-8b-instant", False),
+    (Provider.GROQ, "openai/gpt-oss-20b", False),
     (Provider.HUGGINGFACE, "Qwen/Qwen3-4B-Instruct-2507", False),
     (Provider.META, "muse-spark-1.3", False),
     (Provider.MISTRAL, "mistral-tiny", True),
@@ -50,7 +50,9 @@ async def test_web_search(provider: Provider, model: str) -> None:
     client = create_client(modality=Modality.TEXT, provider=provider, model=model)
 
     output = await client.generate(
-        prompt="When was Python 3.12 released?", tools=[WebSearch()], max_tokens=2000
+        prompt="Search the web: when was Python 3.12 released?",
+        tools=[WebSearch()],
+        max_tokens=2000,
     )
 
     assert isinstance(output, TextOutput)
@@ -64,7 +66,7 @@ async def test_stream_web_search(provider: Provider, model: str) -> None:
     client = create_client(modality=Modality.TEXT, provider=provider, model=model)
 
     stream = client.stream.generate(
-        prompt="When was Python 3.12 released?",
+        prompt="Search the web: when was Python 3.12 released?",
         tools=[WebSearch()],
         max_tokens=2000,
     )

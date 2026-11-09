@@ -74,38 +74,16 @@ class LanguageMapper[Content](ParameterMapper[Content]):
         return request
 
 
-class PromptMapper[Content](ParameterMapper[Content]):
+class PromptMapper[Content](FieldMapper[Content]):
     """Map prompt to OpenAI transcription prompt field."""
 
-    def map(
-        self,
-        request: dict[str, Any],
-        value: object,
-        model: Model,
-    ) -> dict[str, Any]:
-        """Transform prompt into provider request."""
-        validated_value = self._validate_value(value, model)
-        if validated_value is None:
-            return request
-        request["prompt"] = validated_value
-        return request
+    field = "prompt"
 
 
-class TemperatureMapper[Content](ParameterMapper[Content]):
+class TemperatureMapper[Content](FieldMapper[Content]):
     """Map temperature to OpenAI transcription temperature field."""
 
-    def map(
-        self,
-        request: dict[str, Any],
-        value: object,
-        model: Model,
-    ) -> dict[str, Any]:
-        """Transform temperature into provider request."""
-        validated_value = self._validate_value(value, model)
-        if validated_value is None:
-            return request
-        request["temperature"] = validated_value
-        return request
+    field = "temperature"
 
 
 __all__ = [
