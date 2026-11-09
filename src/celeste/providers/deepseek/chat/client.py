@@ -22,7 +22,7 @@ class DeepSeekChatClient(ChatCompletionsClient):
     def _get_vertex_endpoint(self, deepseek_endpoint: str) -> str:
         """Map DeepSeek endpoint to Vertex AI endpoint."""
         mapping: dict[str, str] = {
-            config.DeepSeekChatEndpoint.CREATE_CHAT: config.VertexDeepSeekEndpoint.CREATE_CHAT,
+            config.DeepSeekChatEndpoint.CREATE_CHAT: config.VertexChatEndpoint.CREATE_CHAT,
         }
         vertex_endpoint = mapping.get(deepseek_endpoint)
         if vertex_endpoint is None:
@@ -30,10 +30,14 @@ class DeepSeekChatClient(ChatCompletionsClient):
         return vertex_endpoint
 
     def _build_url(self, endpoint: str, streaming: bool = False) -> str:
-        """Build full URL based on auth type."""
+        """Build the request URL, honoring an explicit base_url override."""
         if isinstance(self.auth, GoogleADC):
-            return self.auth.build_url(self._get_vertex_endpoint(endpoint))
-        return f"{config.BASE_URL}{endpoint}"
+            vertex_url = self.auth.build_url(self._get_vertex_endpoint(endpoint))
+            if self.base_url is None:
+                return vertex_url
+            vertex_path = vertex_url.removeprefix(self.auth.get_vertex_base_url())
+            return f"{self.base_url.rstrip('/')}{vertex_path}"
+        return super()._build_url(endpoint, streaming)
 
     @staticmethod
     def map_usage_fields(usage_data: dict[str, Any]) -> dict[str, int | float | None]:

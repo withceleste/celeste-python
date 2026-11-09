@@ -17,6 +17,8 @@ from celeste.exceptions import (
 from celeste.io import Input, Output, Usage
 from celeste.modalities.audio.models import MODELS as _audio_models
 from celeste.modalities.audio.providers import PROVIDERS as _audio_providers
+from celeste.modalities.decision.models import MODELS as _decision_models
+from celeste.modalities.decision.providers import PROVIDERS as _decision_providers
 from celeste.modalities.embeddings.models import MODELS as _embeddings_models
 from celeste.modalities.embeddings.providers import PROVIDERS as _embeddings_providers
 from celeste.modalities.images.models import MODELS as _images_models
@@ -66,6 +68,7 @@ _CLIENT_MAP: dict[tuple[Modality, Provider | Protocol], type[ModalityClient]] = 
     **{(Modality.EMBEDDINGS, p): c for p, c in _embeddings_providers.items()},
     **{(Modality.SEGMENTATION, p): c for p, c in _segmentation_providers.items()},
     **{(Modality.LIVE, p): c for p, c in _live_providers.items()},
+    **{(Modality.DECISION, p): c for p, c in _decision_providers.items()},
     # Protocol entries (for compatible APIs via protocol= + base_url=)
     (Modality.TEXT, Protocol.OPENRESPONSES): OpenResponsesTextClient,
     (Modality.TEXT, Protocol.CHATCOMPLETIONS): ChatCompletionsTextClient,
@@ -79,6 +82,7 @@ for _model in [
     *_embeddings_models,
     *_segmentation_models,
     *_live_models,
+    *_decision_models,
 ]:
     assert _model.provider is not None
     _models[(_model.id, _model.provider)] = _model

@@ -9,11 +9,19 @@ from typing import Any, Unpack
 from pydantic import SecretStr
 
 from celeste import Authentication, ToolResult, create_client
-from celeste.artifacts import ImageArtifact
+from celeste.artifacts import ImageArtifact, VideoArtifact
 from celeste.core import Modality, Operation, Protocol, Provider
 from celeste.modalities.audio.io import AudioOutput
 from celeste.modalities.audio.parameters import AudioParameters
 from celeste.modalities.audio.streaming import AudioStream
+from celeste.modalities.decision.io import (
+    BooleanQuestion,
+    BoxQuestion,
+    ChoiceQuestion,
+    DecisionOutput,
+    ScoreQuestion,
+)
+from celeste.modalities.decision.parameters import DecisionParameters
 from celeste.modalities.embeddings.io import EmbeddingsOutput
 from celeste.modalities.embeddings.parameters import EmbeddingsParameters
 from celeste.modalities.images.io import ImageOutput
@@ -30,6 +38,7 @@ from celeste.modalities.videos.io import VideoOutput
 from celeste.modalities.videos.parameters import VideoParameters
 from celeste.types import (
     AudioContent,
+    DecisionValue,
     DocumentContent,
     ImageContent,
     Message,
@@ -170,6 +179,35 @@ class SyncTextNamespace:
             text, images=images, videos=videos, audio=audio, **params
         )
 
+    def decide(
+        self,
+        state: DecisionValue,
+        *,
+        questions: dict[
+            str, BooleanQuestion | ChoiceQuestion | ScoreQuestion | BoxQuestion
+        ],
+        model: str,
+        provider: Provider | None = None,
+        api_key: str | SecretStr | None = None,
+        auth: Authentication | None = None,
+        base_url: str | None = None,
+        extra_body: dict[str, Any] | None = None,
+        **params: Unpack[DecisionParameters],
+    ) -> DecisionOutput:
+        """Blocking decision."""
+        client = create_client(
+            modality=Modality.DECISION,
+            operation=Operation.DECIDE,
+            model=model,
+            provider=provider,
+            api_key=api_key,
+            auth=auth,
+            base_url=base_url,
+        )
+        return client.sync.decide(
+            state, questions=questions, extra_body=extra_body, **params
+        )
+
     @property
     def stream(self) -> SyncStreamTextNamespace:
         """Access sync streaming text operations."""
@@ -179,7 +217,7 @@ class SyncTextNamespace:
 class TextNamespace:
     """celeste.text.* namespace.
 
-    Provides text generation and embedding operations.
+    Provides text generation, embedding, and decision operations.
     """
 
     async def generate(
@@ -266,6 +304,50 @@ class TextNamespace:
         )
         return await client.embed(
             text, images=images, videos=videos, audio=audio, **parameters
+        )
+
+    async def decide(
+        self,
+        state: DecisionValue,
+        *,
+        questions: dict[
+            str, BooleanQuestion | ChoiceQuestion | ScoreQuestion | BoxQuestion
+        ],
+        model: str,
+        provider: Provider | None = None,
+        api_key: str | SecretStr | None = None,
+        auth: Authentication | None = None,
+        base_url: str | None = None,
+        extra_body: dict[str, Any] | None = None,
+        **parameters: Unpack[DecisionParameters],
+    ) -> DecisionOutput:
+        """Answer typed questions about a text, JSON, or image state.
+
+        Args:
+            state: Text, JSON, or images the questions refer to; images may nest anywhere.
+            questions: Named boolean, choice, score, or box questions.
+            model: Model ID to use (required).
+            provider: Optional provider override.
+            api_key: Optional API key override.
+            auth: Optional Authentication object.
+            base_url: Custom base URL for proxy endpoints.
+            extra_body: Optional provider-specific request body fields.
+            **parameters: Additional model parameters.
+
+        Returns:
+            DecisionOutput with one typed answer per question.
+        """
+        client = create_client(
+            modality=Modality.DECISION,
+            operation=Operation.DECIDE,
+            model=model,
+            provider=provider,
+            api_key=api_key,
+            auth=auth,
+            base_url=base_url,
+        )
+        return await client.decide(
+            state, questions=questions, extra_body=extra_body, **parameters
         )
 
     @property
@@ -554,6 +636,30 @@ class SyncImagesNamespace:
         )
         return client.sync.segment(image, prompt, **params)
 
+    def decide(
+        self,
+        image: ImageContent,
+        *,
+        questions: dict[
+            str, BooleanQuestion | ChoiceQuestion | ScoreQuestion | BoxQuestion
+        ],
+        model: str,
+        provider: Provider | None = None,
+        api_key: str | SecretStr | None = None,
+        auth: Authentication | None = None,
+        **params: Unpack[DecisionParameters],
+    ) -> DecisionOutput:
+        """Blocking image decision."""
+        client = create_client(
+            modality=Modality.DECISION,
+            operation=Operation.DECIDE,
+            model=model,
+            provider=provider,
+            api_key=api_key,
+            auth=auth,
+        )
+        return client.sync.decide(image, questions=questions, **params)
+
     @property
     def stream(self) -> SyncStreamImagesNamespace:
         """Access sync streaming image operations."""
@@ -563,7 +669,7 @@ class SyncImagesNamespace:
 class ImagesNamespace:
     """celeste.images.* namespace.
 
-    Provides image generation, editing, upscaling, and analysis operations.
+    Provides image generation, editing, upscaling, analysis, and decision operations.
     """
 
     async def generate(
@@ -773,6 +879,43 @@ class ImagesNamespace:
             auth=auth,
         )
         return await client.segment(image, prompt, **parameters)
+
+    async def decide(
+        self,
+        image: ImageContent,
+        *,
+        questions: dict[
+            str, BooleanQuestion | ChoiceQuestion | ScoreQuestion | BoxQuestion
+        ],
+        model: str,
+        provider: Provider | None = None,
+        api_key: str | SecretStr | None = None,
+        auth: Authentication | None = None,
+        **parameters: Unpack[DecisionParameters],
+    ) -> DecisionOutput:
+        """Answer typed questions about an image or list of images.
+
+        Args:
+            image: Image or list of images the questions refer to.
+            questions: Named boolean, choice, score, or box questions.
+            model: Model ID to use (required).
+            provider: Optional provider override.
+            api_key: Optional API key override.
+            auth: Optional Authentication object.
+            **parameters: Additional model parameters.
+
+        Returns:
+            DecisionOutput with one typed answer per question.
+        """
+        client = create_client(
+            modality=Modality.DECISION,
+            operation=Operation.DECIDE,
+            model=model,
+            provider=provider,
+            api_key=api_key,
+            auth=auth,
+        )
+        return await client.decide(image, questions=questions, **parameters)
 
     @property
     def sync(self) -> SyncImagesNamespace:
@@ -1270,6 +1413,28 @@ class SyncVideosNamespace:
         )
         return client.sync.generate(prompt, **params)
 
+    def edit(
+        self,
+        video: VideoArtifact,
+        prompt: str,
+        *,
+        model: str,
+        provider: Provider | None = None,
+        api_key: str | SecretStr | None = None,
+        auth: Authentication | None = None,
+        **params: Unpack[VideoParameters],
+    ) -> VideoOutput:
+        """Blocking video editing."""
+        client = create_client(
+            modality=Modality.VIDEOS,
+            operation=Operation.EDIT,
+            model=model,
+            provider=provider,
+            api_key=api_key,
+            auth=auth,
+        )
+        return client.sync.edit(video, prompt, **params)
+
     def analyze(
         self,
         video: VideoContent,
@@ -1323,7 +1488,7 @@ class SyncVideosNamespace:
 class VideosNamespace:
     """celeste.videos.* namespace.
 
-    Provides video generation and analysis operations.
+    Provides video generation, editing, and analysis operations.
     """
 
     async def generate(
@@ -1358,6 +1523,41 @@ class VideosNamespace:
             auth=auth,
         )
         return await client.generate(prompt, **parameters)
+
+    async def edit(
+        self,
+        video: VideoArtifact,
+        prompt: str,
+        *,
+        model: str,
+        provider: Provider | None = None,
+        api_key: str | SecretStr | None = None,
+        auth: Authentication | None = None,
+        **parameters: Unpack[VideoParameters],
+    ) -> VideoOutput:
+        """Edit a video with a prompt.
+
+        Args:
+            video: The video to edit.
+            prompt: Instructions for editing.
+            model: Model ID to use (required).
+            provider: Optional provider override.
+            api_key: Optional API key override.
+            auth: Optional Authentication object (e.g., GoogleADC for Vertex AI).
+            **parameters: Additional model parameters.
+
+        Returns:
+            VideoOutput with edited video.
+        """
+        client = create_client(
+            modality=Modality.VIDEOS,
+            operation=Operation.EDIT,
+            model=model,
+            provider=provider,
+            api_key=api_key,
+            auth=auth,
+        )
+        return await client.edit(video, prompt, **parameters)
 
     async def analyze(
         self,

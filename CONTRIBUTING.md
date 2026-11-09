@@ -5,7 +5,7 @@
 - **Open an issue first** for non-trivial changes.
 - Base PRs on `main`.
 - Run `make ci` before pushing.
-- **Template-first**: new providers/modalities must start by copying from `templates/`.
+- **Template-first**: copy from `templates/` for new providers/modalities; providers using an existing protocol may copy an existing compatible provider instead (see "Protocol-based providers").
 
 ## Setup
 
@@ -52,7 +52,7 @@ Changes to parsing, streaming, or typing semantics **require explicit maintainer
 
 ## Adding a provider
 
-Always start by copying from the templates. Replace `{provider_slug}`, `{api_slug}` placeholders and strip the `.template` extension.
+For a provider with its own wire API, start by copying from the templates. Replace `{provider_slug}`, `{api_slug}` placeholders and strip the `.template` extension. For an existing wire protocol, follow "Protocol-based providers" below.
 
 **Provider API layer** — copy from `templates/providers/`, place in `src/celeste/providers/<provider>/`:
 
@@ -73,7 +73,11 @@ Always start by copying from the templates. Replace `{provider_slug}`, `{api_slu
 
 ### Protocol-based providers
 
-A protocol is a wire format served by many vendors (`chatcompletions`, `openresponses`). Vendors that speak one (DeepSeek, Moonshot, Groq, Mistral, HuggingFace, ...) subclass the shared protocol client from `src/celeste/protocols/` instead of copying the full provider template — templates live at `templates/protocols/`. Editing a protocol changes every inheriting vendor: vendor-specific behavior goes in that vendor's own `client.py` / `parameters.py` override, never in the shared base.
+A protocol is a wire format served by many vendors (`chatcompletions`, `openresponses`). For an existing format, copy/adapt a compatible provider and reuse the concrete text protocol client, stream, and named mappers under `src/celeste/modalities/text/protocols/`. Meta, Ollama, and OpenRouter demonstrate direct subclasses; HuggingFace and Groq demonstrate a provider wire mixin composed with the text protocol client. Inherit or adapt the modality mappers as needed; a separate mapper module is unnecessary when the shared list is sufficient. Keep vendor-specific behavior in the provider's modules: changing a shared protocol changes every inheriting vendor.
+
+The provider enum, auth/import registration, modality package exports, `PROVIDERS` entry, model aggregation, and `src/celeste/providers/api_references.md` entry steps still apply. Catalogs may be empty for providers accepting arbitrary model IDs. Adding a vendor for an existing format does not require a new `Protocol` member or protocol `_CLIENT_MAP` entry.
+
+Use `templates/protocols/` only when implementing a new wire format. Add a modality-specific protocol adapter, stream, and named mappers using `src/celeste/modalities/text/protocols/` as the existing pattern, then register the new `Protocol` member and its modality entry in `_CLIENT_MAP` for `create_client(protocol=...)`.
 
 ### Adding a second API to an existing provider
 
@@ -97,7 +101,8 @@ The steps above assume a new provider. For a new wire API on an existing one (e.
 4. Add the domain namespace in `src/celeste/namespaces/domains.py` and export it from `src/celeste/namespaces/__init__.py`.
 5. Aggregate the provider catalogs in `src/celeste/modalities/<modality>/models.py`.
 6. Add each wire API's docs link to `src/celeste/providers/api_references.md`.
-7. Tests: every new mapper list gets wire-contract matrix rows and joins the `test_none_omits_every_optional_parameter` list in `tests/unit_tests/test_parameter_wire_contracts.py`; integration tests live in `tests/integration_tests/<modality>/` with an `__init__.py`.
+7. Add `celeste.modalities.<modality>.client`, `.streaming`, and `.providers.*` to the modality `[[tool.mypy.overrides]]` module list in `pyproject.toml`.
+8. Tests: every new mapper list gets wire-contract matrix rows and joins the `test_none_omits_every_optional_parameter` list in `tests/unit_tests/test_parameter_wire_contracts.py`; integration tests live in `tests/integration_tests/<modality>/` with an `__init__.py`.
 
 ## Model catalog rules
 

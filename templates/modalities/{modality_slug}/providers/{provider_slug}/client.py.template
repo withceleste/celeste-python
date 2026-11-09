@@ -2,17 +2,19 @@
 
 from typing import Any
 
-from celeste.artifacts import {Artifact}Artifact
 from celeste.parameters import ParameterMapper
 from celeste.providers.{provider}.{api} import config
-from celeste.providers.{provider}.{api}.client import {Provider}{Api}Client as {Provider}{Api}Mixin
-from celeste.providers.{provider}.{api}.streaming import {Provider}{Api}Stream as _{Provider}{Api}Stream
+from celeste.providers.{provider}.{api}.client import (
+    {Provider}{Api}Client as {Provider}{Api}Mixin,
+)
+from celeste.providers.{provider}.{api}.streaming import (
+    {Provider}{Api}Stream as _{Provider}{Api}Stream,
+)
 from celeste.types import {Content}
 
 from ...client import {Modality}Client
 from ...io import (
     {Modality}Chunk,
-    {Modality}FinishReason,
     {Modality}Input,
 )
 from ...streaming import {Modality}Stream
@@ -22,7 +24,7 @@ from .parameters import {PROVIDER}_PARAMETER_MAPPERS
 class {Provider}{Modality}Stream(_{Provider}{Api}Stream, {Modality}Stream):
     """{Provider} streaming for {modality} modality."""
 
-    def _aggregate_content(self, chunks: list[{Modality}Chunk]) -> Any:
+    def _aggregate_content(self, chunks: list[{Modality}Chunk]) -> {Content}:
         """Aggregate streamed content (modality-specific).
 
         Examples:
@@ -43,24 +45,24 @@ class {Provider}{Modality}Client({Provider}{Api}Mixin, {Modality}Client):
     def parameter_mappers(cls) -> list[ParameterMapper[{Content}]]:
         return {PROVIDER}_PARAMETER_MAPPERS
 
-    def _stream_class(self) -> type[{Modality}Stream]:
-        """Return the Stream class for this provider."""
-        return {Provider}{Modality}Stream
+    def _init_request(self, inputs: {Modality}Input) -> dict[str, Any]:
+        """Initialize provider-specific request structure from inputs."""
+        # TODO: Map inputs to the provider's request structure
+        msg = "Implement request initialization"
+        raise NotImplementedError(msg)
 
     def _parse_content(
         self,
         response_data: dict[str, Any],
     ) -> {Content}:
         """Parse content from response."""
-        data = super()._parse_content(response_data)
-        # TODO: Implement provider-specific content extraction
+        # TODO: Implement provider-specific content extraction from super()._parse_content(response_data)
         msg = "Implement content extraction"
         raise NotImplementedError(msg)
 
-    def _parse_finish_reason(self, response_data: dict[str, Any]) -> {Modality}FinishReason:
-        """Parse finish reason from response."""
-        finish_reason = super()._parse_finish_reason(response_data)
-        return {Modality}FinishReason(reason=finish_reason.reason)
+    def _stream_class(self) -> type[{Modality}Stream]:
+        """Return the Stream class for this provider."""
+        return {Provider}{Modality}Stream
 
 
 __all__ = ["{Provider}{Modality}Client", "{Provider}{Modality}Stream"]

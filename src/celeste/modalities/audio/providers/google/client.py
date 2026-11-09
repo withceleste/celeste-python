@@ -95,7 +95,9 @@ class GoogleAudioClient(GoogleInteractionsMixin, AudioClient):
             if step.get("type") != "model_output":
                 continue
             for part in step.get("content", []):
-                if part.get("type") != "audio" or not part.get("data"):
+                if part.get("type") != "audio" or not (
+                    part.get("data") or part.get("uri")
+                ):
                     continue
                 audio_part = part
         if audio_part is not None:
@@ -104,8 +106,14 @@ class GoogleAudioClient(GoogleInteractionsMixin, AudioClient):
                 for k in ("sample_rate", "channels")
                 if audio_part.get(k)
             }
+            if audio_part.get("data"):
+                return AudioArtifact(
+                    data=audio_part["data"],
+                    mime_type=_to_audio_mime(audio_part.get("mime_type")),
+                    metadata=metadata,
+                )
             return AudioArtifact(
-                data=audio_part["data"],
+                url=audio_part["uri"],
                 mime_type=_to_audio_mime(audio_part.get("mime_type")),
                 metadata=metadata,
             )

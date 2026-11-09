@@ -7,7 +7,13 @@ from celeste.providers.deepseek.chat.parameters import (
 from celeste.types import TextContent
 
 from ...parameters import TextParameter
-from ...protocols.chatcompletions.parameters import CHATCOMPLETIONS_PARAMETER_MAPPERS
+from ...protocols.chatcompletions.parameters import (
+    MaxTokensMapper,
+    OutputSchemaMapper,
+    TemperatureMapper,
+    ToolChoiceMapper,
+    ToolsMapper,
+)
 
 
 class ThinkingLevelMapper(_ThinkingLevelMapper):
@@ -17,8 +23,12 @@ class ThinkingLevelMapper(_ThinkingLevelMapper):
 
 
 DEEPSEEK_PARAMETER_MAPPERS: list[ParameterMapper[TextContent]] = [
-    *CHATCOMPLETIONS_PARAMETER_MAPPERS,
+    TemperatureMapper(),
+    MaxTokensMapper(),
     ThinkingLevelMapper(),
+    OutputSchemaMapper(),
+    ToolsMapper(),
+    ToolChoiceMapper(),
 ]
 
 __all__ = ["DEEPSEEK_PARAMETER_MAPPERS"]

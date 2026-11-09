@@ -99,6 +99,7 @@ async def test_adc_sends_batch_as_single_requests(
 
     assert response == {
         "embeddings": [{"values": [1.0]}, {"values": [2.0]}],
+        "usageMetadata": {},
     }
     assert [call.kwargs["json_body"] for call in post.await_args_list] == [
         {

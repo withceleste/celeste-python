@@ -1,8 +1,8 @@
 """BFL FLUX API parameter mappers."""
 
-from typing import Any, ClassVar
+from typing import Any
 
-from celeste.constraints import ImagesConstraint
+from celeste.constraints import ImagesConstraint, Int
 from celeste.exceptions import ConstraintViolationError, ValidationError
 from celeste.models import Model
 from celeste.parameters import FieldMapper, ParameterMapper
@@ -11,16 +11,44 @@ from celeste.types import ImageContent, VideoContent
 from .utils import add_input_images, encode_image
 
 
-class AspectRatioMapper[Content](FieldMapper[Content]):
-    """Map aspect_ratio to BFL aspect_ratio field."""
+class AspectRatioMapper[Content](ParameterMapper[Content]):
+    """Map native ratios or validated pixel dimensions for the BFL family."""
 
-    field = "aspect_ratio"
+    def map(
+        self, request: dict[str, Any], value: object, model: Model
+    ) -> dict[str, Any]:
+        validated_value = self._validate_value(value, model)
+        if validated_value is None:
+            return request
+        if model.id in (
+            "flux-kontext-pro",
+            "flux-kontext-max",
+            "flux-pro-1.1-ultra",
+            "flux-3-image",
+            "flux-3-video",
+        ):
+            request["aspect_ratio"] = validated_value
+        else:
+            width, height = validated_value.split("x")
+            request["width"] = Int()(width)
+            request["height"] = Int()(height)
+        return request
 
 
-class PromptUpsamplingMapper(FieldMapper[ImageContent]):
-    """Map prompt_upsampling to BFL prompt_upsampling field."""
+class PromptUpsamplingMapper(ParameterMapper[ImageContent]):
+    """Map the prompt control supported by each BFL family."""
 
-    field = "prompt_upsampling"
+    def map(
+        self, request: dict[str, Any], value: object, model: Model
+    ) -> dict[str, Any]:
+        validated_value = self._validate_value(value, model)
+        if validated_value is None or model.id.startswith("flux-2-klein-"):
+            return request
+        if model.id in ("flux-2-max", "flux-2-pro", "flux-2-pro-preview"):
+            request["disable_pup"] = not validated_value
+        else:
+            request["prompt_upsampling"] = validated_value
+        return request
 
 
 class SeedMapper(FieldMapper[ImageContent]):
@@ -30,9 +58,7 @@ class SeedMapper(FieldMapper[ImageContent]):
 
 
 class ReferenceImagesMapper(ParameterMapper[ImageContent]):
-    """Map all references to a BFL input image field after the edit image."""
-
-    field: ClassVar[str]
+    """Map all references to the model's BFL input image field."""
 
     def map(
         self, request: dict[str, Any], value: object, model: Model
@@ -46,7 +72,9 @@ class ReferenceImagesMapper(ParameterMapper[ImageContent]):
             isinstance(constraint, ImagesConstraint)
             and constraint.max_count is not None
             and len(validated_value) + 1 > constraint.max_count
-            and self.field in request
+            and any(
+                field in request for field in ("images", "input_image", "image_prompt")
+            )
         ):
             msg = (
                 f"{model.id} accepts at most {constraint.max_count} input images, "
@@ -54,25 +82,7 @@ class ReferenceImagesMapper(ParameterMapper[ImageContent]):
             )
             raise ConstraintViolationError(msg)
 
-        return add_input_images(request, validated_value, self.field)
-
-
-class InputImageMapper(ReferenceImagesMapper):
-    """Map references to BFL input_image, input_image_2, ... fields."""
-
-    field = "input_image"
-
-
-class ImagesMapper(ReferenceImagesMapper):
-    """Map references to the BFL images list."""
-
-    field = "images"
-
-
-class ImagePromptMapper(ReferenceImagesMapper):
-    """Map references to the BFL image_prompt field."""
-
-    field = "image_prompt"
+        return add_input_images(request, validated_value, model)
 
 
 class SafetyToleranceMapper(FieldMapper[ImageContent]):
@@ -153,9 +163,6 @@ __all__ = [
     "FirstFrameMapper",
     "GroundingMapper",
     "GuidanceMapper",
-    "ImagePromptMapper",
-    "ImagesMapper",
-    "InputImageMapper",
     "LastFrameMapper",
     "OutputFormatMapper",
     "PromptUpsamplingMapper",

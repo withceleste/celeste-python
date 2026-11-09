@@ -27,13 +27,18 @@ class BFLFluxClient(APIMixin):
     3. Return final response with merged metadata
 
     Usage:
-        class BFLFlux3ImagesClient(BFLFluxMixin, ImagesClient):
+        class BFLImagesClient(BFLFluxMixin, ImagesClient):
             def _parse_content(self, response_data):
                 result = response_data.get("result", {})
                 # Extract image from result["sample"]...
     """
 
     _content_fields: ClassVar[set[str]] = {"result"}
+
+    def _build_url(self, endpoint: str, streaming: bool = False) -> str:
+        """Build the request URL, honoring an explicit base_url override."""
+        base = self.base_url if self.base_url is not None else config.BASE_URL
+        return f"{base.rstrip('/')}{endpoint}"
 
     async def _make_request(
         self,
@@ -56,12 +61,12 @@ class BFLFluxClient(APIMixin):
         }
 
         if endpoint is None:
-            endpoint = config.BFLFluxEndpoint.CREATE_TASK
+            endpoint = config.BFLFluxEndpoint.CREATE_IMAGE
         endpoint = endpoint.format(model_id=self.model.id)
 
         # Phase 1: Submit job
         submit_response = await self.http_client.post(
-            f"{config.BASE_URL}{endpoint}",
+            self._build_url(endpoint),
             headers=headers,
             json_body=request_body,
         )
@@ -128,9 +133,7 @@ class BFLFluxClient(APIMixin):
         raise StreamingNotSupportedError(model_id=self.model.id)
 
     def _parse_finish_reason(self, response_data: dict[str, Any]) -> FinishReason:
-        """Map ready BFL status to finish reason when present."""
-        if response_data.get("status") == "Ready":
-            return FinishReason(reason="COMPLETE")
+        """BFL provides status but not structured finish reasons."""
         return FinishReason(reason=None)
 
     @staticmethod

@@ -36,7 +36,7 @@ class MistralChatEndpoint(StrEnum):
     CREATE_CHAT_MODERATION = "/v1/chat/moderations"
 
 
-class VertexMistralEndpoint(StrEnum):
+class VertexChatEndpoint(StrEnum):
     """Endpoints for Mistral on Vertex AI."""
 
     CREATE_CHAT = "/v1/projects/{project_id}/locations/{location}/publishers/mistralai/models/{model_id}:rawPredict"

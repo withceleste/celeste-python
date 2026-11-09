@@ -32,6 +32,12 @@ class GradiumTextToSpeechClient(APIMixin):
     6. Receive end message
     """
 
+    def _build_url(self, endpoint: str, streaming: bool = False) -> str:
+        """Build the WebSocket URL, honoring an explicit base_url override."""
+        base = self.base_url if self.base_url is not None else config.BASE_URL
+        url = f"{base.rstrip('/')}{endpoint}"
+        return url.replace("https://", "wss://", 1).replace("http://", "ws://", 1)
+
     async def _make_stream_request(
         self,
         request_body: dict[str, Any],
@@ -44,7 +50,9 @@ class GradiumTextToSpeechClient(APIMixin):
         if endpoint is None:
             endpoint = config.GradiumTextToSpeechEndpoint.CREATE_SPEECH
         headers = self._merge_headers(await self.auth.aget_headers(), extra_headers)
-        return self._stream_audio(f"{config.BASE_URL}{endpoint}", headers, request_body)
+        return self._stream_audio(
+            self._build_url(endpoint, streaming=True), headers, request_body
+        )
 
     async def _stream_audio(
         self,
@@ -174,13 +182,13 @@ class GradiumTextToSpeechClient(APIMixin):
         """
         format_map: dict[str, AudioMimeType] = {
             "wav": AudioMimeType.WAV,
-            "pcm": AudioMimeType.WAV,  # PCM raw, closest match
+            "pcm": AudioMimeType.PCM,
             "opus": AudioMimeType.OGG,  # Opus in OGG container
-            "ulaw_8000": AudioMimeType.WAV,
-            "alaw_8000": AudioMimeType.WAV,
-            "pcm_8000": AudioMimeType.WAV,
-            "pcm_16000": AudioMimeType.WAV,
-            "pcm_24000": AudioMimeType.WAV,
+            "ulaw_8000": AudioMimeType.PCMU,
+            "alaw_8000": AudioMimeType.PCMA,
+            "pcm_8000": AudioMimeType.PCM,
+            "pcm_16000": AudioMimeType.PCM,
+            "pcm_24000": AudioMimeType.PCM,
         }
         return format_map.get(output_format or "", AudioMimeType.WAV)
 

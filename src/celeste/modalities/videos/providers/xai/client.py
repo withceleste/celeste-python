@@ -7,6 +7,7 @@ from celeste.parameters import ParameterMapper
 from celeste.providers.xai.videos import config
 from celeste.providers.xai.videos.client import XAIVideosClient as XAIVideosMixin
 from celeste.types import VideoContent
+from celeste.utils import build_data_url
 
 from ...client import VideosClient
 from ...io import VideoInput
@@ -27,7 +28,7 @@ class XAIVideosClient(XAIVideosMixin, VideosClient):
         """Initialize request from inputs."""
         request: dict[str, Any] = {"prompt": inputs.prompt}
         if inputs.video is not None:
-            request["video"] = {"url": inputs.video.url}
+            request["video"] = {"url": build_data_url(inputs.video)}
         return request
 
     def _parse_content(

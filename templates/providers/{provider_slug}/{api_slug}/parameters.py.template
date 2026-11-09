@@ -10,28 +10,16 @@ Naming convention:
 from typing import Any
 
 from celeste.models import Model
-from celeste.parameters import ParameterMapper
+from celeste.parameters import FieldMapper, ParameterMapper
 
 
 # PATTERN 1: Simple flat mapping
 # Use when provider expects flat request body: {"param": value}
-class ExampleParamMapper[Content](ParameterMapper[Content]):
+class ExampleParamMapper[Content](FieldMapper[Content]):
     """Map example_param to {Provider} example_param field."""
 
-    def map(
-        self,
-        request: dict[str, Any],
-        value: object,
-        model: Model,
-    ) -> dict[str, Any]:
-        """Transform example_param into provider request."""
-        validated_value = self._validate_value(value, model)
-        if validated_value is None:
-            return request
-
-        # Key matches API parameter name exactly
-        request["example_param"] = validated_value
-        return request
+    # Key matches API parameter name exactly
+    field = "example_param"
 
 
 # PATTERN 2: Nested mapping

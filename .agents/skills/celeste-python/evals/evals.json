@@ -24,7 +24,7 @@
         "Uses a concrete provider API package or the chat completions protocol seam instead of inventing a flat request stack.",
         "Updates modality text provider registration and model aggregation.",
         "Defines models with operations and parameter_constraints.",
-        "Selects focused tests such as test_provider_api_templates.py, test_init.py, test_models.py, and parameter/client tests as relevant."
+        "Selects focused tests such as test_init.py, test_models.py, and parameter/client tests as relevant."
       ]
     },
     {

@@ -4,7 +4,7 @@ import base64
 from typing import Any
 
 from celeste.artifacts import ImageArtifact
-from celeste.constraints import Int
+from celeste.models import Model
 
 
 def encode_image(image: ImageArtifact) -> str:
@@ -29,15 +29,21 @@ def encode_image(image: ImageArtifact) -> str:
 def add_input_images(
     request: dict[str, Any],
     images: list[ImageArtifact],
-    field: str,
+    model: Model,
 ) -> dict[str, Any]:
     """Add input images to a BFL request dict after any already placed.
 
-    ``images`` is one list; other fields start at their own name and number
-    later images ``<field>_2``, ...
+    The model's image field decides the layout: ``images`` is one list, other
+    fields start at their own name and number later images ``<field>_2``, ...
     """
     if not images:
         return request
+    if model.id == "flux-3-image":
+        field = "images"
+    elif model.id in ("flux-pro-1.1-ultra", "flux-pro-1.1", "flux-dev"):
+        field = "image_prompt"
+    else:
+        field = "input_image"
     encoded = [encode_image(image) for image in images]
     if field == "images":
         request[field] = [*request.get(field, []), *encoded]
@@ -48,12 +54,4 @@ def add_input_images(
     return request
 
 
-def add_dimensions(request: dict[str, Any], dimensions: str) -> dict[str, Any]:
-    """Add width and height to a BFL request dict from a WxH value."""
-    width, height = dimensions.split("x")
-    request["width"] = Int()(width)
-    request["height"] = Int()(height)
-    return request
-
-
-__all__ = ["add_dimensions", "add_input_images", "encode_image"]
+__all__ = ["add_input_images", "encode_image"]

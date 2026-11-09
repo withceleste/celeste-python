@@ -16,6 +16,7 @@ from celeste.modalities.audio.providers.openai import parameters as openai_audio
 from celeste.modalities.images.parameters import ImageParameter
 from celeste.modalities.images.providers.bfl import parameters as bfl
 from celeste.modalities.images.providers.google import parameters as google_images
+from celeste.modalities.images.providers.openai import parameters as openai_images
 from celeste.modalities.images.providers.topazlabs import parameters as topazlabs
 from celeste.modalities.live.parameters import LiveParameter
 from celeste.modalities.live.providers.google import parameters as google_live
@@ -46,6 +47,7 @@ GOOGLE_VERTEX = google_text.GOOGLE_VERTEX_PARAMETER_MAPPERS
 GOOGLE_INTERACTIONS = google_text.GOOGLE_INTERACTIONS_PARAMETER_MAPPERS
 IMAGES_VERTEX = google_images.GOOGLE_VERTEX_PARAMETER_MAPPERS
 IMAGES_INTERACTIONS = google_images.GOOGLE_INTERACTIONS_PARAMETER_MAPPERS
+IMAGES_OPENAI = openai_images.OPENAI_PARAMETER_MAPPERS
 AUDIO_GOOGLE = google_audio.GOOGLE_PARAMETER_MAPPERS
 AUDIO_GROQ = groq_audio.GROQ_PARAMETER_MAPPERS
 AUDIO_OPENAI = openai_audio.OPENAI_PARAMETER_MAPPERS
@@ -62,10 +64,7 @@ MOONSHOT = moonshot.MOONSHOT_PARAMETER_MAPPERS
 GROQ = groq.GROQ_PARAMETER_MAPPERS
 BYTEPLUS = byteplus.BYTEPLUS_PARAMETER_MAPPERS
 XAI = xai.XAI_PARAMETER_MAPPERS
-IMAGES_FLUX3 = bfl.BFL_FLUX3_PARAMETER_MAPPERS
-IMAGES_FLUX2 = bfl.BFL_FLUX2_PARAMETER_MAPPERS
-IMAGES_KONTEXT = bfl.BFL_KONTEXT_PARAMETER_MAPPERS
-IMAGES_FLUX1 = bfl.BFL_FLUX1_PARAMETER_MAPPERS
+BFL = bfl.BFL_PARAMETER_MAPPERS
 TOPAZ = topazlabs.TOPAZLABS_PARAMETER_MAPPERS
 FAL = fal.FAL_PARAMETER_MAPPERS
 LIVE_GOOGLE = google_live.GOOGLE_PARAMETER_MAPPERS
@@ -331,10 +330,23 @@ SCALAR_PARAMETER_CASES = [
     (AUDIO_MISTRAL, AP.LANGUAGE, "en", ("language",), "en"),
     (AUDIO_MISTRAL, AP.TEMPERATURE, 0.0, ("temperature",), 0.0),
     (XAI, V.FIRST_FRAME, IMAGE, ("image", "url"), IMAGE.url),
-    (VIDEOS_BFL, V.ASPECT_RATIO, "9:16", ("aspect_ratio",), "9:16"),
     (VIDEOS_BFL, V.RESOLUTION, "hd", ("resolution",), "hd"),
     (VIDEOS_BFL, V.DURATION, 5, ("duration",), 5),
     (VIDEOS_BFL, V.FIRST_FRAME, IMAGE, (), {"mode": "i2v", "keyframes": [IMAGE.url]}),
+    (
+        IMAGES_OPENAI,
+        IP.REFERENCE_IMAGES,
+        [IMAGE],
+        ("images",),
+        [{"image_url": IMAGE.url}],
+    ),
+    (
+        IMAGES_OPENAI,
+        IP.MASK,
+        LOCAL_IMAGE,
+        ("mask",),
+        {"image_url": "data:image/png;base64,ZnJhbWU="},
+    ),
     (TOPAZ, IP.OUTPUT_WIDTH, 2048, ("output_width",), 2048),
     (TOPAZ, IP.OUTPUT_HEIGHT, 1536, ("output_height",), 1536),
     (TOPAZ, IP.OUTPUT_FORMAT, "jpeg", ("output_format",), "jpeg"),
@@ -385,7 +397,18 @@ SCALAR_PARAMETER_CASES = [
     [(*case, MODEL, None) for case in SCALAR_PARAMETER_CASES]
     + [
         (
-            IMAGES_FLUX2,
+            IMAGES_OPENAI,
+            IP.REFERENCE_IMAGES,
+            [IMAGE],
+            ("images",),
+            [{"image_url": "primary"}, {"image_url": IMAGE.url}],
+            MODEL,
+            {"images": [{"image_url": "primary"}]},
+        ),
+    ]
+    + [
+        (
+            BFL,
             IP.ASPECT_RATIO,
             "520x512",
             (),
@@ -405,7 +428,7 @@ SCALAR_PARAMETER_CASES = [
     ]
     + [
         (
-            mappers,
+            BFL,
             IP.ASPECT_RATIO,
             "4:1",
             (),
@@ -413,15 +436,11 @@ SCALAR_PARAMETER_CASES = [
             get_model(model_id, provider=Provider.BFL),
             None,
         )
-        for mappers, model_id in (
-            (IMAGES_KONTEXT, "flux-kontext-pro"),
-            (IMAGES_KONTEXT, "flux-kontext-max"),
-            (IMAGES_FLUX1, "flux-pro-1.1-ultra"),
-        )
+        for model_id in ("flux-kontext-pro", "flux-kontext-max", "flux-pro-1.1-ultra")
     ]
     + [
         (
-            IMAGES_FLUX2,
+            BFL,
             IP.PROMPT_UPSAMPLING,
             value,
             (),
@@ -434,7 +453,7 @@ SCALAR_PARAMETER_CASES = [
     ]
     + [
         (
-            mappers,
+            BFL,
             IP.PROMPT_UPSAMPLING,
             False,
             (),
@@ -442,18 +461,18 @@ SCALAR_PARAMETER_CASES = [
             get_model(model_id, provider=Provider.BFL),
             None,
         )
-        for mappers, model_id in (
-            (IMAGES_FLUX2, "flux-2-flex"),
-            (IMAGES_KONTEXT, "flux-kontext-pro"),
-            (IMAGES_KONTEXT, "flux-kontext-max"),
-            (IMAGES_FLUX1, "flux-pro-1.1-ultra"),
-            (IMAGES_FLUX1, "flux-pro-1.1"),
-            (IMAGES_FLUX1, "flux-dev"),
+        for model_id in (
+            "flux-2-flex",
+            "flux-kontext-pro",
+            "flux-kontext-max",
+            "flux-pro-1.1-ultra",
+            "flux-pro-1.1",
+            "flux-dev",
         )
     ]
     + [
         (
-            IMAGES_FLUX2,
+            BFL,
             IP.PROMPT_UPSAMPLING,
             True,
             (),
@@ -469,7 +488,7 @@ SCALAR_PARAMETER_CASES = [
     ]
     + [
         (
-            IMAGES_FLUX2,
+            BFL,
             IP.SAFETY_TOLERANCE,
             6,
             (),
@@ -478,7 +497,7 @@ SCALAR_PARAMETER_CASES = [
             None,
         ),
         (
-            IMAGES_FLUX1,
+            BFL,
             IP.ASPECT_RATIO,
             "272x256",
             (),
@@ -486,10 +505,19 @@ SCALAR_PARAMETER_CASES = [
             get_model("flux-dev", provider=Provider.BFL),
             None,
         ),
+        (
+            VIDEOS_BFL,
+            V.ASPECT_RATIO,
+            "9:16",
+            ("aspect_ratio",),
+            "9:16",
+            get_model("flux-3-video", provider=Provider.BFL),
+            None,
+        ),
     ]
     + [
         (
-            mappers,
+            BFL,
             IP.REFERENCE_IMAGES,
             [IMAGE] * (total - int(editing)),
             (),
@@ -502,18 +530,18 @@ SCALAR_PARAMETER_CASES = [
             get_model(model_id, provider=Provider.BFL),
             {field: "primary"} if editing else None,
         )
-        for mappers, model_id, field, limit in (
-            (IMAGES_FLUX2, "flux-2-pro", "input_image", 8),
-            (IMAGES_FLUX2, "flux-2-klein-4b", "input_image", 5),
-            (IMAGES_KONTEXT, "flux-kontext-pro", "input_image", 4),
-            (IMAGES_FLUX1, "flux-dev", "image_prompt", 1),
+        for model_id, field, limit in (
+            ("flux-2-pro", "input_image", 8),
+            ("flux-2-klein-4b", "input_image", 5),
+            ("flux-kontext-pro", "input_image", 4),
+            ("flux-dev", "image_prompt", 1),
         )
         for editing in (False, True)
         for total in (limit, limit + 1)
     ]
     + [
         (
-            IMAGES_FLUX3,
+            BFL,
             IP.REFERENCE_IMAGES,
             [IMAGE] * (total - int(editing)),
             (),
@@ -566,6 +594,7 @@ def test_scalar_parameters_use_provider_wire_shape(
     [
         GOOGLE_VERTEX,
         IMAGES_VERTEX,
+        IMAGES_OPENAI,
         AUDIO_GOOGLE,
         AUDIO_GROQ,
         AUDIO_OPENAI,
@@ -580,10 +609,7 @@ def test_scalar_parameters_use_provider_wire_shape(
         GROQ,
         BYTEPLUS,
         XAI,
-        IMAGES_FLUX3,
-        IMAGES_FLUX2,
-        IMAGES_KONTEXT,
-        IMAGES_FLUX1,
+        BFL,
         VIDEOS_BFL,
         TOPAZ,
         LIVE_GOOGLE,
@@ -738,11 +764,11 @@ def test_byteplus_images_have_semantic_roles(
 
 def test_bfl_reference_images_follow_primary_image_numbering() -> None:
     model = Model(id="flux-2-pro", display_name="Wire test")
-    assert _map(IMAGES_FLUX2, IP.REFERENCE_IMAGES, [IMAGE], model=model) == {
+    assert _map(BFL, IP.REFERENCE_IMAGES, [IMAGE], model=model) == {
         "input_image": IMAGE.url
     }
     assert _map(
-        IMAGES_FLUX2,
+        BFL,
         IP.REFERENCE_IMAGES,
         [IMAGE],
         {"input_image": "primary"},

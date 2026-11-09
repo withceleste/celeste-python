@@ -7,7 +7,6 @@ from pydantic import BaseModel, TypeAdapter
 
 from celeste.models import Model
 from celeste.parameters import FieldMapper, ParameterMapper
-from celeste.structured_outputs import RefResolvingJsonSchemaGenerator
 from celeste.types import OutputSchema, TextContent
 
 
@@ -68,20 +67,17 @@ class ResponseFormatMapper(ParameterMapper[TextContent]):
         if origin is list:
             # Cohere requires top-level object, wrap list in {items: [...]}
             inner_type = get_args(validated_value)[0]
-            inner_schema = TypeAdapter(inner_type).json_schema(
-                schema_generator=RefResolvingJsonSchemaGenerator,
-                mode="serialization",
-            )
+            inner_schema = TypeAdapter(inner_type).json_schema(mode="validation")
+            defs = inner_schema.pop("$defs", {})
             schema = {
                 "type": "object",
                 "properties": {"items": {"type": "array", "items": inner_schema}},
                 "required": ["items"],
             }
+            if defs:
+                schema["$defs"] = defs
         else:
-            schema = TypeAdapter(validated_value).json_schema(
-                schema_generator=RefResolvingJsonSchemaGenerator,
-                mode="serialization",
-            )
+            schema = TypeAdapter(validated_value).json_schema(mode="validation")
 
         request["response_format"] = {
             "type": "json_object",

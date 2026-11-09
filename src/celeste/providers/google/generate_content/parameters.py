@@ -263,18 +263,14 @@ class ToolChoiceMapper[Content](ParameterMapper[Content]):
             return request
 
         if isinstance(validated_value, Tool):
-            dispatch = {m.tool_type: m for m in TOOL_MAPPERS}
-            mapper = dispatch.get(type(validated_value))
-            if mapper is None:
-                msg = f"Tool '{type(validated_value).__name__}' cannot be used as tool_choice in Google"
-                raise ValueError(msg)
-            wire = mapper.map_tool(validated_value)
+            msg = (
+                f"Tool '{type(validated_value).__name__}' cannot be used "
+                "as tool_choice in Google GenerateContent; select a function by name"
+            )
+            raise ValueError(msg)
+
+        if isinstance(validated_value, dict) and "name" in validated_value:
             config: dict[str, Any] = {
-                "mode": "ANY",
-                "allowedFunctionNames": [wire.get("name")],
-            }
-        elif isinstance(validated_value, dict) and "name" in validated_value:
-            config = {
                 "mode": "ANY",
                 "allowedFunctionNames": [validated_value["name"]],
             }
@@ -312,7 +308,7 @@ class ResponseJsonSchemaMapper(ParameterMapper[TextContent]):
         self, content: TextContent, value: OutputSchema | None
     ) -> TextContent:
         """Parse JSON to BaseModel using Pydantic's TypeAdapter."""
-        if value is None:
+        if value is None or content == "":
             return content
 
         # If content is already a BaseModel, return it unchanged

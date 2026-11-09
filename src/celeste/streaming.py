@@ -1,8 +1,16 @@
 """Streaming support for Celeste."""
 
 import asyncio
+import weakref
 from abc import ABC, abstractmethod
-from collections.abc import AsyncGenerator, AsyncIterator, Awaitable, Callable, Iterator
+from collections.abc import (
+    AsyncGenerator,
+    AsyncIterator,
+    Awaitable,
+    Callable,
+    Generator,
+    Iterator,
+)
 from contextlib import aclosing, suppress
 from types import TracebackType
 from typing import Any, ClassVar, Self, Unpack
@@ -69,8 +77,8 @@ class Stream[Out: Output, Params: Parameters, Chunk: ChunkBase](ABC):
         self._parameters = parameters
         self._transform_output = transform_output
         self._stream_metadata = stream_metadata or {}
-        # Sync iteration state (portal lifecycle managed by __iter__ generator)
-        self._sync_generator: Iterator[Chunk] | None = None
+        # Sync iteration state (portal lifecycle managed by _iter_chunks generator)
+        self._sync_generator: weakref.ref[Generator[Chunk, None, None]] | None = None
 
     def _build_error_from_value(self, error: Any) -> dict[str, Any]:  # noqa: ANN401
         """Extract {type, message} from an error value using _error_type_fields."""
@@ -397,12 +405,13 @@ class Stream[Out: Output, Params: Parameters, Chunk: ChunkBase](ABC):
 
     # Iterator protocol (sync)
     def __iter__(self) -> Iterator[Chunk]:
-        """Sync iterator using a generator with try/finally for guaranteed cleanup.
+        """Return the sync chunk generator, weakly retained so context exit can close it."""
+        generator = self._iter_chunks()
+        self._sync_generator = weakref.ref(generator)
+        return generator
 
-        Creates a blocking portal in a dedicated thread. The generator's finally
-        block ensures the portal is cleaned up on exhaustion, break, exception,
-        or garbage collection — unlike __next__ which only cleans up on exhaustion.
-        """
+    def _iter_chunks(self) -> Generator[Chunk, None, None]:
+        """Yield chunks through a blocking portal whose finally closes it and the stream."""
         portal_cm = start_blocking_portal()
         portal = portal_cm.__enter__()
         try:
@@ -443,8 +452,11 @@ class Stream[Out: Output, Params: Parameters, Chunk: ChunkBase](ABC):
         exc_val: BaseException | None,
         exc_tb: TracebackType | None,
     ) -> None:
-        """Exit sync context. Portal cleanup is handled by __iter__ generator's finally."""
-        return
+        """Exit sync context, closing the retained chunk generator and its portal."""
+        if self._sync_generator is not None:
+            generator = self._sync_generator()
+            if generator is not None:
+                generator.close()
 
     @property
     def output(self) -> Out:

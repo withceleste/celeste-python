@@ -16,7 +16,7 @@ from .parameters import BFL_PARAMETER_MAPPERS
 class BFLVideosClient(BFLFluxMixin, VideosClient):
     """BFL client for video generation."""
 
-    _generate_endpoint = config.BFLFluxEndpoint.CREATE_TASK
+    _generate_endpoint = config.BFLFluxEndpoint.CREATE_VIDEO
 
     @classmethod
     def parameter_mappers(cls) -> list[ParameterMapper[VideoContent]]:

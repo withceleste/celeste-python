@@ -5,7 +5,6 @@ import base64
 import json
 from collections.abc import AsyncGenerator
 from typing import Any
-from urllib.parse import urlsplit
 
 from websockets.asyncio.client import ClientConnection
 from websockets.asyncio.client import connect as ws_connect
@@ -93,16 +92,18 @@ class GoogleLiveClient(APIMixin):
             raise ValueError(f"No Vertex AI endpoint mapping for: {native_endpoint}")
         return vertex_endpoint
 
-    def _build_url(self, endpoint: str) -> str:
+    def _build_url(self, endpoint: str, streaming: bool = False) -> str:
         """Build the WebSocket URL based on auth type; base_url replaces the host."""
         if isinstance(self.auth, GoogleADC):
             url = self.auth.build_url(
                 self._get_vertex_endpoint(endpoint), model_id=self.model.id
             )
+            if self.base_url is not None:
+                vertex_path = url.removeprefix(self.auth.get_vertex_base_url())
+                url = f"{self.base_url.rstrip('/')}{vertex_path}"
         else:
-            url = f"{config.BASE_URL}{endpoint}"
-        if self.base_url:
-            url = f"{self.base_url.rstrip('/')}{urlsplit(url).path}"
+            base = self.base_url if self.base_url is not None else config.BASE_URL
+            url = f"{base.rstrip('/')}{endpoint}"
         return url.replace("https://", "wss://", 1).replace("http://", "ws://", 1)
 
     def _model_resource_name(self) -> str:
@@ -125,7 +126,7 @@ class GoogleLiveClient(APIMixin):
         """Return the WebSocket event generator."""
         headers = self._merge_headers(await self.auth.aget_headers(), extra_headers)
         url = self._build_url(
-            endpoint or config.GoogleLiveEndpoint.BIDI_GENERATE_CONTENT
+            endpoint or config.GoogleLiveEndpoint.BIDI_GENERATE_CONTENT, streaming=True
         )
         return self._stream_events(url, headers, request_body)
 
@@ -207,4 +208,7 @@ class GoogleLiveClient(APIMixin):
 
     def _parse_usage(self, response_data: dict[str, Any]) -> RawUsage:
         """Extract usage data from a Google Live event."""
-        return self.map_usage_fields(response_data.get("usageMetadata", {}))
+        return self.map_usage_fields(response_data.get("usageMetadata") or {})
+
+
+__all__ = ["GoogleLiveClient"]

@@ -16,6 +16,12 @@ class OllamaGenerateStream:
     - _parse_chunk_finish_reason(event_data) - Extract finish reason from NDJSON event
     """
 
+    def _parse_stream_error(self, event_data: dict[str, Any]) -> dict[str, Any] | None:
+        """Detect Ollama in-band error events."""
+        if event_data.get("error"):
+            return self._build_error_from_value(event_data["error"])
+        return None
+
     def _parse_chunk_content(self, event_data: dict[str, Any]) -> str | None:
         """Extract base64 image from NDJSON event."""
         return event_data.get("image") or None

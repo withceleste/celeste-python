@@ -66,9 +66,13 @@ class GoogleVideosClient(VideosClient):
     def _build_request(
         self,
         inputs: VideoInput,
+        extra_body: dict[str, Any] | None = None,
+        streaming: bool = False,
         **parameters: Unpack[VideoParameters],
     ) -> dict[str, Any]:
-        return self._strategy._build_request(inputs, **parameters)  # type: ignore[union-attr]
+        return self._strategy._build_request(  # type: ignore[union-attr]
+            inputs, extra_body=extra_body, streaming=streaming, **parameters
+        )
 
     def _transform_output(
         self, content: VideoContent, **parameters: Unpack[VideoParameters]
