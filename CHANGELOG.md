@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Features
+
+- **Audio** — Gemini 3.8 TTS (`gemini-3.8-flash-tts`, `gemini-3.8-flash-lite-tts`) accepts Extended Voice Library voices (e.g. `en-us-advisor-1`) and custom `voice_...` / `voicekey_...` ids instead of rejecting them locally; `VoiceConstraint(custom_voices=True)` passes a voice outside the listed catalog through for the provider to validate (#572, #578).
+
 ### Bug Fixes
 
 - **Images** — OpenAI image edits send `mask` and `reference_images` (up to 16 input images) instead of warning and dropping them; edits use the JSON `images` body, and generation with `reference_images` is served by `/images/edits` (#568).
