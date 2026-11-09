@@ -17,6 +17,9 @@ class VoiceConstraint(Constraint):
     voices: list[Voice] = Field(min_length=1)
     """List of valid voices for this constraint."""
 
+    custom_voices: bool = False
+    """Let values matching no listed voice through for the provider to validate."""
+
     def __call__(self, value: str) -> str:
         """Validate value is a valid voice ID or name and return the ID."""
         if not isinstance(value, str):
@@ -32,6 +35,9 @@ class VoiceConstraint(Constraint):
         voice_name_to_id = {v.name: v.id for v in self.voices}
         if value in voice_name_to_id:
             return voice_name_to_id[value]
+
+        if self.custom_voices:
+            return value
 
         # Neither ID nor name matches
         voice_names = [v.name for v in self.voices]

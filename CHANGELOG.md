@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Images** — OpenAI image edits send `mask` and `reference_images` (up to 16 input images) instead of warning and dropping them; edits use the JSON `images` body, and generation with `reference_images` is served by `/images/edits` (#568).
 - **Images** — OpenAI `gpt-image-2`, `gpt-image-2.5-flare` and `gpt-image-2.5-sunburst` accept any documented `WIDTHxHEIGHT` size (multiples of 16, 1:3 to 3:1, at most 3840 per edge, 655,360–8,294,400 pixels) with the standard sizes kept as presets, instead of eight fixed sizes (#564).
+- **Text** — Anthropic on Claude on Google Cloud (GoogleADC) sends image and document inputs as base64 sources; the route accepts no URL sources (#570).
 
 ---
 

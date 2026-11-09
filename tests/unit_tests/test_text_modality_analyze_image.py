@@ -20,6 +20,7 @@ from celeste.modalities.text.providers.mistral.client import MistralTextClient
 from celeste.modalities.text.providers.moonshot.client import MoonshotTextClient
 from celeste.modalities.text.providers.openai.client import OpenAITextClient
 from celeste.modalities.text.providers.xai.client import XAITextClient
+from celeste.providers.google.auth import GoogleADC
 
 IMAGE_INPUT = TextInput(
     prompt="Describe the image",
@@ -143,3 +144,38 @@ def test_anthropic_init_request_includes_image_source_block() -> None:
     assert content[0]["source"]["type"] == "base64"
     assert content[0]["source"]["data"] == "YWJj"
     assert content[-1] == {"type": "text", "text": "Describe the image"}
+
+
+@pytest.mark.parametrize(
+    ("auth", "source"),
+    [
+        (
+            AuthHeader(secret=SecretStr("test"), header="x-api-key", prefix=""),
+            {"type": "url", "url": "https://example.com/cat.png"},
+        ),
+        (
+            GoogleADC(project_id="test-project", location="us-east5"),
+            {"type": "base64", "media_type": "image/png", "data": "YWJj"},
+        ),
+    ],
+)
+def test_anthropic_image_source_matches_route(
+    auth: AuthHeader | GoogleADC, source: dict[str, str]
+) -> None:
+    client = AnthropicTextClient(
+        model=Model(
+            id="claude-sonnet-4-5",
+            provider=Provider.ANTHROPIC,
+            display_name="claude-sonnet-4-5",
+            operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
+        ),
+        provider=Provider.ANTHROPIC,
+        auth=auth,
+    )
+    image = ImageArtifact(
+        url="https://example.com/cat.png", data=b"abc", mime_type=ImageMimeType.PNG
+    )
+
+    request = client._init_request(TextInput(prompt="Describe", image=image))
+
+    assert request["messages"][0]["content"][0]["source"] == source
