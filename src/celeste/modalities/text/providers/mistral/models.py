@@ -259,4 +259,19 @@ MODELS: list[Model] = [
             TextParameter.TOOLS: ToolSupport(tools=[]),
         },
     ),
+    Model(
+        id="zai-glm-5-3-flash",
+        provider=Provider.MISTRAL,
+        display_name="Z.ai GLM 5.3 Flash",
+        operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
+        streaming=True,
+        parameter_constraints={
+            Parameter.TEMPERATURE: Range(min=0.0, max=1.5),
+            TextParameter.OUTPUT_SCHEMA: Schema(),
+            TextParameter.IMAGE: ImagesConstraint(),
+            TextParameter.DOCUMENT: DocumentsConstraint(),
+            TextParameter.TOOLS: ToolSupport(tools=[]),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
+        },
+    ),
 ]
