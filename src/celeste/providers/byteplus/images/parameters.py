@@ -37,4 +37,22 @@ class WatermarkMapper(FieldMapper[ImageContent]):
     field = "watermark"
 
 
-__all__ = ["ImageMapper", "SizeMapper", "WatermarkMapper"]
+class OutputFormatMapper(FieldMapper[ImageContent]):
+    """Map output_format to BytePlus output_format field."""
+
+    field = "output_format"
+
+
+class BackgroundMapper(FieldMapper[ImageContent]):
+    """Map background to BytePlus background field."""
+
+    field = "background"
+
+
+__all__ = [
+    "BackgroundMapper",
+    "ImageMapper",
+    "OutputFormatMapper",
+    "SizeMapper",
+    "WatermarkMapper",
+]

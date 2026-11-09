@@ -15,6 +15,7 @@ from celeste.modalities.audio.providers.mistral import parameters as mistral_aud
 from celeste.modalities.audio.providers.openai import parameters as openai_audio
 from celeste.modalities.images.parameters import ImageParameter
 from celeste.modalities.images.providers.bfl import parameters as bfl
+from celeste.modalities.images.providers.byteplus import parameters as byteplus_images
 from celeste.modalities.images.providers.google import parameters as google_images
 from celeste.modalities.images.providers.openai import parameters as openai_images
 from celeste.modalities.images.providers.topazlabs import parameters as topazlabs
@@ -50,6 +51,7 @@ GOOGLE_INTERACTIONS = google_text.GOOGLE_INTERACTIONS_PARAMETER_MAPPERS
 IMAGES_VERTEX = google_images.GOOGLE_VERTEX_PARAMETER_MAPPERS
 IMAGES_INTERACTIONS = google_images.GOOGLE_INTERACTIONS_PARAMETER_MAPPERS
 IMAGES_OPENAI = openai_images.OPENAI_PARAMETER_MAPPERS
+IMAGES_BYTEPLUS = byteplus_images.BYTEPLUS_PARAMETER_MAPPERS
 AUDIO_GOOGLE = google_audio.GOOGLE_PARAMETER_MAPPERS
 AUDIO_GROQ = groq_audio.GROQ_PARAMETER_MAPPERS
 AUDIO_OPENAI = openai_audio.OPENAI_PARAMETER_MAPPERS
@@ -354,6 +356,8 @@ SCALAR_PARAMETER_CASES = [
         ("mask",),
         {"image_url": "data:image/png;base64,ZnJhbWU="},
     ),
+    (IMAGES_BYTEPLUS, IP.OUTPUT_FORMAT, "jpeg", ("output_format",), "jpeg"),
+    (IMAGES_BYTEPLUS, IP.BACKGROUND, "transparent", ("background",), "transparent"),
     (TOPAZ, IP.OUTPUT_WIDTH, 2048, ("output_width",), 2048),
     (TOPAZ, IP.OUTPUT_HEIGHT, 1536, ("output_height",), 1536),
     (TOPAZ, IP.OUTPUT_FORMAT, "jpeg", ("output_format",), "jpeg"),
@@ -581,6 +585,7 @@ def test_scalar_parameters_use_provider_wire_shape(
         GOOGLE_VERTEX,
         IMAGES_VERTEX,
         IMAGES_OPENAI,
+        IMAGES_BYTEPLUS,
         AUDIO_GOOGLE,
         AUDIO_GROQ,
         AUDIO_OPENAI,
