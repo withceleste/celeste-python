@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Text** — New `prompt_cache_key` parameter (`TextParameter.PROMPT_CACHE_KEY`) is sent as the provider's `prompt_cache_key` field instead of being warned about and dropped, so requests that share a prompt prefix reach the same cache; mapped on the Open Responses protocol, which defines the field (OpenAI, xAI, Meta, OpenRouter, Ollama), and for Mistral and Moonshot on Chat Completions (#576).
 - **Audio** — Gemini 3.8 TTS (`gemini-3.8-flash-tts`, `gemini-3.8-flash-lite-tts`) accepts Extended Voice Library voices (e.g. `en-us-advisor-1`) and custom `voice_...` / `voicekey_...` ids instead of rejecting them locally; `VoiceConstraint(custom_voices=True)` passes a voice outside the listed catalog through for the provider to validate (#572, #578).
 
+### Breaking Changes
+
+- **Text** — Anthropic requests use API version `2026-10-21` (the `anthropic-version` header on the Claude API, `anthropic_version` in the body on Claude on Google Cloud). The version removes `temperature`, `top_p` and `top_k`, so `temperature` on Anthropic models is now warned about and dropped instead of sent; an assistant message carrying a document now returns HTTP 400 from the API (#586).
+
 ### Bug Fixes
 
 - **Images** — OpenAI image edits send `mask` and `reference_images` (up to 16 input images) instead of warning and dropping them; edits use the JSON `images` body, and generation with `reference_images` is served by `/images/edits` (#568).

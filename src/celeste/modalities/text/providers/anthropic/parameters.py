@@ -11,9 +11,6 @@ from celeste.providers.anthropic.messages.parameters import (
     OutputFormatMapper as _OutputFormatMapper,
 )
 from celeste.providers.anthropic.messages.parameters import (
-    TemperatureMapper as _TemperatureMapper,
-)
-from celeste.providers.anthropic.messages.parameters import (
     ThinkingLevelMapper as _ThinkingLevelMapper,
 )
 from celeste.providers.anthropic.messages.parameters import (
@@ -29,12 +26,6 @@ from celeste.types import TextContent
 
 from ...parameters import TextParameter
 from .models import DYNAMIC_FILTERING_MODELS
-
-
-class TemperatureMapper(_TemperatureMapper):
-    """Map temperature to Anthropic's temperature parameter."""
-
-    name = TextParameter.TEMPERATURE
 
 
 class MaxTokensMapper(_MaxTokensMapper):
@@ -107,7 +98,6 @@ class ToolChoiceMapper(_ToolChoiceMapper):
 
 
 ANTHROPIC_PARAMETER_MAPPERS: list[ParameterMapper[TextContent]] = [
-    TemperatureMapper(),
     MaxTokensMapper(),
     ThinkingBudgetMapper(),
     ThinkingLevelMapper(),
