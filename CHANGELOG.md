@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Text** — New `prompt_cache_key` parameter (`TextParameter.PROMPT_CACHE_KEY`) is sent as the provider's `prompt_cache_key` field instead of being warned about and dropped, so requests that share a prompt prefix reach the same cache; mapped on the Open Responses protocol, which defines the field (OpenAI, xAI, Meta, OpenRouter, Ollama), and for Mistral and Moonshot on Chat Completions (#576).
 - **Audio** — Gemini 3.8 TTS (`gemini-3.8-flash-tts`, `gemini-3.8-flash-lite-tts`) accepts Extended Voice Library voices (e.g. `en-us-advisor-1`) and custom `voice_...` / `voicekey_...` ids instead of rejecting them locally; `VoiceConstraint(custom_voices=True)` passes a voice outside the listed catalog through for the provider to validate (#572, #578).
-- **Audio** — Google `gemini-3.5-transcribe` serves `Operation.TRANSCRIBE`: `client.transcribe(audio)` sends the audio to the Interactions API with `transcription_config` and returns the transcript as `TextOutput`; `language` maps to `transcription_config.language_codes` (#585).
+- **Audio** — Google `gemini-3.5-transcribe` serves `Operation.TRANSCRIBE`: `client.transcribe(audio)` sends the audio to the Interactions API with `transcription_config` and returns the transcript as `TextOutput`; `language` maps to `transcription_config.language_codes` (#589).
 
 ### Bug Fixes
 
