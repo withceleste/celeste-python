@@ -9,20 +9,25 @@ from unittest.mock import patch
 import httpx
 import pytest
 
-from celeste import Modality, Provider, create_client
+from celeste import Modality, Model, Provider, create_client
 from celeste.artifacts import VideoArtifact
 from celeste.auth import AuthHeader
+from celeste.modalities.videos.providers.google.interactions import (
+    GoogleInteractionsVideosClient,
+)
+from celeste.modalities.videos.providers.google.veo import GoogleVeoVideosClient
 from celeste.providers.google.auth import GoogleADC
 
 from ._http_helpers import _mock_http, _sse
 
 
 @pytest.mark.parametrize(
-    "model", ["veo-3.1-generate-preview", "gemini-omni-flash-preview"]
+    "client_type", [GoogleVeoVideosClient, GoogleInteractionsVideosClient]
 )
 @pytest.mark.parametrize("adc", [False, True])
 async def test_google_download_auth_is_scoped_to_each_hops_origin(
-    model: str, adc: bool
+    client_type: type[GoogleVeoVideosClient | GoogleInteractionsVideosClient],
+    adc: bool,
 ) -> None:
     credentials = (
         {"Authorization": "Bearer test", "x-goog-user-project": "test-project"}
@@ -47,8 +52,10 @@ async def test_google_download_auth_is_scoped_to_each_hops_origin(
             )
         return httpx.Response(200, content=b"video")
 
-    client = create_client(
-        modality=Modality.VIDEOS, provider=Provider.GOOGLE, model=model, auth=auth
+    client = client_type(
+        model=Model(id="test", provider=Provider.GOOGLE, display_name="test"),
+        provider=Provider.GOOGLE,
+        auth=auth,
     )
     async with _mock_http(handle):
         with patch.object(GoogleADC, "get_headers", return_value=credentials):

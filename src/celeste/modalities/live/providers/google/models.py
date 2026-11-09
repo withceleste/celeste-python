@@ -5,6 +5,7 @@ from celeste.constraints import (
     Choice,
     Constraint,
     ImagesConstraint,
+    Range,
     ToolSupport,
 )
 from celeste.core import Modality, Operation, Provider
@@ -33,6 +34,7 @@ MODELS: list[Model] = [
         parameter_constraints={
             **_MEDIA_CONSTRAINTS,
             LiveParameter.VOICE: VoiceConstraint(voices=GOOGLE_VOICES),
+            LiveParameter.MAX_TOKENS: Range(min=1, max=65536),
         },
     ),
     Model(
@@ -44,6 +46,7 @@ MODELS: list[Model] = [
         parameter_constraints={
             **_MEDIA_CONSTRAINTS,
             LiveParameter.VOICE: VoiceConstraint(voices=GOOGLE_VOICES),
+            LiveParameter.MAX_TOKENS: Range(min=1, max=65536),
             LiveParameter.THINKING_LEVEL: Choice(options=["LOW", "MEDIUM", "HIGH"]),
         },
     ),

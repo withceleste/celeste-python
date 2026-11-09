@@ -15,24 +15,6 @@ from celeste.types import OutputSchema, TextContent
 from .tools import TOOL_MAPPERS
 
 
-class TemperatureMapper(FieldMapper[TextContent]):
-    """Map temperature to Anthropic temperature field."""
-
-    field = "temperature"
-
-
-class TopPMapper(FieldMapper[TextContent]):
-    """Map top_p to Anthropic top_p field."""
-
-    field = "top_p"
-
-
-class TopKMapper(FieldMapper[TextContent]):
-    """Map top_k to Anthropic top_k field."""
-
-    field = "top_k"
-
-
 class MaxTokensMapper(FieldMapper[TextContent]):
     """Map max_tokens to Anthropic max_tokens field."""
 
@@ -234,11 +216,8 @@ __all__ = [
     "MaxTokensMapper",
     "OutputFormatMapper",
     "StopSequencesMapper",
-    "TemperatureMapper",
     "ThinkingLevelMapper",
     "ThinkingMapper",
     "ToolChoiceMapper",
     "ToolsMapper",
-    "TopKMapper",
-    "TopPMapper",
 ]

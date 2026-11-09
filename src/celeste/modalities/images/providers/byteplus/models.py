@@ -129,6 +129,7 @@ MODELS: list[Model] = [
             ImageParameter.QUALITY: Choice(options=["2K", "3K", "4K"]),
             ImageParameter.REFERENCE_IMAGES: ImagesConstraint(max_count=14),
             ImageParameter.WATERMARK: Bool(),
+            ImageParameter.OUTPUT_FORMAT: Choice(options=["png", "jpeg"]),
         },
     ),
     Model(
@@ -173,6 +174,8 @@ MODELS: list[Model] = [
             ImageParameter.QUALITY: Choice(options=["1K", "1.5K", "2K"]),
             ImageParameter.REFERENCE_IMAGES: ImagesConstraint(max_count=10),
             ImageParameter.WATERMARK: Bool(),
+            ImageParameter.OUTPUT_FORMAT: Choice(options=["png", "jpeg"]),
+            ImageParameter.BACKGROUND: Choice(options=["transparent", "opaque"]),
         },
     ),
     Model(
@@ -217,6 +220,8 @@ MODELS: list[Model] = [
             ImageParameter.QUALITY: Choice(options=["1K", "1.5K", "2K"]),
             ImageParameter.REFERENCE_IMAGES: ImagesConstraint(max_count=10),
             ImageParameter.WATERMARK: Bool(),
+            ImageParameter.OUTPUT_FORMAT: Choice(options=["png", "jpeg"]),
+            ImageParameter.BACKGROUND: Choice(options=["transparent", "opaque"]),
         },
     ),
 ]
