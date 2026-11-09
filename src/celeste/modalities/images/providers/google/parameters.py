@@ -5,6 +5,9 @@ from celeste.providers.google.generate_content.parameters import (
     AspectRatioMapper as _VertexAspectRatioMapper,
 )
 from celeste.providers.google.generate_content.parameters import (
+    GoogleSearchMapper as _VertexGoogleSearchMapper,
+)
+from celeste.providers.google.generate_content.parameters import (
     ImageSizeMapper as _VertexImageSizeMapper,
 )
 from celeste.providers.google.generate_content.parameters import (
@@ -15,6 +18,9 @@ from celeste.providers.google.generate_content.parameters import (
 )
 from celeste.providers.google.interactions.parameters import (
     AspectRatioMapper as _InteractionsAspectRatioMapper,
+)
+from celeste.providers.google.interactions.parameters import (
+    GoogleSearchMapper as _InteractionsGoogleSearchMapper,
 )
 from celeste.providers.google.interactions.parameters import (
     ImageSizeMapper as _InteractionsImageSizeMapper,
@@ -54,11 +60,18 @@ class VertexThinkingLevelMapper(_VertexThinkingLevelMapper[ImageContent]):
     name = ImageParameter.THINKING_LEVEL
 
 
+class VertexGroundingMapper(_VertexGoogleSearchMapper[ImageContent]):
+    """Map grounding to a Vertex tools google_search entry."""
+
+    name = ImageParameter.GROUNDING
+
+
 GOOGLE_VERTEX_PARAMETER_MAPPERS: list[ParameterMapper[ImageContent]] = [
     VertexAspectRatioMapper(),
     VertexQualityMapper(),
     VertexReferenceImagesMapper(),
     VertexThinkingLevelMapper(),
+    VertexGroundingMapper(),
 ]
 
 
@@ -86,11 +99,18 @@ class InteractionsThinkingLevelMapper(_InteractionsThinkingLevelMapper[ImageCont
     name = ImageParameter.THINKING_LEVEL
 
 
+class InteractionsGroundingMapper(_InteractionsGoogleSearchMapper):
+    """Map grounding to a Google Interactions tools google_search entry."""
+
+    name = ImageParameter.GROUNDING
+
+
 GOOGLE_INTERACTIONS_PARAMETER_MAPPERS: list[ParameterMapper[ImageContent]] = [
     InteractionsAspectRatioMapper(),
     InteractionsQualityMapper(),
     InteractionsReferenceImagesMapper(),
     InteractionsThinkingLevelMapper(),
+    InteractionsGroundingMapper(),
 ]
 
 

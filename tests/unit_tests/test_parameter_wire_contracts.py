@@ -218,6 +218,8 @@ SCALAR_PARAMETER_CASES = [
     ),
     (IMAGES_VERTEX, IP.ASPECT_RATIO, "16:9", (*IC, "aspectRatio"), "16:9"),
     (IMAGES_VERTEX, IP.QUALITY, "2K", (*IC, "imageSize"), "2K"),
+    (IMAGES_VERTEX, IP.GROUNDING, True, ("tools",), [{"google_search": {}}]),
+    (IMAGES_VERTEX, IP.GROUNDING, False, (), {}),
     (
         AUDIO_GOOGLE,
         AP.VOICE,
@@ -313,6 +315,14 @@ SCALAR_PARAMETER_CASES = [
         ("response_format", "image_size"),
         "2K",
     ),
+    (
+        IMAGES_INTERACTIONS,
+        IP.GROUNDING,
+        True,
+        ("tools",),
+        [{"type": "google_search"}],
+    ),
+    (IMAGES_INTERACTIONS, IP.GROUNDING, False, (), {}),
     (OPEN, T.TEMPERATURE, 0.4, ("temperature",), 0.4),
     (OPEN, T.MAX_TOKENS, 90, ("max_output_tokens",), 90),
     (OPEN, T.THINKING_LEVEL, "high", ("reasoning", "effort"), "high"),
