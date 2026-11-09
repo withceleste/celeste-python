@@ -1,6 +1,7 @@
 import pytest
 
 from celeste.core import Modality, Operation, Provider
+from celeste.exceptions import ConstraintViolationError
 from celeste.modalities.audio.constraints import VoiceConstraint
 from celeste.modalities.audio.parameters import AudioParameter
 from celeste.modalities.audio.providers.elevenlabs.voices import ELEVENLABS_VOICES
@@ -71,3 +72,16 @@ def test_voice_constraint_still_accepts_name_and_id() -> None:
 
     assert constraint(voice.name) == voice.id
     assert constraint(voice.id) == voice.id
+
+
+@pytest.mark.parametrize(
+    "value", ["en-us-advisor-1", "voice_abc123", "voicekey_abc123"]
+)
+def test_voice_constraint_custom_voices_passes_unlisted_values(value: str) -> None:
+    voice = GOOGLE_VOICES[0]
+    constraint = VoiceConstraint(voices=GOOGLE_VOICES, custom_voices=True)
+
+    assert constraint(voice.name) == voice.id
+    assert constraint(value) == value
+    with pytest.raises(ConstraintViolationError):
+        VoiceConstraint(voices=GOOGLE_VOICES)(value)
