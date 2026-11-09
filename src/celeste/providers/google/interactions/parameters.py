@@ -10,7 +10,7 @@ from celeste.mime_types import AudioMimeType
 from celeste.models import Model
 from celeste.parameters import ParameterMapper
 from celeste.providers.google.utils import build_content_part
-from celeste.tools import Tool
+from celeste.tools import Tool, WebSearch
 from celeste.types import (
     AudioContent,
     ImageContent,
@@ -19,7 +19,7 @@ from celeste.types import (
     VideoContent,
 )
 
-from .tools import TOOL_MAPPERS
+from .tools import TOOL_MAPPERS, WebSearchMapper
 
 _TOOL_DISPATCH = {m.tool_type: m for m in TOOL_MAPPERS}
 
@@ -317,6 +317,24 @@ class ImageSizeMapper(ParameterMapper[ImageContent]):
         return request
 
 
+class GoogleSearchMapper(ParameterMapper[ImageContent]):
+    """Map grounding to a Google Interactions tools google_search entry."""
+
+    def map(
+        self,
+        request: dict[str, Any],
+        value: object,
+        model: Model,
+    ) -> dict[str, Any]:
+        """Add the google_search tool when grounding is enabled."""
+        validated_value = self._validate_value(value, model)
+        if not validated_value:
+            return request
+
+        request.setdefault("tools", []).append(WebSearchMapper().map_tool(WebSearch()))
+        return request
+
+
 class MediaContentMapper[Content](ParameterMapper[Content]):
     """Map reference_images to Google Interactions input content."""
 
@@ -558,6 +576,7 @@ __all__ = [
     "AudioMimeTypeMapper",
     "DurationMapper",
     "FirstFrameMapper",
+    "GoogleSearchMapper",
     "ImageSizeMapper",
     "LanguageMapper",
     "LastFrameMapper",
