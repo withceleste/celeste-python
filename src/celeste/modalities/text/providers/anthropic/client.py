@@ -20,6 +20,7 @@ from celeste.providers.anthropic.messages.client import needs_native_replay
 from celeste.providers.anthropic.messages.streaming import (
     AnthropicMessagesStream as _AnthropicMessagesStream,
 )
+from celeste.providers.google.auth import GoogleADC
 from celeste.tools import ToolCall, ToolResult
 from celeste.types import DocumentPart, ImagePart, Role, TextContent, TextPart
 from celeste.utils import detect_mime_type
@@ -220,7 +221,8 @@ class AnthropicTextClient(AnthropicMessagesMixin, TextClient):
 
     def _build_document_source(self, doc: DocumentArtifact) -> dict[str, Any]:
         """Build Anthropic document source dict from DocumentArtifact."""
-        if doc.url:
+        # Claude on Google Cloud accepts no URL sources, only base64.
+        if doc.url and not isinstance(self.auth, GoogleADC):
             return {"type": "url", "url": doc.url}
 
         doc_bytes = doc.get_bytes()
@@ -244,8 +246,8 @@ class AnthropicTextClient(AnthropicMessagesMixin, TextClient):
             )
             return {"type": "base64", "media_type": str(media_type), "data": data}
 
-        # Regular URL: pass through
-        if img.url:
+        # Regular URL: pass through; Claude on Google Cloud accepts no URL sources, only base64.
+        if img.url and not isinstance(self.auth, GoogleADC):
             return {"type": "url", "url": img.url}
 
         # Bytes or file path: encode to base64
