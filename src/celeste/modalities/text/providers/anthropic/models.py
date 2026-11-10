@@ -17,6 +17,26 @@ from ...parameters import TextParameter
 
 MODELS: list[Model] = [
     Model(
+        id="claude-fable-5-2",
+        provider=Provider.ANTHROPIC,
+        display_name="Claude Fable 5.2",
+        operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
+        streaming=True,
+        parameter_constraints={
+            Parameter.MAX_TOKENS: Range(min=0, max=128000),
+            TextParameter.THINKING_LEVEL: Choice(
+                options=["low", "medium", "high", "xhigh", "max"]
+            ),
+            TextParameter.OUTPUT_SCHEMA: Schema(),
+            TextParameter.TOOLS: ToolSupport(tools=[WebSearch]),
+            TextParameter.TOOL_CHOICE: Choice(
+                options=[ToolChoice.AUTO, ToolChoice.NONE]
+            ),
+            TextParameter.IMAGE: ImagesConstraint(),
+            TextParameter.DOCUMENT: DocumentsConstraint(),
+        },
+    ),
+    Model(
         id="claude-haiku-5-5",
         provider=Provider.ANTHROPIC,
         display_name="Claude Haiku 5.5",
@@ -325,6 +345,7 @@ MODELS: list[Model] = [
 # Models that support web_search dynamic filtering (web_search_20260209); others use basic.
 DYNAMIC_FILTERING_MODELS = frozenset(
     {
+        "claude-fable-5-2",
         "claude-haiku-5-5",
         "claude-sonnet-5-5",
         "claude-opus-5-5",
