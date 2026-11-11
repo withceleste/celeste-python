@@ -53,22 +53,6 @@ MODELS: list[Model] = [
         },
     ),
     Model(
-        id="seedance-1-5-pro-251215",
-        provider=Provider.BYTEPLUS,
-        operations={Modality.VIDEOS: {Operation.GENERATE}},
-        display_name="Seedance 1.5 Pro",
-        parameter_constraints={
-            VideoParameter.DURATION: Range(min=4, max=12),
-            VideoParameter.RESOLUTION: Choice(options=["480p", "720p"]),
-            VideoParameter.FIRST_FRAME: ImageConstraint(
-                supported_mime_types=BYTEPLUS_SUPPORTED_MIME_TYPES,
-            ),
-            VideoParameter.LAST_FRAME: ImageConstraint(
-                supported_mime_types=BYTEPLUS_SUPPORTED_MIME_TYPES,
-            ),
-        },
-    ),
-    Model(
         id="dreamina-seedance-2-0-260128",
         provider=Provider.BYTEPLUS,
         operations={Modality.VIDEOS: {Operation.GENERATE}},
