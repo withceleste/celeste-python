@@ -304,4 +304,27 @@ MODELS: list[Model] = [
             TextParameter.DOCUMENT: DocumentsConstraint(),
         },
     ),
+    Model(
+        id="gemini-4-carbon",
+        provider=Provider.GOOGLE,
+        display_name="Gemini 4 Carbon",
+        operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
+        streaming=True,
+        parameter_constraints={
+            # Long decode to 1,048,576 needs background / v1beta1; Celeste sends neither.
+            Parameter.MAX_TOKENS: Range(min=1, max=65536),
+            # 4 Carbon rejects minimal (live API, Vertex model page).
+            TextParameter.THINKING_LEVEL: Choice(options=["low", "medium", "high"]),
+            TextParameter.TOOLS: ToolSupport(
+                tools=[WebSearch, CodeExecution, UrlContext]
+            ),
+            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
+            TextParameter.OUTPUT_SCHEMA: Schema(),
+            # Media input support
+            TextParameter.IMAGE: ImagesConstraint(),
+            TextParameter.VIDEO: VideosConstraint(),
+            TextParameter.AUDIO: AudioConstraint(),
+            TextParameter.DOCUMENT: DocumentsConstraint(),
+        },
+    ),
 ]
