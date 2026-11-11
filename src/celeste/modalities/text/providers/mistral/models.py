@@ -141,11 +141,12 @@ MODELS: list[Model] = [
         id="codestral-latest",
         provider=Provider.MISTRAL,
         display_name="Codestral",
-        operations={Modality.TEXT: {Operation.GENERATE}},
+        operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
         streaming=True,
         parameter_constraints={
             Parameter.TEMPERATURE: Range(min=0.0, max=1.5, step=0.01),
             TextParameter.OUTPUT_SCHEMA: Schema(),
+            TextParameter.DOCUMENT: DocumentsConstraint(),
             TextParameter.TOOLS: ToolSupport(tools=[]),
             TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
         },
