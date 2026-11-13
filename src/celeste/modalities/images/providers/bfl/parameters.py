@@ -1,34 +1,34 @@
 """BFL parameter mappers for images modality."""
 
 from celeste.parameters import ParameterMapper
-from celeste.providers.bfl.images.parameters import (
+from celeste.providers.bfl.flux.parameters import (
     AspectRatioMapper as _AspectRatioMapper,
 )
-from celeste.providers.bfl.images.parameters import (
+from celeste.providers.bfl.flux.parameters import (
     GroundingMapper as _GroundingMapper,
 )
-from celeste.providers.bfl.images.parameters import (
+from celeste.providers.bfl.flux.parameters import (
     GuidanceMapper as _GuidanceMapper,
 )
-from celeste.providers.bfl.images.parameters import (
+from celeste.providers.bfl.flux.parameters import (
     OutputFormatMapper as _OutputFormatMapper,
 )
-from celeste.providers.bfl.images.parameters import (
+from celeste.providers.bfl.flux.parameters import (
     PromptUpsamplingMapper as _PromptUpsamplingMapper,
 )
-from celeste.providers.bfl.images.parameters import (
+from celeste.providers.bfl.flux.parameters import (
     ReferenceImagesMapper as _ReferenceImagesMapper,
 )
-from celeste.providers.bfl.images.parameters import (
+from celeste.providers.bfl.flux.parameters import (
     ResolutionMapper as _ResolutionMapper,
 )
-from celeste.providers.bfl.images.parameters import (
+from celeste.providers.bfl.flux.parameters import (
     SafetyToleranceMapper as _SafetyToleranceMapper,
 )
-from celeste.providers.bfl.images.parameters import (
+from celeste.providers.bfl.flux.parameters import (
     SeedMapper as _SeedMapper,
 )
-from celeste.providers.bfl.images.parameters import (
+from celeste.providers.bfl.flux.parameters import (
     StepsMapper as _StepsMapper,
 )
 from celeste.types import ImageContent

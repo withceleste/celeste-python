@@ -1,11 +1,10 @@
-"""BFL Images API utilities."""
+"""BFL FLUX API utilities."""
 
 import base64
 from typing import Any
 
 from celeste.artifacts import ImageArtifact
-
-from .config import BFLImageField, image_field_for_model
+from celeste.models import Model
 
 
 def encode_image(image: ImageArtifact) -> str:
@@ -30,7 +29,7 @@ def encode_image(image: ImageArtifact) -> str:
 def add_input_images(
     request: dict[str, Any],
     images: list[ImageArtifact],
-    model_id: str,
+    model: Model,
 ) -> dict[str, Any]:
     """Add input images to a BFL request dict after any already placed.
 
@@ -39,9 +38,14 @@ def add_input_images(
     """
     if not images:
         return request
-    field = image_field_for_model(model_id).value
+    if model.id == "flux-3-image":
+        field = "images"
+    elif model.id in ("flux-pro-1.1-ultra", "flux-pro-1.1", "flux-dev"):
+        field = "image_prompt"
+    else:
+        field = "input_image"
     encoded = [encode_image(image) for image in images]
-    if field == BFLImageField.IMAGES:
+    if field == "images":
         request[field] = [*request.get(field, []), *encoded]
         return request
     start = 2 if field in request else 1

@@ -1,4 +1,4 @@
-"""BFL Images API parameter mappers."""
+"""BFL FLUX API parameter mappers."""
 
 from typing import Any
 
@@ -8,7 +8,6 @@ from celeste.models import Model
 from celeste.parameters import FieldMapper, ParameterMapper
 from celeste.types import ImageContent
 
-from .config import image_field_for_model
 from .utils import add_input_images
 
 
@@ -72,7 +71,9 @@ class ReferenceImagesMapper(ParameterMapper[ImageContent]):
             isinstance(constraint, ImagesConstraint)
             and constraint.max_count is not None
             and len(validated_value) + 1 > constraint.max_count
-            and image_field_for_model(model.id) in request
+            and any(
+                field in request for field in ("images", "input_image", "image_prompt")
+            )
         ):
             msg = (
                 f"{model.id} accepts at most {constraint.max_count} input images, "
@@ -80,7 +81,7 @@ class ReferenceImagesMapper(ParameterMapper[ImageContent]):
             )
             raise ConstraintViolationError(msg)
 
-        return add_input_images(request, validated_value, model.id)
+        return add_input_images(request, validated_value, model)
 
 
 class SafetyToleranceMapper(FieldMapper[ImageContent]):
