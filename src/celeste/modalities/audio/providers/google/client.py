@@ -13,6 +13,7 @@ from celeste.providers.google.interactions.client import (
 from celeste.providers.google.interactions.streaming import (
     GoogleInteractionsStream as _GoogleInteractionsStream,
 )
+from celeste.providers.google.utils import build_content_part
 from celeste.types import AudioContent
 
 from ...client import AudioClient
@@ -68,17 +69,34 @@ class GoogleAudioStream(_GoogleInteractionsStream, AudioStream):
 
 
 class GoogleAudioClient(GoogleInteractionsMixin, AudioClient):
-    """Google audio client (Interactions API TTS and music generation)."""
+    """Google audio client (Interactions API TTS, music generation, and transcription)."""
 
     _speak_endpoint = config.GoogleInteractionsEndpoint.CREATE_INTERACTION
     _generate_endpoint = config.GoogleInteractionsEndpoint.CREATE_INTERACTION
+    _transcribe_endpoint = config.GoogleInteractionsEndpoint.CREATE_INTERACTION
 
     @classmethod
     def parameter_mappers(cls) -> list[ParameterMapper[AudioContent]]:
         return GOOGLE_PARAMETER_MAPPERS
 
     def _init_request(self, inputs: AudioInput) -> dict[str, Any]:
-        """Initialize request with text input."""
+        """Initialize TTS text input or transcription audio input."""
+        if inputs.audio is not None:
+            audio = inputs.audio
+            if isinstance(audio, list):
+                if len(audio) != 1:
+                    msg = "Google transcription accepts exactly one audio file"
+                    raise ValueError(msg)
+                artifact = audio[0]
+            else:
+                artifact = audio
+            if not isinstance(artifact, AudioArtifact):
+                msg = "Google transcription requires an AudioArtifact"
+                raise ValueError(msg)
+            return {
+                "input": [build_content_part(artifact, "audio")],
+                "generation_config": {"transcription_config": {}},
+            }
         return {
             "input": inputs.text,
             "response_format": {"type": "audio"},
@@ -87,8 +105,8 @@ class GoogleAudioClient(GoogleInteractionsMixin, AudioClient):
     def _parse_content(
         self,
         response_data: dict[str, Any],
-    ) -> AudioArtifact:
-        """Parse the final generated audio block from model_output steps."""
+    ) -> AudioArtifact | str:
+        """Parse the final audio block, or the transcript text when no audio was generated."""
         steps = super()._parse_content(response_data)
         audio_part: dict[str, Any] | None = None
         for step in steps:
@@ -117,7 +135,16 @@ class GoogleAudioClient(GoogleInteractionsMixin, AudioClient):
                 mime_type=_to_audio_mime(audio_part.get("mime_type")),
                 metadata=metadata,
             )
-        msg = "No audio content in response"
+        texts = [
+            part.get("text")
+            for step in steps
+            if step.get("type") == "model_output"
+            for part in step.get("content", [])
+            if part.get("type") == "text" and part.get("text") is not None
+        ]
+        if texts:
+            return "".join(texts)
+        msg = "No audio or text content in response"
         raise ValueError(msg)
 
     def _build_metadata(self, response_data: dict[str, Any]) -> dict[str, Any]:

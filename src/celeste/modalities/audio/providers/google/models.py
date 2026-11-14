@@ -1,6 +1,6 @@
 """Google models for audio modality."""
 
-from celeste.constraints import Choice, ImagesConstraint
+from celeste.constraints import AudioConstraint, Choice, ImagesConstraint
 from celeste.core import Modality, Operation, Provider
 from celeste.mime_types import AudioMimeType
 from celeste.models import Model
@@ -123,6 +123,26 @@ MODELS: list[Model] = [
         operations={Modality.AUDIO: {Operation.GENERATE}},
         parameter_constraints={
             AudioParameter.REFERENCE_IMAGES: ImagesConstraint(max_count=10),
+        },
+    ),
+    Model(
+        id="gemini-3.5-transcribe",
+        provider=Provider.GOOGLE,
+        display_name="Google Gemini 3.5 Transcribe",
+        operations={Modality.AUDIO: {Operation.TRANSCRIBE}},
+        parameter_constraints={
+            AudioParameter.AUDIO: AudioConstraint(
+                supported_mime_types=[
+                    AudioMimeType.AAC,
+                    AudioMimeType.AIFF,
+                    AudioMimeType.FLAC,
+                    AudioMimeType.M4A,
+                    AudioMimeType.MP3,
+                    AudioMimeType.OGG,
+                    AudioMimeType.WAV,
+                    AudioMimeType.WEBM,
+                ]
+            ),
         },
     ),
 ]

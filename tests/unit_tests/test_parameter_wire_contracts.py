@@ -425,6 +425,15 @@ SCALAR_PARAMETER_CASES = [
             MODEL,
             {"images": [{"image_url": "primary"}]},
         ),
+        (
+            AUDIO_GOOGLE,
+            AP.LANGUAGE,
+            "en",
+            ("generation_config",),
+            {"transcription_config": {"language_codes": ["en-US"]}},
+            MODEL,
+            {"generation_config": {"transcription_config": {}}},
+        ),
     ]
     + [
         (
