@@ -54,6 +54,7 @@ MODELS: list[Model] = [
         streaming=True,
         parameter_constraints={
             Parameter.TEMPERATURE: Range(min=0.0, max=1.5, step=0.01),
+            TextParameter.THINKING_LEVEL: Choice(options=["low", "medium", "high"]),
             TextParameter.OUTPUT_SCHEMA: Schema(),
             TextParameter.IMAGE: ImagesConstraint(),
             TextParameter.DOCUMENT: DocumentsConstraint(),
