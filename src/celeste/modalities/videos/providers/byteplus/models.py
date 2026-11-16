@@ -132,4 +132,24 @@ MODELS: list[Model] = [
             ),
         },
     ),
+    Model(
+        id="dreamina-seedance-2-5-flash-261115",
+        provider=Provider.BYTEPLUS,
+        operations={Modality.VIDEOS: {Operation.GENERATE}},
+        display_name="Seedance 2.5 Flash",
+        parameter_constraints={
+            VideoParameter.DURATION: Range(min=4, max=30, special_values=[-1]),
+            VideoParameter.RESOLUTION: Choice(options=["480p", "720p"]),
+            VideoParameter.REFERENCE_IMAGES: ImagesConstraint(
+                supported_mime_types=BYTEPLUS_SUPPORTED_MIME_TYPES,
+                max_count=10,
+            ),
+            VideoParameter.FIRST_FRAME: ImageConstraint(
+                supported_mime_types=BYTEPLUS_SUPPORTED_MIME_TYPES,
+            ),
+            VideoParameter.LAST_FRAME: ImageConstraint(
+                supported_mime_types=BYTEPLUS_SUPPORTED_MIME_TYPES,
+            ),
+        },
+    ),
 ]
