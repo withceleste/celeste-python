@@ -78,6 +78,8 @@ _TTS_V2_5_LANGUAGES = [
 ]
 
 _SCRIBE_MIME_TYPES = [
+    AudioMimeType.AAC,
+    AudioMimeType.AIFF,
     AudioMimeType.FLAC,
     AudioMimeType.MP3,
     AudioMimeType.M4A,
