@@ -37,4 +37,23 @@ MODELS: list[Model] = [
             LiveParameter.TOOLS: ToolSupport(tools=[WebSearch]),
         },
     ),
+    Model(
+        id="gpt-live-1.1",
+        provider=Provider.OPENAI,
+        display_name="GPT Live 1.1",
+        streaming=True,
+        operations={Modality.LIVE: {Operation.CONNECT}},
+        parameter_constraints={
+            LiveParameter.VOICE: VoiceConstraint(voices=OPENAI_LIVE_VOICES),
+            LiveParameter.AUDIO_FORMAT: Choice(options=OPENAI_AUDIO_FORMATS),
+            LiveParameter.AUDIO: AudioConstraint(
+                supported_mime_types=[
+                    AudioMimeType.PCM,
+                    AudioMimeType.PCMU,
+                    AudioMimeType.PCMA,
+                ]
+            ),
+            LiveParameter.TOOLS: ToolSupport(tools=[WebSearch]),
+        },
+    ),
 ]
