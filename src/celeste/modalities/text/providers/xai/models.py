@@ -16,20 +16,6 @@ from ...parameters import TextParameter
 
 MODELS: list[Model] = [
     Model(
-        id="grok-build-0.1",
-        provider=Provider.XAI,
-        display_name="Grok Build 0.1",
-        operations={Modality.TEXT: {Operation.GENERATE, Operation.ANALYZE}},
-        streaming=True,
-        parameter_constraints={
-            Parameter.TEMPERATURE: Range(min=0.0, max=2.0),
-            TextParameter.TOOLS: ToolSupport(tools=[]),
-            TextParameter.TOOL_CHOICE: ToolChoiceSupport(),
-            TextParameter.OUTPUT_SCHEMA: Schema(),
-            TextParameter.IMAGE: ImagesConstraint(),
-        },
-    ),
-    Model(
         id="grok-4.20-multi-agent-0309",
         provider=Provider.XAI,
         display_name="Grok 4.20 Multi-Agent 0309",
