@@ -228,6 +228,11 @@ class HTTPClient:
             if not event_source.response.is_success:
                 await event_source.response.aread()
                 event_source.response.raise_for_status()
+            # A successful stream that names no Content-Type is read as SSE
+            # (OpenAI's ChatGPT sign-in route sends none).
+            event_source.response.headers.setdefault(
+                "content-type", "text/event-stream"
+            )
             async with aclosing(event_source.aiter_sse()) as events:
                 async for sse in events:
                     try:

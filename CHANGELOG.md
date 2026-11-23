@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Images** — Google `gemini-3-pro-image`, `gemini-3.1-flash-image` and `gemini-nano-banana-2.1` accept the `grounding` parameter: `grounding=True` adds the `google_search` tool on both the Interactions and Vertex backends instead of being warned about and dropped, so the image reflects real-time search results (#588).
 - **Audio** — ElevenLabs text-to-speech accepts the `ulaw_8000` and `alaw_8000` output formats instead of rejecting them locally; unary and streamed speech in those formats is labeled `AudioMimeType.PCMU` / `AudioMimeType.PCMA` (#587).
 - **Images** — BytePlus Seedream sends `output_format` (`png`, `jpeg`; Seedream 5.0 lite, pro, flash) and `background` (`transparent`, `opaque`; Seedream 5.0 pro, flash) instead of warning about and dropping them (#590).
+- **Text** — OpenAI text requests can be billed to a ChatGPT plan instead of an API key: sign in once per machine with `ChatGPT.login()` (`celeste.providers.openai.auth`), then pass `auth=ChatGPT()`. The sign-in is kept in `~/.config/celeste/chatgpt.json` and renewed as needed. Requests use OpenAI's Sign in with ChatGPT route for open-source apps, so they are streamed and sent with `store: false`, reasoning returns encrypted so tool-calling turns can be replayed, and system messages are sent as developer messages.
 
 ### Breaking Changes
 
