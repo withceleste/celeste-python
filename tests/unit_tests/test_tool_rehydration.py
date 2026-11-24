@@ -20,6 +20,16 @@ def test_build_request_rehydrates_serialized_tools() -> None:
     ]
 
 
+def test_user_tool_named_web_search_stays_a_function_tool() -> None:
+    tool = {"name": "web_search", "parameters": {"type": "object", "properties": {}}}
+
+    request = anthropic_test_client()._build_request(
+        TextInput(prompt="hi"), tools=[tool]
+    )
+
+    assert "type" not in request["tools"][0]
+
+
 def test_tools_mapper_rejects_unrecognized_dict() -> None:
     with pytest.raises(InvalidToolError):
         anthropic_test_client()._build_request(
