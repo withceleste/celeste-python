@@ -5,7 +5,15 @@ from unittest.mock import Mock, patch
 import pytest
 
 import celeste
-from celeste import Modality, Model, Operation, Protocol, Provider, create_client
+from celeste import (
+    Modality,
+    Model,
+    Operation,
+    Protocol,
+    Provider,
+    create_client,
+    get_base_url,
+)
 from celeste.auth import NoAuth
 from celeste.exceptions import ClientNotFoundError, ModelNotFoundError
 
@@ -145,3 +153,23 @@ def test_create_client_reports_missing_route(text_model: Model) -> None:
         ),
     ):
         create_client(modality=Modality.TEXT, model=text_model.id)
+
+
+@pytest.mark.parametrize(
+    ("provider", "modality", "base_url"),
+    [
+        (Provider.ANTHROPIC, Modality.TEXT, "https://api.anthropic.com"),
+        (Provider.GOOGLE, Modality.TEXT, "https://generativelanguage.googleapis.com"),
+        (Provider.OPENAI, Modality.LIVE, "wss://api.openai.com"),
+    ],
+    ids=["wire mixin", "dispatcher", "live"],
+)
+def test_get_base_url_returns_the_provider_default(
+    provider: Provider, modality: Modality, base_url: str
+) -> None:
+    assert get_base_url(provider, modality) == base_url
+
+
+def test_get_base_url_reports_missing_route() -> None:
+    with pytest.raises(ClientNotFoundError):
+        get_base_url(Provider.ANTHROPIC, Modality.IMAGES)
