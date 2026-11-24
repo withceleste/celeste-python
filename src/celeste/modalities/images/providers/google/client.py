@@ -1,6 +1,6 @@
 """Google images client (Interactions or Vertex selected by auth)."""
 
-from typing import Any, Unpack
+from typing import Any, ClassVar, Unpack
 
 from celeste.parameters import ParameterMapper
 from celeste.providers.google.auth import GoogleADC
@@ -23,6 +23,7 @@ _MODEL_IDS = frozenset(m.id for m in MODELS)
 class GoogleImagesClient(ImagesClient):
     """Google images client (selects the Interactions or Vertex backend)."""
 
+    _default_base_url: ClassVar[str] = GoogleInteractionsImagesClient._default_base_url
     _strategy: GoogleInteractionsImagesClient | GoogleVertexImagesClient | None = None
 
     def model_post_init(self, __context: object) -> None:

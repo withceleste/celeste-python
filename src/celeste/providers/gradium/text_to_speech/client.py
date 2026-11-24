@@ -4,7 +4,7 @@ import base64
 import json
 from collections.abc import AsyncGenerator
 from contextlib import aclosing
-from typing import Any
+from typing import Any, ClassVar
 
 from websockets.asyncio.client import connect as ws_connect
 
@@ -32,9 +32,11 @@ class GradiumTextToSpeechClient(APIMixin):
     6. Receive end message
     """
 
+    _default_base_url: ClassVar[str] = config.BASE_URL
+
     def _build_url(self, endpoint: str, streaming: bool = False) -> str:
         """Build the WebSocket URL, honoring an explicit base_url override."""
-        base = self.base_url if self.base_url is not None else config.BASE_URL
+        base = self.base_url if self.base_url is not None else self._default_base_url
         url = f"{base.rstrip('/')}{endpoint}"
         return url.replace("https://", "wss://", 1).replace("http://", "ws://", 1)
 

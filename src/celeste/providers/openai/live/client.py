@@ -4,7 +4,7 @@ import asyncio
 import base64
 import json
 from collections.abc import AsyncGenerator
-from typing import Any
+from typing import Any, ClassVar
 
 from websockets.asyncio.client import ClientConnection
 from websockets.asyncio.client import connect as ws_connect
@@ -31,6 +31,8 @@ class OpenAILiveClient(APIMixin):
     3. end() sends session.close; the stream ends after session.closed
     """
 
+    _default_base_url: ClassVar[str] = config.BASE_URL
+
     def _build_request(
         self,
         inputs: Any,
@@ -47,7 +49,7 @@ class OpenAILiveClient(APIMixin):
 
     def _build_url(self, endpoint: str, streaming: bool = False) -> str:
         """Build the WebSocket URL, honoring an explicit base_url override."""
-        base = self.base_url if self.base_url is not None else config.BASE_URL
+        base = self.base_url if self.base_url is not None else self._default_base_url
         url = f"{base.rstrip('/').removesuffix('/v1')}{endpoint}"
         return url.replace("https://", "wss://", 1).replace("http://", "ws://", 1)
 

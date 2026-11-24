@@ -6,7 +6,7 @@ providers use client.py.template. The PROVIDERS registry entry stays
 """
 
 # from collections.abc import AsyncGenerator
-from typing import Any, Unpack
+from typing import Any, ClassVar, Unpack
 
 from celeste.grounding import Grounding
 from celeste.parameters import ParameterMapper
@@ -28,6 +28,7 @@ from .parameters import (
 class {Provider}{Modality}Client({Modality}Client):
     """{Provider} {modality} client (selects the {Api1} or {Api2} backend)."""
 
+    _default_base_url: ClassVar[str] = {Provider}{Api1}{Modality}Client._default_base_url
     _strategy: {Provider}{Api1}{Modality}Client | {Provider}{Api2}{Modality}Client | None = None
 
     def model_post_init(self, __context: object) -> None:

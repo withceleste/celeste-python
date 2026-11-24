@@ -57,6 +57,7 @@ class APIMixin(ABC):
     provider: Provider | None
     protocol: Protocol | None
     base_url: str | None
+    _default_base_url: ClassVar[str]
     _content_fields: ClassVar[set[str]] = set()
 
     @property

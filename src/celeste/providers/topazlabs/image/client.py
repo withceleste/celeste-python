@@ -33,11 +33,12 @@ class TopazLabsImageClient(APIMixin):
     the modality ClassVar (which is only a capability sentinel).
     """
 
+    _default_base_url: ClassVar[str] = config.BASE_URL
     _content_fields: ClassVar[set[str]] = {"download_url", "url"}
 
     def _build_url(self, endpoint: str, streaming: bool = False) -> str:
         """Build the request URL, honoring an explicit base_url override."""
-        base = self.base_url if self.base_url is not None else config.BASE_URL
+        base = self.base_url if self.base_url is not None else self._default_base_url
         return f"{base.rstrip('/')}{endpoint}"
 
     def _build_request(

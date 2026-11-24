@@ -35,6 +35,7 @@ class GoogleVeoClient(APIMixin):
                 return VideoArtifact(data=video_bytes, mime_type=VideoMimeType.MP4, ...)
     """
 
+    _default_base_url: ClassVar[str] = config.BASE_URL
     _content_fields: ClassVar[set[str]] = {"response"}
 
     def _get_vertex_endpoint(self, gemini_endpoint: str) -> str:
@@ -59,7 +60,7 @@ class GoogleVeoClient(APIMixin):
             vertex_path = vertex_url.removeprefix(self.auth.get_vertex_base_url())
             return f"{self.base_url.rstrip('/')}{vertex_path}"
         endpoint = endpoint.format(model_id=self.model.id)
-        base = self.base_url if self.base_url is not None else config.BASE_URL
+        base = self.base_url if self.base_url is not None else self._default_base_url
         return f"{base.rstrip('/')}{endpoint}"
 
     def _build_poll_url(self, operation_name: str) -> str:

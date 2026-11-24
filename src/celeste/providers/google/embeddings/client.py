@@ -30,6 +30,7 @@ class GoogleEmbeddingsClient(APIMixin):
                 return super()._parse_content(response_data)  # No transformation needed
     """
 
+    _default_base_url: ClassVar[str] = config.BASE_URL
     _content_fields: ClassVar[set[str]] = {"embedding", "embeddings"}
 
     async def _make_stream_request(
@@ -73,7 +74,7 @@ class GoogleEmbeddingsClient(APIMixin):
             vertex_path = vertex_url.removeprefix(self.auth.get_vertex_base_url())
             return f"{self.base_url.rstrip('/')}{vertex_path}"
         endpoint = endpoint.format(model_id=self.model.id)
-        base = self.base_url if self.base_url is not None else config.BASE_URL
+        base = self.base_url if self.base_url is not None else self._default_base_url
         return f"{base.rstrip('/')}{endpoint}"
 
     async def _make_request(

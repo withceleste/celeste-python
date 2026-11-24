@@ -1,7 +1,7 @@
 """Google text client (Interactions API; GoogleADC auth uses Vertex GenerateContent)."""
 
 from collections.abc import AsyncGenerator
-from typing import Any, Unpack
+from typing import Any, ClassVar, Unpack
 
 from celeste.grounding import Grounding
 from celeste.parameters import ParameterMapper
@@ -24,6 +24,7 @@ from .vertex import GoogleVertexTextClient
 class GoogleTextClient(TextClient):
     """Google text client (selects the Interactions or Vertex backend by auth)."""
 
+    _default_base_url: ClassVar[str] = GoogleInteractionsTextClient._default_base_url
     _strategy: GoogleInteractionsTextClient | GoogleVertexTextClient | None = None
 
     def model_post_init(self, __context: object) -> None:

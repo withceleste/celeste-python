@@ -34,11 +34,12 @@ class BytePlusVideosClient(APIMixin):
                 # Extract video from content["video_url"]...
     """
 
+    _default_base_url: ClassVar[str] = config.BASE_URL
     _content_fields: ClassVar[set[str]] = {"content"}
 
     def _build_url(self, endpoint: str, streaming: bool = False) -> str:
         """Build the request URL, honoring an explicit base_url override."""
-        base = self.base_url if self.base_url is not None else config.BASE_URL
+        base = self.base_url if self.base_url is not None else self._default_base_url
         return f"{base.rstrip('/')}{endpoint}"
 
     def _build_request(

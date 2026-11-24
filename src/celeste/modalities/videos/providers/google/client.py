@@ -1,6 +1,6 @@
 """Google videos client (Veo by model family; Omni models use Interactions)."""
 
-from typing import Any, Unpack
+from typing import Any, ClassVar, Unpack
 
 from celeste.artifacts import VideoArtifact
 from celeste.parameters import ParameterMapper
@@ -24,6 +24,7 @@ _OMNI_MODEL_IDS = frozenset(m.id for m in GOOGLE_OMNI_MODELS)
 class GoogleVideosClient(VideosClient):
     """Google videos client (selects the Veo or Interactions backend by model id)."""
 
+    _default_base_url: ClassVar[str] = GoogleInteractionsVideosClient._default_base_url
     _strategy: GoogleVeoVideosClient | GoogleInteractionsVideosClient | None = None
 
     def model_post_init(self, __context: object) -> None:

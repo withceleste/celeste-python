@@ -2,11 +2,14 @@
 
 from typing import Any
 from unittest.mock import MagicMock
+from urllib.parse import urlsplit
 
 import pytest
 from pydantic import SecretStr
 
+from celeste import _CLIENT_MAP
 from celeste.auth import AuthHeader
+from celeste.client import ModalityClient
 from celeste.core import Provider
 from celeste.models import Model
 from celeste.providers.anthropic.messages import config as anthropic_config
@@ -237,3 +240,12 @@ def test_veo_poll_routes_match_auth() -> None:
     vertex_url = GoogleVeoClient._build_poll_url(vertex, "operations/abc")
     assert direct_url.endswith("/v1beta/operations/abc")
     assert "fetchPredictOperation" in vertex_url
+
+
+@pytest.mark.parametrize(
+    "client_type", dict.fromkeys(_CLIENT_MAP.values()), ids=lambda c: c.__name__
+)
+def test_registered_client_declares_its_default_base_url(
+    client_type: type[ModalityClient],
+) -> None:
+    assert urlsplit(client_type._default_base_url).hostname
