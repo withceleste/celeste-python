@@ -527,7 +527,7 @@ class VoiceMapper(ParameterMapper[AudioContent]):
 
 
 class LanguageMapper(ParameterMapper[AudioContent]):
-    """Map language to Google Interactions generation_config.speech_config language field."""
+    """Map language to transcription_config.language_codes on ASR requests, else speech_config."""
 
     locale_map: ClassVar[dict[str, str]] = {}
 
@@ -543,9 +543,11 @@ class LanguageMapper(ParameterMapper[AudioContent]):
             return request
 
         locale = self.locale_map.get(str(validated_value), str(validated_value))
-        speech_config = request.setdefault("generation_config", {}).setdefault(
-            "speech_config", [{}]
-        )
+        generation_config = request.setdefault("generation_config", {})
+        if "transcription_config" in generation_config:
+            generation_config["transcription_config"]["language_codes"] = [locale]
+            return request
+        speech_config = generation_config.setdefault("speech_config", [{}])
         speech_config[0]["language"] = locale
         return request
 
