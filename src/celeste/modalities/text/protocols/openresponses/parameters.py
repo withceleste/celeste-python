@@ -3,20 +3,10 @@
 from celeste.parameters import ParameterMapper
 from celeste.protocols.openresponses.parameters import (
     MaxOutputTokensMapper as _MaxOutputTokensMapper,
-)
-from celeste.protocols.openresponses.parameters import (
     PromptCacheKeyMapper as _PromptCacheKeyMapper,
-)
-from celeste.protocols.openresponses.parameters import (
     TemperatureMapper as _TemperatureMapper,
-)
-from celeste.protocols.openresponses.parameters import (
     TextFormatMapper as _TextFormatMapper,
-)
-from celeste.protocols.openresponses.parameters import (
     ToolChoiceMapper as _ToolChoiceMapper,
-)
-from celeste.protocols.openresponses.parameters import (
     ToolsMapper as _ToolsMapper,
 )
 from celeste.types import TextContent

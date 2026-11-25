@@ -10,14 +10,10 @@ from celeste.types import TextContent
 from ...parameters import TextParameter
 from ...protocols.chatcompletions.parameters import (
     MaxTokensMapper as _MaxTokensMapper,
-)
-from ...protocols.chatcompletions.parameters import (
     OutputSchemaMapper,
     PromptCacheKeyMapper,
     TemperatureMapper,
     ThinkingLevelMapper,
-)
-from ...protocols.chatcompletions.parameters import (
     ToolChoiceMapper as _ToolChoiceMapper,
 )
 

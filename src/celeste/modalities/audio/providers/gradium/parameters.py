@@ -3,8 +3,6 @@
 from celeste.parameters import ParameterMapper
 from celeste.providers.gradium.text_to_speech.parameters import (
     OutputFormatMapper as _OutputFormatMapper,
-)
-from celeste.providers.gradium.text_to_speech.parameters import (
     VoiceMapper as _VoiceMapper,
 )
 from celeste.types import AudioContent

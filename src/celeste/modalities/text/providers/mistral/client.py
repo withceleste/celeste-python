@@ -6,8 +6,6 @@ from celeste.parameters import ParameterMapper
 from celeste.providers.mistral.chat.client import MistralChatClient as MistralChatMixin
 from celeste.providers.mistral.chat.streaming import (
     MistralChatStream as _MistralChatStream,
-)
-from celeste.providers.mistral.chat.streaming import (
     _extract_thinking_text,
 )
 from celeste.types import Message, Role, TextContent
@@ -15,8 +13,6 @@ from celeste.types import Message, Role, TextContent
 from ...io import TextInput
 from ...protocols.chatcompletions.client import (
     ChatCompletionsTextClient,
-)
-from ...protocols.chatcompletions.client import (
     ChatCompletionsTextStream as _ChatCompletionsTextStream,
 )
 from ...streaming import TextStream

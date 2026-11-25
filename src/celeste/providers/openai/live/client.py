@@ -6,8 +6,7 @@ import json
 from collections.abc import AsyncGenerator
 from typing import Any, ClassVar
 
-from websockets.asyncio.client import ClientConnection
-from websockets.asyncio.client import connect as ws_connect
+from websockets.asyncio.client import ClientConnection, connect as ws_connect
 from websockets.exceptions import ConnectionClosed
 
 from celeste.client import APIMixin

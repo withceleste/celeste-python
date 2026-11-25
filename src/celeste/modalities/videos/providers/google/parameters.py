@@ -3,38 +3,18 @@
 from celeste.parameters import ParameterMapper
 from celeste.providers.google.interactions.parameters import (
     AspectRatioMapper as _InteractionsAspectRatioMapper,
-)
-from celeste.providers.google.interactions.parameters import (
     DurationMapper as _InteractionsDurationMapper,
-)
-from celeste.providers.google.interactions.parameters import (
     FirstFrameMapper as _InteractionsFirstFrameMapper,
-)
-from celeste.providers.google.interactions.parameters import (
     LastFrameMapper as _InteractionsLastFrameMapper,
-)
-from celeste.providers.google.interactions.parameters import (
     ReferenceImagesMapper as _InteractionsReferenceImagesMapper,
-)
-from celeste.providers.google.interactions.parameters import (
     ResolutionMapper as _InteractionsResolutionMapper,
 )
 from celeste.providers.google.veo.parameters import (
     AspectRatioMapper as _VeoAspectRatioMapper,
-)
-from celeste.providers.google.veo.parameters import (
     DurationSecondsMapper as _VeoDurationSecondsMapper,
-)
-from celeste.providers.google.veo.parameters import (
     FirstFrameMapper as _VeoFirstFrameMapper,
-)
-from celeste.providers.google.veo.parameters import (
     LastFrameMapper as _VeoLastFrameMapper,
-)
-from celeste.providers.google.veo.parameters import (
     ReferenceImagesMapper as _VeoReferenceImagesMapper,
-)
-from celeste.providers.google.veo.parameters import (
     ResolutionMapper as _VeoResolutionMapper,
 )
 from celeste.types import VideoContent

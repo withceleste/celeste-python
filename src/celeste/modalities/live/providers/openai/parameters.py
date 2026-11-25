@@ -4,11 +4,7 @@ from celeste.artifacts import AudioArtifact
 from celeste.parameters import ParameterMapper
 from celeste.providers.openai.live.parameters import (
     AudioFormatMapper as _AudioFormatMapper,
-)
-from celeste.providers.openai.live.parameters import (
     ToolsMapper as _ToolsMapper,
-)
-from celeste.providers.openai.live.parameters import (
     VoiceMapper as _VoiceMapper,
 )
 

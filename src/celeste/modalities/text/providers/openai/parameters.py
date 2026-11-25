@@ -6,8 +6,6 @@ from celeste.models import Model
 from celeste.parameters import ParameterMapper
 from celeste.protocols.openresponses.parameters import (
     ReasoningEffortMapper as _ReasoningEffortMapper,
-)
-from celeste.protocols.openresponses.parameters import (
     VerbosityMapper as _VerbosityMapper,
 )
 from celeste.tools import WebSearch
@@ -19,10 +17,8 @@ from ...protocols.openresponses.parameters import (
     OutputSchemaMapper,
     PromptCacheKeyMapper,
     TemperatureMapper,
-    ToolsMapper,
-)
-from ...protocols.openresponses.parameters import (
     ToolChoiceMapper as _ToolChoiceMapper,
+    ToolsMapper,
 )
 
 

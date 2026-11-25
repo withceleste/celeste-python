@@ -6,20 +6,10 @@ from celeste.models import Model
 from celeste.parameters import ParameterMapper
 from celeste.providers.anthropic.messages.parameters import (
     MaxTokensMapper as _MaxTokensMapper,
-)
-from celeste.providers.anthropic.messages.parameters import (
     OutputFormatMapper as _OutputFormatMapper,
-)
-from celeste.providers.anthropic.messages.parameters import (
     ThinkingLevelMapper as _ThinkingLevelMapper,
-)
-from celeste.providers.anthropic.messages.parameters import (
     ThinkingMapper as _ThinkingMapper,
-)
-from celeste.providers.anthropic.messages.parameters import (
     ToolChoiceMapper as _ToolChoiceMapper,
-)
-from celeste.providers.anthropic.messages.parameters import (
     ToolsMapper as _ToolsMapper,
 )
 from celeste.types import TextContent

@@ -9,8 +9,6 @@ from celeste.providers.google.generate_content.parameters import (
     MaxOutputTokensMapper,
     SeedMapper,
     TemperatureMapper,
-)
-from celeste.providers.google.generate_content.parameters import (
     ToolsMapper as _ToolsMapper,
 )
 from celeste.providers.google.generate_content.tools import WebSearchMapper

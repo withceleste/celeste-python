@@ -3,56 +3,22 @@
 from celeste.parameters import ParameterMapper
 from celeste.providers.topazlabs.image.parameters import (
     CropToFillMapper as _CropToFillMapper,
-)
-from celeste.providers.topazlabs.image.parameters import (
     DeblurStrengthMapper as _DeblurStrengthMapper,
-)
-from celeste.providers.topazlabs.image.parameters import (
     DecompressionStrengthMapper as _DecompressionStrengthMapper,
-)
-from celeste.providers.topazlabs.image.parameters import (
     DenoiseMapper as _DenoiseMapper,
-)
-from celeste.providers.topazlabs.image.parameters import (
     DenoiseStrengthMapper as _DenoiseStrengthMapper,
-)
-from celeste.providers.topazlabs.image.parameters import (
     DetailStrengthMapper as _DetailStrengthMapper,
-)
-from celeste.providers.topazlabs.image.parameters import (
     FaceEnhancementCreativityMapper as _FaceEnhancementCreativityMapper,
-)
-from celeste.providers.topazlabs.image.parameters import (
     FaceEnhancementMapper as _FaceEnhancementMapper,
-)
-from celeste.providers.topazlabs.image.parameters import (
     FaceEnhancementStrengthMapper as _FaceEnhancementStrengthMapper,
-)
-from celeste.providers.topazlabs.image.parameters import (
     FixCompressionMapper as _FixCompressionMapper,
-)
-from celeste.providers.topazlabs.image.parameters import (
     OpacityMapper as _OpacityMapper,
-)
-from celeste.providers.topazlabs.image.parameters import (
     OutputFormatMapper as _OutputFormatMapper,
-)
-from celeste.providers.topazlabs.image.parameters import (
     OutputHeightMapper as _OutputHeightMapper,
-)
-from celeste.providers.topazlabs.image.parameters import (
     OutputWidthMapper as _OutputWidthMapper,
-)
-from celeste.providers.topazlabs.image.parameters import (
     RecoveryStrengthMapper as _RecoveryStrengthMapper,
-)
-from celeste.providers.topazlabs.image.parameters import (
     SharpenMapper as _SharpenMapper,
-)
-from celeste.providers.topazlabs.image.parameters import (
     StrengthMapper as _StrengthMapper,
-)
-from celeste.providers.topazlabs.image.parameters import (
     SubjectDetectionMapper as _SubjectDetectionMapper,
 )
 from celeste.types import ImageContent

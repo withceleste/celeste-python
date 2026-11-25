@@ -3,8 +3,6 @@
 from celeste.parameters import ParameterMapper
 from celeste.protocols.openresponses.parameters import (
     ReasoningEffortMapper as _ReasoningEffortMapper,
-)
-from celeste.protocols.openresponses.parameters import (
     ToolsMapper as _ToolsMapper,
 )
 from celeste.providers.xai.responses.tools import TOOL_MAPPERS as XAI_TOOL_MAPPERS

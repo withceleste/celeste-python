@@ -20,8 +20,7 @@ from celeste.exceptions import (
 )
 from celeste.grounding import Grounding
 from celeste.http import HTTPClient, get_http_client
-from celeste.io import Chunk as ChunkBase
-from celeste.io import FinishReason, Input, Output, Usage
+from celeste.io import Chunk as ChunkBase, FinishReason, Input, Output, Usage
 from celeste.mime_types import ApplicationMimeType
 from celeste.models import Model
 from celeste.parameters import ParameterMapper, Parameters

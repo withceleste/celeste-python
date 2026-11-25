@@ -3,11 +3,7 @@
 from celeste.parameters import ParameterMapper
 from celeste.providers.groq.audio.parameters import (
     LanguageMapper as _LanguageMapper,
-)
-from celeste.providers.groq.audio.parameters import (
     PromptMapper as _PromptMapper,
-)
-from celeste.providers.groq.audio.parameters import (
     TemperatureMapper as _TemperatureMapper,
 )
 from celeste.types import AudioContent

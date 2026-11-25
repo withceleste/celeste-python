@@ -14,8 +14,6 @@ from celeste.types import TextContent
 from ...io import TextInput
 from ...protocols.openresponses.client import (
     OpenResponsesTextClient,
-)
-from ...protocols.openresponses.client import (
     OpenResponsesTextStream as _OpenResponsesTextStream,
 )
 from ...streaming import TextStream

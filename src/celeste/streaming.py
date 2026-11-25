@@ -20,8 +20,7 @@ from anyio.from_thread import start_blocking_portal
 
 from celeste.exceptions import StreamEventError, StreamNotExhaustedError
 from celeste.grounding import Grounding
-from celeste.io import Chunk as ChunkBase
-from celeste.io import FinishReason, Output, Usage
+from celeste.io import Chunk as ChunkBase, FinishReason, Output, Usage
 from celeste.parameters import Parameters
 from celeste.tools import ToolCall, validate_tool_calls
 from celeste.types import Message, RawUsage, ToolActivity

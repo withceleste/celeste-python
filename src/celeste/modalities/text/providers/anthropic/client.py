@@ -15,8 +15,8 @@ from celeste.mime_types import ImageMimeType
 from celeste.parameters import ParameterMapper
 from celeste.providers.anthropic.messages.client import (
     AnthropicMessagesClient as AnthropicMessagesMixin,
+    needs_native_replay,
 )
-from celeste.providers.anthropic.messages.client import needs_native_replay
 from celeste.providers.anthropic.messages.streaming import (
     AnthropicMessagesStream as _AnthropicMessagesStream,
 )
