@@ -21,22 +21,10 @@
 
 
 # PATTERN 2: Nested mapping
-# class ReasoningEffortMapper(ParameterMapper[TextContent]):
+# class ReasoningEffortMapper(FieldMapper[TextContent]):
 #     """Map reasoning_effort to {Protocol} reasoning.effort field."""
 #
-#     def map(
-#         self,
-#         request: dict[str, Any],
-#         value: object,
-#         model: Model,
-#     ) -> dict[str, Any]:
-#         """Transform reasoning_effort into provider request."""
-#         validated_value = self._validate_value(value, model)
-#         if validated_value is None:
-#             return request
-#
-#         request.setdefault("reasoning", {})["effort"] = validated_value
-#         return request
+#     field = "reasoning.effort"  # dots nest
 
 
 # PATTERN 3: Response format with parse_output

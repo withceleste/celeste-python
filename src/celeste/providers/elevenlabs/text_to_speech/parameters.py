@@ -53,25 +53,10 @@ class OutputFormatMapper(ParameterMapper[AudioContent]):
         return AudioArtifact(data=content.data, mime_type=mime_type)
 
 
-class SpeedMapper(ParameterMapper[AudioContent]):
+class SpeedMapper(FieldMapper[AudioContent]):
     """Map speed parameter to ElevenLabs voice_settings.speed field."""
 
-    def map(
-        self,
-        request: dict[str, Any],
-        value: object,
-        model: Model,
-    ) -> dict[str, Any]:
-        """Transform speed into provider request."""
-        validated_value = self._validate_value(value, model)
-        if validated_value is None:
-            return request
-
-        if "voice_settings" not in request:
-            request["voice_settings"] = {}
-
-        request["voice_settings"]["speed"] = validated_value
-        return request
+    field = "voice_settings.speed"
 
 
 class LanguageCodeMapper(ParameterMapper[AudioContent]):

@@ -4,7 +4,7 @@ from typing import Any
 
 from celeste.exceptions import InvalidToolError
 from celeste.models import Model
-from celeste.parameters import ParameterMapper
+from celeste.parameters import FieldMapper, ParameterMapper
 from celeste.providers.google.generate_content.parameters import (
     MaxOutputTokensMapper,
     SeedMapper,
@@ -50,19 +50,10 @@ class MediaContentMapper[Content](ParameterMapper[Content]):
         return request
 
 
-class ThinkingLevelMapper[Content](ParameterMapper[Content]):
+class ThinkingLevelMapper[Content](FieldMapper[Content]):
     """Map thinking_level to Google generationConfig.thinkingConfig.thinkingLevel field."""
 
-    def map(
-        self, request: dict[str, Any], value: object, model: Model
-    ) -> dict[str, Any]:
-        """Transform thinking_level into provider request."""
-        value = self._validate_value(value, model)
-        if value is not None:
-            request.setdefault("generationConfig", {}).setdefault("thinkingConfig", {})[
-                "thinkingLevel"
-            ] = value
-        return request
+    field = "generationConfig.thinkingConfig.thinkingLevel"
 
 
 class ToolsMapper[Content](ParameterMapper[Content]):

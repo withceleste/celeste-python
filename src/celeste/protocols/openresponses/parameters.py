@@ -127,22 +127,10 @@ class ReasoningEffortMapper(ParameterMapper[TextContent]):
         return request
 
 
-class VerbosityMapper(ParameterMapper[TextContent]):
+class VerbosityMapper(FieldMapper[TextContent]):
     """Map verbosity to Responses text.verbosity field."""
 
-    def map(
-        self,
-        request: dict[str, Any],
-        value: object,
-        model: Model,
-    ) -> dict[str, Any]:
-        """Transform verbosity into provider request."""
-        validated_value = self._validate_value(value, model)
-        if validated_value is None:
-            return request
-
-        request.setdefault("text", {})["verbosity"] = validated_value
-        return request
+    field = "text.verbosity"
 
 
 class ToolsMapper(ParameterMapper[TextContent]):
