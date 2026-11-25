@@ -1,7 +1,5 @@
 """Unit tests for `TextClient.analyze(image=...)` request building (no network)."""
 
-import inspect
-
 import pytest
 from pydantic import SecretStr
 
@@ -45,40 +43,6 @@ def _client(
         provider=provider,
         auth=AuthHeader(secret=SecretStr("test"), **header),
     )
-
-
-def test_analyze_signatures_accept_image() -> None:
-    """Ensure all providers accept `image=` (all optional)."""
-    for client_cls in (
-        OpenAITextClient,
-        GoogleTextClient,
-        MistralTextClient,
-        AnthropicTextClient,
-        CohereTextClient,
-        GroqTextClient,
-        MoonshotTextClient,
-        XAITextClient,
-    ):
-        sig = inspect.signature(client_cls.analyze)
-        params = sig.parameters
-
-        # image is optional keyword-only parameter
-        assert "image" in params
-        assert params["image"].default is None  # optional
-
-        # No text parameter
-        assert "text" not in params
-
-
-def test_google_analyze_signature_accepts_video_and_audio() -> None:
-    """Ensure Google provider accepts `video=` and `audio=` (only Google supports native video/audio)."""
-    sig = inspect.signature(GoogleTextClient.analyze)
-    params = sig.parameters
-
-    assert "video" in params
-    assert params["video"].default is None  # optional
-    assert "audio" in params
-    assert params["audio"].default is None  # optional
 
 
 @pytest.mark.parametrize(

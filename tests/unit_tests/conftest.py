@@ -1,5 +1,8 @@
 """Shared pytest fixtures for unit tests."""
 
+from collections.abc import AsyncIterator
+from typing import Any
+
 import pytest
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import SimpleSpanProcessor
@@ -46,3 +49,9 @@ def exporter() -> tuple[InMemorySpanExporter, TracerProvider]:
 def start_test_span(provider: TracerProvider, name: str = "test") -> Span:
     """Start a detached span on the given provider's tracer."""
     return provider.get_tracer("celeste-test").start_span(name)
+
+
+async def async_iter(items: list[Any]) -> AsyncIterator[Any]:
+    """Yield items as an async iterator."""
+    for item in items:
+        yield item

@@ -1,6 +1,5 @@
 """Unit tests for streaming metadata built from provider response_data."""
 
-from collections.abc import AsyncIterator
 from typing import Any
 
 from celeste.core import Modality, Provider
@@ -9,11 +8,7 @@ from celeste.modalities.text.providers.google.interactions import (
 )
 from celeste.modalities.text.providers.google.vertex import GoogleVertexTextStream
 from celeste.modalities.text.providers.openai.client import OpenAITextStream
-
-
-async def _async_iter(items: list[dict[str, Any]]) -> AsyncIterator[dict[str, Any]]:
-    for item in items:
-        yield item
+from tests.unit_tests.conftest import async_iter
 
 
 async def test_openai_stream_builds_metadata_from_inner_response_data() -> None:
@@ -31,7 +26,7 @@ async def test_openai_stream_builds_metadata_from_inner_response_data() -> None:
     ]
 
     stream = OpenAITextStream(
-        _async_iter(events),
+        async_iter(events),
         transform_output=lambda x, **_: x,
         stream_metadata={
             "model": "gpt-4o-mini",
@@ -71,7 +66,7 @@ async def test_google_stream_builds_metadata_from_event_response_data() -> None:
     }
 
     stream = GoogleInteractionsTextStream(
-        _async_iter([event]),
+        async_iter([event]),
         transform_output=lambda x, **_: x,
         stream_metadata={
             "model": "gemini-2.5-pro",
@@ -107,7 +102,7 @@ async def test_google_vertex_stream_builds_metadata_from_event_response_data() -
     }
 
     stream = GoogleVertexTextStream(
-        _async_iter([event]),
+        async_iter([event]),
         transform_output=lambda x, **_: x,
         stream_metadata={
             "model": "gemini-2.5-pro",

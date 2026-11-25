@@ -16,6 +16,7 @@ from celeste.http import (
     close_all_http_clients,
     get_http_client,
 )
+from tests.unit_tests.conftest import async_iter
 
 
 @pytest.fixture
@@ -205,17 +206,12 @@ async def test_context_manager_closes_on_exception(transport: AsyncMock) -> None
     transport.aclose.assert_awaited_once()
 
 
-async def _iterate(items: list[Any]) -> AsyncIterator[Any]:
-    for item in items:
-        yield item
-
-
 def _event_source(data: list[str], response: httpx.Response | None = None) -> MagicMock:
     source = MagicMock()
     source.response = response or httpx.Response(
         200, request=httpx.Request("POST", "https://example.com")
     )
-    source.aiter_sse.return_value = _iterate(
+    source.aiter_sse.return_value = async_iter(
         [SimpleNamespace(data=item) for item in data]
     )
     source.__aenter__ = AsyncMock(return_value=source)
@@ -323,7 +319,7 @@ async def test_ndjson_stream_parses_nonempty_lines(transport: AsyncMock) -> None
 async def test_bytes_stream_yields_raw_chunks(transport: AsyncMock) -> None:
     response = httpx.Response(
         200,
-        content=_iterate([b"\x00\x01", b"\x02"]),
+        content=async_iter([b"\x00\x01", b"\x02"]),
         request=httpx.Request("POST", "https://example.com"),
     )
     transport.stream = MagicMock(return_value=AsyncResponseContext(response))

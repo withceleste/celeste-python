@@ -9,6 +9,7 @@ from celeste.exceptions import StreamEventError, StreamNotExhaustedError
 from celeste.io import Chunk, Output
 from celeste.parameters import Parameters
 from celeste.streaming import Stream
+from tests.unit_tests.conftest import async_iter
 
 
 class TextOutput(Output[str]):
@@ -49,18 +50,15 @@ class ClosableEvents:
         self.close_calls += 1
 
 
-async def events(*items: dict[str, Any]) -> AsyncIterator[dict[str, Any]]:
-    for item in items:
-        yield item
-
-
 async def test_async_iteration_filters_lifecycle_events_and_builds_output() -> None:
     stream = TextStream(
-        events(
-            {"delta": "Hello"},
-            {"type": "ping"},
-            {"delta": " world"},
-            {"type": "done"},
+        async_iter(
+            [
+                {"delta": "Hello"},
+                {"type": "ping"},
+                {"delta": " world"},
+                {"type": "done"},
+            ]
         )
     )
 
@@ -72,7 +70,7 @@ async def test_async_iteration_filters_lifecycle_events_and_builds_output() -> N
 
 
 async def test_output_is_unavailable_until_stream_is_exhausted() -> None:
-    stream = TextStream(events({"delta": "Hello"}))
+    stream = TextStream(async_iter([{"delta": "Hello"}]))
 
     with pytest.raises(StreamNotExhaustedError):
         _ = stream.output
@@ -87,7 +85,7 @@ async def test_output_is_unavailable_until_stream_is_exhausted() -> None:
 
 
 async def test_empty_stream_completes_without_an_output() -> None:
-    stream = TextStream(events({"type": "ping"}, {"type": "done"}))
+    stream = TextStream(async_iter([{"type": "ping"}, {"type": "done"}]))
 
     assert [chunk async for chunk in stream] == []
     with pytest.raises(StreamNotExhaustedError):
@@ -131,7 +129,7 @@ async def test_source_failure_closes_the_stream() -> None:
 
 
 def test_sync_iteration_builds_the_same_output() -> None:
-    stream = TextStream(events({"delta": "Hello"}, {"delta": " sync"}))
+    stream = TextStream(async_iter([{"delta": "Hello"}, {"delta": " sync"}]))
 
     assert [chunk.content for chunk in stream] == ["Hello", " sync"]
     assert stream.output.content == "Hello sync"
@@ -175,7 +173,7 @@ async def test_stream_error_shapes(
     event: dict[str, Any], error_type: str | None, message: str
 ) -> None:
     stream = TextStream(
-        events(event),
+        async_iter([event]),
         stream_metadata={"provider": "test-provider"},
     )
 
@@ -192,14 +190,16 @@ async def test_provider_can_override_error_type_fields() -> None:
         _error_type_fields = ("status", "code")
 
     stream = GoogleLikeStream(
-        events(
-            {
-                "error": {
-                    "status": "PERMISSION_DENIED",
-                    "code": 403,
-                    "message": "forbidden",
+        async_iter(
+            [
+                {
+                    "error": {
+                        "status": "PERMISSION_DENIED",
+                        "code": 403,
+                        "message": "forbidden",
+                    }
                 }
-            }
+            ]
         )
     )
 
@@ -210,9 +210,11 @@ async def test_provider_can_override_error_type_fields() -> None:
 
 async def test_midstream_error_preserves_already_yielded_chunks() -> None:
     stream = TextStream(
-        events(
-            {"delta": "partial"},
-            {"type": "error", "error": {"message": "failed"}},
+        async_iter(
+            [
+                {"delta": "partial"},
+                {"type": "error", "error": {"message": "failed"}},
+            ]
         )
     )
     chunks: list[Chunk[str]] = []

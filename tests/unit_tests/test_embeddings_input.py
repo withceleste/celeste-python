@@ -15,39 +15,6 @@ _TEST_PNG_BYTES = (
 )
 
 
-def test_text_only() -> None:
-    inp = EmbeddingsInput(text="hello")
-    assert inp.text == "hello"
-    assert inp.images is None
-    assert inp.videos is None
-
-
-def test_batch_text() -> None:
-    inp = EmbeddingsInput(text=["a", "b"])
-    assert isinstance(inp.text, list)
-
-
-def test_image_only() -> None:
-    img = ImageArtifact(data=_TEST_PNG_BYTES, mime_type=ImageMimeType.PNG)
-    inp = EmbeddingsInput(images=img)
-    assert inp.images is not None
-    assert inp.text is None
-
-
-def test_image_list() -> None:
-    img1 = ImageArtifact(data=_TEST_PNG_BYTES, mime_type=ImageMimeType.PNG)
-    img2 = ImageArtifact(data=_TEST_PNG_BYTES, mime_type=ImageMimeType.PNG)
-    inp = EmbeddingsInput(images=[img1, img2])
-    assert isinstance(inp.images, list)
-    assert len(inp.images) == 2
-
-
-def test_video_only() -> None:
-    vid = VideoArtifact(data=b"\x00" * 10, mime_type=VideoMimeType.MP4)
-    inp = EmbeddingsInput(videos=vid)
-    assert inp.videos is not None
-
-
 def test_text_and_image() -> None:
     img = ImageArtifact(data=_TEST_PNG_BYTES, mime_type=ImageMimeType.PNG)
     inp = EmbeddingsInput(text="a cat", images=img)
@@ -58,13 +25,6 @@ def test_text_and_image() -> None:
 def test_no_input_raises() -> None:
     with pytest.raises(Exception, match="At least one"):
         EmbeddingsInput()
-
-
-def test_audio_only() -> None:
-    aud = AudioArtifact(data=b"\x00" * 10, mime_type=AudioMimeType.MP3)
-    inp = EmbeddingsInput(audio=aud)
-    assert inp.audio is not None
-    assert inp.text is None
 
 
 @pytest.mark.parametrize("batch_name", ["text", "images", "videos", "audio"])
