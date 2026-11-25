@@ -10,6 +10,7 @@ from typing import Any, ClassVar, Unpack
 
 from celeste.grounding import Grounding
 from celeste.parameters import ParameterMapper
+from celeste.providers.{provider_slug}.{api1_slug}.config import BASE_URL
 from celeste.tools import ToolCall
 from celeste.types import {Content}
 
@@ -28,7 +29,7 @@ from .parameters import (
 class {Provider}{Modality}Client({Modality}Client):
     """{Provider} {modality} client (selects the {Api1} or {Api2} backend)."""
 
-    _default_base_url: ClassVar[str] = {Provider}{Api1}{Modality}Client._default_base_url
+    _default_base_url: ClassVar[str] = BASE_URL
     _strategy: {Provider}{Api1}{Modality}Client | {Provider}{Api2}{Modality}Client | None = None
 
     def model_post_init(self, __context: object) -> None:
@@ -69,6 +70,9 @@ class {Provider}{Modality}Client({Modality}Client):
     # auto-discovers this class from the registry and fails CI naming any hook it
     # must define; ModalityClient's docstring (src/celeste/client.py) describes
     # the hook surface.
+    def _build_url(self, endpoint: str, streaming: bool = False) -> str:
+        return self._strategy._build_url(endpoint, streaming)  # type: ignore[union-attr]
+
     def _init_request(self, inputs: {Modality}Input) -> dict[str, Any]:
         return self._strategy._init_request(inputs)  # type: ignore[union-attr]
 
