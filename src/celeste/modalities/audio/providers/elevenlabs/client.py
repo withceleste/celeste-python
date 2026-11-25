@@ -1,9 +1,10 @@
 """ElevenLabs audio client (dispatches TTS and STT wire backends)."""
 
 from collections.abc import AsyncGenerator
-from typing import Any, Unpack
+from typing import Any, ClassVar, Unpack
 
 from celeste.parameters import ParameterMapper
+from celeste.providers.elevenlabs.text_to_speech.config import BASE_URL
 from celeste.types import AudioContent
 
 from ...client import AudioClient
@@ -25,6 +26,7 @@ _STT_MODEL_IDS = frozenset(m.id for m in ELEVENLABS_STT_MODELS)
 class ElevenLabsAudioClient(AudioClient):
     """ElevenLabs audio client (selects TTS or STT backend by model id)."""
 
+    _default_base_url: ClassVar[str] = BASE_URL
     _strategy: (
         ElevenLabsTextToSpeechAudioClient | ElevenLabsSpeechToTextAudioClient | None
     ) = None

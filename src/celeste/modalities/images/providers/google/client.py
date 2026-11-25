@@ -1,9 +1,10 @@
 """Google images client (Interactions or Vertex selected by auth)."""
 
-from typing import Any, Unpack
+from typing import Any, ClassVar, Unpack
 
 from celeste.parameters import ParameterMapper
 from celeste.providers.google.auth import GoogleADC
+from celeste.providers.google.interactions.config import BASE_URL
 from celeste.types import ImageContent
 
 from ...client import ImagesClient
@@ -23,6 +24,7 @@ _MODEL_IDS = frozenset(m.id for m in MODELS)
 class GoogleImagesClient(ImagesClient):
     """Google images client (selects the Interactions or Vertex backend)."""
 
+    _default_base_url: ClassVar[str] = BASE_URL
     _strategy: GoogleInteractionsImagesClient | GoogleVertexImagesClient | None = None
 
     def model_post_init(self, __context: object) -> None:
@@ -60,6 +62,9 @@ class GoogleImagesClient(ImagesClient):
             *GOOGLE_INTERACTIONS_PARAMETER_MAPPERS,
             *GOOGLE_VERTEX_PARAMETER_MAPPERS,
         ]
+
+    def _build_url(self, endpoint: str, streaming: bool = False) -> str:
+        return self._strategy._build_url(endpoint, streaming)  # type: ignore[union-attr]
 
     def _init_request(self, inputs: ImageInput) -> dict[str, Any]:
         return self._strategy._init_request(inputs)  # type: ignore[union-attr]

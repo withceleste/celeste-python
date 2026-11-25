@@ -4,7 +4,7 @@ import asyncio
 import base64
 import json
 from collections.abc import AsyncGenerator
-from typing import Any
+from typing import Any, ClassVar
 
 from websockets.asyncio.client import ClientConnection
 from websockets.asyncio.client import connect as ws_connect
@@ -59,6 +59,8 @@ class GoogleLiveClient(APIMixin):
     4. end() closes the socket; Google has no client close message
     """
 
+    _default_base_url: ClassVar[str] = config.BASE_URL
+
     def _build_request(
         self,
         inputs: Any,
@@ -102,8 +104,7 @@ class GoogleLiveClient(APIMixin):
                 vertex_path = url.removeprefix(self.auth.get_vertex_base_url())
                 url = f"{self.base_url.rstrip('/')}{vertex_path}"
         else:
-            base = self.base_url if self.base_url is not None else config.BASE_URL
-            url = f"{base.rstrip('/')}{endpoint}"
+            url = super()._build_url(endpoint, streaming)
         return url.replace("https://", "wss://", 1).replace("http://", "ws://", 1)
 
     def _model_resource_name(self) -> str:

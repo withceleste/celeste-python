@@ -57,6 +57,7 @@ class APIMixin(ABC):
     provider: Provider | None
     protocol: Protocol | None
     base_url: str | None
+    _default_base_url: ClassVar[str]
     _content_fields: ClassVar[set[str]] = set()
 
     @property
@@ -64,6 +65,11 @@ class APIMixin(ABC):
     def http_client(self) -> HTTPClient:
         """HTTP client with connection pooling for this provider."""
         ...
+
+    def _build_url(self, endpoint: str, streaming: bool = False) -> str:
+        """Build the request URL, honoring an explicit base_url override."""
+        base = self.base_url if self.base_url is not None else self._default_base_url
+        return f"{base.rstrip('/')}{endpoint}"
 
     async def _json_headers(
         self, extra_headers: dict[str, str] | None = None

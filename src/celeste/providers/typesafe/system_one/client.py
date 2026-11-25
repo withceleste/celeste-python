@@ -15,7 +15,6 @@ class TypeSafeSystemOneClient(APIMixin):
     """Mixin for TypeSafe System One API.
 
     Provides shared HTTP implementation:
-    - _build_url(endpoint, streaming) - Apply base_url overrides to both transports
     - _make_request(endpoint=...) - HTTP POST, opting into images when the request needs them
     - _make_stream_request() - raises StreamingNotSupportedError
     - _parse_usage() - Extract usage dict from response
@@ -26,12 +25,8 @@ class TypeSafeSystemOneClient(APIMixin):
     Modality clients set ``_decide_endpoint`` class attribute to route operations.
     """
 
+    _default_base_url: ClassVar[str] = config.BASE_URL
     _content_fields: ClassVar[set[str]] = {"answers"}
-
-    def _build_url(self, endpoint: str, streaming: bool = False) -> str:
-        """Build the request URL, honoring an explicit base_url override."""
-        base = self.base_url if self.base_url is not None else config.BASE_URL
-        return f"{base.rstrip('/')}{endpoint}"
 
     def _build_request(
         self,

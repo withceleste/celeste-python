@@ -3,7 +3,7 @@
 import asyncio
 import time
 from collections.abc import AsyncGenerator
-from typing import Any
+from typing import Any, ClassVar
 
 from celeste.client import APIMixin
 from celeste.exceptions import StreamingNotSupportedError
@@ -29,10 +29,7 @@ class FalQueueClient(APIMixin):
     3. GET response_url for the result body
     """
 
-    def _build_url(self, endpoint: str, streaming: bool = False) -> str:
-        """Build the request URL, honoring an explicit base_url override."""
-        base = self.base_url if self.base_url is not None else config.BASE_URL
-        return f"{base.rstrip('/')}{endpoint}"
+    _default_base_url: ClassVar[str] = config.BASE_URL
 
     async def _make_request(
         self,
