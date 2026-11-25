@@ -85,10 +85,8 @@ def _noop_use_span(span: Any, end_on_exit: bool = False) -> Iterator[Any]:
 
 
 try:
-    from opentelemetry import metrics as _otel_metrics
-    from opentelemetry import trace as _otel_trace
-    from opentelemetry.trace import Status as _OtelStatus
-    from opentelemetry.trace import StatusCode as _OtelStatusCode
+    from opentelemetry import metrics as _otel_metrics, trace as _otel_trace
+    from opentelemetry.trace import Status as _OtelStatus, StatusCode as _OtelStatusCode
 
     tracer: Any = _otel_trace.get_tracer("celeste")
     use_span: Any = _otel_trace.use_span

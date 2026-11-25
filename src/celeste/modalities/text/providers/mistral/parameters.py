@@ -15,10 +15,8 @@ from ...protocols.chatcompletions.parameters import (
     PromptCacheKeyMapper,
     TemperatureMapper,
     ThinkingLevelMapper,
-    ToolsMapper,
-)
-from ...protocols.chatcompletions.parameters import (
     ToolChoiceMapper as _ToolChoiceMapper,
+    ToolsMapper,
 )
 
 

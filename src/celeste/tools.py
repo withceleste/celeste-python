@@ -5,8 +5,12 @@ from abc import ABC, abstractmethod
 from enum import StrEnum
 from typing import Any, ClassVar, Literal
 
-from pydantic import BaseModel, ConfigDict, Field
-from pydantic import ValidationError as PydanticValidationError
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    ValidationError as PydanticValidationError,
+)
 
 from celeste.exceptions import ValidationError
 from celeste.types import Role, ToolCall, ToolResultContent

@@ -10,8 +10,8 @@ from celeste.providers.google.interactions.client import (
 )
 from celeste.providers.google.interactions.streaming import (
     GoogleInteractionsStream as _GoogleInteractionsStream,
+    reconstruct_steps,
 )
-from celeste.providers.google.interactions.streaming import reconstruct_steps
 from celeste.providers.google.interactions.tools import (
     is_native_replay_step,
     tool_calls_from_steps,

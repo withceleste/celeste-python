@@ -3,17 +3,9 @@
 from celeste.parameters import ParameterMapper
 from celeste.providers.byteplus.images.parameters import (
     BackgroundMapper as _BackgroundMapper,
-)
-from celeste.providers.byteplus.images.parameters import (
     ImageMapper as _ImageMapper,
-)
-from celeste.providers.byteplus.images.parameters import (
     OutputFormatMapper as _OutputFormatMapper,
-)
-from celeste.providers.byteplus.images.parameters import (
     SizeMapper as _SizeMapper,
-)
-from celeste.providers.byteplus.images.parameters import (
     WatermarkMapper as _WatermarkMapper,
 )
 from celeste.types import ImageContent

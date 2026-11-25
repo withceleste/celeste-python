@@ -6,14 +6,8 @@ from celeste.mime_types import AudioMimeType
 from celeste.parameters import ParameterMapper
 from celeste.providers.google.interactions.parameters import (
     AudioMimeTypeMapper as _AudioMimeTypeMapper,
-)
-from celeste.providers.google.interactions.parameters import (
     LanguageMapper as _LanguageMapper,
-)
-from celeste.providers.google.interactions.parameters import (
     MediaContentMapper as _MediaContentMapper,
-)
-from celeste.providers.google.interactions.parameters import (
     VoiceMapper as _VoiceMapper,
 )
 from celeste.types import AudioContent

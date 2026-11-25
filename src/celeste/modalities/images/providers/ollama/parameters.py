@@ -6,17 +6,9 @@ from celeste.models import Model
 from celeste.parameters import ParameterMapper
 from celeste.providers.ollama.generate.parameters import (
     HeightMapper as _HeightMapper,
-)
-from celeste.providers.ollama.generate.parameters import (
     NegativePromptMapper as _NegativePromptMapper,
-)
-from celeste.providers.ollama.generate.parameters import (
     SeedMapper as _SeedMapper,
-)
-from celeste.providers.ollama.generate.parameters import (
     StepsMapper as _StepsMapper,
-)
-from celeste.providers.ollama.generate.parameters import (
     WidthMapper as _WidthMapper,
 )
 from celeste.types import ImageContent

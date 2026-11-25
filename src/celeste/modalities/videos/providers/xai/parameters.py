@@ -3,14 +3,8 @@
 from celeste.parameters import ParameterMapper
 from celeste.providers.xai.videos.parameters import (
     AspectRatioMapper as _AspectRatioMapper,
-)
-from celeste.providers.xai.videos.parameters import (
     DurationMapper as _DurationMapper,
-)
-from celeste.providers.xai.videos.parameters import (
     FirstFrameMapper as _FirstFrameMapper,
-)
-from celeste.providers.xai.videos.parameters import (
     ResolutionMapper as _ResolutionMapper,
 )
 from celeste.types import VideoContent

@@ -3,47 +3,21 @@
 from celeste.parameters import ParameterMapper
 from celeste.providers.google.generate_content.parameters import (
     MaxOutputTokensMapper as _VertexMaxOutputTokensMapper,
-)
-from celeste.providers.google.generate_content.parameters import (
     ResponseJsonSchemaMapper as _VertexResponseJsonSchemaMapper,
-)
-from celeste.providers.google.generate_content.parameters import (
     SeedMapper as _VertexSeedMapper,
-)
-from celeste.providers.google.generate_content.parameters import (
     TemperatureMapper as _VertexTemperatureMapper,
-)
-from celeste.providers.google.generate_content.parameters import (
     ThinkingBudgetMapper as _VertexThinkingBudgetMapper,
-)
-from celeste.providers.google.generate_content.parameters import (
     ThinkingLevelMapper as _VertexThinkingLevelMapper,
-)
-from celeste.providers.google.generate_content.parameters import (
     ToolChoiceMapper as _VertexToolChoiceMapper,
-)
-from celeste.providers.google.generate_content.parameters import (
     ToolsMapper as _VertexToolsMapper,
 )
 from celeste.providers.google.interactions.parameters import (
     MaxOutputTokensMapper as _InteractionsMaxOutputTokensMapper,
-)
-from celeste.providers.google.interactions.parameters import (
     ResponseFormatMapper as _InteractionsResponseFormatMapper,
-)
-from celeste.providers.google.interactions.parameters import (
     SeedMapper as _InteractionsSeedMapper,
-)
-from celeste.providers.google.interactions.parameters import (
     TemperatureMapper as _InteractionsTemperatureMapper,
-)
-from celeste.providers.google.interactions.parameters import (
     ThinkingLevelMapper as _InteractionsThinkingLevelMapper,
-)
-from celeste.providers.google.interactions.parameters import (
     ToolChoiceMapper as _InteractionsToolChoiceMapper,
-)
-from celeste.providers.google.interactions.parameters import (
     ToolsMapper as _InteractionsToolsMapper,
 )
 from celeste.types import TextContent

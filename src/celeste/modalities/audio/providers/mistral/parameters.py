@@ -3,8 +3,6 @@
 from celeste.parameters import ParameterMapper
 from celeste.providers.mistral.audio.parameters import (
     LanguageMapper as _LanguageMapper,
-)
-from celeste.providers.mistral.audio.parameters import (
     TemperatureMapper as _TemperatureMapper,
 )
 from celeste.types import AudioContent

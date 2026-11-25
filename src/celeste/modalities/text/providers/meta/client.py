@@ -5,8 +5,6 @@ from typing import Any, ClassVar, Unpack
 from celeste.grounding import Grounding
 from celeste.modalities.text.protocols.openresponses.client import (
     OpenResponsesTextClient,
-)
-from celeste.modalities.text.protocols.openresponses.client import (
     OpenResponsesTextStream as _OpenResponsesTextStream,
 )
 from celeste.parameters import ParameterMapper

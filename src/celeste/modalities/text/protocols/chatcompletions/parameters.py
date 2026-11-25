@@ -3,20 +3,10 @@
 from celeste.parameters import FieldMapper, ParameterMapper
 from celeste.protocols.chatcompletions.parameters import (
     MaxTokensMapper as _MaxTokensMapper,
-)
-from celeste.protocols.chatcompletions.parameters import (
     PromptCacheKeyMapper as _PromptCacheKeyMapper,
-)
-from celeste.protocols.chatcompletions.parameters import (
     ResponseFormatMapper as _ResponseFormatMapper,
-)
-from celeste.protocols.chatcompletions.parameters import (
     TemperatureMapper as _TemperatureMapper,
-)
-from celeste.protocols.chatcompletions.parameters import (
     ToolChoiceMapper as _ToolChoiceMapper,
-)
-from celeste.protocols.chatcompletions.parameters import (
     ToolsMapper as _ToolsMapper,
 )
 from celeste.types import TextContent

@@ -3,32 +3,16 @@
 from celeste.parameters import ParameterMapper
 from celeste.providers.google.generate_content.parameters import (
     AspectRatioMapper as _VertexAspectRatioMapper,
-)
-from celeste.providers.google.generate_content.parameters import (
     GoogleSearchMapper as _VertexGoogleSearchMapper,
-)
-from celeste.providers.google.generate_content.parameters import (
     ImageSizeMapper as _VertexImageSizeMapper,
-)
-from celeste.providers.google.generate_content.parameters import (
     MediaContentMapper as _VertexMediaContentMapper,
-)
-from celeste.providers.google.generate_content.parameters import (
     ThinkingLevelMapper as _VertexThinkingLevelMapper,
 )
 from celeste.providers.google.interactions.parameters import (
     AspectRatioMapper as _InteractionsAspectRatioMapper,
-)
-from celeste.providers.google.interactions.parameters import (
     GoogleSearchMapper as _InteractionsGoogleSearchMapper,
-)
-from celeste.providers.google.interactions.parameters import (
     ImageSizeMapper as _InteractionsImageSizeMapper,
-)
-from celeste.providers.google.interactions.parameters import (
     MediaContentMapper as _InteractionsMediaContentMapper,
-)
-from celeste.providers.google.interactions.parameters import (
     ThinkingLevelMapper as _InteractionsThinkingLevelMapper,
 )
 from celeste.types import ImageContent

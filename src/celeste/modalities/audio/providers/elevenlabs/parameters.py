@@ -6,14 +6,8 @@ from celeste.providers.elevenlabs.speech_to_text.parameters import (
 )
 from celeste.providers.elevenlabs.text_to_speech.parameters import (
     LanguageCodeMapper as _TextToSpeechLanguageCodeMapper,
-)
-from celeste.providers.elevenlabs.text_to_speech.parameters import (
     OutputFormatMapper as _OutputFormatMapper,
-)
-from celeste.providers.elevenlabs.text_to_speech.parameters import (
     SpeedMapper as _SpeedMapper,
-)
-from celeste.providers.elevenlabs.text_to_speech.parameters import (
     VoiceMapper as _VoiceMapper,
 )
 from celeste.types import AudioContent

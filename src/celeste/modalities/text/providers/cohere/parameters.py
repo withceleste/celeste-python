@@ -6,14 +6,8 @@ from celeste.models import Model
 from celeste.parameters import ParameterMapper
 from celeste.providers.cohere.chat.parameters import (
     MaxTokensMapper as _MaxTokensMapper,
-)
-from celeste.providers.cohere.chat.parameters import (
     ResponseFormatMapper as _ResponseFormatMapper,
-)
-from celeste.providers.cohere.chat.parameters import (
     TemperatureMapper as _TemperatureMapper,
-)
-from celeste.providers.cohere.chat.parameters import (
     ThinkingMapper as _ThinkingMapper,
 )
 from celeste.types import TextContent

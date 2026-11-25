@@ -3,32 +3,14 @@
 from celeste.parameters import ParameterMapper
 from celeste.providers.bfl.images.parameters import (
     AspectRatioMapper as _AspectRatioMapper,
-)
-from celeste.providers.bfl.images.parameters import (
     GroundingMapper as _GroundingMapper,
-)
-from celeste.providers.bfl.images.parameters import (
     GuidanceMapper as _GuidanceMapper,
-)
-from celeste.providers.bfl.images.parameters import (
     OutputFormatMapper as _OutputFormatMapper,
-)
-from celeste.providers.bfl.images.parameters import (
     PromptUpsamplingMapper as _PromptUpsamplingMapper,
-)
-from celeste.providers.bfl.images.parameters import (
     ReferenceImagesMapper as _ReferenceImagesMapper,
-)
-from celeste.providers.bfl.images.parameters import (
     ResolutionMapper as _ResolutionMapper,
-)
-from celeste.providers.bfl.images.parameters import (
     SafetyToleranceMapper as _SafetyToleranceMapper,
-)
-from celeste.providers.bfl.images.parameters import (
     SeedMapper as _SeedMapper,
-)
-from celeste.providers.bfl.images.parameters import (
     StepsMapper as _StepsMapper,
 )
 from celeste.types import ImageContent

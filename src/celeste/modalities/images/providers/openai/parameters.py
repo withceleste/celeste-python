@@ -3,32 +3,14 @@
 from celeste.parameters import ParameterMapper
 from celeste.providers.openai.images.parameters import (
     BackgroundMapper as _BackgroundMapper,
-)
-from celeste.providers.openai.images.parameters import (
     ImagesMapper as _ImagesMapper,
-)
-from celeste.providers.openai.images.parameters import (
     MaskMapper as _MaskMapper,
-)
-from celeste.providers.openai.images.parameters import (
     ModerationMapper as _ModerationMapper,
-)
-from celeste.providers.openai.images.parameters import (
     NumImagesMapper as _NumImagesMapper,
-)
-from celeste.providers.openai.images.parameters import (
     OutputCompressionMapper as _OutputCompressionMapper,
-)
-from celeste.providers.openai.images.parameters import (
     OutputFormatMapper as _OutputFormatMapper,
-)
-from celeste.providers.openai.images.parameters import (
     PartialImagesMapper as _PartialImagesMapper,
-)
-from celeste.providers.openai.images.parameters import (
     QualityMapper as _QualityMapper,
-)
-from celeste.providers.openai.images.parameters import (
     SizeMapper as _SizeMapper,
 )
 from celeste.types import ImageContent

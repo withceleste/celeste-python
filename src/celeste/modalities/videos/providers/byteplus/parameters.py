@@ -3,20 +3,10 @@
 from celeste.parameters import ParameterMapper
 from celeste.providers.byteplus.videos.parameters import (
     AspectRatioMapper as _AspectRatioMapper,
-)
-from celeste.providers.byteplus.videos.parameters import (
     DurationMapper as _DurationMapper,
-)
-from celeste.providers.byteplus.videos.parameters import (
     FirstFrameMapper as _FirstFrameMapper,
-)
-from celeste.providers.byteplus.videos.parameters import (
     LastFrameMapper as _LastFrameMapper,
-)
-from celeste.providers.byteplus.videos.parameters import (
     ReferenceImagesMapper as _ReferenceImagesMapper,
-)
-from celeste.providers.byteplus.videos.parameters import (
     ResolutionMapper as _ResolutionMapper,
 )
 from celeste.types import VideoContent

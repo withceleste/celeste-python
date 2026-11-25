@@ -11,8 +11,6 @@ from celeste.types import TextContent
 
 from ...protocols.chatcompletions.client import (
     ChatCompletionsTextClient,
-)
-from ...protocols.chatcompletions.client import (
     ChatCompletionsTextStream as _ChatCompletionsTextStream,
 )
 from ...streaming import TextStream

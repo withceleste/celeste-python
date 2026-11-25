@@ -3,17 +3,9 @@
 from celeste.parameters import ParameterMapper
 from celeste.providers.xai.images.parameters import (
     AspectRatioMapper as _AspectRatioMapper,
-)
-from celeste.providers.xai.images.parameters import (
     ImagesMapper as _ImagesMapper,
-)
-from celeste.providers.xai.images.parameters import (
     NumImagesMapper as _NumImagesMapper,
-)
-from celeste.providers.xai.images.parameters import (
     ResolutionMapper as _ResolutionMapper,
-)
-from celeste.providers.xai.images.parameters import (
     ResponseFormatMapper as _ResponseFormatMapper,
 )
 from celeste.types import ImageContent
