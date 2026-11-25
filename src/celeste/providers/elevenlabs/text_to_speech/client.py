@@ -33,11 +33,6 @@ class ElevenLabsTextToSpeechClient(APIMixin):
 
     _default_base_url: ClassVar[str] = config.BASE_URL
 
-    def _build_url(self, endpoint: str, streaming: bool = False) -> str:
-        """Build the request URL, honoring an explicit base_url override."""
-        base = self.base_url if self.base_url is not None else self._default_base_url
-        return f"{base.rstrip('/')}{endpoint}"
-
     async def _make_request(
         self,
         request_body: dict[str, Any],

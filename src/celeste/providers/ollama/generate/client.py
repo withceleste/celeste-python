@@ -26,11 +26,6 @@ class OllamaGenerateClient(APIMixin):
     _default_base_url: ClassVar[str] = config.DEFAULT_BASE_URL
     _content_fields: ClassVar[set[str]] = {"image", "response"}
 
-    def _build_url(self, endpoint: str, streaming: bool = False) -> str:
-        """Build full URL for Ollama Generate API."""
-        base = self.base_url if self.base_url is not None else self._default_base_url
-        return f"{base.rstrip('/')}{endpoint}"
-
     def _build_request(
         self,
         inputs: Any,

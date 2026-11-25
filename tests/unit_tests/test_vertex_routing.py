@@ -229,8 +229,16 @@ def test_adc_embeddings_use_location_endpoint(location: str, base_url: str) -> N
 
 
 def test_veo_poll_routes_match_auth() -> None:
-    direct = MagicMock(auth=_api_key(), model=_model("veo"), base_url=None)
-    vertex = MagicMock(auth=_adc(), model=_model("veo"), base_url=None)
+    direct, vertex = (
+        MagicMock(
+            spec=GoogleVeoClient,
+            auth=auth,
+            model=_model("veo"),
+            base_url=None,
+            _default_base_url=veo_config.BASE_URL,
+        )
+        for auth in (_api_key(), _adc())
+    )
     for client in (direct, vertex):
         client._get_vertex_endpoint = GoogleVeoClient._get_vertex_endpoint.__get__(
             client

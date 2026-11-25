@@ -14,7 +14,6 @@ class ChatCompletionsClient(APIMixin):
     """Chat Completions protocol client.
 
     Provides shared implementation for all providers using the Chat Completions API:
-    - _build_url() - Build URL with provider base URL (override for Vertex AI)
     - _build_request() - Add model ID and streaming flag
     - _make_request() - HTTP POST to /v1/chat/completions
     - _make_stream_request() - HTTP streaming to /v1/chat/completions
@@ -39,23 +38,6 @@ class ChatCompletionsClient(APIMixin):
     _default_base_url: ClassVar[str] = config.DEFAULT_BASE_URL
     _default_endpoint: ClassVar[str] = config.ChatCompletionsEndpoint.CREATE_CHAT
     _content_fields: ClassVar[set[str]] = {"choices"}
-
-    def _build_url(self, endpoint: str, streaming: bool = False) -> str:
-        """Build the request URL, honoring an explicit base_url override."""
-        # Override for Vertex AI support:
-        # def _build_url(self, endpoint: str, streaming: bool = False) -> str:
-        #     if isinstance(self.auth, GoogleADC):
-        #         vertex_url = self.auth.build_url(
-        #             self._get_vertex_endpoint(endpoint, streaming),
-        #             model_id=self.model.id,
-        #         )
-        #         if self.base_url is None:
-        #             return vertex_url
-        #         vertex_path = vertex_url.removeprefix(self.auth.get_vertex_base_url())
-        #         return f"{self.base_url.rstrip('/')}{vertex_path}"
-        #     return super()._build_url(endpoint, streaming)
-        base = self.base_url if self.base_url is not None else self._default_base_url
-        return f"{base.rstrip('/')}{endpoint}"
 
     def _build_request(
         self,

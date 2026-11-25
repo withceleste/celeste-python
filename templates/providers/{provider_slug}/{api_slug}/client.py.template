@@ -16,7 +16,6 @@ class {Provider}{Api}Client(APIMixin):
     """Mixin for {Provider} {Api} API.
 
     Provides shared HTTP implementation:
-    - _build_url(endpoint, streaming) - Apply base_url overrides to both transports
     - _make_request(endpoint=...) - HTTP POST to specified endpoint
     - _make_stream_request() - HTTP streaming (if supported, otherwise raises StreamingNotSupportedError)
     - _parse_usage() - Extract usage dict from response
@@ -35,8 +34,8 @@ class {Provider}{Api}Client(APIMixin):
     _default_base_url: ClassVar[str] = config.BASE_URL
     _content_fields: ClassVar[set[str]] = {"..."}
 
-    # Optional: Vertex AI endpoint routing. Add this method and enable the
-    # commented routing in _build_url() when the provider supports Vertex AI.
+    # Optional: Vertex AI endpoint routing. Add these two methods when the provider
+    # serves the same API on Vertex AI; APIMixin._build_url joins every other URL.
     #
     # def _get_vertex_endpoint(self, native_endpoint: str, streaming: bool = False) -> str:
     #     """Map native endpoint to Vertex AI endpoint."""
@@ -49,20 +48,18 @@ class {Provider}{Api}Client(APIMixin):
     #     if vertex_endpoint is None:
     #         raise ValueError(f"No Vertex AI endpoint mapping for: {native_endpoint}")
     #     return vertex_endpoint
-
-    def _build_url(self, endpoint: str, streaming: bool = False) -> str:
-        """Build the request URL, honoring an explicit base_url override."""
-        # if isinstance(self.auth, GoogleADC):
-        #     vertex_url = self.auth.build_url(
-        #         self._get_vertex_endpoint(endpoint, streaming), model_id=self.model.id
-        #     )
-        #     if self.base_url is None:
-        #         return vertex_url
-        #     vertex_path = vertex_url.removeprefix(self.auth.get_vertex_base_url())
-        #     return f"{self.base_url.rstrip('/')}{vertex_path}"
-        # endpoint = endpoint.format(model_id=self.model.id)
-        base = self.base_url if self.base_url is not None else self._default_base_url
-        return f"{base.rstrip('/')}{endpoint}"
+    #
+    # def _build_url(self, endpoint: str, streaming: bool = False) -> str:
+    #     """Route GoogleADC auth to Vertex AI."""
+    #     if isinstance(self.auth, GoogleADC):
+    #         vertex_url = self.auth.build_url(
+    #             self._get_vertex_endpoint(endpoint, streaming), model_id=self.model.id
+    #         )
+    #         if self.base_url is None:
+    #             return vertex_url
+    #         vertex_path = vertex_url.removeprefix(self.auth.get_vertex_base_url())
+    #         return f"{self.base_url.rstrip('/')}{vertex_path}"
+    #     return super()._build_url(endpoint, streaming)
 
     def _build_request(
         self,

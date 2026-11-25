@@ -59,9 +59,7 @@ class GoogleVeoClient(APIMixin):
                 return vertex_url
             vertex_path = vertex_url.removeprefix(self.auth.get_vertex_base_url())
             return f"{self.base_url.rstrip('/')}{vertex_path}"
-        endpoint = endpoint.format(model_id=self.model.id)
-        base = self.base_url if self.base_url is not None else self._default_base_url
-        return f"{base.rstrip('/')}{endpoint}"
+        return super()._build_url(endpoint.format(model_id=self.model.id), streaming)
 
     def _build_poll_url(self, operation_name: str) -> str:
         """Build polling URL for long-running operations."""

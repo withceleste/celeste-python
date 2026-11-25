@@ -36,8 +36,7 @@ class GradiumTextToSpeechClient(APIMixin):
 
     def _build_url(self, endpoint: str, streaming: bool = False) -> str:
         """Build the WebSocket URL, honoring an explicit base_url override."""
-        base = self.base_url if self.base_url is not None else self._default_base_url
-        url = f"{base.rstrip('/')}{endpoint}"
+        url = super()._build_url(endpoint, streaming)
         return url.replace("https://", "wss://", 1).replace("http://", "ws://", 1)
 
     async def _make_stream_request(

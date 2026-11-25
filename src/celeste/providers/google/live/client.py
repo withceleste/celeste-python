@@ -104,10 +104,7 @@ class GoogleLiveClient(APIMixin):
                 vertex_path = url.removeprefix(self.auth.get_vertex_base_url())
                 url = f"{self.base_url.rstrip('/')}{vertex_path}"
         else:
-            base = (
-                self.base_url if self.base_url is not None else self._default_base_url
-            )
-            url = f"{base.rstrip('/')}{endpoint}"
+            url = super()._build_url(endpoint, streaming)
         return url.replace("https://", "wss://", 1).replace("http://", "ws://", 1)
 
     def _model_resource_name(self) -> str:

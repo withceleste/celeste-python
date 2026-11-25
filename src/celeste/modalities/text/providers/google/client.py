@@ -6,6 +6,7 @@ from typing import Any, ClassVar, Unpack
 from celeste.grounding import Grounding
 from celeste.parameters import ParameterMapper
 from celeste.providers.google.auth import GoogleADC
+from celeste.providers.google.interactions.config import BASE_URL
 from celeste.tools import ToolCall
 from celeste.types import TextContent
 
@@ -24,7 +25,7 @@ from .vertex import GoogleVertexTextClient
 class GoogleTextClient(TextClient):
     """Google text client (selects the Interactions or Vertex backend by auth)."""
 
-    _default_base_url: ClassVar[str] = GoogleInteractionsTextClient._default_base_url
+    _default_base_url: ClassVar[str] = BASE_URL
     _strategy: GoogleInteractionsTextClient | GoogleVertexTextClient | None = None
 
     def model_post_init(self, __context: object) -> None:
@@ -51,6 +52,9 @@ class GoogleTextClient(TextClient):
             *GOOGLE_INTERACTIONS_PARAMETER_MAPPERS,
             *GOOGLE_VERTEX_PARAMETER_MAPPERS,
         ]
+
+    def _build_url(self, endpoint: str, streaming: bool = False) -> str:
+        return self._strategy._build_url(endpoint, streaming)  # type: ignore[union-attr]
 
     def _init_request(self, inputs: TextInput) -> dict[str, Any]:
         return self._strategy._init_request(inputs)  # type: ignore[union-attr]
