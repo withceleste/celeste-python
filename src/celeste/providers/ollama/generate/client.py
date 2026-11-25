@@ -17,7 +17,6 @@ class OllamaGenerateClient(APIMixin):
     Provides shared HTTP implementation for Ollama's native API:
     - _make_request() - HTTP POST to /api/generate
     - _make_stream_request() - NDJSON streaming
-    - _parse_usage() - Extract usage dict from response
     - _parse_content() - Extract image from response
     - _parse_finish_reason() - Check done field
     - _content_fields: ClassVar - Content field names to exclude from metadata
@@ -102,16 +101,6 @@ class OllamaGenerateClient(APIMixin):
             UsageField.OUTPUT_TOKENS: output_tokens,
             UsageField.TOTAL_TOKENS: total_tokens,
         }
-
-    def _parse_usage(
-        self, response_data: dict[str, Any]
-    ) -> dict[str, int | float | None]:
-        """Extract usage data from Ollama Generate API response.
-
-        Ollama image generation doesn't return token usage.
-        """
-        usage_data = response_data.get("usage", response_data) or {}
-        return OllamaGenerateClient.map_usage_fields(usage_data)
 
     def _parse_content(self, response_data: dict[str, Any]) -> Any:
         """Parse image content from Ollama Generate API response."""

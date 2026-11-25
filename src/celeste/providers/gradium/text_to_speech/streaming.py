@@ -10,7 +10,6 @@ class GradiumTextToSpeechStream:
 
     Provides shared implementation for streaming parsing (provider API level):
     - _parse_chunk_content(event_data) - Extract audio bytes from WebSocket event
-    - _parse_chunk_usage(event_data) - Extract and normalize usage from event
     - _parse_chunk_finish_reason(event_data) - Extract finish reason from event
 
     Gradium TTS streams audio via WebSocket, yielding {"data": bytes} events.
@@ -24,15 +23,6 @@ class GradiumTextToSpeechStream:
         Returns audio bytes if present, None otherwise.
         """
         return event_data.get("data") or None
-
-    def _parse_chunk_usage(
-        self, event_data: dict[str, Any]
-    ) -> dict[str, int | float | None] | None:
-        """Extract and normalize usage from event.
-
-        Gradium TTS doesn't return usage in stream.
-        """
-        return None
 
     def _parse_chunk_finish_reason(
         self, event_data: dict[str, Any]

@@ -2,13 +2,10 @@
 
 import asyncio
 import time
-from collections.abc import AsyncGenerator
 from typing import Any, ClassVar
 
 from celeste.client import APIMixin
 from celeste.core import UsageField
-from celeste.exceptions import StreamingNotSupportedError
-from celeste.io import FinishReason
 from celeste.mime_types import ApplicationMimeType
 
 from . import config
@@ -19,7 +16,6 @@ class BFLImagesClient(APIMixin):
 
     Provides shared implementation:
     - _make_request() - HTTP POST with async polling pattern
-    - _parse_finish_reason() - Map BFL status to FinishReason
 
     The BFL API uses async polling:
     1. POST to /v1/{model_id} to submit job
@@ -116,21 +112,6 @@ class BFLImagesClient(APIMixin):
                 raise ValueError(msg)
 
             await asyncio.sleep(config.POLLING_INTERVAL)
-
-    async def _make_stream_request(
-        self,
-        request_body: dict[str, Any],
-        *,
-        endpoint: str | None = None,
-        extra_headers: dict[str, str] | None = None,
-        **parameters: Any,
-    ) -> AsyncGenerator[dict[str, Any], None]:
-        """BFL Images API does not support SSE streaming in this client."""
-        raise StreamingNotSupportedError(model_id=self.model.id)
-
-    def _parse_finish_reason(self, response_data: dict[str, Any]) -> FinishReason:
-        """BFL provides status but not structured finish reasons."""
-        return FinishReason(reason=None)
 
     @staticmethod
     def map_usage_fields(usage_data: dict[str, Any]) -> dict[str, int | float | None]:

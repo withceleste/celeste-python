@@ -110,17 +110,8 @@ class {Provider}{Api}Client(APIMixin):
     ) -> AsyncGenerator[dict[str, Any], None]:
         """Make streaming request to {Provider} {Api} API.
 
-        If this API does not support streaming, replace this implementation with:
-            async def _make_stream_request(
-                self,
-                request_body: dict[str, Any],
-                *,
-                endpoint: str | None = None,
-                extra_headers: dict[str, str] | None = None,
-                **parameters: Any,
-            ) -> AsyncGenerator[dict[str, Any], None]:
-                \"\"\"{Provider} {Api} does not support SSE streaming in this client.\"\"\"
-                raise StreamingNotSupportedError(model_id=self.model.id)
+        If this API does not support streaming, delete this method: the
+        ModalityClient default raises StreamingNotSupportedError.
         """
         if endpoint is None:
             endpoint = config.{Provider}{Api}Endpoint.CREATE_...

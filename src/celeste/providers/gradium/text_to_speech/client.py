@@ -128,14 +128,6 @@ class GradiumTextToSpeechClient(APIMixin):
         """
         return GradiumTextToSpeechClient.map_usage_fields(response_data)
 
-    def _parse_content(self, response_data: dict[str, Any]) -> Any:
-        """Parse content from Gradium TTS response.
-
-        Gradium uses WebSocket; base generate() should not call this.
-        """
-        msg = "Gradium TTS uses WebSocket; modality client must override generate()"
-        raise NotImplementedError(msg)
-
     def _parse_finish_reason(self, response_data: dict[str, Any]) -> FinishReason:
         """Gradium TTS doesn't provide finish reasons."""
         return FinishReason(reason=None)
