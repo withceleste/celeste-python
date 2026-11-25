@@ -50,12 +50,6 @@ class ResponseFormatMapper(ParameterMapper[AudioContent]):
         return request
 
 
-class InstructionsMapper(FieldMapper[AudioContent]):
-    """Map instructions to OpenAI instructions field."""
-
-    field = "instructions"
-
-
 class LanguageMapper[Content](ParameterMapper[Content]):
     """Map language to OpenAI transcription language field."""
 
@@ -87,7 +81,6 @@ class TemperatureMapper[Content](FieldMapper[Content]):
 
 
 __all__ = [
-    "InstructionsMapper",
     "LanguageMapper",
     "PromptMapper",
     "ResponseFormatMapper",

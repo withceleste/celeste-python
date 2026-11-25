@@ -38,12 +38,6 @@ class OutputFormatMapper(FieldMapper[ImageContent]):
     field = "output_format"
 
 
-class StyleMapper(FieldMapper[ImageContent]):
-    """Map style to OpenAI style field."""
-
-    field = "style"
-
-
 class ModerationMapper(FieldMapper[ImageContent]):
     """Map moderation to OpenAI moderation field."""
 
@@ -105,5 +99,4 @@ __all__ = [
     "PartialImagesMapper",
     "QualityMapper",
     "SizeMapper",
-    "StyleMapper",
 ]
