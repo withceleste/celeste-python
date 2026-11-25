@@ -86,7 +86,7 @@ class ToolsMapper(_ToolsMapper):
         request = super().map(request, value, model)
         if model.id in DYNAMIC_FILTERING_MODELS:
             for tool in request.get("tools", []):
-                if tool.get("name") == "web_search":
+                if tool.get("type") == "web_search_20250305":
                     tool["type"] = "web_search_20260209"
         return request
 

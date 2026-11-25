@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Text** — Anthropic on Claude on Google Cloud (GoogleADC) sends image and document inputs as base64 sources; the route accepts no URL sources (#570).
 - **Videos** — Google `veo-3.1-generate-preview` is no longer registered: the Gemini API shut it down on October 22, 2026 and now answers 404 `NOT_FOUND`. No Veo model remains registered; Google's replacement is `gemini-omni-1.2-flash` (#585).
 - **Live** — Google `gemini-3.8-live` and `gemini-3.8-live-extended-thinking` constrain `max_tokens` to 1–65,536, the documented output-token limit, as the Google text models do; a larger value raises `ConstraintViolationError` instead of being sent (#591).
+- **Text** — Anthropic keeps a function tool named `web_search` a function tool: on the models with dynamic filtering it was sent as the hosted `web_search_20260209` with an `input_schema`, which the API rejects (#622).
 
 ---
 
