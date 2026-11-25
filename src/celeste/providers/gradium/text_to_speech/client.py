@@ -20,7 +20,6 @@ class GradiumTextToSpeechClient(APIMixin):
 
     Provides shared implementation for speech generation via WebSocket:
     - _make_stream_request() - Returns WebSocket streaming events
-    - _parse_usage() - Returns empty dict (TTS doesn't return usage)
     - _map_output_format_to_mime_type() - Map format string to AudioMimeType
 
     The Gradium Text-to-Speech API uses WebSocket instead of HTTP REST:
@@ -109,24 +108,6 @@ class GradiumTextToSpeechClient(APIMixin):
                     error_msg = data.get("message", "Unknown error")
                     msg = f"Gradium TTS error: {error_msg}"
                     raise ValueError(msg)
-
-    @staticmethod
-    def map_usage_fields(usage_data: dict[str, Any]) -> dict[str, int | float | None]:
-        """Map Gradium usage fields to unified names.
-
-        Gradium TTS doesn't provide usage metadata.
-        """
-        return {}
-
-    def _parse_usage(
-        self, response_data: dict[str, Any]
-    ) -> dict[str, int | float | None]:
-        """Extract usage data from Gradium API response.
-
-        Gradium TTS doesn't provide usage metadata.
-        Returns empty dict for modality clients to wrap in Usage type.
-        """
-        return GradiumTextToSpeechClient.map_usage_fields(response_data)
 
     def _parse_finish_reason(self, response_data: dict[str, Any]) -> FinishReason:
         """Gradium TTS doesn't provide finish reasons."""

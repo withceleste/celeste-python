@@ -58,6 +58,7 @@ class APIMixin(ABC):
     base_url: str | None
     _default_base_url: ClassVar[str]
     _content_fields: ClassVar[set[str]] = set()
+    _usage_key: ClassVar[str] = "usage"
 
     @property
     @abstractmethod
@@ -69,6 +70,15 @@ class APIMixin(ABC):
         """Build the request URL, honoring an explicit base_url override."""
         base = self.base_url if self.base_url is not None else self._default_base_url
         return f"{base.rstrip('/')}{endpoint}"
+
+    @staticmethod
+    def map_usage_fields(usage_data: dict[str, Any]) -> RawUsage:
+        """Map provider usage fields to unified names; none by default."""
+        return {}
+
+    def _parse_usage(self, response_data: dict[str, Any]) -> RawUsage:
+        """Map the response's usage object to unified names."""
+        return self.map_usage_fields(response_data.get(self._usage_key) or {})
 
     async def _json_headers(
         self, extra_headers: dict[str, str] | None = None
@@ -377,11 +387,6 @@ class ModalityClient[
     @abstractmethod
     def parameter_mappers(cls) -> list[ParameterMapper[Content]]:
         """Provider-specific parameter mappers."""
-        ...
-
-    @abstractmethod
-    def _parse_usage(self, response_data: dict[str, Any]) -> RawUsage:
-        """Parse usage information from provider response."""
         ...
 
     @abstractmethod

@@ -16,7 +16,6 @@ class GoogleInteractionsClient(APIMixin):
     Provides shared implementation for all capabilities using the Interactions API:
     - _make_request() - HTTP POST to /v1beta/interactions
     - _make_stream_request() - HTTP streaming to /v1beta/interactions (stream=true in body)
-    - _parse_usage() - Extract usage dict from usage metadata
     - _parse_content() - Extract steps array from response
     - _parse_finish_reason() - Extract finish reason (interaction status) from response
     - _content_fields: ClassVar - Content field names to exclude from metadata
@@ -109,13 +108,6 @@ class GoogleInteractionsClient(APIMixin):
             UsageField.REASONING_TOKENS: usage_data.get("total_thought_tokens"),
             UsageField.CACHED_TOKENS: usage_data.get("total_cached_tokens"),
         }
-
-    def _parse_usage(
-        self, response_data: dict[str, Any]
-    ) -> dict[str, int | float | None]:
-        """Extract usage data from Interactions usage metadata."""
-        usage_data = response_data.get("usage") or {}
-        return GoogleInteractionsClient.map_usage_fields(usage_data)
 
     def _parse_content(self, response_data: dict[str, Any]) -> Any:
         """Return all steps from response.

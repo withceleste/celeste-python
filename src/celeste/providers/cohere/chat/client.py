@@ -16,7 +16,6 @@ class CohereChatClient(APIMixin):
     Provides shared implementation for all capabilities using the Chat API:
     - _make_request() - HTTP POST to /v2/chat
     - _make_stream_request() - HTTP streaming to /v2/chat
-    - _parse_usage() - Extract usage dict from response
     - _parse_content() - Extract content array from response message
     - _parse_finish_reason() - Extract finish reason from response
     - _content_fields: ClassVar - Content field names to exclude from metadata
@@ -105,13 +104,6 @@ class CohereChatClient(APIMixin):
             UsageField.TOTAL_TOKENS: tokens.get("total_tokens") if tokens else None,
             UsageField.CACHED_TOKENS: usage_data.get("cached_tokens"),
         }
-
-    def _parse_usage(
-        self, response_data: dict[str, Any]
-    ) -> dict[str, int | float | None]:
-        """Extract usage data from Chat API response."""
-        usage_data = response_data.get("usage") or {}
-        return CohereChatClient.map_usage_fields(usage_data)
 
     def _parse_content(self, response_data: dict[str, Any]) -> Any:
         """Parse content array from Chat API response message.

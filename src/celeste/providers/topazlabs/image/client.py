@@ -164,12 +164,6 @@ class TopazLabsImageClient(APIMixin):
         download_data: dict[str, Any] = response.json()
         return download_data
 
-    def _parse_usage(
-        self, response_data: dict[str, Any]
-    ) -> dict[str, int | float | None]:
-        """Topaz Image responses do not expose usage fields in this client."""
-        return {}
-
     def _parse_content(self, response_data: dict[str, Any]) -> Any:
         """Parse download URL from response."""
         download_url = response_data.get("download_url") or response_data.get("url")

@@ -29,6 +29,7 @@ class GoogleEmbeddingsClient(APIMixin):
     """
 
     _default_base_url: ClassVar[str] = config.BASE_URL
+    _usage_key: ClassVar[str] = "usageMetadata"
     _content_fields: ClassVar[set[str]] = {"embedding", "embeddings"}
 
     @staticmethod
@@ -139,13 +140,6 @@ class GoogleEmbeddingsClient(APIMixin):
 
         msg = "Unexpected response format: missing 'embedding' or 'embeddings' field"
         raise ValueError(msg)
-
-    def _parse_usage(
-        self, response_data: dict[str, Any]
-    ) -> dict[str, int | float | None]:
-        """Extract usage data from Embeddings usageMetadata."""
-        usage_data = response_data.get("usageMetadata") or {}
-        return GoogleEmbeddingsClient.map_usage_fields(usage_data)
 
     def _parse_finish_reason(self, response_data: dict[str, Any]) -> FinishReason:
         """Embeddings API doesn't provide finish reasons."""

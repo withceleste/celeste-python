@@ -18,7 +18,6 @@ class ChatCompletionsClient(APIMixin):
     - _make_request() - HTTP POST to /v1/chat/completions
     - _make_stream_request() - HTTP streaming to /v1/chat/completions
     - map_usage_fields() - Map usage fields to unified names
-    - _parse_usage() - Extract usage dict from response
     - _parse_content() - Extract choices array from response
     - _parse_finish_reason() - Extract finish reason from response
     - _content_fields: ClassVar - Content field names to exclude from metadata
@@ -111,13 +110,6 @@ class ChatCompletionsClient(APIMixin):
             UsageField.TOTAL_TOKENS: usage_data.get("total_tokens"),
             UsageField.CACHED_TOKENS: prompt_tokens_details.get("cached_tokens"),
         }
-
-    def _parse_usage(
-        self, response_data: dict[str, Any]
-    ) -> dict[str, int | float | None]:
-        """Extract usage data from Chat Completions API response."""
-        usage_data = response_data.get("usage") or {}
-        return self.map_usage_fields(usage_data)
 
     def _parse_content(self, response_data: dict[str, Any]) -> Any:
         """Parse choices array from Chat Completions API response."""

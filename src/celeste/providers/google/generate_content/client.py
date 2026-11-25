@@ -17,7 +17,6 @@ class GoogleGenerateContentClient(APIMixin):
     Provides shared implementation for all capabilities using the GenerateContent API:
     - _make_request() - HTTP POST to generateContent
     - _make_stream_request() - HTTP streaming to streamGenerateContent
-    - _parse_usage() - Extract usage dict from usageMetadata
     - _parse_content() - Extract parts array from first candidate
     - _parse_finish_reason() - Extract finish reason string from candidates
     - _content_fields: ClassVar - Content field names to exclude from metadata
@@ -37,6 +36,7 @@ class GoogleGenerateContentClient(APIMixin):
     """
 
     _default_base_url: ClassVar[str] = config.BASE_URL
+    _usage_key: ClassVar[str] = "usageMetadata"
     _content_fields: ClassVar[set[str]] = {"candidates"}
 
     def _get_vertex_endpoint(self, gemini_endpoint: str) -> str:
@@ -117,13 +117,6 @@ class GoogleGenerateContentClient(APIMixin):
             UsageField.REASONING_TOKENS: usage_data.get("thoughtsTokenCount"),
             UsageField.CACHED_TOKENS: usage_data.get("cachedContentTokenCount"),
         }
-
-    def _parse_usage(
-        self, response_data: dict[str, Any]
-    ) -> dict[str, int | float | None]:
-        """Extract usage data from Gemini usageMetadata."""
-        usage_data = response_data.get("usageMetadata") or {}
-        return GoogleGenerateContentClient.map_usage_fields(usage_data)
 
     def _parse_content(self, response_data: dict[str, Any]) -> Any:
         """Return all candidates from response.

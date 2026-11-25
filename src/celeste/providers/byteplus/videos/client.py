@@ -137,13 +137,6 @@ class BytePlusVideosClient(APIMixin):
             UsageField.TOTAL_TOKENS: usage_data.get("total_tokens"),
         }
 
-    def _parse_usage(
-        self, response_data: dict[str, Any]
-    ) -> dict[str, int | float | None]:
-        """Extract usage data from BytePlus API response."""
-        usage_data = response_data.get("usage") or {}
-        return BytePlusVideosClient.map_usage_fields(usage_data)
-
     def _parse_content(self, response_data: dict[str, Any]) -> Any:
         """Parse content from BytePlus video generation response."""
         content = response_data.get("content", {})

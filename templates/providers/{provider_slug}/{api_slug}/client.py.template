@@ -18,11 +18,11 @@ class {Provider}{Api}Client(APIMixin):
     Provides shared HTTP implementation:
     - _make_request(endpoint=...) - HTTP POST to specified endpoint
     - _make_stream_request() - HTTP streaming (if supported, otherwise raises StreamingNotSupportedError)
-    - _parse_usage() - Extract usage dict from response
     - _parse_content() - Extract content from response
     - _parse_finish_reason() - Extract finish reason (if provided)
     - _default_base_url: ClassVar - The API's base URL
     - _content_fields: ClassVar - Content field names to exclude from metadata
+    - _usage_key: ClassVar - Response key holding usage, if not "usage"
 
     Auth-based endpoint selection (optional, when the same wire API is also served on Vertex AI):
     - GoogleADC auth -> Vertex AI endpoints (via _build_url + _get_vertex_endpoint)
@@ -132,13 +132,6 @@ class {Provider}{Api}Client(APIMixin):
             UsageField.OUTPUT_TOKENS: usage_data.get("..."),
             UsageField.TOTAL_TOKENS: usage_data.get("..."),
         }
-
-    def _parse_usage(
-        self, response_data: dict[str, Any]
-    ) -> dict[str, int | float | None]:
-        """Extract usage data from {Provider} {Api} API response."""
-        usage_data = response_data.get("...") or {}
-        return {Provider}{Api}Client.map_usage_fields(usage_data)
 
     def _parse_content(self, response_data: dict[str, Any]) -> Any:
         """Parse content from {Provider} {Api} API response."""

@@ -15,12 +15,14 @@ _HOOK_KINDS = (types.FunctionType, classmethod, staticmethod, property)
 # streaming namespaces call _stream_class first, which base-raises otherwise.
 _STREAMING_HOOKS = frozenset({"_make_stream_request", "_stream_class"})
 # Construction hook: pydantic injects per-class init_private_attributes wrappers
-# that break identity comparison.
-_EXCLUDED = frozenset({"model_post_init"})
+# that break identity comparison. map_usage_fields: static helper, reached only
+# through _parse_usage.
+_EXCLUDED = frozenset({"model_post_init", "map_usage_fields"})
 # Hooks whose base implementation reads per-class state, so method identity
 # alone cannot see divergence: hook name -> the state the base impl reads.
 _STATE_DRIVEN_HOOKS: dict[str, Callable[[type[ModalityClient]], object]] = {
     "_build_metadata": lambda c: c._content_fields,
+    "_parse_usage": lambda c: c._usage_key,
     "_transform_output": lambda c: list(c.parameter_mappers()),
 }
 

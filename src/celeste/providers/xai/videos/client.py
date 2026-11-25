@@ -15,7 +15,6 @@ class XAIVideosClient(APIMixin):
 
     Provides shared implementation for video generation:
     - _make_request() - HTTP POST with async polling pattern
-    - _parse_usage() - Extract usage dict from response
     - _parse_content() - Extract video URL from response
     - _parse_finish_reason() - Returns None (Videos API doesn't provide finish reasons)
     - _content_fields: ClassVar - Content field names to exclude from metadata
@@ -111,13 +110,6 @@ class XAIVideosClient(APIMixin):
             UsageField.OUTPUT_TOKENS: usage_data.get("output_tokens"),
             UsageField.TOTAL_TOKENS: usage_data.get("total_tokens"),
         }
-
-    def _parse_usage(
-        self, response_data: dict[str, Any]
-    ) -> dict[str, int | float | None]:
-        """Extract usage data from xAI Videos API response."""
-        usage_data = response_data.get("usage") or {}
-        return XAIVideosClient.map_usage_fields(usage_data)
 
     def _parse_content(self, response_data: dict[str, Any]) -> Any:
         """Parse video URL from xAI Videos API response.
