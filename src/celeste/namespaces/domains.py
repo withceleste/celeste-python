@@ -6,6 +6,7 @@ The namespace routes to the appropriate modality client based on the operation.
 
 from typing import Any, Unpack
 
+from asgiref.sync import async_to_sync
 from pydantic import SecretStr
 
 from celeste import Authentication, ToolResult, create_client
@@ -46,42 +47,6 @@ from celeste.types import (
 )
 
 
-class SyncStreamTextNamespace:
-    """celeste.text.sync.stream.* namespace."""
-
-    def generate(
-        self,
-        prompt: str | None = None,
-        *,
-        messages: list[Message | ToolResult] | None = None,
-        model: str,
-        provider: Provider | None = None,
-        protocol: Protocol | None = None,
-        api_key: str | SecretStr | None = None,
-        auth: Authentication | None = None,
-        base_url: str | None = None,
-        extra_body: dict[str, Any] | None = None,
-        **params: Unpack[TextParameters],
-    ) -> TextStream:
-        """Sync streaming text generation."""
-        client = create_client(
-            modality=Modality.TEXT,
-            operation=Operation.GENERATE,
-            model=model,
-            provider=provider,
-            protocol=protocol,
-            api_key=api_key,
-            auth=auth,
-            base_url=base_url,
-        )
-        return client.sync.stream.generate(
-            prompt,
-            messages=messages,
-            extra_body=extra_body,
-            **params,
-        )
-
-
 class StreamTextNamespace:
     """celeste.text.stream.* namespace."""
 
@@ -118,95 +83,17 @@ class StreamTextNamespace:
         )
 
 
+SyncStreamTextNamespace = StreamTextNamespace
+
+
 class SyncTextNamespace:
     """celeste.text.sync.* namespace."""
 
-    def generate(
-        self,
-        prompt: str | None = None,
-        *,
-        messages: list[Message | ToolResult] | None = None,
-        model: str,
-        provider: Provider | None = None,
-        protocol: Protocol | None = None,
-        api_key: str | SecretStr | None = None,
-        auth: Authentication | None = None,
-        base_url: str | None = None,
-        extra_body: dict[str, Any] | None = None,
-        **params: Unpack[TextParameters],
-    ) -> TextOutput:
-        """Blocking text generation."""
-        client = create_client(
-            modality=Modality.TEXT,
-            operation=Operation.GENERATE,
-            model=model,
-            provider=provider,
-            protocol=protocol,
-            api_key=api_key,
-            auth=auth,
-            base_url=base_url,
-        )
-        return client.sync.generate(
-            prompt,
-            messages=messages,
-            extra_body=extra_body,
-            **params,
-        )
-
-    def embed(
-        self,
-        text: str | list[str] | None = None,
-        *,
-        images: ImageContent | None = None,
-        videos: VideoContent | None = None,
-        audio: AudioContent | None = None,
-        model: str,
-        provider: Provider | None = None,
-        api_key: str | SecretStr | None = None,
-        auth: Authentication | None = None,
-        **params: Unpack[EmbeddingsParameters],
-    ) -> EmbeddingsOutput:
-        """Blocking embeddings generation."""
-        client = create_client(
-            modality=Modality.EMBEDDINGS,
-            operation=Operation.EMBED,
-            model=model,
-            provider=provider,
-            api_key=api_key,
-            auth=auth,
-        )
-        return client.sync.embed(
-            text, images=images, videos=videos, audio=audio, **params
-        )
-
-    def decide(
-        self,
-        state: DecisionValue,
-        *,
-        questions: dict[
-            str, BooleanQuestion | ChoiceQuestion | ScoreQuestion | BoxQuestion
-        ],
-        model: str,
-        provider: Provider | None = None,
-        api_key: str | SecretStr | None = None,
-        auth: Authentication | None = None,
-        base_url: str | None = None,
-        extra_body: dict[str, Any] | None = None,
-        **params: Unpack[DecisionParameters],
-    ) -> DecisionOutput:
-        """Blocking decision."""
-        client = create_client(
-            modality=Modality.DECISION,
-            operation=Operation.DECIDE,
-            model=model,
-            provider=provider,
-            api_key=api_key,
-            auth=auth,
-            base_url=base_url,
-        )
-        return client.sync.decide(
-            state, questions=questions, extra_body=extra_body, **params
-        )
+    def __init__(self) -> None:
+        namespace = TextNamespace()
+        self.generate = async_to_sync(namespace.generate)
+        self.embed = async_to_sync(namespace.embed)
+        self.decide = async_to_sync(namespace.decide)
 
     @property
     def stream(self) -> SyncStreamTextNamespace:
@@ -361,78 +248,6 @@ class TextNamespace:
         return StreamTextNamespace()
 
 
-class SyncStreamImagesNamespace:
-    """celeste.images.sync.stream.* namespace."""
-
-    def generate(
-        self,
-        prompt: str,
-        *,
-        model: str,
-        provider: Provider | None = None,
-        api_key: str | SecretStr | None = None,
-        auth: Authentication | None = None,
-        **params: Unpack[ImageParameters],
-    ) -> ImagesStream:
-        """Sync streaming image generation."""
-        client = create_client(
-            modality=Modality.IMAGES,
-            operation=Operation.GENERATE,
-            model=model,
-            provider=provider,
-            api_key=api_key,
-            auth=auth,
-        )
-        return client.sync.stream.generate(prompt, **params)
-
-    def edit(
-        self,
-        image: ImageArtifact,
-        prompt: str,
-        *,
-        model: str,
-        provider: Provider | None = None,
-        api_key: str | SecretStr | None = None,
-        auth: Authentication | None = None,
-        **params: Unpack[ImageParameters],
-    ) -> ImagesStream:
-        """Sync streaming image editing."""
-        client = create_client(
-            modality=Modality.IMAGES,
-            operation=Operation.EDIT,
-            model=model,
-            provider=provider,
-            api_key=api_key,
-            auth=auth,
-        )
-        return client.sync.stream.edit(image, prompt, **params)
-
-    def analyze(
-        self,
-        image: ImageContent,
-        prompt: str | None = None,
-        *,
-        messages: list[Message | ToolResult] | None = None,
-        model: str,
-        provider: Provider | None = None,
-        api_key: str | SecretStr | None = None,
-        auth: Authentication | None = None,
-        **params: Unpack[TextParameters],
-    ) -> TextStream:
-        """Sync streaming image analysis."""
-        client = create_client(
-            modality=Modality.TEXT,
-            operation=Operation.ANALYZE,
-            model=model,
-            provider=provider,
-            api_key=api_key,
-            auth=auth,
-        )
-        return client.sync.stream.analyze(
-            prompt, messages=messages, image=image, **params
-        )
-
-
 class StreamImagesNamespace:
     """celeste.images.stream.* namespace."""
 
@@ -503,162 +318,21 @@ class StreamImagesNamespace:
         return client.stream.analyze(prompt, messages=messages, image=image, **params)
 
 
+SyncStreamImagesNamespace = StreamImagesNamespace
+
+
 class SyncImagesNamespace:
     """celeste.images.sync.* namespace."""
 
-    def generate(
-        self,
-        prompt: str,
-        *,
-        model: str,
-        provider: Provider | None = None,
-        api_key: str | SecretStr | None = None,
-        auth: Authentication | None = None,
-        **params: Unpack[ImageParameters],
-    ) -> ImageOutput:
-        """Blocking image generation."""
-        client = create_client(
-            modality=Modality.IMAGES,
-            operation=Operation.GENERATE,
-            model=model,
-            provider=provider,
-            api_key=api_key,
-            auth=auth,
-        )
-        return client.sync.generate(prompt, **params)
-
-    def edit(
-        self,
-        image: ImageArtifact,
-        prompt: str,
-        *,
-        model: str,
-        provider: Provider | None = None,
-        api_key: str | SecretStr | None = None,
-        auth: Authentication | None = None,
-        **params: Unpack[ImageParameters],
-    ) -> ImageOutput:
-        """Blocking image editing."""
-        client = create_client(
-            modality=Modality.IMAGES,
-            operation=Operation.EDIT,
-            model=model,
-            provider=provider,
-            api_key=api_key,
-            auth=auth,
-        )
-        return client.sync.edit(image, prompt, **params)
-
-    def upscale(
-        self,
-        image: ImageArtifact,
-        *,
-        model: str,
-        provider: Provider | None = None,
-        api_key: str | SecretStr | None = None,
-        auth: Authentication | None = None,
-        **params: Unpack[ImageParameters],
-    ) -> ImageOutput:
-        """Blocking image upscale."""
-        client = create_client(
-            modality=Modality.IMAGES,
-            operation=Operation.UPSCALE,
-            model=model,
-            provider=provider,
-            api_key=api_key,
-            auth=auth,
-        )
-        return client.sync.upscale(image, **params)
-
-    def analyze(
-        self,
-        image: ImageContent,
-        prompt: str | None = None,
-        *,
-        messages: list[Message | ToolResult] | None = None,
-        model: str,
-        provider: Provider | None = None,
-        api_key: str | SecretStr | None = None,
-        auth: Authentication | None = None,
-        **params: Unpack[TextParameters],
-    ) -> TextOutput:
-        """Blocking image analysis."""
-        client = create_client(
-            modality=Modality.TEXT,
-            operation=Operation.ANALYZE,
-            model=model,
-            provider=provider,
-            api_key=api_key,
-            auth=auth,
-        )
-        return client.sync.analyze(prompt, messages=messages, image=image, **params)
-
-    def embed(
-        self,
-        images: ImageContent,
-        *,
-        model: str,
-        provider: Provider | None = None,
-        api_key: str | SecretStr | None = None,
-        auth: Authentication | None = None,
-        **params: Unpack[EmbeddingsParameters],
-    ) -> EmbeddingsOutput:
-        """Blocking image embeddings generation."""
-        client = create_client(
-            modality=Modality.EMBEDDINGS,
-            operation=Operation.EMBED,
-            model=model,
-            provider=provider,
-            api_key=api_key,
-            auth=auth,
-        )
-        return client.sync.embed(images=images, **params)
-
-    def segment(
-        self,
-        image: ImageArtifact,
-        prompt: str | None = None,
-        *,
-        model: str,
-        provider: Provider | None = None,
-        api_key: str | SecretStr | None = None,
-        auth: Authentication | None = None,
-        **params: Unpack[SegmentationParameters],
-    ) -> SegmentationOutput:
-        """Blocking image segmentation."""
-        client = create_client(
-            modality=Modality.SEGMENTATION,
-            operation=Operation.SEGMENT,
-            model=model,
-            provider=provider,
-            api_key=api_key,
-            auth=auth,
-        )
-        return client.sync.segment(image, prompt, **params)
-
-    def decide(
-        self,
-        image: ImageContent,
-        *,
-        questions: dict[
-            str, BooleanQuestion | ChoiceQuestion | ScoreQuestion | BoxQuestion
-        ],
-        model: str,
-        provider: Provider | None = None,
-        api_key: str | SecretStr | None = None,
-        auth: Authentication | None = None,
-        **params: Unpack[DecisionParameters],
-    ) -> DecisionOutput:
-        """Blocking image decision."""
-        client = create_client(
-            modality=Modality.DECISION,
-            operation=Operation.DECIDE,
-            model=model,
-            provider=provider,
-            api_key=api_key,
-            auth=auth,
-        )
-        return client.sync.decide(image, questions=questions, **params)
+    def __init__(self) -> None:
+        namespace = ImagesNamespace()
+        self.generate = async_to_sync(namespace.generate)
+        self.edit = async_to_sync(namespace.edit)
+        self.upscale = async_to_sync(namespace.upscale)
+        self.analyze = async_to_sync(namespace.analyze)
+        self.embed = async_to_sync(namespace.embed)
+        self.segment = async_to_sync(namespace.segment)
+        self.decide = async_to_sync(namespace.decide)
 
     @property
     def stream(self) -> SyncStreamImagesNamespace:
@@ -928,56 +602,6 @@ class ImagesNamespace:
         return StreamImagesNamespace()
 
 
-class SyncStreamAudioNamespace:
-    """celeste.audio.sync.stream.* namespace."""
-
-    def speak(
-        self,
-        text: str,
-        *,
-        model: str,
-        provider: Provider | None = None,
-        api_key: str | SecretStr | None = None,
-        auth: Authentication | None = None,
-        **params: Unpack[AudioParameters],
-    ) -> AudioStream:
-        """Sync streaming text-to-speech."""
-        client = create_client(
-            modality=Modality.AUDIO,
-            operation=Operation.SPEAK,
-            model=model,
-            provider=provider,
-            api_key=api_key,
-            auth=auth,
-        )
-        return client.sync.stream.speak(text, **params)
-
-    def analyze(
-        self,
-        audio: AudioContent,
-        prompt: str | None = None,
-        *,
-        messages: list[Message | ToolResult] | None = None,
-        model: str,
-        provider: Provider | None = None,
-        api_key: str | SecretStr | None = None,
-        auth: Authentication | None = None,
-        **params: Unpack[TextParameters],
-    ) -> TextStream:
-        """Sync streaming audio analysis."""
-        client = create_client(
-            modality=Modality.TEXT,
-            operation=Operation.ANALYZE,
-            model=model,
-            provider=provider,
-            api_key=api_key,
-            auth=auth,
-        )
-        return client.sync.stream.analyze(
-            prompt, messages=messages, audio=audio, **params
-        )
-
-
 class StreamAudioNamespace:
     """celeste.audio.stream.* namespace."""
 
@@ -1026,116 +650,19 @@ class StreamAudioNamespace:
         return client.stream.analyze(prompt, messages=messages, audio=audio, **params)
 
 
+SyncStreamAudioNamespace = StreamAudioNamespace
+
+
 class SyncAudioNamespace:
     """celeste.audio.sync.* namespace."""
 
-    def speak(
-        self,
-        text: str,
-        *,
-        model: str,
-        provider: Provider | None = None,
-        api_key: str | SecretStr | None = None,
-        auth: Authentication | None = None,
-        **params: Unpack[AudioParameters],
-    ) -> AudioOutput:
-        """Blocking text-to-speech."""
-        client = create_client(
-            modality=Modality.AUDIO,
-            operation=Operation.SPEAK,
-            model=model,
-            provider=provider,
-            api_key=api_key,
-            auth=auth,
-        )
-        return client.sync.speak(text, **params)
-
-    def generate(
-        self,
-        prompt: str,
-        *,
-        model: str,
-        provider: Provider | None = None,
-        api_key: str | SecretStr | None = None,
-        auth: Authentication | None = None,
-        **params: Unpack[AudioParameters],
-    ) -> AudioOutput:
-        """Blocking audio generation."""
-        client = create_client(
-            modality=Modality.AUDIO,
-            operation=Operation.GENERATE,
-            model=model,
-            provider=provider,
-            api_key=api_key,
-            auth=auth,
-        )
-        return client.sync.generate(prompt, **params)
-
-    def analyze(
-        self,
-        audio: AudioContent,
-        prompt: str | None = None,
-        *,
-        messages: list[Message | ToolResult] | None = None,
-        model: str,
-        provider: Provider | None = None,
-        api_key: str | SecretStr | None = None,
-        auth: Authentication | None = None,
-        **params: Unpack[TextParameters],
-    ) -> TextOutput:
-        """Blocking audio analysis."""
-        client = create_client(
-            modality=Modality.TEXT,
-            operation=Operation.ANALYZE,
-            model=model,
-            provider=provider,
-            api_key=api_key,
-            auth=auth,
-        )
-        return client.sync.analyze(prompt, messages=messages, audio=audio, **params)
-
-    def transcribe(
-        self,
-        audio: AudioContent,
-        *,
-        model: str,
-        provider: Provider | None = None,
-        api_key: str | SecretStr | None = None,
-        auth: Authentication | None = None,
-        prompt: str | None = None,
-        **params: Unpack[AudioParameters],
-    ) -> TextOutput:
-        """Blocking speech transcription."""
-        client = create_client(
-            modality=Modality.AUDIO,
-            operation=Operation.TRANSCRIBE,
-            model=model,
-            provider=provider,
-            api_key=api_key,
-            auth=auth,
-        )
-        return client.sync.transcribe(audio, prompt=prompt, **params)
-
-    def embed(
-        self,
-        audio: AudioContent,
-        *,
-        model: str,
-        provider: Provider | None = None,
-        api_key: str | SecretStr | None = None,
-        auth: Authentication | None = None,
-        **params: Unpack[EmbeddingsParameters],
-    ) -> EmbeddingsOutput:
-        """Blocking audio embeddings generation."""
-        client = create_client(
-            modality=Modality.EMBEDDINGS,
-            operation=Operation.EMBED,
-            model=model,
-            provider=provider,
-            api_key=api_key,
-            auth=auth,
-        )
-        return client.sync.embed(audio=audio, **params)
+    def __init__(self) -> None:
+        namespace = AudioNamespace()
+        self.speak = async_to_sync(namespace.speak)
+        self.generate = async_to_sync(namespace.generate)
+        self.analyze = async_to_sync(namespace.analyze)
+        self.transcribe = async_to_sync(namespace.transcribe)
+        self.embed = async_to_sync(namespace.embed)
 
     @property
     def stream(self) -> SyncStreamAudioNamespace:
@@ -1333,35 +860,6 @@ class AudioNamespace:
         return StreamAudioNamespace()
 
 
-class SyncStreamVideosNamespace:
-    """celeste.videos.sync.stream.* namespace."""
-
-    def analyze(
-        self,
-        video: VideoContent,
-        prompt: str | None = None,
-        *,
-        messages: list[Message | ToolResult] | None = None,
-        model: str,
-        provider: Provider | None = None,
-        api_key: str | SecretStr | None = None,
-        auth: Authentication | None = None,
-        **params: Unpack[TextParameters],
-    ) -> TextStream:
-        """Sync streaming video analysis."""
-        client = create_client(
-            modality=Modality.TEXT,
-            operation=Operation.ANALYZE,
-            model=model,
-            provider=provider,
-            api_key=api_key,
-            auth=auth,
-        )
-        return client.sync.stream.analyze(
-            prompt, messages=messages, video=video, **params
-        )
-
-
 class StreamVideosNamespace:
     """celeste.videos.stream.* namespace."""
 
@@ -1389,95 +887,18 @@ class StreamVideosNamespace:
         return client.stream.analyze(prompt, messages=messages, video=video, **params)
 
 
+SyncStreamVideosNamespace = StreamVideosNamespace
+
+
 class SyncVideosNamespace:
     """celeste.videos.sync.* namespace."""
 
-    def generate(
-        self,
-        prompt: str,
-        *,
-        model: str,
-        provider: Provider | None = None,
-        api_key: str | SecretStr | None = None,
-        auth: Authentication | None = None,
-        **params: Unpack[VideoParameters],
-    ) -> VideoOutput:
-        """Blocking video generation."""
-        client = create_client(
-            modality=Modality.VIDEOS,
-            operation=Operation.GENERATE,
-            model=model,
-            provider=provider,
-            api_key=api_key,
-            auth=auth,
-        )
-        return client.sync.generate(prompt, **params)
-
-    def edit(
-        self,
-        video: VideoArtifact,
-        prompt: str,
-        *,
-        model: str,
-        provider: Provider | None = None,
-        api_key: str | SecretStr | None = None,
-        auth: Authentication | None = None,
-        **params: Unpack[VideoParameters],
-    ) -> VideoOutput:
-        """Blocking video editing."""
-        client = create_client(
-            modality=Modality.VIDEOS,
-            operation=Operation.EDIT,
-            model=model,
-            provider=provider,
-            api_key=api_key,
-            auth=auth,
-        )
-        return client.sync.edit(video, prompt, **params)
-
-    def analyze(
-        self,
-        video: VideoContent,
-        prompt: str | None = None,
-        *,
-        messages: list[Message | ToolResult] | None = None,
-        model: str,
-        provider: Provider | None = None,
-        api_key: str | SecretStr | None = None,
-        auth: Authentication | None = None,
-        **params: Unpack[TextParameters],
-    ) -> TextOutput:
-        """Blocking video analysis."""
-        client = create_client(
-            modality=Modality.TEXT,
-            operation=Operation.ANALYZE,
-            model=model,
-            provider=provider,
-            api_key=api_key,
-            auth=auth,
-        )
-        return client.sync.analyze(prompt, messages=messages, video=video, **params)
-
-    def embed(
-        self,
-        videos: VideoContent,
-        *,
-        model: str,
-        provider: Provider | None = None,
-        api_key: str | SecretStr | None = None,
-        auth: Authentication | None = None,
-        **params: Unpack[EmbeddingsParameters],
-    ) -> EmbeddingsOutput:
-        """Blocking video embeddings generation."""
-        client = create_client(
-            modality=Modality.EMBEDDINGS,
-            operation=Operation.EMBED,
-            model=model,
-            provider=provider,
-            api_key=api_key,
-            auth=auth,
-        )
-        return client.sync.embed(videos=videos, **params)
+    def __init__(self) -> None:
+        namespace = VideosNamespace()
+        self.generate = async_to_sync(namespace.generate)
+        self.edit = async_to_sync(namespace.edit)
+        self.analyze = async_to_sync(namespace.analyze)
+        self.embed = async_to_sync(namespace.embed)
 
     @property
     def stream(self) -> SyncStreamVideosNamespace:
@@ -1642,39 +1063,6 @@ class VideosNamespace:
         return StreamVideosNamespace()
 
 
-class SyncStreamDocumentsNamespace:
-    """celeste.documents.sync.stream.* namespace."""
-
-    def analyze(
-        self,
-        document: DocumentContent,
-        prompt: str | None = None,
-        *,
-        messages: list[Message | ToolResult] | None = None,
-        model: str,
-        provider: Provider | None = None,
-        protocol: Protocol | None = None,
-        api_key: str | SecretStr | None = None,
-        auth: Authentication | None = None,
-        base_url: str | None = None,
-        **params: Unpack[TextParameters],
-    ) -> TextStream:
-        """Sync streaming document analysis."""
-        client = create_client(
-            modality=Modality.TEXT,
-            operation=Operation.ANALYZE,
-            model=model,
-            provider=provider,
-            protocol=protocol,
-            api_key=api_key,
-            auth=auth,
-            base_url=base_url,
-        )
-        return client.sync.stream.analyze(
-            prompt, messages=messages, document=document, **params
-        )
-
-
 class StreamDocumentsNamespace:
     """celeste.documents.stream.* namespace."""
 
@@ -1708,37 +1096,15 @@ class StreamDocumentsNamespace:
         )
 
 
+SyncStreamDocumentsNamespace = StreamDocumentsNamespace
+
+
 class SyncDocumentsNamespace:
     """celeste.documents.sync.* namespace."""
 
-    def analyze(
-        self,
-        document: DocumentContent,
-        prompt: str | None = None,
-        *,
-        messages: list[Message | ToolResult] | None = None,
-        model: str,
-        provider: Provider | None = None,
-        protocol: Protocol | None = None,
-        api_key: str | SecretStr | None = None,
-        auth: Authentication | None = None,
-        base_url: str | None = None,
-        **params: Unpack[TextParameters],
-    ) -> TextOutput:
-        """Blocking document analysis."""
-        client = create_client(
-            modality=Modality.TEXT,
-            operation=Operation.ANALYZE,
-            model=model,
-            provider=provider,
-            protocol=protocol,
-            api_key=api_key,
-            auth=auth,
-            base_url=base_url,
-        )
-        return client.sync.analyze(
-            prompt, messages=messages, document=document, **params
-        )
+    def __init__(self) -> None:
+        namespace = DocumentsNamespace()
+        self.analyze = async_to_sync(namespace.analyze)
 
     @property
     def stream(self) -> SyncStreamDocumentsNamespace:

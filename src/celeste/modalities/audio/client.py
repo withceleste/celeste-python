@@ -162,63 +162,9 @@ class AudioSyncNamespace:
 
     def __init__(self, client: AudioClient) -> None:
         self._client = client
-
-    def speak(
-        self,
-        text: str,
-        *,
-        extra_body: dict[str, Any] | None = None,
-        extra_headers: dict[str, str] | None = None,
-        **parameters: Unpack[AudioParameters],
-    ) -> AudioOutput:
-        """Blocking speech generation."""
-        inputs = AudioInput(text=text)
-        return async_to_sync(self._client._predict)(
-            inputs,
-            endpoint=self._client._speak_endpoint,
-            extra_body=extra_body,
-            extra_headers=extra_headers,
-            **parameters,
-        )
-
-    def generate(
-        self,
-        prompt: str,
-        *,
-        extra_body: dict[str, Any] | None = None,
-        extra_headers: dict[str, str] | None = None,
-        **parameters: Unpack[AudioParameters],
-    ) -> AudioOutput:
-        """Blocking audio generation."""
-        if self._client._generate_endpoint is None:
-            msg = f"Model {self._client.model.id} does not support audio generation"
-            raise NotImplementedError(msg)
-        inputs = AudioInput(text=prompt)
-        return async_to_sync(self._client._predict)(
-            inputs,
-            endpoint=self._client._generate_endpoint,
-            extra_body=extra_body,
-            extra_headers=extra_headers,
-            **parameters,
-        )
-
-    def transcribe(
-        self,
-        audio: AudioContent,
-        *,
-        prompt: str | None = None,
-        extra_body: dict[str, Any] | None = None,
-        extra_headers: dict[str, str] | None = None,
-        **parameters: Unpack[AudioParameters],
-    ) -> TextOutput:
-        """Blocking speech transcription."""
-        return async_to_sync(self._client.transcribe)(
-            audio,
-            prompt=prompt,
-            extra_body=extra_body,
-            extra_headers=extra_headers,
-            **parameters,
-        )
+        self.speak = async_to_sync(client.speak)
+        self.generate = async_to_sync(client.generate)
+        self.transcribe = async_to_sync(client.transcribe)
 
     @property
     def stream(self) -> "AudioSyncStreamNamespace":
@@ -226,34 +172,7 @@ class AudioSyncNamespace:
         return AudioSyncStreamNamespace(self._client)
 
 
-class AudioSyncStreamNamespace:
-    """Sync streaming namespace - returns Stream instance with sync iteration support."""
-
-    def __init__(self, client: AudioClient) -> None:
-        self._client = client
-
-    def speak(
-        self,
-        text: str,
-        *,
-        extra_body: dict[str, Any] | None = None,
-        extra_headers: dict[str, str] | None = None,
-        **parameters: Unpack[AudioParameters],
-    ) -> AudioStream:
-        """Sync streaming speech generation.
-
-        Returns Stream instance that supports both async and sync iteration.
-
-        Usage:
-            stream = client.sync.stream.speak("Hello world")
-            for chunk in stream:  # Sync iteration (bridges async internally)
-                audio_bytes = chunk.content
-            stream.output.content.save("output.mp3")
-        """
-        # Return same stream as async version - __iter__/__next__ handle sync iteration
-        return self._client.stream.speak(
-            text, extra_body=extra_body, extra_headers=extra_headers, **parameters
-        )
+AudioSyncStreamNamespace = AudioStreamNamespace
 
 
 __all__ = [

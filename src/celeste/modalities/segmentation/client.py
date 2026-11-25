@@ -70,25 +70,7 @@ class SegmentationSyncNamespace:
     """Sync namespace for segmentation operations."""
 
     def __init__(self, client: SegmentationClient) -> None:
-        self._client = client
-
-    def segment(
-        self,
-        image: ImageArtifact,
-        prompt: str | None = None,
-        *,
-        extra_body: dict[str, Any] | None = None,
-        extra_headers: dict[str, str] | None = None,
-        **parameters: Unpack[SegmentationParameters],
-    ) -> SegmentationOutput:
-        """Blocking image segmentation."""
-        return async_to_sync(self._client.segment)(
-            image,
-            prompt,
-            extra_body=extra_body,
-            extra_headers=extra_headers,
-            **parameters,
-        )
+        self.segment = async_to_sync(client.segment)
 
 
 __all__ = [

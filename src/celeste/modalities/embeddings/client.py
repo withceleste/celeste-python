@@ -97,29 +97,7 @@ class EmbeddingsSyncNamespace:
     """Sync namespace for embeddings operations."""
 
     def __init__(self, client: EmbeddingsClient) -> None:
-        self._client = client
-
-    def embed(
-        self,
-        text: str | list[str] | None = None,
-        *,
-        images: ImageContent | None = None,
-        videos: VideoContent | None = None,
-        audio: AudioContent | None = None,
-        extra_body: dict[str, Any] | None = None,
-        extra_headers: dict[str, str] | None = None,
-        **parameters: Unpack[EmbeddingsParameters],
-    ) -> EmbeddingsOutput:
-        """Blocking embeddings generation."""
-        return async_to_sync(self._client.embed)(
-            text,
-            images=images,
-            videos=videos,
-            audio=audio,
-            extra_body=extra_body,
-            extra_headers=extra_headers,
-            **parameters,
-        )
+        self.embed = async_to_sync(client.embed)
 
 
 __all__ = [

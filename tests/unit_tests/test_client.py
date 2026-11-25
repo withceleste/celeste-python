@@ -1,7 +1,7 @@
 import warnings
 from enum import StrEnum
 from typing import Any, ClassVar, Unpack
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock
 
 import httpx
 import pytest
@@ -160,13 +160,10 @@ def test_non_streaming_model_is_rejected(model: Model) -> None:
 
 def test_sync_namespace_delegates_to_async_prediction() -> None:
     expected = TextOutput(content="hello")
-    client = Mock()
-    client._predict = AsyncMock(return_value=expected)
+    client = AsyncMock()
+    client.generate.return_value = expected
 
     result = TextSyncNamespace(client).generate("hello", temperature=0.2)
 
     assert result is expected
-    client._check_media_support.assert_called_once_with(messages=None)
-    inputs = client._predict.await_args.args[0]
-    assert inputs.prompt == "hello"
-    assert client._predict.await_args.kwargs["temperature"] == 0.2
+    client.generate.assert_awaited_once_with("hello", temperature=0.2)

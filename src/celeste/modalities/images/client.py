@@ -162,82 +162,9 @@ class ImagesSyncNamespace:
 
     def __init__(self, client: ImagesClient) -> None:
         self._client = client
-
-    def generate(
-        self,
-        prompt: str,
-        *,
-        extra_body: dict[str, Any] | None = None,
-        extra_headers: dict[str, str] | None = None,
-        **parameters: Unpack[ImageParameters],
-    ) -> ImageOutput:
-        """Blocking image generation.
-
-        Usage:
-            result = client.sync.generate("A sunset over mountains")
-            result.content.show()
-        """
-        inputs = ImageInput(prompt=prompt)
-        return async_to_sync(self._client._predict)(
-            inputs,
-            endpoint=self._client._generate_endpoint,
-            extra_body=extra_body,
-            extra_headers=extra_headers,
-            **parameters,
-        )
-
-    def edit(
-        self,
-        image: ImageArtifact,
-        prompt: str,
-        *,
-        extra_body: dict[str, Any] | None = None,
-        extra_headers: dict[str, str] | None = None,
-        **parameters: Unpack[ImageParameters],
-    ) -> ImageOutput:
-        """Blocking image edit.
-
-        Usage:
-            result = client.sync.edit(image, "Add a rainbow")
-            result.content.show()
-        """
-        if self._client._edit_endpoint is None:
-            msg = f"Model {self._client.model.id} does not support image editing"
-            raise NotImplementedError(msg)
-        inputs = ImageInput(prompt=prompt, image=image)
-        return async_to_sync(self._client._predict)(
-            inputs,
-            endpoint=self._client._edit_endpoint,
-            extra_body=extra_body,
-            extra_headers=extra_headers,
-            **parameters,
-        )
-
-    def upscale(
-        self,
-        image: ImageArtifact,
-        *,
-        extra_body: dict[str, Any] | None = None,
-        extra_headers: dict[str, str] | None = None,
-        **parameters: Unpack[ImageParameters],
-    ) -> ImageOutput:
-        """Blocking image upscale.
-
-        Usage:
-            result = client.sync.upscale(image)
-            result.content.show()
-        """
-        if self._client._upscale_endpoint is None:
-            msg = f"Model {self._client.model.id} does not support image upscaling"
-            raise NotImplementedError(msg)
-        inputs = ImageInput(image=image)
-        return async_to_sync(self._client._predict)(
-            inputs,
-            endpoint=self._client._upscale_endpoint,
-            extra_body=extra_body,
-            extra_headers=extra_headers,
-            **parameters,
-        )
+        self.generate = async_to_sync(client.generate)
+        self.edit = async_to_sync(client.edit)
+        self.upscale = async_to_sync(client.upscale)
 
     @property
     def stream(self) -> "ImagesSyncStreamNamespace":
@@ -245,61 +172,7 @@ class ImagesSyncNamespace:
         return ImagesSyncStreamNamespace(self._client)
 
 
-class ImagesSyncStreamNamespace:
-    """Sync streaming namespace - returns Stream instance with sync iteration support."""
-
-    def __init__(self, client: ImagesClient) -> None:
-        self._client = client
-
-    def generate(
-        self,
-        prompt: str,
-        *,
-        extra_body: dict[str, Any] | None = None,
-        extra_headers: dict[str, str] | None = None,
-        **parameters: Unpack[ImageParameters],
-    ) -> ImagesStream:
-        """Sync streaming image generation.
-
-        Returns Stream instance that supports both async and sync iteration.
-
-        Usage:
-            stream = client.sync.stream.generate("A sunset over mountains")
-            for chunk in stream:  # Sync iteration (bridges async internally)
-                print(chunk.content)
-            print(stream.output.usage)
-        """
-        # Return same stream as async version - __iter__/__next__ handle sync iteration
-        return self._client.stream.generate(
-            prompt, extra_body=extra_body, extra_headers=extra_headers, **parameters
-        )
-
-    def edit(
-        self,
-        image: ImageArtifact,
-        prompt: str,
-        *,
-        extra_body: dict[str, Any] | None = None,
-        extra_headers: dict[str, str] | None = None,
-        **parameters: Unpack[ImageParameters],
-    ) -> ImagesStream:
-        """Sync streaming image editing.
-
-        Returns Stream instance that supports both async and sync iteration.
-
-        Usage:
-            stream = client.sync.stream.edit(image, "Add a rainbow")
-            for chunk in stream:
-                print(chunk.content)
-            print(stream.output.usage)
-        """
-        return self._client.stream.edit(
-            image,
-            prompt,
-            extra_body=extra_body,
-            extra_headers=extra_headers,
-            **parameters,
-        )
+ImagesSyncStreamNamespace = ImagesStreamNamespace
 
 
 __all__ = [

@@ -78,33 +78,7 @@ class DecisionSyncNamespace:
     """
 
     def __init__(self, client: DecisionClient) -> None:
-        self._client = client
-
-    def decide(
-        self,
-        state: DecisionValue,
-        *,
-        questions: dict[
-            str, BooleanQuestion | ChoiceQuestion | ScoreQuestion | BoxQuestion
-        ],
-        extra_body: dict[str, Any] | None = None,
-        extra_headers: dict[str, str] | None = None,
-        **parameters: Unpack[DecisionParameters],
-    ) -> DecisionOutput:
-        """Blocking decision.
-
-        Usage:
-            result = client.sync.decide(state, questions=questions)
-            print(result.content)
-        """
-        inputs = DecisionInput(state=state, questions=questions)
-        return async_to_sync(self._client._predict)(
-            inputs,
-            endpoint=self._client._decide_endpoint,
-            extra_body=extra_body,
-            extra_headers=extra_headers,
-            **parameters,
-        )
+        self.decide = async_to_sync(client.decide)
 
 
 __all__ = [
