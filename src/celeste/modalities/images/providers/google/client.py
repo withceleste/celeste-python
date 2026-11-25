@@ -1,15 +1,14 @@
 """Google images client (Interactions or Vertex selected by auth)."""
 
-from typing import Any, ClassVar, Unpack
+from typing import ClassVar
 
+from celeste.client import Forward
 from celeste.parameters import ParameterMapper
 from celeste.providers.google.auth import GoogleADC
 from celeste.providers.google.interactions.config import BASE_URL
 from celeste.types import ImageContent
 
 from ...client import ImagesClient
-from ...io import ImageFinishReason, ImageInput
-from ...parameters import ImageParameters
 from .interactions import GoogleInteractionsImagesClient
 from .models import MODELS
 from .parameters import (
@@ -49,13 +48,6 @@ class GoogleImagesClient(ImagesClient):
         )
         object.__setattr__(self, "_strategy", strategy)
 
-        if strategy._generate_endpoint is not None:
-            object.__setattr__(self, "_generate_endpoint", strategy._generate_endpoint)
-        if strategy._edit_endpoint is not None:
-            object.__setattr__(self, "_edit_endpoint", strategy._edit_endpoint)
-        if strategy._upscale_endpoint is not None:
-            object.__setattr__(self, "_upscale_endpoint", strategy._upscale_endpoint)
-
     @classmethod
     def parameter_mappers(cls) -> list[ParameterMapper[ImageContent]]:
         return [
@@ -63,59 +55,18 @@ class GoogleImagesClient(ImagesClient):
             *GOOGLE_VERTEX_PARAMETER_MAPPERS,
         ]
 
-    def _build_url(self, endpoint: str, streaming: bool = False) -> str:
-        return self._strategy._build_url(endpoint, streaming)  # type: ignore[union-attr]
-
-    def _init_request(self, inputs: ImageInput) -> dict[str, Any]:
-        return self._strategy._init_request(inputs)  # type: ignore[union-attr]
-
-    def _build_request(
-        self,
-        inputs: ImageInput,
-        extra_body: dict[str, Any] | None = None,
-        streaming: bool = False,
-        **parameters: Unpack[ImageParameters],
-    ) -> dict[str, Any]:
-        return self._strategy._build_request(  # type: ignore[union-attr]
-            inputs, extra_body=extra_body, streaming=streaming, **parameters
-        )
-
-    def _transform_output(
-        self, content: ImageContent, **parameters: Unpack[ImageParameters]
-    ) -> ImageContent:
-        return self._strategy._transform_output(content, **parameters)  # type: ignore[union-attr]
-
-    def _build_metadata(self, response_data: dict[str, Any]) -> dict[str, Any]:
-        return self._strategy._build_metadata(response_data)  # type: ignore[union-attr]
-
-    def _parse_usage(
-        self, response_data: dict[str, Any]
-    ) -> dict[str, int | float | None]:
-        return self._strategy._parse_usage(response_data)  # type: ignore[union-attr]
-
-    def _parse_content(
-        self,
-        response_data: dict[str, Any],
-    ) -> ImageContent:
-        return self._strategy._parse_content(response_data)  # type: ignore[union-attr]
-
-    def _parse_finish_reason(self, response_data: dict[str, Any]) -> ImageFinishReason:
-        return self._strategy._parse_finish_reason(response_data)  # type: ignore[union-attr]
-
-    async def _make_request(
-        self,
-        request_body: dict[str, Any],
-        *,
-        endpoint: str | None = None,
-        extra_headers: dict[str, str] | None = None,
-        **parameters: Unpack[ImageParameters],
-    ) -> dict[str, Any]:
-        return await self._strategy._make_request(  # type: ignore[union-attr]
-            request_body,
-            endpoint=endpoint,
-            extra_headers=extra_headers,
-            **parameters,
-        )
+    _generate_endpoint = Forward()
+    _edit_endpoint = Forward()
+    _upscale_endpoint = Forward()
+    _build_url = Forward()
+    _init_request = Forward()
+    _build_request = Forward()
+    _transform_output = Forward()
+    _build_metadata = Forward()
+    _parse_usage = Forward()
+    _parse_content = Forward()
+    _parse_finish_reason = Forward()
+    _make_request = Forward()
 
 
 __all__ = ["GoogleImagesClient"]

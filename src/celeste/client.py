@@ -541,7 +541,18 @@ class ModalityClient[
         return request
 
 
+class Forward(property):
+    """Dispatcher attribute that resolves to the same-named attribute of self._strategy."""
+
+    def __init__(self) -> None:
+        super().__init__(lambda client: getattr(client._strategy, self.name))
+
+    def __set_name__(self, owner: type, name: str) -> None:
+        self.name = name
+
+
 __all__ = [
     "APIMixin",
+    "Forward",
     "ModalityClient",
 ]
