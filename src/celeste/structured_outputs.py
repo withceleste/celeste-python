@@ -1,7 +1,13 @@
 """JSON Schema generators for structured outputs."""
 
+import json
+from typing import get_origin
+
+from pydantic import BaseModel, TypeAdapter
 from pydantic.json_schema import GenerateJsonSchema, JsonSchemaMode, JsonSchemaValue
 from pydantic_core import CoreSchema
+
+from celeste.types import OutputSchema, TextContent
 
 
 class StrictJsonSchemaGenerator(GenerateJsonSchema):
@@ -31,4 +37,22 @@ class StrictJsonSchemaGenerator(GenerateJsonSchema):
                         self._add_strict_props(item)
 
 
-__all__ = ["StrictJsonSchemaGenerator"]
+def parse_json_output(content: TextContent, value: OutputSchema | None) -> TextContent:
+    """Parse JSON text to the schema; a list schema unwraps {"items": [...]} or dict values."""
+    if value is None or content == "":
+        return content
+
+    if isinstance(content, BaseModel):
+        return content
+    if isinstance(content, list) and content and isinstance(content[0], BaseModel):
+        return content
+
+    parsed = json.loads(content, strict=False) if isinstance(content, str) else content
+
+    if get_origin(value) is list and isinstance(parsed, dict):
+        parsed = parsed["items"] if "items" in parsed else list(parsed.values())
+
+    return TypeAdapter(value).validate_python(parsed)
+
+
+__all__ = ["StrictJsonSchemaGenerator", "parse_json_output"]

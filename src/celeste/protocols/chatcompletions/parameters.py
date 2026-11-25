@@ -1,14 +1,13 @@
 """Chat Completions protocol parameter mappers."""
 
-import json
-from typing import Any, ClassVar, get_origin
+from typing import Any, ClassVar
 
 from pydantic import BaseModel, TypeAdapter
 
 from celeste.exceptions import InvalidToolError
 from celeste.models import Model
 from celeste.parameters import FieldMapper, ParameterMapper
-from celeste.structured_outputs import StrictJsonSchemaGenerator
+from celeste.structured_outputs import StrictJsonSchemaGenerator, parse_json_output
 from celeste.tools import Tool, ToolMapper
 from celeste.types import OutputSchema, TextContent
 
@@ -58,27 +57,7 @@ class ResponseFormatMapper(ParameterMapper[TextContent]):
         self, content: TextContent, value: OutputSchema | None
     ) -> TextContent:
         """Parse JSON string to typed output via Pydantic TypeAdapter."""
-        if value is None or content == "":
-            return content
-
-        if isinstance(content, BaseModel):
-            return content
-        if isinstance(content, list) and content and isinstance(content[0], BaseModel):
-            return content
-
-        if isinstance(content, str):
-            parsed = json.loads(content, strict=False)
-        else:
-            parsed = content
-
-        origin = get_origin(value)
-        if origin is list and isinstance(parsed, dict):
-            if "items" in parsed:
-                parsed = parsed["items"]
-            else:
-                parsed = list(parsed.values())
-
-        return TypeAdapter(value).validate_python(parsed)
+        return parse_json_output(content, value)
 
 
 class ToolsMapper(ParameterMapper[TextContent]):

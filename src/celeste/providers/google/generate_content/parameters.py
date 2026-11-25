@@ -1,15 +1,15 @@
 """Google GenerateContent API parameter mappers."""
 
-import json
 from typing import Any, get_args, get_origin
 
-from pydantic import BaseModel, TypeAdapter
+from pydantic import BaseModel
 
 from celeste.exceptions import InvalidToolError
 from celeste.mime_types import ApplicationMimeType
 from celeste.models import Model
 from celeste.parameters import FieldMapper, ParameterMapper
 from celeste.providers.google.utils import build_media_part
+from celeste.structured_outputs import parse_json_output
 from celeste.tools import Tool, WebSearch
 from celeste.types import OutputSchema, TextContent
 
@@ -262,30 +262,7 @@ class ResponseJsonSchemaMapper(ParameterMapper[TextContent]):
         self, content: TextContent, value: OutputSchema | None
     ) -> TextContent:
         """Parse JSON to BaseModel using Pydantic's TypeAdapter."""
-        if value is None or content == "":
-            return content
-
-        # If content is already a BaseModel, return it unchanged
-        if isinstance(content, BaseModel):
-            return content
-        if isinstance(content, list) and content and isinstance(content[0], BaseModel):
-            return content
-
-        parsed = (
-            json.loads(content, strict=False) if isinstance(content, str) else content
-        )
-
-        # For list[T], handle various formats Google might return
-        origin = get_origin(value)
-        if origin is list and isinstance(parsed, dict):
-            # Google returns arrays directly in JSON schema, but might wrap in object
-            if "items" in parsed:
-                parsed = parsed["items"]
-            else:
-                # If it's a dict but not wrapped, try to extract array values
-                parsed = list(parsed.values()) if parsed else []
-
-        return TypeAdapter(value).validate_python(parsed)
+        return parse_json_output(content, value)
 
     def _convert_to_google_schema(self, output_schema: Any) -> dict[str, Any]:  # noqa: ANN401
         """Convert Pydantic BaseModel or list[BaseModel] to Google JSON Schema format."""
