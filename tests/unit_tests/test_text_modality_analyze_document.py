@@ -12,7 +12,9 @@ from celeste.core import Modality, Operation, Provider
 from celeste.mime_types import DocumentMimeType
 from celeste.modalities.text.io import TextInput
 from celeste.modalities.text.providers.anthropic.client import AnthropicTextClient
-from celeste.modalities.text.providers.google.client import GoogleTextClient
+from celeste.modalities.text.providers.google.interactions import (
+    GoogleInteractionsTextClient,
+)
 from celeste.modalities.text.providers.mistral.client import MistralTextClient
 from celeste.modalities.text.providers.openai.client import OpenAITextClient
 
@@ -24,7 +26,7 @@ PDF_URL = "https://example.com/doc.pdf"
 # Provider -> (client class, model id, request key, prompt part type).
 _CLIENTS = {
     Provider.OPENAI: (OpenAITextClient, "gpt-4o", "input", "input_text"),
-    Provider.GOOGLE: (GoogleTextClient, "gemini-2.5-pro", "input", "text"),
+    Provider.GOOGLE: (GoogleInteractionsTextClient, "gemini-2.5-pro", "input", "text"),
     Provider.ANTHROPIC: (AnthropicTextClient, "claude-sonnet-4-5", "messages", "text"),
     Provider.MISTRAL: (MistralTextClient, "pixtral-12b-latest", "messages", "text"),
 }

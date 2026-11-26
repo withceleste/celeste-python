@@ -3,13 +3,13 @@
 import pytest
 from pydantic import SecretStr
 
-from celeste import Model
+from celeste import Model, create_client
 from celeste.artifacts import ImageArtifact, VideoArtifact
 from celeste.auth import AuthHeader
+from celeste.client import ModalityClient
 from celeste.core import Modality, Operation, Provider
 from celeste.mime_types import ImageMimeType, VideoMimeType
 from celeste.modalities.videos.io import VideoInput
-from celeste.modalities.videos.providers.google.client import GoogleVideosClient
 from celeste.modalities.videos.providers.google.interactions import (
     GoogleInteractionsVideosClient,
 )
@@ -28,23 +28,22 @@ def _model(model_id: str) -> Model:
     )
 
 
-def _client(model_id: str) -> GoogleVideosClient:
-    return GoogleVideosClient(
+def _client(model_id: str) -> ModalityClient:
+    return create_client(
+        modality=Modality.VIDEOS,
         model=_model(model_id),
         provider=Provider.GOOGLE,
         auth=AuthHeader(secret=SecretStr("test"), header="x-goog-api-key", prefix=""),
     )
 
 
-def test_veo_model_dispatches_to_veo_strategy(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_veo_model_dispatches_to_veo_backend(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
         "celeste.modalities.videos.providers.google.client._VEO_MODEL_IDS",
         frozenset({"veo-test"}),
     )
     client = _client("veo-test")
-    assert isinstance(client._strategy, GoogleVeoVideosClient)
-    assert client._generate_endpoint == client._strategy._generate_endpoint
-    assert client._edit_endpoint == client._strategy._edit_endpoint
+    assert type(client) is GoogleVeoVideosClient
 
 
 @pytest.mark.parametrize(
@@ -64,11 +63,9 @@ def test_vertex_veo_parses_video_without_mutating_response(video: dict) -> None:
     assert response["response"]["videos"][0] == {**video, "mimeType": "video/mp4"}
 
 
-def test_omni_model_dispatches_to_interactions_strategy() -> None:
+def test_omni_model_dispatches_to_interactions_backend() -> None:
     client = _client("gemini-omni-flash-preview")
-    assert isinstance(client._strategy, GoogleInteractionsVideosClient)
-    assert client._generate_endpoint == client._strategy._generate_endpoint
-    assert client._edit_endpoint == client._strategy._edit_endpoint
+    assert type(client) is GoogleInteractionsVideosClient
 
 
 def test_unknown_model_raises() -> None:
@@ -163,8 +160,3 @@ def test_interactions_parse_content_video_variants(
     assert artifact.data == data
     assert artifact.url == url
     assert artifact.mime_type == VideoMimeType.MP4
-
-
-def test_dispatcher_forwards_download_content() -> None:
-    client = _client("gemini-omni-flash-preview")
-    assert "download_content" in type(client).__dict__

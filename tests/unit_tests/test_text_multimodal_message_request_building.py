@@ -31,7 +31,9 @@ from celeste.mime_types import (
 from celeste.modalities.text.io import TextInput
 from celeste.modalities.text.providers.anthropic.client import AnthropicTextClient
 from celeste.modalities.text.providers.cohere.client import CohereTextClient
-from celeste.modalities.text.providers.google.client import GoogleTextClient
+from celeste.modalities.text.providers.google.interactions import (
+    GoogleInteractionsTextClient,
+)
 from celeste.modalities.text.providers.mistral.client import MistralTextClient
 from celeste.modalities.text.providers.moonshot.client import MoonshotTextClient
 from celeste.modalities.text.providers.openai.client import OpenAITextClient
@@ -178,7 +180,7 @@ def test_chat_completions_assistant_tool_call_serializes_message_parts() -> None
 
 
 def test_google_message_parts_include_all_media_blocks() -> None:
-    client = GoogleTextClient(
+    client = GoogleInteractionsTextClient(
         model=_model(Provider.GOOGLE),
         provider=Provider.GOOGLE,
         auth=_auth(Provider.GOOGLE),

@@ -17,8 +17,8 @@ class TemperatureMapper(_ExampleParamMapper):
 
 # A second wire API makes this file multi-backend: rename this set with the first
 # backend's token ({Api1}NameMapper / {PROVIDER}_{API1}_PARAMETER_MAPPERS), add the
-# parallel {Api2} set, and let the dispatcher client.py merge the lists in
-# parameter_mappers(). No bare set survives in a multi-backend file.
+# parallel {Api2} set; each backend client uses its own. No bare set survives in a
+# multi-backend file.
 {PROVIDER}_PARAMETER_MAPPERS: list[ParameterMapper[{Content}]] = [
     TemperatureMapper(),
 ]

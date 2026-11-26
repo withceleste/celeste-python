@@ -16,7 +16,9 @@ from celeste.modalities.text.protocols.openresponses.client import (
 )
 from celeste.modalities.text.providers.anthropic.client import AnthropicTextClient
 from celeste.modalities.text.providers.cohere.client import CohereTextClient
-from celeste.modalities.text.providers.google.client import GoogleTextClient
+from celeste.modalities.text.providers.google.interactions import (
+    GoogleInteractionsTextClient,
+)
 from celeste.tools import ToolOutput, ToolResult
 
 
@@ -108,7 +110,7 @@ def test_anthropic_tool_result_uses_pydantic_json_text() -> None:
 
 def test_google_tool_result_wraps_json_in_text_block() -> None:
     refs = [ArtifactRef(id="image-1", artifact_type=InputType.IMAGE)]
-    client = GoogleTextClient(
+    client = GoogleInteractionsTextClient(
         model=_text_model(Provider.GOOGLE),
         provider=Provider.GOOGLE,
         auth=AuthHeader(secret=SecretStr("test"), header="x-goog-api-key", prefix=""),
