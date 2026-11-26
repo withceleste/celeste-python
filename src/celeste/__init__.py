@@ -225,6 +225,28 @@ def create_client(
     )
 
 
+def get_base_url(provider: Provider, modality: Modality) -> str:
+    """Get the base URL a provider's API-key requests go to for a modality.
+
+    The default a client uses when no base_url is passed, readable without
+    credentials. It does not reflect a caller's base_url, nor auth that routes
+    elsewhere (GoogleADC to Vertex AI).
+
+    Args:
+        provider: The AI provider.
+        modality: The modality being used.
+
+    Returns:
+        The base URL with its scheme (wss:// for live clients); it may carry a path.
+
+    Raises:
+        ClientNotFoundError: If no client is registered for the modality/provider.
+    """
+    if (modality, provider) not in _CLIENT_MAP:
+        raise ClientNotFoundError(modality=modality, provider=provider)
+    return _CLIENT_MAP[(modality, provider)]._default_base_url
+
+
 __all__ = [
     "AudioPart",
     "Authentication",
@@ -258,6 +280,7 @@ __all__ = [
     "audio",
     "create_client",
     "documents",
+    "get_base_url",
     "get_model",
     "images",
     "list_models",
