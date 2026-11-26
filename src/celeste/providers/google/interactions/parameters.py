@@ -1,20 +1,21 @@
 """Google Interactions API parameter mappers."""
 
-import json
-from typing import Any, ClassVar, get_args, get_origin
+from typing import Any, ClassVar
 
-from pydantic import BaseModel, TypeAdapter
+from pydantic import BaseModel
 
 from celeste.exceptions import InvalidToolError, ValidationError
 from celeste.mime_types import AudioMimeType
 from celeste.models import Model
 from celeste.parameters import FieldMapper, ParameterMapper
+from celeste.providers.google.generate_content.parameters import (
+    ResponseJsonSchemaMapper,
+)
 from celeste.providers.google.utils import build_content_part
 from celeste.tools import Tool, WebSearch
 from celeste.types import (
     AudioContent,
     ImageContent,
-    OutputSchema,
     TextContent,
     VideoContent,
 )
@@ -150,7 +151,7 @@ class ToolChoiceMapper(ParameterMapper[TextContent]):
         return request
 
 
-class ResponseFormatMapper(ParameterMapper[TextContent]):
+class ResponseFormatMapper(ResponseJsonSchemaMapper):
     """Map output_schema to Google Interactions response_format field."""
 
     def map(
@@ -171,74 +172,6 @@ class ResponseFormatMapper(ParameterMapper[TextContent]):
             "schema": schema,
         }
         return request
-
-    def parse_output(
-        self, content: TextContent, value: OutputSchema | None
-    ) -> TextContent:
-        """Parse JSON to BaseModel using Pydantic's TypeAdapter."""
-        if value is None or content == "":
-            return content
-
-        # If content is already a BaseModel, return it unchanged
-        if isinstance(content, BaseModel):
-            return content
-        if isinstance(content, list) and content and isinstance(content[0], BaseModel):
-            return content
-
-        parsed = (
-            json.loads(content, strict=False) if isinstance(content, str) else content
-        )
-
-        # For list[T], handle various formats Google might return
-        origin = get_origin(value)
-        if origin is list and isinstance(parsed, dict):
-            # Google returns arrays directly in JSON schema, but might wrap in object
-            if "items" in parsed:
-                parsed = parsed["items"]
-            else:
-                # If it's a dict but not wrapped, try to extract array values
-                parsed = list(parsed.values()) if parsed else []
-
-        return TypeAdapter(value).validate_python(parsed)
-
-    def _convert_to_google_schema(self, output_schema: Any) -> dict[str, Any]:  # noqa: ANN401
-        """Convert Pydantic BaseModel or list[BaseModel] to Google JSON Schema format."""
-        origin = get_origin(output_schema)
-        if origin is list:
-            inner_type = get_args(output_schema)[0]
-            items_schema = inner_type.model_json_schema()
-            defs = items_schema.get("$defs", {})
-            items_schema_clean = {k: v for k, v in items_schema.items() if k != "$defs"}
-            json_schema = {"type": "array", "items": items_schema_clean}
-            if defs:
-                json_schema["$defs"] = defs
-        else:
-            json_schema = output_schema.model_json_schema()
-
-        json_schema = self._remove_unsupported_fields(json_schema)
-        return json_schema
-
-    def _remove_unsupported_fields(self, schema: dict[str, Any]) -> dict[str, Any]:
-        """Remove unsupported metadata fields from schema."""
-        result: dict[str, Any] = {}
-
-        for key, value in schema.items():
-            if key == "title":
-                continue
-
-            if isinstance(value, dict):
-                result[key] = self._remove_unsupported_fields(value)
-            elif isinstance(value, list):
-                result[key] = [
-                    self._remove_unsupported_fields(item)
-                    if isinstance(item, dict)
-                    else item
-                    for item in value
-                ]
-            else:
-                result[key] = value
-
-        return result
 
 
 class AspectRatioMapper[Content](ParameterMapper[Content]):
