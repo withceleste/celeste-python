@@ -48,7 +48,7 @@ class ParameterMapper[Content](ABC):
 
 
 class FieldMapper[Content](ParameterMapper[Content]):
-    """Maps a parameter directly to a flat request field after validation."""
+    """Maps a parameter to a request field after validation; dots nest ("a.b")."""
 
     field: ClassVar[str]
 
@@ -57,7 +57,11 @@ class FieldMapper[Content](ParameterMapper[Content]):
         validated_value = self._validate_value(value, model)
         if validated_value is None:
             return request
-        request[self.field] = validated_value
+        *parents, leaf = self.field.split(".")
+        target = request
+        for key in parents:
+            target = target.setdefault(key, {})
+        target[leaf] = validated_value
         return request
 
 

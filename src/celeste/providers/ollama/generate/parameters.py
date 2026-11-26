@@ -54,22 +54,10 @@ class StepsMapper(FieldMapper[ImageContent]):
     field = "steps"
 
 
-class SeedMapper(ParameterMapper[ImageContent]):
+class SeedMapper(FieldMapper[ImageContent]):
     """Map seed to Ollama options.seed field (nested)."""
 
-    def map(
-        self,
-        request: dict[str, Any],
-        value: object,
-        model: Model,
-    ) -> dict[str, Any]:
-        """Transform seed into provider request."""
-        validated_value = self._validate_value(value, model)
-        if validated_value is None:
-            return request
-
-        request.setdefault("options", {})["seed"] = validated_value
-        return request
+    field = "options.seed"
 
 
 class NegativePromptMapper(FieldMapper[ImageContent]):

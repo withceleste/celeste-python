@@ -5,7 +5,7 @@ from typing import Any
 from celeste.exceptions import InvalidToolError
 from celeste.mime_types import AudioMimeType
 from celeste.models import Model
-from celeste.parameters import ParameterMapper
+from celeste.parameters import FieldMapper, ParameterMapper
 from celeste.protocols.openresponses.parameters import ToolsMapper as _ToolsMapper
 from celeste.protocols.openresponses.tools import TOOL_MAPPERS
 from celeste.tools import Tool
@@ -14,17 +14,10 @@ from celeste.utils.mime import split_sample_rate
 from .config import DEFAULT_AUDIO_FORMAT
 
 
-class VoiceMapper[Content](ParameterMapper[Content]):
+class VoiceMapper[Content](FieldMapper[Content]):
     """Map voice to OpenAI audio.output.voice field."""
 
-    def map(
-        self, request: dict[str, Any], value: object, model: Model
-    ) -> dict[str, Any]:
-        """Transform voice into provider request."""
-        value = self._validate_value(value, model)
-        if value is not None:
-            request.setdefault("audio", {}).setdefault("output", {})["voice"] = value
-        return request
+    field = "audio.output.voice"
 
 
 class AudioFormatMapper[Content](ParameterMapper[Content]):

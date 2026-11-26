@@ -4,47 +4,21 @@ from typing import Any
 
 from celeste.exceptions import ValidationError
 from celeste.models import Model
-from celeste.parameters import ParameterMapper
+from celeste.parameters import FieldMapper, ParameterMapper
 from celeste.types import VideoContent
 from celeste.utils import detect_mime_type
 
 
-class AspectRatioMapper(ParameterMapper[VideoContent]):
+class AspectRatioMapper(FieldMapper[VideoContent]):
     """Map aspect_ratio to Google Veo parameters.aspectRatio field."""
 
-    def map(
-        self,
-        request: dict[str, Any],
-        value: object,
-        model: Model,
-    ) -> dict[str, Any]:
-        """Transform aspect_ratio into provider request."""
-        validated_value = self._validate_value(value, model)
-        if validated_value is None:
-            return request
-
-        # Transform to provider-specific request format
-        request.setdefault("parameters", {})["aspectRatio"] = validated_value
-        return request
+    field = "parameters.aspectRatio"
 
 
-class ResolutionMapper(ParameterMapper[VideoContent]):
+class ResolutionMapper(FieldMapper[VideoContent]):
     """Map resolution to Google Veo parameters.resolution field."""
 
-    def map(
-        self,
-        request: dict[str, Any],
-        value: object,
-        model: Model,
-    ) -> dict[str, Any]:
-        """Transform resolution into provider request."""
-        validated_value = self._validate_value(value, model)
-        if validated_value is None:
-            return request
-
-        # Transform to provider-specific request format
-        request.setdefault("parameters", {})["resolution"] = validated_value
-        return request
+    field = "parameters.resolution"
 
 
 class DurationSecondsMapper(ParameterMapper[VideoContent]):

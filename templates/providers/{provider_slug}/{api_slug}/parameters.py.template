@@ -7,10 +7,7 @@ Naming convention:
 - The request key should match the provider's expected field name exactly
 """
 
-from typing import Any
-
-from celeste.models import Model
-from celeste.parameters import FieldMapper, ParameterMapper
+from celeste.parameters import FieldMapper
 
 
 # PATTERN 1: Simple flat mapping
@@ -24,23 +21,11 @@ class ExampleParamMapper[Content](FieldMapper[Content]):
 
 # PATTERN 2: Nested mapping
 # Use when provider expects nested structure: {"parameters": {"param": value}}
-class NestedParamMapper[Content](ParameterMapper[Content]):
+class NestedParamMapper[Content](FieldMapper[Content]):
     """Map nested_param to {Provider} parameters.nestedParam field."""
 
-    def map(
-        self,
-        request: dict[str, Any],
-        value: object,
-        model: Model,
-    ) -> dict[str, Any]:
-        """Transform nested_param into provider request."""
-        validated_value = self._validate_value(value, model)
-        if validated_value is None:
-            return request
-
-        # Key matches API parameter name exactly (camelCase for this provider)
-        request.setdefault("parameters", {})["nestedParam"] = validated_value
-        return request
+    # Dots nest; keys match API parameter names exactly (camelCase for this provider)
+    field = "parameters.nestedParam"
 
 
 __all__ = [

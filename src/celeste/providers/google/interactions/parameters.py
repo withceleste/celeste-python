@@ -8,7 +8,7 @@ from pydantic import BaseModel, TypeAdapter
 from celeste.exceptions import InvalidToolError, ValidationError
 from celeste.mime_types import AudioMimeType
 from celeste.models import Model
-from celeste.parameters import ParameterMapper
+from celeste.parameters import FieldMapper, ParameterMapper
 from celeste.providers.google.utils import build_content_part
 from celeste.tools import Tool, WebSearch
 from celeste.types import (
@@ -24,60 +24,22 @@ from .tools import TOOL_MAPPERS, WebSearchMapper
 _TOOL_DISPATCH = {m.tool_type: m for m in TOOL_MAPPERS}
 
 
-class TemperatureMapper(ParameterMapper[TextContent]):
+class TemperatureMapper(FieldMapper[TextContent]):
     """Map temperature to Google Interactions generation_config.temperature field."""
 
-    def map(
-        self,
-        request: dict[str, Any],
-        value: object,
-        model: Model,
-    ) -> dict[str, Any]:
-        """Transform temperature into provider request."""
-        validated_value = self._validate_value(value, model)
-        if validated_value is None:
-            return request
-
-        request.setdefault("generation_config", {})["temperature"] = validated_value
-        return request
+    field = "generation_config.temperature"
 
 
-class MaxOutputTokensMapper(ParameterMapper[TextContent]):
+class MaxOutputTokensMapper(FieldMapper[TextContent]):
     """Map max_tokens to Google Interactions generation_config.max_output_tokens field."""
 
-    def map(
-        self,
-        request: dict[str, Any],
-        value: object,
-        model: Model,
-    ) -> dict[str, Any]:
-        """Transform max_tokens into provider request."""
-        validated_value = self._validate_value(value, model)
-        if validated_value is None:
-            return request
-
-        request.setdefault("generation_config", {})["max_output_tokens"] = (
-            validated_value
-        )
-        return request
+    field = "generation_config.max_output_tokens"
 
 
-class SeedMapper(ParameterMapper[TextContent]):
+class SeedMapper(FieldMapper[TextContent]):
     """Map seed to Google Interactions generation_config.seed field."""
 
-    def map(
-        self,
-        request: dict[str, Any],
-        value: object,
-        model: Model,
-    ) -> dict[str, Any]:
-        """Transform seed into provider request."""
-        validated_value = self._validate_value(value, model)
-        if validated_value is None:
-            return request
-
-        request.setdefault("generation_config", {})["seed"] = validated_value
-        return request
+    field = "generation_config.seed"
 
 
 class ThinkingLevelMapper[Content](ParameterMapper[Content]):

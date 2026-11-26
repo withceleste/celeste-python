@@ -8,7 +8,7 @@ from pydantic import BaseModel, TypeAdapter
 from celeste.exceptions import InvalidToolError
 from celeste.mime_types import ApplicationMimeType
 from celeste.models import Model
-from celeste.parameters import ParameterMapper
+from celeste.parameters import FieldMapper, ParameterMapper
 from celeste.providers.google.utils import build_media_part
 from celeste.tools import Tool, WebSearch
 from celeste.types import OutputSchema, TextContent
@@ -16,58 +16,22 @@ from celeste.types import OutputSchema, TextContent
 from .tools import TOOL_MAPPERS, WebSearchMapper
 
 
-class TemperatureMapper[Content](ParameterMapper[Content]):
+class TemperatureMapper[Content](FieldMapper[Content]):
     """Map temperature to Google generationConfig.temperature field."""
 
-    def map(
-        self,
-        request: dict[str, Any],
-        value: object,
-        model: Model,
-    ) -> dict[str, Any]:
-        """Transform temperature into provider request."""
-        validated_value = self._validate_value(value, model)
-        if validated_value is None:
-            return request
-
-        request.setdefault("generationConfig", {})["temperature"] = validated_value
-        return request
+    field = "generationConfig.temperature"
 
 
-class SeedMapper[Content](ParameterMapper[Content]):
+class SeedMapper[Content](FieldMapper[Content]):
     """Map seed to Google generationConfig.seed field."""
 
-    def map(
-        self,
-        request: dict[str, Any],
-        value: object,
-        model: Model,
-    ) -> dict[str, Any]:
-        """Transform seed into provider request."""
-        validated_value = self._validate_value(value, model)
-        if validated_value is None:
-            return request
-
-        request.setdefault("generationConfig", {})["seed"] = validated_value
-        return request
+    field = "generationConfig.seed"
 
 
-class MaxOutputTokensMapper[Content](ParameterMapper[Content]):
+class MaxOutputTokensMapper[Content](FieldMapper[Content]):
     """Map max_tokens to Google generationConfig.maxOutputTokens field."""
 
-    def map(
-        self,
-        request: dict[str, Any],
-        value: object,
-        model: Model,
-    ) -> dict[str, Any]:
-        """Transform max_tokens into provider request."""
-        validated_value = self._validate_value(value, model)
-        if validated_value is None:
-            return request
-
-        request.setdefault("generationConfig", {})["maxOutputTokens"] = validated_value
-        return request
+    field = "generationConfig.maxOutputTokens"
 
 
 class ThinkingBudgetMapper[Content](ParameterMapper[Content]):
@@ -114,44 +78,16 @@ class ThinkingLevelMapper[Content](ParameterMapper[Content]):
         return request
 
 
-class AspectRatioMapper[Content](ParameterMapper[Content]):
+class AspectRatioMapper[Content](FieldMapper[Content]):
     """Map aspect_ratio to Google generationConfig.imageConfig.aspectRatio field."""
 
-    def map(
-        self,
-        request: dict[str, Any],
-        value: object,
-        model: Model,
-    ) -> dict[str, Any]:
-        """Transform aspect_ratio into provider request."""
-        validated_value = self._validate_value(value, model)
-        if validated_value is None:
-            return request
-
-        request.setdefault("generationConfig", {}).setdefault("imageConfig", {})[
-            "aspectRatio"
-        ] = validated_value
-        return request
+    field = "generationConfig.imageConfig.aspectRatio"
 
 
-class ImageSizeMapper[Content](ParameterMapper[Content]):
+class ImageSizeMapper[Content](FieldMapper[Content]):
     """Map image_size to Google generationConfig.imageConfig.imageSize field."""
 
-    def map(
-        self,
-        request: dict[str, Any],
-        value: object,
-        model: Model,
-    ) -> dict[str, Any]:
-        """Transform image_size into provider request."""
-        validated_value = self._validate_value(value, model)
-        if validated_value is None:
-            return request
-
-        request.setdefault("generationConfig", {}).setdefault("imageConfig", {})[
-            "imageSize"
-        ] = validated_value
-        return request
+    field = "generationConfig.imageConfig.imageSize"
 
 
 class GoogleSearchMapper[Content](ParameterMapper[Content]):
