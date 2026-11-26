@@ -21,7 +21,7 @@ PROVIDERS: dict[Provider, type[TextClient]] = {
     Provider.ANTHROPIC: AnthropicTextClient,
     Provider.COHERE: CohereTextClient,
     Provider.DEEPSEEK: DeepSeekTextClient,
-    Provider.GOOGLE: GoogleTextClient,
+    Provider.GOOGLE: GoogleTextClient,  # type: ignore[type-abstract]
     Provider.GROQ: GroqTextClient,
     Provider.HUGGINGFACE: HuggingFaceTextClient,
     Provider.META: MetaTextClient,

@@ -12,7 +12,9 @@ from celeste.modalities.text.client import TextClient
 from celeste.modalities.text.io import TextInput
 from celeste.modalities.text.providers.anthropic.client import AnthropicTextClient
 from celeste.modalities.text.providers.cohere.client import CohereTextClient
-from celeste.modalities.text.providers.google.client import GoogleTextClient
+from celeste.modalities.text.providers.google.interactions import (
+    GoogleInteractionsTextClient,
+)
 from celeste.modalities.text.providers.groq.client import GroqTextClient
 from celeste.modalities.text.providers.mistral.client import MistralTextClient
 from celeste.modalities.text.providers.moonshot.client import MoonshotTextClient
@@ -66,7 +68,7 @@ def test_openresponses_init_request_includes_input_image_block(
 
 
 def test_google_init_request_includes_image_content_part() -> None:
-    client = _client(GoogleTextClient, Provider.GOOGLE, "gemini-2.5-pro")
+    client = _client(GoogleInteractionsTextClient, Provider.GOOGLE, "gemini-2.5-pro")
 
     request = client._init_request(IMAGE_INPUT)
 

@@ -1,121 +1,30 @@
 """Google images client (Interactions or Vertex selected by auth)."""
 
-from typing import Any, ClassVar, Unpack
+from typing import Any, ClassVar
 
-from celeste.parameters import ParameterMapper
 from celeste.providers.google.auth import GoogleADC
 from celeste.providers.google.interactions.config import BASE_URL
-from celeste.types import ImageContent
 
 from ...client import ImagesClient
-from ...io import ImageFinishReason, ImageInput
-from ...parameters import ImageParameters
 from .interactions import GoogleInteractionsImagesClient
 from .models import MODELS
-from .parameters import (
-    GOOGLE_INTERACTIONS_PARAMETER_MAPPERS,
-    GOOGLE_VERTEX_PARAMETER_MAPPERS,
-)
 from .vertex import GoogleVertexImagesClient
 
 _MODEL_IDS = frozenset(m.id for m in MODELS)
 
 
 class GoogleImagesClient(ImagesClient):
-    """Google images client (selects the Interactions or Vertex backend)."""
+    """Google images client: constructing it returns the Vertex backend for GoogleADC auth, else Interactions."""
 
     _default_base_url: ClassVar[str] = BASE_URL
-    _strategy: GoogleInteractionsImagesClient | GoogleVertexImagesClient | None = None
 
-    def model_post_init(self, __context: object) -> None:
-        """Initialize the backend client based on model id and auth type."""
-        super().model_post_init(__context)
-
-        if self.model.id not in _MODEL_IDS:
-            msg = f"Unknown Google images model: {self.model.id}"
+    def __new__(cls, **data: Any) -> Any:
+        if data["model"].id not in _MODEL_IDS:
+            msg = f"Unknown Google images model: {data['model'].id}"
             raise ValueError(msg)
-
-        StrategyClass = (
-            GoogleVertexImagesClient
-            if isinstance(self.auth, GoogleADC)
-            else GoogleInteractionsImagesClient
-        )
-        strategy = StrategyClass(
-            modality=self.modality,
-            model=self.model,
-            provider=self.provider,
-            auth=self.auth,
-            base_url=self.base_url,
-        )
-        object.__setattr__(self, "_strategy", strategy)
-
-        if strategy._generate_endpoint is not None:
-            object.__setattr__(self, "_generate_endpoint", strategy._generate_endpoint)
-        if strategy._edit_endpoint is not None:
-            object.__setattr__(self, "_edit_endpoint", strategy._edit_endpoint)
-        if strategy._upscale_endpoint is not None:
-            object.__setattr__(self, "_upscale_endpoint", strategy._upscale_endpoint)
-
-    @classmethod
-    def parameter_mappers(cls) -> list[ParameterMapper[ImageContent]]:
-        return [
-            *GOOGLE_INTERACTIONS_PARAMETER_MAPPERS,
-            *GOOGLE_VERTEX_PARAMETER_MAPPERS,
-        ]
-
-    def _build_url(self, endpoint: str, streaming: bool = False) -> str:
-        return self._strategy._build_url(endpoint, streaming)  # type: ignore[union-attr]
-
-    def _init_request(self, inputs: ImageInput) -> dict[str, Any]:
-        return self._strategy._init_request(inputs)  # type: ignore[union-attr]
-
-    def _build_request(
-        self,
-        inputs: ImageInput,
-        extra_body: dict[str, Any] | None = None,
-        streaming: bool = False,
-        **parameters: Unpack[ImageParameters],
-    ) -> dict[str, Any]:
-        return self._strategy._build_request(  # type: ignore[union-attr]
-            inputs, extra_body=extra_body, streaming=streaming, **parameters
-        )
-
-    def _transform_output(
-        self, content: ImageContent, **parameters: Unpack[ImageParameters]
-    ) -> ImageContent:
-        return self._strategy._transform_output(content, **parameters)  # type: ignore[union-attr]
-
-    def _build_metadata(self, response_data: dict[str, Any]) -> dict[str, Any]:
-        return self._strategy._build_metadata(response_data)  # type: ignore[union-attr]
-
-    def _parse_usage(
-        self, response_data: dict[str, Any]
-    ) -> dict[str, int | float | None]:
-        return self._strategy._parse_usage(response_data)  # type: ignore[union-attr]
-
-    def _parse_content(
-        self,
-        response_data: dict[str, Any],
-    ) -> ImageContent:
-        return self._strategy._parse_content(response_data)  # type: ignore[union-attr]
-
-    def _parse_finish_reason(self, response_data: dict[str, Any]) -> ImageFinishReason:
-        return self._strategy._parse_finish_reason(response_data)  # type: ignore[union-attr]
-
-    async def _make_request(
-        self,
-        request_body: dict[str, Any],
-        *,
-        endpoint: str | None = None,
-        extra_headers: dict[str, str] | None = None,
-        **parameters: Unpack[ImageParameters],
-    ) -> dict[str, Any]:
-        return await self._strategy._make_request(  # type: ignore[union-attr]
-            request_body,
-            endpoint=endpoint,
-            extra_headers=extra_headers,
-            **parameters,
-        )
+        if isinstance(data["auth"], GoogleADC):
+            return GoogleVertexImagesClient(**data)
+        return GoogleInteractionsImagesClient(**data)
 
 
 __all__ = ["GoogleImagesClient"]

@@ -9,7 +9,6 @@ from celeste.auth import AuthHeader
 from celeste.core import Modality, Operation, Provider
 from celeste.mime_types import ImageMimeType
 from celeste.modalities.images.io import ImageInput
-from celeste.modalities.images.providers.google.client import GoogleImagesClient
 from celeste.modalities.images.providers.google.interactions import (
     GoogleInteractionsImagesClient,
 )
@@ -30,22 +29,24 @@ def _api_key_auth() -> AuthHeader:
     return AuthHeader(secret=SecretStr("test"), header="x-goog-api-key", prefix="")
 
 
-def test_api_key_auth_dispatches_to_interactions_strategy() -> None:
-    client = GoogleImagesClient(
-        model=_model(), provider=Provider.GOOGLE, auth=_api_key_auth()
+def test_api_key_auth_dispatches_to_interactions_backend() -> None:
+    client = create_client(
+        modality=Modality.IMAGES,
+        provider=Provider.GOOGLE,
+        model=_model(),
+        auth=_api_key_auth(),
     )
-    assert isinstance(client._strategy, GoogleInteractionsImagesClient)
-    assert client._generate_endpoint == client._strategy._generate_endpoint
-    assert client._edit_endpoint == client._strategy._edit_endpoint
+    assert type(client) is GoogleInteractionsImagesClient
 
 
-def test_google_adc_auth_dispatches_to_vertex_strategy() -> None:
-    client = GoogleImagesClient(
-        model=_model(), provider=Provider.GOOGLE, auth=GoogleADC(project_id="p")
+def test_google_adc_auth_dispatches_to_vertex_backend() -> None:
+    client = create_client(
+        modality=Modality.IMAGES,
+        provider=Provider.GOOGLE,
+        model=_model(),
+        auth=GoogleADC(project_id="p"),
     )
-    assert isinstance(client._strategy, GoogleVertexImagesClient)
-    assert client._generate_endpoint == client._strategy._generate_endpoint
-    assert client._edit_endpoint == client._strategy._edit_endpoint
+    assert type(client) is GoogleVertexImagesClient
 
 
 @pytest.mark.parametrize("use_adc", [False, True], ids=["api-key", "adc"])
@@ -68,7 +69,7 @@ def test_create_client_rejects_unknown_google_images_model(use_adc: bool) -> Non
 
 
 def test_interactions_init_request_generate_is_text_only() -> None:
-    client = GoogleImagesClient(
+    client = GoogleInteractionsImagesClient(
         model=_model(), provider=Provider.GOOGLE, auth=_api_key_auth()
     )
 
@@ -86,7 +87,7 @@ def test_interactions_init_request_generate_is_text_only() -> None:
 
 
 def test_interactions_init_request_edit_prepends_image_part() -> None:
-    client = GoogleImagesClient(
+    client = GoogleInteractionsImagesClient(
         model=_model(), provider=Provider.GOOGLE, auth=_api_key_auth()
     )
 
@@ -105,7 +106,7 @@ def test_interactions_init_request_edit_prepends_image_part() -> None:
 
 
 def test_interactions_aspect_ratio_and_quality_map_to_response_format() -> None:
-    client = GoogleImagesClient(
+    client = GoogleInteractionsImagesClient(
         model=_model(), provider=Provider.GOOGLE, auth=_api_key_auth()
     )
 
@@ -123,7 +124,7 @@ def test_interactions_aspect_ratio_and_quality_map_to_response_format() -> None:
 
 
 def test_interactions_reference_images_stay_inside_user_input_content() -> None:
-    client = GoogleImagesClient(
+    client = GoogleInteractionsImagesClient(
         model=_model(), provider=Provider.GOOGLE, auth=_api_key_auth()
     )
 

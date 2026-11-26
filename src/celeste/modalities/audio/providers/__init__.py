@@ -11,7 +11,7 @@ from .mistral import MistralAudioClient
 from .openai import OpenAIAudioClient
 
 PROVIDERS: dict[Provider, type[AudioClient]] = {
-    Provider.ELEVENLABS: ElevenLabsAudioClient,
+    Provider.ELEVENLABS: ElevenLabsAudioClient,  # type: ignore[type-abstract]
     Provider.GOOGLE: GoogleAudioClient,
     Provider.GRADIUM: GradiumAudioClient,
     Provider.GROQ: GroqAudioClient,

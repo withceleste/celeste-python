@@ -29,9 +29,9 @@ Celeste: unified multi-modal AI SDK for Python (3.12+, uv). One client API acros
 Multi-backend providers (one provider, several wire APIs — e.g. Google):
 
 - The `PROVIDERS` registry always maps a `Provider` to one `{Provider}{Modality}Client` class. It never branches and never holds functions.
-- `client.py` is then a dispatcher: `{Provider}{Modality}Client({Modality}Client)` selects the backend once in `model_post_init` (by auth and/or model id) via `object.__setattr__(self, "_strategy", ...)`, copies the endpoint ClassVars it routes on, concatenates all backend mapper lists in `parameter_mappers()`, and forwards every hook a backend customizes to `self._strategy` — a missing delegate silently runs the base implementation. Enforced by `tests/unit_tests/test_dispatcher_delegation.py`, which auto-discovers dispatchers from the registry and fails CI naming the hook, dispatcher, and backend; `ModalityClient`'s docstring (`src/celeste/client.py`) describes the hook surface.
+- `client.py` is then a dispatcher: `{Provider}{Modality}Client({Modality}Client)` keeps `_default_base_url` and defines only `__new__`, which picks the backend (by auth and/or model id) and returns that backend's instance — nothing is forwarded. Construction returns `{Provider}{Api}{Modality}Client`, so `isinstance(client, {Provider}{Modality}Client)` is False and the registry entry carries `# type: ignore[type-abstract]`.
 - Each backend is the old single-backend client body in an api-named file (`interactions.py`, `vertex.py`), classes renamed `{Provider}{Api}{Modality}Client`; every mapper set in `parameters.py` takes the backend token too (`VertexTemperatureMapper`, `GOOGLE_VERTEX_PARAMETER_MAPPERS`) — a bare set never coexists with a tokened one.
-- Where variation lives, in escalation order: endpoint ClassVar (`_generate_endpoint`, `_edit_endpoint`) for same-wire operations → `_build_url` auth branch for the same wire format on another host (Vertex) → `_strategy` dispatcher only for genuinely different wire formats.
+- Where variation lives, in escalation order: endpoint ClassVar (`_generate_endpoint`, `_edit_endpoint`) for same-wire operations → `_build_url` auth branch for the same wire format on another host (Vertex) → dispatcher only for genuinely different wire formats.
 
 Naming: wire mixin `{Provider}{Api}Client` (`GoogleInteractionsClient`); registered composite `{Provider}{Modality}Client` (`GoogleTextClient`); per-backend composite `{Provider}{Api}{Modality}Client` (`GoogleInteractionsTextClient`). The prefix is always the `Provider` enum name, never a brand or model family (`Google`, not `Gemini`). Composition files always alias the wire imports — `{Provider}{Api}Client as {Provider}{Api}Mixin`, `{Provider}{Api}Stream as _{Provider}{Api}Stream` — and never alias `config`.
 
@@ -72,7 +72,7 @@ Template-first: copy new provider/modality files from `templates/`; providers us
 ## Testing
 
 - `make ci` is the gate. House style: wire-contract tests are data-driven over mapper lists (`_map` / `_at` in `tests/unit_tests/test_parameter_wire_contracts.py`); request-payload tests call `client._init_request(...)` directly; stream parse tests instantiate via `object.__new__(...)`; never mock httpx in provider/parameter tests (only `tests/unit_tests/test_http.py` touches the transport).
-- Every new wire mapper list joins the `test_parameter_wire_contracts.py` matrix; a multi-backend dispatcher gets dispatch-selection asserts on `client._strategy`.
+- Every new wire mapper list joins the `test_parameter_wire_contracts.py` matrix; a multi-backend dispatcher gets selection asserts on `type(create_client(...))`.
 - A test must earn its place: focused, guarding real behavior, parametrized over cases instead of duplicated. No test ceremony, no coverage bloat. If a test is not clearly required, no test is better than a weak one.
 
 ## Transport quirks

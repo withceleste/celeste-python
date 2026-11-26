@@ -9,6 +9,6 @@ from .xai import XAIVideosClient
 
 PROVIDERS: dict[Provider, type[VideosClient]] = {
     Provider.BYTEPLUS: BytePlusVideosClient,
-    Provider.GOOGLE: GoogleVideosClient,
+    Provider.GOOGLE: GoogleVideosClient,  # type: ignore[type-abstract]
     Provider.XAI: XAIVideosClient,
 }

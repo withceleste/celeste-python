@@ -19,7 +19,9 @@ from celeste.constraints import (
 )
 from celeste.core import InputType, Modality, Operation, Provider
 from celeste.modalities.text.parameters import TextParameter
-from celeste.modalities.text.providers.google.client import GoogleTextClient
+from celeste.modalities.text.providers.google.interactions import (
+    GoogleInteractionsTextClient,
+)
 from celeste.models import Model
 from celeste.types import ImagePart, Message, Role, TextPart
 
@@ -29,7 +31,7 @@ type MediaArtifact = AudioArtifact | DocumentArtifact | ImageArtifact | VideoArt
 def _client(
     parameter: TextParameter | None = None,
     constraint: Constraint | None = None,
-) -> GoogleTextClient:
+) -> GoogleInteractionsTextClient:
     constraints = (
         {parameter: constraint}
         if parameter is not None and constraint is not None
@@ -42,7 +44,7 @@ def _client(
         operations={Modality.TEXT: {Operation.ANALYZE}},
         parameter_constraints=constraints,
     )
-    return GoogleTextClient(
+    return GoogleInteractionsTextClient(
         model=model,
         provider=Provider.GOOGLE,
         auth=AuthHeader(secret=SecretStr("test"), header="x-goog-api-key", prefix=""),

@@ -14,7 +14,7 @@ from .xai import XAIImagesClient
 PROVIDERS: dict[Provider, type[ImagesClient]] = {
     Provider.BFL: BFLImagesClient,
     Provider.BYTEPLUS: BytePlusImagesClient,
-    Provider.GOOGLE: GoogleImagesClient,
+    Provider.GOOGLE: GoogleImagesClient,  # type: ignore[type-abstract]
     Provider.OLLAMA: OllamaImagesClient,
     Provider.OPENAI: OpenAIImagesClient,
     Provider.TOPAZLABS: TopazLabsImagesClient,
