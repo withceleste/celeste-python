@@ -14,8 +14,8 @@ from celeste.mime_types import ImageMimeType
 from celeste.modalities.text.io import TextInput, TextOutput, TextUsage
 from celeste.tools import ToolCall
 from celeste.types import Message, Role
-from tests.unit_tests._telemetry_helpers import TelemetryStream, async_iter
-from tests.unit_tests.conftest import start_test_span
+from tests.unit_tests._telemetry_helpers import TelemetryStream
+from tests.unit_tests.conftest import async_iter, start_test_span
 
 
 @pytest.fixture

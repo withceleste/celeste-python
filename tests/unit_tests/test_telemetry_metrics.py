@@ -7,11 +7,8 @@ from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import InMemoryMetricReader
 
 from celeste import telemetry
-from tests.unit_tests._telemetry_helpers import (
-    TelemetryStream,
-    TelemetryUsage,
-    async_iter,
-)
+from tests.unit_tests._telemetry_helpers import TelemetryStream, TelemetryUsage
+from tests.unit_tests.conftest import async_iter
 
 
 @pytest.fixture

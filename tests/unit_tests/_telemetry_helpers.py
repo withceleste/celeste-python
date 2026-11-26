@@ -54,9 +54,3 @@ class TelemetryStream(Stream[TelemetryOutput, Parameters, Chunk]):
             return None
         usage = TelemetryUsage(**event["usage"]) if "usage" in event else None
         return Chunk(content=content or "", finish_reason=None, usage=usage)
-
-
-async def async_iter(events: list[dict[str, Any]]) -> AsyncIterator[dict[str, Any]]:
-    """Convert a list of events into an async iterator."""
-    for event in events:
-        yield event

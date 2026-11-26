@@ -1,16 +1,8 @@
 """Regression test for Anthropic native assistant transcript replay."""
 
-from collections.abc import AsyncIterator
-from typing import Any
-
 from celeste.modalities.text.io import TextInput
 from celeste.modalities.text.providers.anthropic.client import AnthropicTextStream
-from tests.unit_tests.conftest import anthropic_test_client
-
-
-async def _async_iter(items: list[dict[str, Any]]) -> AsyncIterator[dict[str, Any]]:
-    for item in items:
-        yield item
+from tests.unit_tests.conftest import anthropic_test_client, async_iter
 
 
 async def test_anthropic_stream_preserves_server_tool_result_for_replay() -> None:
@@ -47,7 +39,7 @@ async def test_anthropic_stream_preserves_server_tool_result_for_replay() -> Non
             "delta": {"type": "text_delta", "text": "done"},
         },
     ]
-    stream = AnthropicTextStream(_async_iter(events))
+    stream = AnthropicTextStream(async_iter(events))
 
     async for _ in stream:
         pass
@@ -115,7 +107,7 @@ async def test_anthropic_stream_preserves_caller_and_container_for_replay() -> N
             "usage": {"output_tokens": 10},
         },
     ]
-    stream = AnthropicTextStream(_async_iter(events))
+    stream = AnthropicTextStream(async_iter(events))
 
     async for _ in stream:
         pass
@@ -164,7 +156,7 @@ async def test_anthropic_programmatic_tool_use_alone_triggers_native_replay() ->
             "usage": {"output_tokens": 5},
         },
     ]
-    stream = AnthropicTextStream(_async_iter(events))
+    stream = AnthropicTextStream(async_iter(events))
 
     async for _ in stream:
         pass

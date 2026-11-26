@@ -1,8 +1,5 @@
 """Streaming requests and raw responses preserve complete billing usage."""
 
-from collections.abc import AsyncIterator
-from typing import Any
-
 from pydantic import SecretStr
 
 from celeste.auth import AuthHeader
@@ -13,11 +10,7 @@ from celeste.modalities.text.protocols.openresponses import OpenResponsesTextStr
 from celeste.modalities.text.providers.anthropic.client import AnthropicTextStream
 from celeste.modalities.text.providers.groq.client import GroqTextClient
 from celeste.models import Model
-
-
-async def _async_iter(items: list[dict[str, Any]]) -> AsyncIterator[dict[str, Any]]:
-    for item in items:
-        yield item
+from tests.unit_tests.conftest import async_iter
 
 
 def test_groq_streaming_request_enables_terminal_usage() -> None:
@@ -67,7 +60,7 @@ async def test_anthropic_stream_assembles_raw_response_with_complete_usage() -> 
             "usage": {"output_tokens": 305},
         },
     ]
-    stream = AnthropicTextStream(_async_iter(events))
+    stream = AnthropicTextStream(async_iter(events))
 
     async for _ in stream:
         pass
@@ -104,7 +97,7 @@ async def test_openresponses_stream_unwraps_completed_response() -> None:
         },
         {"type": "response.completed", "response": response},
     ]
-    stream = OpenResponsesTextStream(_async_iter(events))
+    stream = OpenResponsesTextStream(async_iter(events))
 
     async for _ in stream:
         pass
@@ -127,7 +120,7 @@ async def test_chatcompletions_stream_keeps_terminal_usage_event() -> None:
         },
         final_chunk,
     ]
-    stream = ChatCompletionsTextStream(_async_iter(events))
+    stream = ChatCompletionsTextStream(async_iter(events))
 
     async for _ in stream:
         pass

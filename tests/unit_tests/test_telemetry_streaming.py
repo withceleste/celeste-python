@@ -20,9 +20,8 @@ from tests.unit_tests._telemetry_helpers import (
     TelemetryOutput,
     TelemetryStream,
     TelemetryUsage,
-    async_iter,
 )
-from tests.unit_tests.conftest import start_test_span
+from tests.unit_tests.conftest import async_iter, start_test_span
 
 
 class _OffSpecUsage(Usage):

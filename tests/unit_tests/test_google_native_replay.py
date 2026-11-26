@@ -1,6 +1,5 @@
 """Regression coverage for Google native tool transcript replay."""
 
-from collections.abc import AsyncIterator
 from typing import Any
 
 import pytest
@@ -15,11 +14,7 @@ from celeste.modalities.text.providers.google.vertex import (
     GoogleVertexTextStream,
 )
 from celeste.tools import ToolResult
-
-
-async def _async_iter(items: list[dict[str, Any]]) -> AsyncIterator[dict[str, Any]]:
-    for item in items:
-        yield item
+from tests.unit_tests.conftest import async_iter
 
 
 async def test_google_stream_replays_native_tool_parts_verbatim() -> None:
@@ -55,7 +50,7 @@ async def test_google_stream_replays_native_tool_parts_verbatim() -> None:
     events[-1]["candidates"][0]["finishReason"] = "STOP"
     events[-1]["usageMetadata"] = {"totalTokenCount": 3}
 
-    stream = GoogleVertexTextStream(_async_iter(events))
+    stream = GoogleVertexTextStream(async_iter(events))
     async for _ in stream:
         pass
 
@@ -111,7 +106,7 @@ async def test_google_vertex_preserves_all_text_parts(bundled: bool) -> None:
         for group in groups
     ]
     events.append({"candidates": [{"finishReason": "STOP"}]})
-    stream = GoogleVertexTextStream(_async_iter(events))
+    stream = GoogleVertexTextStream(async_iter(events))
     chunks = [chunk async for chunk in stream]
     assert "".join(chunk.content for chunk in chunks) == expected
     assert stream.output.content == expected
@@ -131,6 +126,6 @@ def test_google_vertex_non_text_parts_do_not_emit_text() -> None:
 async def test_google_stream_joins_thought_parts() -> None:
     parts = [{"text": text, "thought": True} for text in ("Thinking", " more")]
     response = {"candidates": [{"content": {"parts": parts}}]}
-    stream = GoogleVertexTextStream(_async_iter([response]))
+    stream = GoogleVertexTextStream(async_iter([response]))
     _ = [chunk async for chunk in stream]
     assert stream.output.reasoning == "Thinking more"

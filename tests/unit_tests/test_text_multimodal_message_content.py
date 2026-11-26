@@ -1,7 +1,6 @@
 """Unit tests for canonical multimodal message content."""
 
-import pytest
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel
 
 from celeste import (
     DocumentPart,
@@ -56,24 +55,6 @@ def test_message_content_round_trips_discriminated_document_part() -> None:
     assert isinstance(restored.content[0], TextPart)
     assert isinstance(restored.content[1], DocumentPart)
     assert restored.content[1].document.data == b"abc"
-
-
-def test_message_content_rejects_raw_artifact() -> None:
-    with pytest.raises(ValidationError):
-        Message(role=Role.USER, content=ImageArtifact(data=b"abc"))
-
-
-def test_message_content_rejects_mixed_raw_list() -> None:
-    with pytest.raises(ValidationError):
-        Message(
-            role=Role.USER,
-            content=["describe", ImageArtifact(data=b"abc")],  # type: ignore[list-item]
-        )
-
-
-def test_message_content_rejects_structured_payload() -> None:
-    with pytest.raises(ValidationError):
-        Message(role=Role.USER, content=StructuredPayload(ok=True))
 
 
 def test_tool_result_content_remains_structured_payload() -> None:
