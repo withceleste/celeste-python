@@ -167,14 +167,6 @@ class ElevenLabsTextToSpeechClient(APIMixin):
         """Extract usage data from ElevenLabs TTS response."""
         return ElevenLabsTextToSpeechClient.map_usage_fields(response_data)
 
-    def _parse_content(self, response_data: dict[str, Any]) -> Any:
-        """Parse content from ElevenLabs TTS response.
-
-        The TTS endpoint returns binary audio, so base generate() should not call this.
-        """
-        msg = "ElevenLabs TTS returns binary responses; modality client must override generate()"
-        raise NotImplementedError(msg)
-
     def _parse_finish_reason(self, response_data: dict[str, Any]) -> FinishReason:
         """ElevenLabs TTS doesn't provide finish reasons."""
         return FinishReason(reason=None)

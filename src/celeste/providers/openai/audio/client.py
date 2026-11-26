@@ -1,12 +1,9 @@
 """OpenAI Audio API client mixin."""
 
-from collections.abc import AsyncGenerator
 from typing import Any, ClassVar
 
 from celeste.artifacts import AudioArtifact
 from celeste.client import APIMixin
-from celeste.exceptions import StreamingNotSupportedError
-from celeste.io import FinishReason
 from celeste.mime_types import AudioMimeType
 from celeste.utils import detect_mime_type
 
@@ -64,17 +61,6 @@ class OpenAIAudioClient(APIMixin):
         elif streaming:
             request_body["stream"] = True
         return request_body
-
-    async def _make_stream_request(
-        self,
-        request_body: dict[str, Any],
-        *,
-        endpoint: str | None = None,
-        extra_headers: dict[str, str] | None = None,
-        **parameters: Any,
-    ) -> AsyncGenerator[dict[str, Any], None]:
-        """OpenAI Audio speech endpoint does not support SSE streaming in this client."""
-        raise StreamingNotSupportedError(model_id=self.model.id)
 
     async def _make_request(
         self,
@@ -182,11 +168,6 @@ class OpenAIAudioClient(APIMixin):
             return str(text)
         msg = "OpenAI TTS returns binary responses; modality client must override generate()"
         raise NotImplementedError(msg)
-
-    def _parse_finish_reason(self, response_data: dict[str, Any]) -> FinishReason:
-        """OpenAI Audio API doesn't provide finish reasons."""
-        _ = response_data
-        return FinishReason(reason=None)
 
     def _build_metadata(self, response_data: dict[str, Any]) -> dict[str, Any]:
         """Keep language, duration, and duration usage in metadata when present."""

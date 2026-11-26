@@ -2,11 +2,9 @@
 
 import asyncio
 import time
-from collections.abc import AsyncGenerator
 from typing import Any, ClassVar
 
 from celeste.client import APIMixin
-from celeste.exceptions import StreamingNotSupportedError
 from celeste.io import FinishReason
 from celeste.mime_types import ApplicationMimeType
 from celeste.utils import detect_mime_type
@@ -165,17 +163,6 @@ class TopazLabsImageClient(APIMixin):
         self._handle_error_response(response)
         download_data: dict[str, Any] = response.json()
         return download_data
-
-    async def _make_stream_request(
-        self,
-        request_body: dict[str, Any],
-        *,
-        endpoint: str | None = None,
-        extra_headers: dict[str, str] | None = None,
-        **parameters: Any,
-    ) -> AsyncGenerator[dict[str, Any], None]:
-        """Topaz Labs Image API does not support SSE streaming in this client."""
-        raise StreamingNotSupportedError(model_id=self.model.id)
 
     def _parse_usage(
         self, response_data: dict[str, Any]

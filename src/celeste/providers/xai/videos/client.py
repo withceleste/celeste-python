@@ -1,12 +1,10 @@
 """xAI Videos API client mixin."""
 
 import asyncio
-from collections.abc import AsyncGenerator
 from typing import Any, ClassVar
 
 from celeste.client import APIMixin
 from celeste.core import UsageField
-from celeste.exceptions import StreamingNotSupportedError
 from celeste.io import FinishReason
 
 from . import config
@@ -44,17 +42,6 @@ class XAIVideosClient(APIMixin):
         )
         request_body["model"] = self.model.id
         return request_body
-
-    async def _make_stream_request(
-        self,
-        request_body: dict[str, Any],
-        *,
-        endpoint: str | None = None,
-        extra_headers: dict[str, str] | None = None,
-        **parameters: Any,
-    ) -> AsyncGenerator[dict[str, Any], None]:
-        """xAI Videos API does not support SSE streaming."""
-        raise StreamingNotSupportedError(model_id=self.model.id)
 
     async def _make_request(
         self,

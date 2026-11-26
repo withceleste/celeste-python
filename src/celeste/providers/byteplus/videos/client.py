@@ -3,12 +3,10 @@
 import asyncio
 import logging
 import time
-from collections.abc import AsyncGenerator
 from typing import Any, ClassVar
 
 from celeste.client import APIMixin
 from celeste.core import UsageField
-from celeste.exceptions import StreamingNotSupportedError
 from celeste.io import FinishReason
 
 from . import config
@@ -128,17 +126,6 @@ class BytePlusVideosClient(APIMixin):
                 raise ValueError(msg)
 
             await asyncio.sleep(config.POLLING_INTERVAL)
-
-    async def _make_stream_request(
-        self,
-        request_body: dict[str, Any],
-        *,
-        endpoint: str | None = None,
-        extra_headers: dict[str, str] | None = None,
-        **parameters: Any,
-    ) -> AsyncGenerator[dict[str, Any], None]:
-        """BytePlus Videos API does not support SSE streaming in this client."""
-        raise StreamingNotSupportedError(model_id=self.model.id)
 
     @staticmethod
     def map_usage_fields(usage_data: dict[str, Any]) -> dict[str, int | float | None]:

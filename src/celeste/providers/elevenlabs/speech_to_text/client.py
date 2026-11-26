@@ -4,7 +4,6 @@ from typing import Any, ClassVar
 
 from celeste.artifacts import AudioArtifact
 from celeste.client import APIMixin
-from celeste.io import FinishReason
 from celeste.mime_types import AudioMimeType
 from celeste.utils import detect_mime_type
 
@@ -94,11 +93,6 @@ class ElevenLabsSpeechToTextClient(APIMixin):
             msg = "No text in transcription response"
             raise ValueError(msg)
         return str(text)
-
-    def _parse_finish_reason(self, response_data: dict[str, Any]) -> FinishReason:
-        """ElevenLabs STT does not provide finish reasons."""
-        _ = response_data
-        return FinishReason(reason=None)
 
     def _build_metadata(self, response_data: dict[str, Any]) -> dict[str, Any]:
         """Keep language fields in metadata when present."""

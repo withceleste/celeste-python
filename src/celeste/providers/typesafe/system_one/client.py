@@ -1,11 +1,9 @@
 """TypeSafe System One API client mixin."""
 
-from collections.abc import AsyncGenerator
 from typing import Any, ClassVar
 
 from celeste.client import APIMixin
 from celeste.core import UsageField
-from celeste.exceptions import StreamingNotSupportedError
 from celeste.io import FinishReason
 
 from . import config
@@ -16,7 +14,6 @@ class TypeSafeSystemOneClient(APIMixin):
 
     Provides shared HTTP implementation:
     - _make_request(endpoint=...) - HTTP POST, opting into images when the request needs them
-    - _make_stream_request() - raises StreamingNotSupportedError
     - _parse_usage() - Extract usage dict from response
     - _parse_content() - Extract answers map from response
     - _parse_finish_reason() - Extract finish reason (if provided)
@@ -73,17 +70,6 @@ class TypeSafeSystemOneClient(APIMixin):
         self._handle_error_response(response)
         data: dict[str, Any] = response.json()
         return data
-
-    async def _make_stream_request(
-        self,
-        request_body: dict[str, Any],
-        *,
-        endpoint: str | None = None,
-        extra_headers: dict[str, str] | None = None,
-        **parameters: Any,
-    ) -> AsyncGenerator[dict[str, Any], None]:
-        """TypeSafe System One does not support SSE streaming in this client."""
-        raise StreamingNotSupportedError(model_id=self.model.id)
 
     @staticmethod
     def map_usage_fields(usage_data: dict[str, Any]) -> dict[str, int | float | None]:

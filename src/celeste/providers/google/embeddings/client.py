@@ -1,12 +1,10 @@
 """Google Embeddings API client mixin."""
 
 import asyncio
-from collections.abc import AsyncGenerator
 from typing import Any, ClassVar
 
 from celeste.client import APIMixin
 from celeste.core import UsageField
-from celeste.exceptions import StreamingNotSupportedError
 from celeste.io import FinishReason
 
 from ..auth import GoogleADC
@@ -32,17 +30,6 @@ class GoogleEmbeddingsClient(APIMixin):
 
     _default_base_url: ClassVar[str] = config.BASE_URL
     _content_fields: ClassVar[set[str]] = {"embedding", "embeddings"}
-
-    async def _make_stream_request(
-        self,
-        request_body: dict[str, Any],
-        *,
-        endpoint: str | None = None,
-        extra_headers: dict[str, str] | None = None,
-        **parameters: Any,
-    ) -> AsyncGenerator[dict[str, Any], None]:
-        """Embeddings API does not support SSE streaming in this client."""
-        raise StreamingNotSupportedError(model_id=self.model.id)
 
     @staticmethod
     def map_usage_fields(usage_data: dict[str, Any]) -> dict[str, int | float | None]:

@@ -2,11 +2,9 @@
 
 import asyncio
 import time
-from collections.abc import AsyncGenerator
 from typing import Any, ClassVar
 
 from celeste.client import APIMixin
-from celeste.exceptions import StreamingNotSupportedError
 from celeste.io import FinishReason
 from celeste.mime_types import ApplicationMimeType
 
@@ -18,7 +16,6 @@ class FalQueueClient(APIMixin):
 
     Provides shared implementation:
     - _make_request() - POST to queue, poll status_url, fetch response_url
-    - _make_stream_request() - raises StreamingNotSupportedError
     - _parse_usage() - empty (fal queue results carry no usage)
     - _parse_finish_reason() - COMPLETE on success
     - _parse_content() - return completed result payload for modality clients
@@ -100,17 +97,6 @@ class FalQueueClient(APIMixin):
                 raise ValueError(msg)
 
             await asyncio.sleep(config.POLLING_INTERVAL)
-
-    async def _make_stream_request(
-        self,
-        request_body: dict[str, Any],
-        *,
-        endpoint: str | None = None,
-        extra_headers: dict[str, str] | None = None,
-        **parameters: Any,
-    ) -> AsyncGenerator[dict[str, Any], None]:
-        """fal queue does not support SSE streaming in this client."""
-        raise StreamingNotSupportedError(model_id=self.model.id)
 
     def _parse_finish_reason(self, response_data: dict[str, Any]) -> FinishReason:
         """fal provides no structured finish reason."""
