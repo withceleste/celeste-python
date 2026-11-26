@@ -299,7 +299,6 @@ class _MediaConstraint[M: MimeType](Constraint):
     """Base for single-media-artifact constraints."""
 
     _artifact_type: ClassVar[type]
-    _media_label: ClassVar[str]
 
     supported_mime_types: list[M] | None = None
 
@@ -358,7 +357,6 @@ class ImageConstraint(_MediaConstraint[ImageMimeType]):
     """Constraint for validating a single image artifact - validates mime_type."""
 
     _artifact_type = ImageArtifact
-    _media_label = "image"
 
 
 class ImagesConstraint(_MediaListConstraint[ImageMimeType]):
@@ -372,7 +370,6 @@ class VideoConstraint(_MediaConstraint[VideoMimeType]):
     """Constraint for validating a single video artifact - validates mime_type."""
 
     _artifact_type = VideoArtifact
-    _media_label = "video"
 
 
 class VideosConstraint(_MediaListConstraint[VideoMimeType]):
@@ -386,7 +383,6 @@ class AudioConstraint(_MediaConstraint[AudioMimeType]):
     """Constraint for validating a single audio artifact - validates mime_type."""
 
     _artifact_type = AudioArtifact
-    _media_label = "audio"
 
 
 class AudiosConstraint(_MediaListConstraint[AudioMimeType]):
@@ -400,7 +396,6 @@ class DocumentConstraint(_MediaConstraint[DocumentMimeType]):
     """Constraint for validating a single document artifact - validates mime_type."""
 
     _artifact_type = DocumentArtifact
-    _media_label = "document"
 
 
 class DocumentsConstraint(_MediaListConstraint[DocumentMimeType]):

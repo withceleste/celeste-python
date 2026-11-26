@@ -7,7 +7,6 @@ class DeepSeekChatEndpoint(StrEnum):
     """Endpoints for DeepSeek Chat API."""
 
     CREATE_CHAT = "/v1/chat/completions"
-    LIST_MODELS = "/models"
 
 
 class VertexChatEndpoint(StrEnum):

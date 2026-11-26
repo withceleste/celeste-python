@@ -21,12 +21,6 @@ class MaxTokensMapper(FieldMapper[TextContent]):
     field = "max_tokens"
 
 
-class StopSequencesMapper(FieldMapper[TextContent]):
-    """Map stop_sequences to Anthropic stop_sequences field."""
-
-    field = "stop_sequences"
-
-
 class ThinkingMapper(ParameterMapper[TextContent]):
     """Map thinking to Anthropic thinking field.
 
@@ -215,7 +209,6 @@ class OutputFormatMapper(ParameterMapper[TextContent]):
 __all__ = [
     "MaxTokensMapper",
     "OutputFormatMapper",
-    "StopSequencesMapper",
     "ThinkingLevelMapper",
     "ThinkingMapper",
     "ToolChoiceMapper",

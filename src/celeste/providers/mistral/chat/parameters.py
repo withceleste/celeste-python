@@ -5,30 +5,10 @@ from typing import Any, get_args, get_origin
 from pydantic import TypeAdapter
 
 from celeste.models import Model
-from celeste.parameters import ParameterMapper
 from celeste.protocols.chatcompletions.parameters import (
     ResponseFormatMapper as _ResponseFormatMapper,
 )
 from celeste.structured_outputs import StrictJsonSchemaGenerator
-from celeste.types import TextContent
-
-
-class WebSearchMapper(ParameterMapper[TextContent]):
-    """Map web_search to Mistral tools field."""
-
-    def map(
-        self,
-        request: dict[str, Any],
-        value: object,
-        model: Model,
-    ) -> dict[str, Any]:
-        """Transform web_search into provider request."""
-        validated_value = self._validate_value(value, model)
-        if not validated_value:
-            return request
-
-        request.setdefault("tools", []).append({"type": "web_search"})
-        return request
 
 
 class ResponseFormatMapper(_ResponseFormatMapper):
@@ -79,4 +59,4 @@ class ResponseFormatMapper(_ResponseFormatMapper):
         return request
 
 
-__all__ = ["ResponseFormatMapper", "WebSearchMapper"]
+__all__ = ["ResponseFormatMapper"]

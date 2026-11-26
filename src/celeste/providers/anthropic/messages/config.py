@@ -7,9 +7,6 @@ class AnthropicMessagesEndpoint(StrEnum):
     """Endpoints for Anthropic Messages API."""
 
     CREATE_MESSAGE = "/v1/messages"
-    COUNT_MESSAGE_TOKENS = "/v1/messages/count_tokens"
-    LIST_MODELS = "/v1/models"
-    GET_MODEL = "/v1/models/{model_id}"
 
 
 class VertexMessagesEndpoint(StrEnum):
@@ -24,7 +21,6 @@ BASE_URL = "https://api.anthropic.com"
 # Required
 ANTHROPIC_VERSION = "2026-10-21"
 VERTEX_ANTHROPIC_VERSION = "2026-10-21"
-CONTENT_TYPE_JSON = "application/json"
 
 # Header
 HEADER_ANTHROPIC_VERSION = "anthropic-version"
@@ -40,12 +36,3 @@ BETA_STRUCTURED_OUTPUTS = "structured-outputs-2025-11-13"
 
 # Defaults
 DEFAULT_MAX_TOKENS = 1024
-
-# SSE
-SSE_EVENT_MESSAGE_START = "message_start"
-SSE_EVENT_CONTENT_BLOCK_START = "content_block_start"
-SSE_EVENT_PING = "ping"
-SSE_EVENT_CONTENT_BLOCK_DELTA = "content_block_delta"
-SSE_EVENT_CONTENT_BLOCK_STOP = "content_block_stop"
-SSE_EVENT_MESSAGE_DELTA = "message_delta"
-SSE_EVENT_MESSAGE_STOP = "message_stop"

@@ -10,7 +10,6 @@ class {Protocol}Endpoint(StrEnum):
     # Examples:
     #   CREATE_CHAT = "/v1/chat/completions"
     #   CREATE_RESPONSE = "/v1/responses"
-    #   LIST_MODELS = "/v1/models"
     pass
 
 

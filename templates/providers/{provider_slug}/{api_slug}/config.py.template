@@ -13,7 +13,6 @@ class {Provider}{Api}Endpoint(StrEnum):
     #   CREATE_SPEECH = "/v1/text-to-speech/{voice_id}"
     #   STREAM_SPEECH = "/v1/text-to-speech/{voice_id}/stream"
     #   GET_OPERATION = "/v1/{operation_name}"
-    #   LIST_MODELS = "/v1/models"
     pass
 
 
