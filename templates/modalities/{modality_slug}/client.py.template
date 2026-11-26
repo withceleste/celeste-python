@@ -205,61 +205,8 @@ class {Modality}SyncNamespace:
 
     def __init__(self, client: {Modality}Client) -> None:
         self._client = client
-
-    def generate(
-        self,
-        prompt: str,
-        *,
-        extra_body: dict[str, Any] | None = None,
-        extra_headers: dict[str, str] | None = None,
-        **parameters: Unpack[{Modality}Parameters],
-    ) -> {Modality}Output:
-        """Blocking {modality} generation.
-
-        Usage:
-            result = client.sync.generate("Hello")
-            print(result.content)
-        """
-        inputs = {Modality}Input(prompt=prompt)
-        return async_to_sync(self._client._predict)(
-            inputs,
-            endpoint=self._client._generate_endpoint,
-            extra_body=extra_body,
-            extra_headers=extra_headers,
-            **parameters,
-        )
-
-    def analyze(
-        self,
-        prompt: str,
-        *,
-        image: ImageContent | None = None,
-        video: VideoContent | None = None,
-        audio: AudioContent | None = None,
-        document: DocumentContent | None = None,
-        extra_body: dict[str, Any] | None = None,
-        extra_headers: dict[str, str] | None = None,
-        **parameters: Unpack[{Modality}Parameters],
-    ) -> {Modality}Output:
-        """Blocking media analysis (image, video, or audio).
-
-        Usage:
-            result = client.sync.analyze("Describe", image=img)
-            print(result.content)
-        """
-        self._client._check_media_support(
-            image=image, video=video, audio=audio, document=document
-        )
-        inputs = {Modality}Input(
-            prompt=prompt, image=image, video=video, audio=audio, document=document
-        )
-        return async_to_sync(self._client._predict)(
-            inputs,
-            endpoint=self._client._analyze_endpoint,
-            extra_body=extra_body,
-            extra_headers=extra_headers,
-            **parameters,
-        )
+        self.generate = async_to_sync(client.generate)
+        self.analyze = async_to_sync(client.analyze)
 
     @property
     def stream(self) -> "{Modality}SyncStreamNamespace":
@@ -267,68 +214,7 @@ class {Modality}SyncNamespace:
         return {Modality}SyncStreamNamespace(self._client)
 
 
-class {Modality}SyncStreamNamespace:
-    """Sync streaming namespace - returns Stream instance with sync iteration support."""
-
-    def __init__(self, client: {Modality}Client) -> None:
-        self._client = client
-
-    def generate(
-        self,
-        prompt: str,
-        *,
-        extra_body: dict[str, Any] | None = None,
-        extra_headers: dict[str, str] | None = None,
-        **parameters: Unpack[{Modality}Parameters],
-    ) -> {Modality}Stream:
-        """Sync streaming {modality} generation.
-
-        Returns Stream instance that supports both async and sync iteration.
-
-        Usage:
-            stream = client.sync.stream.generate("Hello")
-            for chunk in stream:  # Sync iteration (bridges async internally)
-                print(chunk.content, end="")
-            print(stream.output.usage)
-        """
-        # Return same stream as async version - __iter__/__next__ handle sync iteration
-        return self._client.stream.generate(
-            prompt, extra_body=extra_body, extra_headers=extra_headers, **parameters
-        )
-
-    def analyze(
-        self,
-        prompt: str,
-        *,
-        image: ImageContent | None = None,
-        video: VideoContent | None = None,
-        audio: AudioContent | None = None,
-        document: DocumentContent | None = None,
-        extra_body: dict[str, Any] | None = None,
-        extra_headers: dict[str, str] | None = None,
-        **parameters: Unpack[{Modality}Parameters],
-    ) -> {Modality}Stream:
-        """Sync streaming media analysis (image, video, or audio).
-
-        Returns Stream instance that supports both async and sync iteration.
-
-        Usage:
-            stream = client.sync.stream.analyze("Describe", image=img)
-            for chunk in stream:  # Sync iteration (bridges async internally)
-                print(chunk.content, end="")
-            print(stream.output.usage)
-        """
-        # Return same stream as async version - __iter__/__next__ handle sync iteration
-        return self._client.stream.analyze(
-            prompt,
-            image=image,
-            video=video,
-            audio=audio,
-            document=document,
-            extra_body=extra_body,
-            extra_headers=extra_headers,
-            **parameters,
-        )
+{Modality}SyncStreamNamespace = {Modality}StreamNamespace
 
 
 __all__ = [

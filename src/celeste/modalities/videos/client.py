@@ -83,57 +83,8 @@ class VideosSyncNamespace:
     """
 
     def __init__(self, client: VideosClient) -> None:
-        self._client = client
-
-    def generate(
-        self,
-        prompt: str,
-        *,
-        extra_body: dict[str, Any] | None = None,
-        extra_headers: dict[str, str] | None = None,
-        **parameters: Unpack[VideoParameters],
-    ) -> VideoOutput:
-        """Blocking video generation.
-
-        Usage:
-            result = client.sync.generate("A cat walking on the beach")
-            result.content.save("video.mp4")
-        """
-        inputs = VideoInput(prompt=prompt)
-        return async_to_sync(self._client._predict)(
-            inputs,
-            endpoint=self._client._generate_endpoint,
-            extra_body=extra_body,
-            extra_headers=extra_headers,
-            **parameters,
-        )
-
-    def edit(
-        self,
-        video: VideoArtifact,
-        prompt: str,
-        *,
-        extra_body: dict[str, Any] | None = None,
-        extra_headers: dict[str, str] | None = None,
-        **parameters: Unpack[VideoParameters],
-    ) -> VideoOutput:
-        """Blocking video edit.
-
-        Usage:
-            result = client.sync.edit(video, "Make it night")
-            result.content.save("video.mp4")
-        """
-        if self._client._edit_endpoint is None:
-            msg = f"Model {self._client.model.id} does not support video editing"
-            raise NotImplementedError(msg)
-        inputs = VideoInput(prompt=prompt, video=video)
-        return async_to_sync(self._client._predict)(
-            inputs,
-            endpoint=self._client._edit_endpoint,
-            extra_body=extra_body,
-            extra_headers=extra_headers,
-            **parameters,
-        )
+        self.generate = async_to_sync(client.generate)
+        self.edit = async_to_sync(client.edit)
 
 
 __all__ = [

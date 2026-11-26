@@ -224,74 +224,8 @@ class TextSyncNamespace:
 
     def __init__(self, client: TextClient) -> None:
         self._client = client
-
-    def generate(
-        self,
-        prompt: str | None = None,
-        *,
-        messages: list[Message | ToolResult] | None = None,
-        extra_body: dict[str, Any] | None = None,
-        extra_headers: dict[str, str] | None = None,
-        **parameters: Unpack[TextParameters],
-    ) -> TextOutput:
-        """Blocking text generation.
-
-        Usage:
-            result = client.sync.generate("Hello")
-            print(result.content)
-        """
-        self._client._check_media_support(messages=messages)
-        inputs = TextInput(prompt=prompt, messages=messages)
-        return async_to_sync(self._client._predict)(
-            inputs,
-            extra_body=extra_body,
-            extra_headers=extra_headers,
-            **parameters,
-        )
-
-    def analyze(
-        self,
-        prompt: str | None = None,
-        *,
-        messages: list[Message | ToolResult] | None = None,
-        image: ImageContent | None = None,
-        video: VideoContent | None = None,
-        audio: AudioContent | None = None,
-        document: DocumentContent | None = None,
-        extra_body: dict[str, Any] | None = None,
-        extra_headers: dict[str, str] | None = None,
-        **parameters: Unpack[TextParameters],
-    ) -> TextOutput:
-        """Blocking media analysis (image, video, audio, or document).
-
-        Usage:
-            result = client.sync.analyze("Describe", image=img)
-            print(result.content)
-
-            result = client.sync.analyze("Summarize", document=doc)
-            print(result.content)
-        """
-        self._client._check_media_support(
-            messages=messages,
-            image=image,
-            video=video,
-            audio=audio,
-            document=document,
-        )
-        inputs = TextInput(
-            prompt=prompt,
-            messages=messages,
-            image=image,
-            video=video,
-            audio=audio,
-            document=document,
-        )
-        return async_to_sync(self._client._predict)(
-            inputs,
-            extra_body=extra_body,
-            extra_headers=extra_headers,
-            **parameters,
-        )
+        self.generate = async_to_sync(client.generate)
+        self.analyze = async_to_sync(client.analyze)
 
     @property
     def stream(self) -> "TextSyncStreamNamespace":
@@ -299,77 +233,7 @@ class TextSyncNamespace:
         return TextSyncStreamNamespace(self._client)
 
 
-class TextSyncStreamNamespace:
-    """Sync streaming namespace - returns Stream instance with sync iteration support."""
-
-    def __init__(self, client: TextClient) -> None:
-        self._client = client
-
-    def generate(
-        self,
-        prompt: str | None = None,
-        *,
-        messages: list[Message | ToolResult] | None = None,
-        extra_body: dict[str, Any] | None = None,
-        extra_headers: dict[str, str] | None = None,
-        **parameters: Unpack[TextParameters],
-    ) -> TextStream:
-        """Sync streaming text generation.
-
-        Returns Stream instance that supports both async and sync iteration.
-
-        Usage:
-            stream = client.sync.stream.generate("Hello")
-            for chunk in stream:  # Sync iteration (bridges async internally)
-                print(chunk.content, end="")
-            print(stream.output.usage)
-        """
-        # Return same stream as async version - __iter__/__next__ handle sync iteration
-        return self._client.stream.generate(
-            prompt,
-            messages=messages,
-            extra_body=extra_body,
-            extra_headers=extra_headers,
-            **parameters,
-        )
-
-    def analyze(
-        self,
-        prompt: str | None = None,
-        *,
-        messages: list[Message | ToolResult] | None = None,
-        image: ImageContent | None = None,
-        video: VideoContent | None = None,
-        audio: AudioContent | None = None,
-        document: DocumentContent | None = None,
-        extra_body: dict[str, Any] | None = None,
-        extra_headers: dict[str, str] | None = None,
-        **parameters: Unpack[TextParameters],
-    ) -> TextStream:
-        """Sync streaming media analysis (image, video, audio, or document).
-
-        Returns Stream instance that supports both async and sync iteration.
-
-        Usage:
-            stream = client.sync.stream.analyze("Describe", image=img)
-            for chunk in stream:
-                print(chunk.content, end="")
-
-            stream = client.sync.stream.analyze("Summarize", document=doc)
-            for chunk in stream:
-                print(chunk.content, end="")
-        """
-        return self._client.stream.analyze(
-            prompt,
-            messages=messages,
-            image=image,
-            video=video,
-            audio=audio,
-            document=document,
-            extra_body=extra_body,
-            extra_headers=extra_headers,
-            **parameters,
-        )
+TextSyncStreamNamespace = TextStreamNamespace
 
 
 __all__ = [
