@@ -18,7 +18,6 @@ class OpenResponsesClient(APIMixin):
     - _make_request() - HTTP POST to /v1/responses
     - _make_stream_request() - HTTP streaming to /v1/responses
     - map_usage_fields() - Map usage fields to unified names
-    - _parse_usage() - Extract usage dict from response
     - _parse_content() - Extract output array from response
     - _parse_finish_reason() - Extract finish reason from response
     - _content_fields: ClassVar - Content field names to exclude from metadata
@@ -110,13 +109,6 @@ class OpenResponsesClient(APIMixin):
             UsageField.CACHED_TOKENS: input_details.get("cached_tokens"),
             UsageField.REASONING_TOKENS: output_details.get("reasoning_tokens"),
         }
-
-    def _parse_usage(
-        self, response_data: dict[str, Any]
-    ) -> dict[str, int | float | None]:
-        """Extract usage data from Responses API response."""
-        usage_data = response_data.get("usage") or {}
-        return self.map_usage_fields(usage_data)
 
     def _parse_content(self, response_data: dict[str, Any]) -> Any:
         """Parse output array from Responses API."""

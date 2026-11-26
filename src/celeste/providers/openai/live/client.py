@@ -12,7 +12,6 @@ from websockets.exceptions import ConnectionClosed
 from celeste.client import APIMixin
 from celeste.core import UsageField
 from celeste.exceptions import StreamEventError
-from celeste.types import RawUsage
 
 from . import config
 
@@ -22,7 +21,6 @@ class OpenAILiveClient(APIMixin):
 
     Provides the WebSocket transport for live streaming:
     - _make_stream_request() - Returns the Live event generator
-    - _parse_usage() - Extract usage dict from an event
 
     The OpenAI Live primary WebSocket is full duplex:
     1. Send session.start and await session.started
@@ -145,10 +143,6 @@ class OpenAILiveClient(APIMixin):
     def map_usage_fields(usage_data: dict[str, Any]) -> dict[str, int | float | None]:
         """Map OpenAI Live usage fields to unified names; seconds are cumulative."""
         return {UsageField.BILLED_UNITS: usage_data.get("seconds")}
-
-    def _parse_usage(self, response_data: dict[str, Any]) -> RawUsage:
-        """Extract usage data from an OpenAI Live event."""
-        return self.map_usage_fields(response_data.get("usage") or {})
 
 
 __all__ = ["OpenAILiveClient"]

@@ -21,7 +21,6 @@ class OpenAIImagesClient(APIMixin):
     Provides shared implementation for image operations:
     - _make_request(endpoint=...) - HTTP POST to images endpoint
     - _make_stream_request() - HTTP streaming
-    - _parse_usage() - Extract usage dict from response
     - _parse_content() - Extract data array from response
     - _parse_finish_reason() - Returns None (Images API doesn't provide finish reasons)
     - _content_fields: ClassVar - Content field names to exclude from metadata
@@ -123,16 +122,6 @@ class OpenAIImagesClient(APIMixin):
             UsageField.OUTPUT_TOKENS: usage_data.get("output_tokens"),
             UsageField.TOTAL_TOKENS: usage_data.get("total_tokens"),
         }
-
-    def _parse_usage(
-        self, response_data: dict[str, Any]
-    ) -> dict[str, int | float | None]:
-        """Extract usage data from Images API response.
-
-        Returns dict that modality clients wrap in their specific Usage type.
-        """
-        usage_data = response_data.get("usage") or {}
-        return OpenAIImagesClient.map_usage_fields(usage_data)
 
     def _parse_content(self, response_data: dict[str, Any]) -> Any:
         """Parse data array from Images API response.

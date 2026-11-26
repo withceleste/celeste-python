@@ -16,7 +16,6 @@ class BytePlusImagesClient(APIMixin):
     Provides shared implementation for all capabilities using the Images API:
     - _make_request() - HTTP POST to /api/v3/images/generations
     - _make_stream_request() - HTTP streaming to /api/v3/images/generations
-    - _parse_usage() - Extract usage dict from response
     - _parse_content() - Extract images/data array from response
     - _parse_finish_reason() - Extract finish reason from response
     - _content_fields: ClassVar - Content field names to exclude from metadata
@@ -100,16 +99,6 @@ class BytePlusImagesClient(APIMixin):
             UsageField.OUTPUT_TOKENS: usage_data.get("output_tokens"),
             UsageField.NUM_IMAGES: usage_data.get("generated_images"),
         }
-
-    def _parse_usage(
-        self, response_data: dict[str, Any]
-    ) -> dict[str, int | float | None]:
-        """Extract usage data from Images API response.
-
-        Returns dict that modality clients wrap in their specific Usage type.
-        """
-        usage_data = response_data.get("usage") or {}
-        return BytePlusImagesClient.map_usage_fields(usage_data)
 
     def _parse_content(self, response_data: dict[str, Any]) -> Any:
         """Parse images/data array from Images API response.

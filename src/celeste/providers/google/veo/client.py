@@ -171,21 +171,6 @@ class GoogleVeoClient(APIMixin):
             raise ValueError(msg)
         return generated_samples[0].get("video", {})
 
-    @staticmethod
-    def map_usage_fields(usage_data: dict[str, Any]) -> dict[str, int | float | None]:
-        """Map Google Veo usage fields to unified names.
-
-        Shared by client and streaming across all capabilities.
-        Veo API doesn't provide usage metadata.
-        """
-        return {}
-
-    def _parse_usage(
-        self, response_data: dict[str, Any]
-    ) -> dict[str, int | float | None]:
-        """Extract usage data from Veo API response."""
-        return GoogleVeoClient.map_usage_fields(response_data)
-
     def _parse_finish_reason(self, response_data: dict[str, Any]) -> FinishReason:
         """Veo API doesn't provide finish reasons."""
         return FinishReason(reason=None)

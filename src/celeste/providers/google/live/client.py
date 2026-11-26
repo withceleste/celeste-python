@@ -12,7 +12,6 @@ from websockets.exceptions import ConnectionClosed
 from celeste.client import APIMixin
 from celeste.core import UsageField
 from celeste.providers.google.auth import GoogleADC
-from celeste.types import RawUsage
 
 from . import config
 
@@ -49,7 +48,6 @@ class GoogleLiveClient(APIMixin):
 
     Provides the WebSocket transport for live streaming:
     - _make_stream_request() - Returns the Live event generator
-    - _parse_usage() - Extract usage dict from an event
 
     The Google Live API is bidirectional over one WebSocket:
     1. Send setup and await setupComplete
@@ -59,6 +57,7 @@ class GoogleLiveClient(APIMixin):
     """
 
     _default_base_url: ClassVar[str] = config.BASE_URL
+    _usage_key: ClassVar[str] = "usageMetadata"
 
     def _build_request(
         self,
@@ -205,10 +204,6 @@ class GoogleLiveClient(APIMixin):
             UsageField.REASONING_TOKENS: usage_data.get("thoughtsTokenCount"),
             UsageField.CACHED_TOKENS: usage_data.get("cachedContentTokenCount"),
         }
-
-    def _parse_usage(self, response_data: dict[str, Any]) -> RawUsage:
-        """Extract usage data from a Google Live event."""
-        return self.map_usage_fields(response_data.get("usageMetadata") or {})
 
 
 __all__ = ["GoogleLiveClient"]

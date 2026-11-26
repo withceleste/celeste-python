@@ -14,7 +14,6 @@ class TypeSafeSystemOneClient(APIMixin):
 
     Provides shared HTTP implementation:
     - _make_request(endpoint=...) - HTTP POST, opting into images when the request needs them
-    - _parse_usage() - Extract usage dict from response
     - _parse_content() - Extract answers map from response
     - _parse_finish_reason() - Extract finish reason (if provided)
     - _content_fields: ClassVar - Content field names to exclude from metadata
@@ -78,13 +77,6 @@ class TypeSafeSystemOneClient(APIMixin):
             UsageField.INPUT_TOKENS: usage_data.get("input_tokens"),
             UsageField.OUTPUT_TOKENS: usage_data.get("output_tokens"),
         }
-
-    def _parse_usage(
-        self, response_data: dict[str, Any]
-    ) -> dict[str, int | float | None]:
-        """Extract usage data from TypeSafe System One API response."""
-        usage_data = response_data.get("usage") or {}
-        return TypeSafeSystemOneClient.map_usage_fields(usage_data)
 
     def _parse_content(self, response_data: dict[str, Any]) -> Any:
         """Parse answers map from TypeSafe System One API response."""

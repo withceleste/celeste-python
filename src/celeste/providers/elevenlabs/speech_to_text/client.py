@@ -79,13 +79,6 @@ class ElevenLabsSpeechToTextClient(APIMixin):
         result: dict[str, Any] = response.json()
         return result
 
-    def _parse_usage(
-        self, response_data: dict[str, Any]
-    ) -> dict[str, int | float | None]:
-        """ElevenLabs STT does not return token usage in the body."""
-        _ = response_data
-        return {}
-
     def _parse_content(self, response_data: dict[str, Any]) -> str:
         """Parse transcript text from ElevenLabs STT response."""
         text = response_data.get("text")

@@ -39,7 +39,6 @@ class AnthropicMessagesClient(APIMixin):
     Provides shared implementation for all capabilities using the Messages API:
     - _make_request() - HTTP POST to /v1/messages
     - _make_stream_request() - HTTP streaming to /v1/messages
-    - _parse_usage() - Extract usage dict from response
     - _parse_content() - Extract content array from response
     - _parse_finish_reason() - Extract finish reason from response
     - _content_fields: ClassVar - Content field names to exclude from metadata
@@ -208,13 +207,6 @@ class AnthropicMessagesClient(APIMixin):
             UsageField.TOTAL_TOKENS: total_tokens,
             UsageField.CACHED_TOKENS: cached_tokens,
         }
-
-    def _parse_usage(
-        self, response_data: dict[str, Any]
-    ) -> dict[str, int | float | None]:
-        """Extract usage data from Messages API response."""
-        usage_data = response_data.get("usage") or {}
-        return AnthropicMessagesClient.map_usage_fields(usage_data)
 
     def _parse_content(self, response_data: dict[str, Any]) -> Any:
         """Parse content array from Messages API.

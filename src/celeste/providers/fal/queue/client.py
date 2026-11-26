@@ -16,7 +16,6 @@ class FalQueueClient(APIMixin):
 
     Provides shared implementation:
     - _make_request() - POST to queue, poll status_url, fetch response_url
-    - _parse_usage() - empty (fal queue results carry no usage)
     - _parse_finish_reason() - COMPLETE on success
     - _parse_content() - return completed result payload for modality clients
 
@@ -101,12 +100,6 @@ class FalQueueClient(APIMixin):
     def _parse_finish_reason(self, response_data: dict[str, Any]) -> FinishReason:
         """fal provides no structured finish reason."""
         return FinishReason(reason="COMPLETE")
-
-    def _parse_usage(
-        self, response_data: dict[str, Any]
-    ) -> dict[str, int | float | None]:
-        """fal queue results do not include usage metrics."""
-        return {}
 
     def _parse_content(self, response_data: dict[str, Any]) -> Any:
         """Return completed queue result payload."""

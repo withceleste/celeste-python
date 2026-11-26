@@ -18,7 +18,6 @@ class {Protocol}Client(APIMixin):
     - _make_request() - HTTP POST to protocol endpoint
     - _make_stream_request() - HTTP streaming to protocol endpoint
     - map_usage_fields() - Map usage fields to unified names
-    - _parse_usage() - Extract usage dict from response
     - _parse_content() - Extract content from response
     - _parse_finish_reason() - Extract finish reason from response
     - _content_fields: ClassVar - Content field names to exclude from metadata
@@ -123,13 +122,6 @@ class {Protocol}Client(APIMixin):
             UsageField.OUTPUT_TOKENS: usage_data.get("..."),
             UsageField.TOTAL_TOKENS: usage_data.get("..."),
         }
-
-    def _parse_usage(
-        self, response_data: dict[str, Any]
-    ) -> dict[str, int | float | None]:
-        """Extract usage data from {Protocol} API response."""
-        usage_data = response_data.get("usage") or {}
-        return self.map_usage_fields(usage_data)
 
     def _parse_content(self, response_data: dict[str, Any]) -> Any:
         """Parse content from {Protocol} API response."""

@@ -80,13 +80,6 @@ class GroqAudioClient(APIMixin):
         result: dict[str, Any] = response.json()
         return result
 
-    def _parse_usage(
-        self, response_data: dict[str, Any]
-    ) -> dict[str, int | float | None]:
-        """Extract usage data from Groq Audio API response."""
-        _ = response_data
-        return {}
-
     def _parse_content(self, response_data: dict[str, Any]) -> str:
         """Parse transcript text from Groq Audio API response."""
         text = response_data.get("text")

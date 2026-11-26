@@ -19,7 +19,6 @@ class ElevenLabsTextToSpeechClient(APIMixin):
     Provides shared implementation for speech generation:
     - _make_request() - HTTP POST to /v1/text-to-speech/{voice_id}
     - _make_stream_request() - HTTP streaming with binary chunks
-    - _parse_usage() - Returns empty dict (TTS doesn't return usage)
     - _map_output_format_to_mime_type() - Map format string to AudioMimeType
 
     The TTS endpoint returns binary audio data, not JSON.
@@ -151,21 +150,6 @@ class ElevenLabsTextToSpeechClient(APIMixin):
             async for chunk in response.aiter_bytes():
                 if chunk:
                     yield {"data": chunk}
-
-    @staticmethod
-    def map_usage_fields(usage_data: dict[str, Any]) -> dict[str, int | float | None]:
-        """Map ElevenLabs usage fields to unified names.
-
-        Shared by client and streaming across all capabilities.
-        ElevenLabs TTS doesn't return usage in response body.
-        """
-        return {}
-
-    def _parse_usage(
-        self, response_data: dict[str, Any]
-    ) -> dict[str, int | float | None]:
-        """Extract usage data from ElevenLabs TTS response."""
-        return ElevenLabsTextToSpeechClient.map_usage_fields(response_data)
 
     def _parse_finish_reason(self, response_data: dict[str, Any]) -> FinishReason:
         """ElevenLabs TTS doesn't provide finish reasons."""

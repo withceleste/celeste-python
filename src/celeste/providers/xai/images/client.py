@@ -14,7 +14,6 @@ class XAIImagesClient(APIMixin):
 
     Provides shared HTTP implementation:
     - _make_request(endpoint=...) - HTTP POST to specified endpoint
-    - _parse_usage() - Extract usage dict from response
     - _parse_content() - Extract data array from response
     - _parse_finish_reason() - Returns None (no finish reasons for images)
     - _content_fields: ClassVar - Content field names to exclude from metadata
@@ -71,13 +70,6 @@ class XAIImagesClient(APIMixin):
             UsageField.OUTPUT_TOKENS: usage_data.get("output_tokens"),
             UsageField.TOTAL_TOKENS: usage_data.get("total_tokens"),
         }
-
-    def _parse_usage(
-        self, response_data: dict[str, Any]
-    ) -> dict[str, int | float | None]:
-        """Extract usage data from xAI Images API response."""
-        usage_data = response_data.get("usage") or {}
-        return XAIImagesClient.map_usage_fields(usage_data)
 
     def _parse_content(self, response_data: dict[str, Any]) -> Any:
         """Parse data array from xAI Images API response."""
