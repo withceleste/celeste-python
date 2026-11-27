@@ -26,6 +26,18 @@ _MEDIA_CONSTRAINTS: dict[str, Constraint] = {
 
 MODELS: list[Model] = [
     Model(
+        id="gemini-2.5-flash-native-audio-preview-12-2025",
+        provider=Provider.GOOGLE,
+        display_name="Gemini 2.5 Flash Live Preview",
+        streaming=True,
+        operations={Modality.LIVE: {Operation.CONNECT}},
+        parameter_constraints={
+            **_MEDIA_CONSTRAINTS,
+            LiveParameter.VOICE: VoiceConstraint(voices=GOOGLE_VOICES),
+            LiveParameter.MAX_TOKENS: Range(min=1, max=8192),
+        },
+    ),
+    Model(
         id="gemini-3.8-live",
         provider=Provider.GOOGLE,
         display_name="Gemini 3.8 Live",
