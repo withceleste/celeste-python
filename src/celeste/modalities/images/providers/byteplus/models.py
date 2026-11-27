@@ -233,7 +233,7 @@ MODELS: list[Model] = [
         parameter_constraints={
             ImageParameter.ASPECT_RATIO: Dimensions(
                 min_pixels=1280 * 720,  # 921,600
-                max_pixels=4_624_220,
+                max_pixels=2880 * 2880,  # 8,294,400
                 min_aspect_ratio=1 / 16,
                 max_aspect_ratio=16,
                 presets={
